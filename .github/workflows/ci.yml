@@ -1,0 +1,84 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore TargCC.Core.sln
+      
+    - name: Build solution
+      run: dotnet build TargCC.Core.sln --configuration Release --no-restore
+      
+    - name: Run tests
+      run: dotnet test TargCC.Core.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: success()
+      with:
+        files: '**/coverage.cobertura.xml'
+        fail_ci_if_error: false
+        
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore TargCC.Core.sln
+      
+    - name: Build with analyzers
+      run: dotnet build TargCC.Core.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=false
+      
+    - name: Run StyleCop
+      run: dotnet build TargCC.Core.sln --no-restore /p:RunCodeAnalysis=true
+      continue-on-error: true
+      
+    - name: Check for warnings
+      run: |
+        echo "Checking build output for warnings..."
+        # This step will be enhanced later with actual warning parsing
+        
+  security-scan:
+    name: Security Scan
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run DevSkim scanner
+      uses: microsoft/DevSkim-Action@v1
+      continue-on-error: true
+      
+    - name: Upload DevSkim results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: devskim-results.sarif
+      continue-on-error: true
