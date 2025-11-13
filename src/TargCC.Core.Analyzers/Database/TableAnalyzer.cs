@@ -347,10 +347,10 @@ namespace TargCC.Core.Analyzers.Database
         {
             _logger.LogDebug(
                 "Table analysis complete for {Schema}.{Table}: {ColumnCount} columns, {IndexCount} indexes, {PKCount} PK columns",
-                table.SchemaName, 
-                table.Name, 
-                table.Columns.Count, 
-                table.Indexes.Count, 
+                table.SchemaName,
+                table.Name,
+                table.Columns.Count,
+                table.Indexes.Count,
                 table.PrimaryKeyColumns.Count);
         }
     }

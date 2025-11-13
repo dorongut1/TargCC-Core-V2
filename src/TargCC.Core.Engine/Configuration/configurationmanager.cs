@@ -28,8 +28,7 @@ public sealed class ConfigurationManager
     /// <summary>
     /// Gets the current TargCC configuration.
     /// </summary>
-    public TargCCConfiguration Configuration => 
-        _targCCConfig ?? throw new InvalidOperationException("Configuration not loaded. Call LoadConfiguration first.");
+    public TargCCConfiguration Configuration =>_targCCConfig ?? throw new InvalidOperationException("Configuration not loaded. Call LoadConfiguration first.");
 
     /// <summary>
     /// Loads configuration from the specified JSON file and environment variables.
@@ -229,10 +228,10 @@ public sealed class ConfigurationManager
 
         using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
         using var ms = new MemoryStream();
-        
+
         // Write IV first
         ms.Write(aes.IV, 0, aes.IV.Length);
-        
+
         using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
         using (var writer = new StreamWriter(cs))
         {
@@ -254,7 +253,7 @@ public sealed class ConfigurationManager
 
         using var aes = Aes.Create();
         aes.Key = DeriveKey(key);
-        
+
         // Extract IV
         var iv = new byte[aes.IV.Length];
         Array.Copy(fullCipher, 0, iv, 0, iv.Length);
@@ -264,7 +263,7 @@ public sealed class ConfigurationManager
         using var ms = new MemoryStream(fullCipher, iv.Length, fullCipher.Length - iv.Length);
         using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
         using var reader = new StreamReader(cs);
-        
+
         return reader.ReadToEnd();
     }
 
@@ -283,7 +282,7 @@ public sealed class ConfigurationManager
     private static TargCCConfiguration CloneConfiguration(TargCCConfiguration original)
     {
         var json = JsonSerializer.Serialize(original);
-        return JsonSerializer.Deserialize<TargCCConfiguration>(json) 
+        return JsonSerializer.Deserialize<TargCCConfiguration>(json)
             ?? throw new InvalidOperationException("Failed to clone configuration.");
     }
 

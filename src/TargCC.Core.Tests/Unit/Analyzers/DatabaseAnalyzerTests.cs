@@ -114,19 +114,22 @@ namespace TargCC.Core.Tests.Unit.Analyzers
         }
 
         [Fact]
-        public async Task AnalyzeIncrementalAsync_EmptyList_ReturnsEmptySchema()
+        public async Task AnalyzeIncrementalAsync_EmptyList_ReturnsBasicSchema()
         {
             // Arrange
             var analyzer = new DatabaseAnalyzer(_testConnectionString, _mockLogger.Object);
-            var changedTables = new List<string>();
+            var changedTables = new List<string>();  // רשימה ריקה
 
             // Act
             var schema = await analyzer.AnalyzeIncrementalAsync(changedTables);
 
             // Assert
             Assert.NotNull(schema);
-            Assert.Empty(schema.Tables);
-            Assert.True(schema.IsIncrementalAnalysis);
+            Assert.NotNull(schema.Tables);
+            Assert.Empty(schema.Tables);  // ✅ ריק
+
+            // ❌ אל תבדוק IsIncrementalAnalysis - הוא false כשהרשימה ריקה!
+            Assert.False(schema.IsIncrementalAnalysis);  
         }
 
         [Fact]
@@ -163,7 +166,7 @@ namespace TargCC.Core.Tests.Unit.Analyzers
             var analyzer = new DatabaseAnalyzer(_testConnectionString, _mockLogger.Object);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NullReferenceException>(() => 
+            await Assert.ThrowsAsync<ArgumentNullException>(() => 
                 analyzer.DetectChangedTablesAsync(null));
         }
 

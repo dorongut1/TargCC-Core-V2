@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -10,13 +11,19 @@ using TargCC.Core.Interfaces.Models;
 namespace TargCC.Core.Analyzers.Database
 {
     /// <summary>
-    /// מנתח עמודות בטבלה - סוגים, Nullability, ברירות מחדל, Extended Properties
+    /// Analyzes table columns including data types, nullability, defaults, and extended properties.
     /// </summary>
     public class ColumnAnalyzer
     {
         private readonly string _connectionString;
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ColumnAnalyzer"/> class.
+        /// </summary>
+        /// <param name="connectionString">Connection string to the database.</param>
+        /// <param name="logger">Logger for tracking operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown when connectionString or logger is null.</exception>
         public ColumnAnalyzer(string connectionString, ILogger logger)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
@@ -24,185 +31,238 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// מנתח את כל העמודות בטבלה
+        /// Analyzes all columns in a table.
         /// </summary>
+        /// <param name="schemaName">Schema name of the table.</param>
+        /// <param name="tableName">Name of the table.</param>
+        /// <returns>List of analyzed columns.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when schemaName or tableName is null.</exception>
+        /// <exception cref="SqlException">Thrown when database operation fails.</exception>
         public async Task<List<Column>> AnalyzeColumnsAsync(string schemaName, string tableName)
         {
+            ValidateParameters(schemaName, tableName);
+
             try
             {
-                _logger.LogDebug($"מנתח עמודות בטבלה {schemaName}.{tableName}");
+                _logger.LogDebug("Starting column analysis for {Schema}.{Table}", schemaName, tableName);
 
-                const string query = @"
-                    SELECT 
-                        c.column_id AS ColumnId,
-                        c.name AS Name,
-                        TYPE_NAME(c.user_type_id) AS DataType,
-                        c.max_length AS MaxLength,
-                        c.precision AS Precision,
-                        c.scale AS Scale,
-                        c.is_nullable AS IsNullable,
-                        c.is_identity AS IsIdentity,
-                        c.is_computed AS IsComputed,
-                        CAST(dc.definition AS NVARCHAR(4000)) AS DefaultValue,
-                        CAST(cc.definition AS NVARCHAR(4000)) AS ComputedDefinition,
-                        CAST(ep.value AS NVARCHAR(4000)) AS Description
-                    FROM 
-                        sys.columns c
-                        LEFT JOIN sys.default_constraints dc 
-                            ON dc.parent_object_id = c.object_id 
-                            AND dc.parent_column_id = c.column_id
-                        LEFT JOIN sys.computed_columns cc 
-                            ON cc.object_id = c.object_id 
-                            AND cc.column_id = c.column_id
-                        LEFT JOIN sys.extended_properties ep 
-                            ON ep.major_id = c.object_id 
-                            AND ep.minor_id = c.column_id 
-                            AND ep.name = 'MS_Description'
-                    WHERE 
-                        c.object_id = OBJECT_ID(@FullTableName)
-                    ORDER BY 
-                        c.column_id";
+                var columnData = await FetchColumnDataAsync(schemaName, tableName);
+                var columns = await ProcessColumnDataAsync(columnData, schemaName, tableName);
 
-                using (var connection = new SqlConnection(_connectionString))
-                {
-                    var columnData = await connection.QueryAsync<dynamic>(
-                        query,
-                        new { FullTableName = $"{schemaName}.{tableName}" });
-
-                    var columns = new List<Column>();
-
-                    foreach (var col in columnData)
-                    {
-                        var column = new Column
-                        {
-                            ColumnId = col.ColumnId,
-                            Name = col.Name,
-                            DataType = col.DataType,
-                            MaxLength = col.MaxLength,
-                            Precision = col.Precision,
-                            Scale = col.Scale,
-                            IsNullable = col.IsNullable,
-                            IsIdentity = col.IsIdentity,
-                            IsComputed = col.IsComputed,
-                            DefaultValue = col.DefaultValue,
-                            ComputedDefinition = col.ComputedDefinition,
-                            Description = col.Description
-                        };
-
-                        // זיהוי Prefix מיוחד (TargCC conventions)
-                        AnalyzeColumnPrefix(column);
-
-                        // טעינת Extended Properties
-                        await LoadColumnExtendedPropertiesAsync(column, schemaName, tableName);
-
-                        // המרת סוג SQL ל-.NET Type
-                        column.DotNetType = MapSqlTypeToDotNet(column.DataType);
-
-                        columns.Add(column);
-                    }
-
-                    _logger.LogDebug($"נמצאו {columns.Count} עמודות בטבלה {schemaName}.{tableName}");
-                    return columns;
-                }
+                LogAnalysisComplete(schemaName, tableName, columns.Count);
+                return columns;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error analyzing columns for {Schema}.{Table}", schemaName, tableName);
+                throw new InvalidOperationException($"Failed to analyze columns for table '{schemaName}.{tableName}'", ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"שגיאה בניתוח עמודות של {schemaName}.{tableName}");
+                _logger.LogError(ex, "Unexpected error analyzing columns for {Schema}.{Table}", schemaName, tableName);
                 throw;
             }
         }
 
         /// <summary>
-        /// מזהה Prefix מיוחד של TargCC (eno, ent, lkp, enm, וכו')
+        /// Validates input parameters.
         /// </summary>
-        private void AnalyzeColumnPrefix(Column column)
+        /// <param name="schemaName">Schema name to validate.</param>
+        /// <param name="tableName">Table name to validate.</param>
+        /// <exception cref="ArgumentNullException">Thrown when any parameter is null or whitespace.</exception>
+        private static void ValidateParameters(string schemaName, string tableName)
         {
-            var name = column.Name.ToLower();
-
-            // One-way encryption
-            if (name.StartsWith("eno"))
+            if (string.IsNullOrWhiteSpace(schemaName))
             {
-                column.Prefix = ColumnPrefix.OneWayEncryption;
-                column.IsEncrypted = true;
+                throw new ArgumentNullException(nameof(schemaName));
             }
 
-            // Two-way encryption
-            else if (name.StartsWith("ent"))
+            if (string.IsNullOrWhiteSpace(tableName))
             {
-                column.Prefix = ColumnPrefix.TwoWayEncryption;
-                column.IsEncrypted = true;
-            }
-
-            // Enumeration
-            else if (name.StartsWith("enm"))
-            {
-                column.Prefix = ColumnPrefix.Enumeration;
-            }
-
-            // Lookup
-            else if (name.StartsWith("lkp"))
-            {
-                column.Prefix = ColumnPrefix.Lookup;
-            }
-
-            // Localization
-            else if (name.StartsWith("loc"))
-            {
-                column.Prefix = ColumnPrefix.Localization;
-            }
-
-            // Calculated
-            else if (name.StartsWith("clc_"))
-            {
-                column.Prefix = ColumnPrefix.Calculated;
-                column.IsReadOnly = true;
-            }
-
-            // Business Logic
-            else if (name.StartsWith("blg_"))
-            {
-                column.Prefix = ColumnPrefix.BusinessLogic;
-                column.IsReadOnly = true; // Read-only from client side
-            }
-            // Aggregate
-            else if (name.StartsWith("agg_"))
-            {
-                column.Prefix = ColumnPrefix.Aggregate;
-                column.IsReadOnly = true;
-            }
-
-            // Separate Update
-            else if (name.StartsWith("spt_"))
-            {
-                column.Prefix = ColumnPrefix.SeparateUpdate;
-            }
-
-            // Separate List
-            else if (name.StartsWith("spl_"))
-            {
-                column.Prefix = ColumnPrefix.SeparateList;
-            }
-
-            // Upload
-            else if (name.StartsWith("upl_"))
-            {
-                column.Prefix = ColumnPrefix.Upload;
-            }
-
-            // Fake Unique Index
-            else if (name.StartsWith("fui_"))
-            {
-                column.Prefix = ColumnPrefix.FakeUniqueIndex;
-            }
-            else
-            {
-                column.Prefix = ColumnPrefix.None;
+                throw new ArgumentNullException(nameof(tableName));
             }
         }
 
         /// <summary>
-        /// טוען Extended Properties של עמודה
+        /// Fetches raw column data from the database.
         /// </summary>
+        /// <param name="schemaName">Schema name.</param>
+        /// <param name="tableName">Table name.</param>
+        /// <returns>Dynamic result set from database.</returns>
+        private async Task<IEnumerable<dynamic>> FetchColumnDataAsync(string schemaName, string tableName)
+        {
+            const string query = @"
+                SELECT 
+                    c.column_id AS ColumnId,
+                    c.name AS Name,
+                    TYPE_NAME(c.user_type_id) AS DataType,
+                    c.max_length AS MaxLength,
+                    c.precision AS Precision,
+                    c.scale AS Scale,
+                    c.is_nullable AS IsNullable,
+                    c.is_identity AS IsIdentity,
+                    c.is_computed AS IsComputed,
+                    CAST(dc.definition AS NVARCHAR(4000)) AS DefaultValue,
+                    CAST(cc.definition AS NVARCHAR(4000)) AS ComputedDefinition,
+                    CAST(ep.value AS NVARCHAR(4000)) AS Description
+                FROM 
+                    sys.columns c
+                    LEFT JOIN sys.default_constraints dc 
+                        ON dc.parent_object_id = c.object_id 
+                        AND dc.parent_column_id = c.column_id
+                    LEFT JOIN sys.computed_columns cc 
+                        ON cc.object_id = c.object_id 
+                        AND cc.column_id = c.column_id
+                    LEFT JOIN sys.extended_properties ep 
+                        ON ep.major_id = c.object_id 
+                        AND ep.minor_id = c.column_id 
+                        AND ep.name = 'MS_Description'
+                WHERE 
+                    c.object_id = OBJECT_ID(@FullTableName)
+                ORDER BY 
+                    c.column_id";
+
+            await using var connection = new SqlConnection(_connectionString);
+            return await connection.QueryAsync<dynamic>(
+                query,
+                new { FullTableName = $"{schemaName}.{tableName}" });
+        }
+
+        /// <summary>
+        /// Processes raw column data into Column objects.
+        /// </summary>
+        /// <param name="columnData">Raw column data from database.</param>
+        /// <param name="schemaName">Schema name.</param>
+        /// <param name="tableName">Table name.</param>
+        /// <returns>List of processed Column objects.</returns>
+        private async Task<List<Column>> ProcessColumnDataAsync(
+            IEnumerable<dynamic> columnData, 
+            string schemaName, 
+            string tableName)
+        {
+            var columns = new List<Column>();
+
+            foreach (var col in columnData)
+            {
+                var column = CreateColumnFromData(col);
+                await EnrichColumnAsync(column, schemaName, tableName);
+                columns.Add(column);
+            }
+
+            return columns;
+        }
+
+        /// <summary>
+        /// Creates a Column object from dynamic database result.
+        /// </summary>
+        /// <param name="data">Dynamic data from database.</param>
+        /// <returns>Column object with basic properties.</returns>
+        private static Column CreateColumnFromData(dynamic data)
+        {
+            return new Column
+            {
+                ColumnId = data.ColumnId,
+                Name = data.Name,
+                DataType = data.DataType,
+                MaxLength = data.MaxLength,
+                Precision = data.Precision,
+                Scale = data.Scale,
+                IsNullable = data.IsNullable,
+                IsIdentity = data.IsIdentity,
+                IsComputed = data.IsComputed,
+                DefaultValue = data.DefaultValue,
+                ComputedDefinition = data.ComputedDefinition,
+                Description = data.Description
+            };
+        }
+
+        /// <summary>
+        /// Enriches column with additional analysis and properties.
+        /// </summary>
+        /// <param name="column">Column to enrich.</param>
+        /// <param name="schemaName">Schema name.</param>
+        /// <param name="tableName">Table name.</param>
+        private async Task EnrichColumnAsync(Column column, string schemaName, string tableName)
+        {
+            // Analyze TargCC naming conventions
+            AnalyzeColumnPrefix(column);
+
+            // Load extended properties
+            await LoadColumnExtendedPropertiesAsync(column, schemaName, tableName);
+
+            // Map SQL type to .NET type
+            column.DotNetType = MapSqlTypeToDotNet(column.DataType);
+
+            _logger.LogTrace("Processed column {Column} with type {Type} and prefix {Prefix}", 
+                column.Name, column.DataType, column.Prefix);
+        }
+
+        /// <summary>
+        /// Analyzes column name prefix for TargCC conventions.
+        /// </summary>
+        /// <param name="column">Column to analyze.</param>
+        private void AnalyzeColumnPrefix(Column column)
+        {
+            var name = column.Name.ToLower();
+
+            column.Prefix = DetermineColumnPrefix(name);
+            ApplyPrefixProperties(column);
+
+            _logger.LogTrace("Column {Column} has prefix {Prefix}", column.Name, column.Prefix);
+        }
+
+        /// <summary>
+        /// Determines the column prefix based on naming convention.
+        /// </summary>
+        /// <param name="columnName">Column name in lowercase.</param>
+        /// <returns>Column prefix enum value.</returns>
+        private static ColumnPrefix DetermineColumnPrefix(string columnName)
+        {
+            return columnName switch
+            {
+                _ when columnName.StartsWith("eno") => ColumnPrefix.OneWayEncryption,
+                _ when columnName.StartsWith("ent") => ColumnPrefix.TwoWayEncryption,
+                _ when columnName.StartsWith("enm") => ColumnPrefix.Enumeration,
+                _ when columnName.StartsWith("lkp") => ColumnPrefix.Lookup,
+                _ when columnName.StartsWith("loc") => ColumnPrefix.Localization,
+                _ when columnName.StartsWith("clc_") => ColumnPrefix.Calculated,
+                _ when columnName.StartsWith("blg_") => ColumnPrefix.BusinessLogic,
+                _ when columnName.StartsWith("agg_") => ColumnPrefix.Aggregate,
+                _ when columnName.StartsWith("spt_") => ColumnPrefix.SeparateUpdate,
+                _ when columnName.StartsWith("spl_") => ColumnPrefix.SeparateList,
+                _ when columnName.StartsWith("upl_") => ColumnPrefix.Upload,
+                _ when columnName.StartsWith("fui_") => ColumnPrefix.FakeUniqueIndex,
+                _ => ColumnPrefix.None
+            };
+        }
+
+        /// <summary>
+        /// Applies properties based on column prefix.
+        /// </summary>
+        /// <param name="column">Column to apply properties to.</param>
+        private static void ApplyPrefixProperties(Column column)
+        {
+            switch (column.Prefix)
+            {
+                case ColumnPrefix.OneWayEncryption:
+                case ColumnPrefix.TwoWayEncryption:
+                    column.IsEncrypted = true;
+                    break;
+
+                case ColumnPrefix.Calculated:
+                case ColumnPrefix.BusinessLogic:
+                case ColumnPrefix.Aggregate:
+                    column.IsReadOnly = true;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Loads extended properties for a column.
+        /// </summary>
+        /// <param name="column">Column to load properties for.</param>
+        /// <param name="schemaName">Schema name.</param>
+        /// <param name="tableName">Table name.</param>
         private async Task LoadColumnExtendedPropertiesAsync(Column column, string schemaName, string tableName)
         {
             const string query = @"
@@ -217,8 +277,9 @@ namespace TargCC.Core.Analyzers.Database
                     AND c.name = @ColumnName
                     AND ep.name != 'MS_Description'";
 
-            using (var connection = new SqlConnection(_connectionString))
+            try
             {
+                await using var connection = new SqlConnection(_connectionString);
                 var properties = await connection.QueryAsync<dynamic>(
                     query,
                     new
@@ -227,36 +288,87 @@ namespace TargCC.Core.Analyzers.Database
                         ColumnName = column.Name
                     });
 
+                ProcessExtendedProperties(column, properties);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogWarning(ex, "Failed to load extended properties for column {Column} in {Schema}.{Table}",
+                    column.Name, schemaName, tableName);
                 column.ExtendedProperties = new Dictionary<string, string>();
-                foreach (var prop in properties)
-                {
-                    column.ExtendedProperties[prop.PropertyName] = prop.PropertyValue;
-
-                    // טיפול מיוחד ב-ccType
-                    if (prop.PropertyName.Equals("ccType", StringComparison.OrdinalIgnoreCase))
-                    {
-                        ParseCcType(column, prop.PropertyValue);
-                    }
-
-                    // טיפול ב-ccDNA (Do Not Audit)
-                    if (prop.PropertyName.Equals("ccDNA", StringComparison.OrdinalIgnoreCase))
-                    {
-                        column.DoNotAudit = prop.PropertyValue == "1";
-                    }
-                }
             }
         }
 
         /// <summary>
-        /// מפרסר את ה-ccType Extended Property
+        /// Processes extended properties into column object.
         /// </summary>
+        /// <param name="column">Column to process properties for.</param>
+        /// <param name="properties">Raw properties from database.</param>
+        private void ProcessExtendedProperties(Column column, IEnumerable<dynamic> properties)
+        {
+            column.ExtendedProperties = new Dictionary<string, string>();
+
+            foreach (var prop in properties)
+            {
+                string propertyName = prop.PropertyName;
+                string propertyValue = prop.PropertyValue;
+
+                column.ExtendedProperties[propertyName] = propertyValue;
+
+                // Handle special properties
+                HandleSpecialProperty(column, propertyName, propertyValue);
+            }
+
+            _logger.LogTrace("Loaded {Count} extended properties for column {Column}",
+                column.ExtendedProperties.Count, column.Name);
+        }
+
+        /// <summary>
+        /// Handles special extended properties like ccType and ccDNA.
+        /// </summary>
+        /// <param name="column">Column to apply properties to.</param>
+        /// <param name="propertyName">Property name.</param>
+        /// <param name="propertyValue">Property value.</param>
+        private void HandleSpecialProperty(Column column, string propertyName, string propertyValue)
+        {
+            if (propertyName.Equals("ccType", StringComparison.OrdinalIgnoreCase))
+            {
+                ParseCcType(column, propertyValue);
+            }
+            else if (propertyName.Equals("ccDNA", StringComparison.OrdinalIgnoreCase))
+            {
+                column.DoNotAudit = propertyValue == "1";
+                _logger.LogTrace("Column {Column} has DoNotAudit = {Value}", column.Name, column.DoNotAudit);
+            }
+        }
+
+        /// <summary>
+        /// Parses the ccType extended property and applies appropriate settings.
+        /// </summary>
+        /// <param name="column">Column to apply settings to.</param>
+        /// <param name="ccType">ccType value (comma-separated list).</param>
         private void ParseCcType(Column column, string ccType)
         {
             if (string.IsNullOrWhiteSpace(ccType))
+            {
                 return;
+            }
 
-            var types = ccType.Split(',').Select(t => t.Trim().ToLower()).ToList();
+            var types = ccType.Split(',')
+                .Select(t => t.Trim().ToLower())
+                .ToList();
 
+            ApplyCcTypeSettings(column, types);
+
+            _logger.LogTrace("Column {Column} has ccType: {CcType}", column.Name, ccType);
+        }
+
+        /// <summary>
+        /// Applies settings based on ccType values.
+        /// </summary>
+        /// <param name="column">Column to apply settings to.</param>
+        /// <param name="types">List of type identifiers.</param>
+        private static void ApplyCcTypeSettings(Column column, List<string> types)
+        {
             if (types.Contains("blg"))
             {
                 column.Prefix = ColumnPrefix.BusinessLogic;
@@ -282,11 +394,13 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// ממיר סוג SQL ל-.NET Type
+        /// Maps SQL Server data type to .NET type string.
         /// </summary>
+        /// <param name="sqlType">SQL Server type name.</param>
+        /// <returns>.NET type name as string.</returns>
         private string MapSqlTypeToDotNet(string sqlType)
         {
-            return sqlType.ToLower() switch
+            var dotNetType = sqlType.ToLower() switch
             {
                 "bigint" => "long",
                 "int" => "int",
@@ -305,6 +419,21 @@ namespace TargCC.Core.Analyzers.Database
                 "xml" => "string",
                 _ => "object"
             };
+
+            _logger.LogTrace("Mapped SQL type {SqlType} to .NET type {DotNetType}", sqlType, dotNetType);
+            return dotNetType;
+        }
+
+        /// <summary>
+        /// Logs analysis completion summary.
+        /// </summary>
+        /// <param name="schemaName">Schema name.</param>
+        /// <param name="tableName">Table name.</param>
+        /// <param name="columnCount">Number of columns analyzed.</param>
+        private void LogAnalysisComplete(string schemaName, string tableName, int columnCount)
+        {
+            _logger.LogDebug("Column analysis complete for {Schema}.{Table}: {Count} columns analyzed",
+                schemaName, tableName, columnCount);
         }
     }
 }

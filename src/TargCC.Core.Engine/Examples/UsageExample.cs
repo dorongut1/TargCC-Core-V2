@@ -11,7 +11,7 @@ namespace TargCC.Core.Engine.Examples;
 /// 1. Setup dependency injection
 /// 2. Load configuration
 /// 3. Initialize plugin system
-/// 4. Load and manage plugins
+/// 4. Load and manage plugins.
 /// </summary>
 public static class UsageExample
 {
@@ -23,7 +23,7 @@ public static class UsageExample
         // Step 1: Setup Dependency Injection
         Console.WriteLine("1. Setting up services...");
         var services = new ServiceCollection();
-        
+
         // Add logging
         services.AddLogging(builder =>
         {
@@ -42,7 +42,7 @@ public static class UsageExample
         // Step 2: Load Configuration
         Console.WriteLine("2. Loading configuration...");
         var configManager = serviceProvider.GetRequiredService<ConfigurationManager>();
-        
+
         try
         {
             var config = configManager.LoadConfiguration("appsettings.json", optional: true);
@@ -67,7 +67,7 @@ public static class UsageExample
         var config2 = configManager.Configuration;
         var pluginCount = await pluginManager.LoadAndInitializePluginsAsync(
             config2.Plugins.PluginDirectory);
-        
+
         Console.WriteLine($"   ✓ Loaded {pluginCount} plugin(s)\n");
 
         // Step 5: List Loaded Plugins
@@ -80,17 +80,17 @@ public static class UsageExample
                 Console.WriteLine($"   {status} {metadata.Plugin.Name} v{metadata.Plugin.Version}");
                 Console.WriteLine($"      {metadata.Plugin.Description}");
                 Console.WriteLine($"      Author: {metadata.Plugin.Author}");
-                
+
                 if (metadata.Plugin.Dependencies.Any())
                 {
                     Console.WriteLine($"      Dependencies: {string.Join(", ", metadata.Plugin.Dependencies)}");
                 }
-                
+
                 if (!string.IsNullOrEmpty(metadata.ErrorMessage))
                 {
                     Console.WriteLine($"      ⚠ Error: {metadata.ErrorMessage}");
                 }
-                
+
                 Console.WriteLine();
             }
         }
@@ -105,12 +105,12 @@ public static class UsageExample
         {
             Console.WriteLine("6. Plugin operations:");
             var firstPlugin = pluginManager.Plugins.First().Value;
-            
+
             // Disable plugin
             Console.WriteLine($"   Disabling: {firstPlugin.Plugin.Name}");
             await pluginManager.DisablePluginAsync(firstPlugin.Plugin.Name);
             Console.WriteLine($"   ✓ Status: {(firstPlugin.IsEnabled ? "Enabled" : "Disabled")}");
-            
+
             // Enable plugin
             Console.WriteLine($"   Enabling: {firstPlugin.Plugin.Name}");
             await pluginManager.EnablePluginAsync(firstPlugin.Plugin.Name);
@@ -119,15 +119,15 @@ public static class UsageExample
 
         // Step 7: Configuration Operations
         Console.WriteLine("7. Configuration operations:");
-        
+
         // Get a value
         var dbProvider = configManager.GetValue("database:provider");
         Console.WriteLine($"   Database Provider: {dbProvider ?? "Not set"}");
-        
+
         // Set a value
         configManager.SetValue("database:commandTimeoutSeconds", "60");
         Console.WriteLine($"   Updated Command Timeout: {configManager.Configuration.Database.CommandTimeoutSeconds}s");
-        
+
         // Save configuration (optional)
         // configManager.SaveConfiguration("appsettings.backup.json", encryptSensitiveData: true);
         Console.WriteLine();
@@ -136,7 +136,7 @@ public static class UsageExample
         Console.WriteLine("8. Shutting down...");
         await pluginManager.ShutdownAllAsync();
         Console.WriteLine("   ✓ All plugins shut down");
-        
+
         pluginManager.Dispose();
         Console.WriteLine("   ✓ Resources released\n");
 

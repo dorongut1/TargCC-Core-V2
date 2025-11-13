@@ -2,7 +2,7 @@
 
 ## סטטוס כללי
 - **זמן משוער**: 4-6 שבועות
-- **התקדמות**: 8.5/14 משימות (61% - משימה 9 בעיצומה)
+- **התקדמות**: 8.75/14 משימות (62.5% - משימה 9 כמעט הושלמה)
 - **תאריך התחלה**: Week 1-3 הושלמו
 - **יעד סיום**: Week 6 (בקירוב)
 
@@ -131,17 +131,17 @@ public interface IPlugin
 ### משימה 9: רפקטורינג (3-4 ימים) 🔄 בעיצומה
 - [x] DatabaseAnalyzer.cs - הושלם ✅ (13/11/2025, 1 שעה)
 - [x] TableAnalyzer.cs - הושלם ✅ (13/11/2025, 45 דקות)
-- [ ] ColumnAnalyzer.cs - הבא
-- [ ] RelationshipAnalyzer.cs
-- [x] פונקציות < 50 שורות (DatabaseAnalyzer, TableAnalyzer)
-- [x] Single Responsibility (DatabaseAnalyzer, TableAnalyzer)
-- [x] Serilog/Structured logging (DatabaseAnalyzer, TableAnalyzer)
-- [x] Try-Catch מסודר (DatabaseAnalyzer, TableAnalyzer)
-- [x] Async/Await בכל I/O (DatabaseAnalyzer, TableAnalyzer)
+- [x] ColumnAnalyzer.cs - הושלם ✅ (13/11/2025, 1 שעה)
+- [ ] RelationshipAnalyzer.cs - הבא!
+- [x] פונקציות < 50 שורות (3/4 קבצים)
+- [x] Single Responsibility (3/4 קבצים)
+- [x] Serilog/Structured logging (3/4 קבצים)
+- [x] Try-Catch מסודר (3/4 קבצים)
+- [x] Async/Await בכל I/O (3/4 קבצים)
 - [ ] Performance Profiling
 
 **צ'ק פוינט**: SonarQube Grade A
-**התקדמות**: 2/4 קבצים (50%)
+**התקדמות**: 3/4 קבצים (75%)
 
 ---
 
@@ -231,15 +231,20 @@ public interface IPlugin
 - **למידה**: ___________
 
 ### שבוע 4
-- **משימות**: 1.5 / 4 🔄
+- **משימות**: 1.75 / 4 🔄
 - **בעיות**: אין
 - **למידה**: 
   - StyleCop Beta לא יציב, השתמש ב-1.1.118 stable
   - רפקטורינג חוסך זמן בטווח הארוך
-  - Structured logging משפר debugging
-- **קבצים שהושלמו**: DatabaseAnalyzer.cs (1 שעה), TableAnalyzer.cs (45 דקות)
-- **הבא**: ColumnAnalyzer.cs
-- **תאריך עדכון אחרון:** 13/11/2025
+  - Structured logging משפר debugging מאוד
+  - Switch Expression נקי יותר מ-if-else
+  - Helper methods קטנות = קוד יותר ניתן לבדיקה
+- **קבצים שהושלמו**: 
+  - DatabaseAnalyzer.cs (1 שעה, 8 helpers)
+  - TableAnalyzer.cs (45 דקות, 6 helpers)
+  - ColumnAnalyzer.cs (1 שעה, 10 helpers)
+- **הבא**: RelationshipAnalyzer.cs (אחרון!)
+- **תאריך עדכון אחרון:** 13/11/2025, 22:00
 
 ### שבוע 5
 - **משימות**: ___ / 4
