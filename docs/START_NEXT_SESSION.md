@@ -1,8 +1,8 @@
 # 🚀 התחל כאן - Session הבא
 
-**תאריך עדכון:** 14/11/2025, 22:55  
-**סטטוס פרויקט:** Phase 1 - 78% Complete (11/14 משימות) 🎉  
-**משימה נוכחית:** Task 11 - Documentation @ 90% ✅
+**תאריך עדכון:** 14/11/2025, 23:35  
+**סטטוס פרויקט:** Phase 1 - 79% Complete (11/14 משימות) 🎉  
+**משימה נוכחית:** Task 11 - Documentation @ 92% ✅
 
 ---
 
@@ -21,11 +21,12 @@
 #### שבוע 5: טסטים ✅
 - ✅ **משימה 10**: Testing Framework (63 tests, 80%+ coverage)
 
-#### שבוע 5: תיעוד (90% הושלם!) 📚
+#### שבוע 5: תיעוד (92% הושלם!) 📚
 - ✅ **DatabaseAnalyzer.cs** - מתועד מושלם
 - ✅ **ColumnAnalyzer.cs** - 200+ שורות תיעוד, 7 examples (45 דקות)
 - ✅ **RelationshipAnalyzer.cs** - 220+ שורות, 7 examples (30 דקות)
 - ✅ **TableAnalyzer.cs** - 130+ שורות, 14 examples (20 דקות)
+- ✅ **Column.cs + ColumnPrefix enum** - 700 שורות, 39 examples! (20 דקות)
 - ✅ **README.md** - מלא ומפורט
 - ✅ **API_DOCUMENTATION.md** - מצוין
 - ✅ **ADR-001, ADR-002** - Architecture decisions
@@ -39,12 +40,7 @@
 **תוצאה:** 100% Core Documentation ✅
 
 **מה לעשות:**
-1. **Column.cs** (15 דקות)
-   - Properties documentation
-   - ColumnPrefix enum
-   - Examples
-
-2. **Table.cs** (15 דקות)
+1. **Table.cs** (15 דקות) ← הבא!
    - Properties documentation
    - FullName calculation
    - Examples
@@ -289,8 +285,9 @@ C:\Disk1\TargCC-Core-V2\src\TargCC.Core.Interfaces\Models\
 | **ColumnAnalyzer** | ✅ | 45m |
 | **RelationshipAnalyzer** | ✅ | 30m |
 | **TableAnalyzer** | ✅ | 20m |
-| **Models** | ⏳ 0/5 | 60m |
-| **סה"כ** | **90%** | **95m + 60m** |
+| **Column.cs + Enums** | ✅ | 20m |
+| **Models נותרו** | ⏳ 0/4 | 40m |
+| **סה"כ** | **92%** | **115m + 40m** |
 
 **נשאר:** רק Models! 🎯
 
