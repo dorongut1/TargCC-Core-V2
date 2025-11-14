@@ -89,5 +89,10 @@ public enum RelationshipType
     /// <summary>
     /// Many-to-Many (N:M) - via junction table.
     /// </summary>
-    ManyToMany = 3
+    ManyToMany = 3,
+
+    /// <summary>
+    /// Many-to-one (N:1) - via junction table.
+    /// </summary>
+    ManyToOne = 4
 }

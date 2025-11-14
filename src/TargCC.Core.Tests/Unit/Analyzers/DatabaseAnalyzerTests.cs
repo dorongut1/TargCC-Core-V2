@@ -126,7 +126,7 @@ namespace TargCC.Core.Tests.Unit.Analyzers
             // Assert
             Assert.NotNull(schema);
             Assert.NotNull(schema.Tables);
-            Assert.Empty(schema.Tables);  // ✅ ריק
+            Assert.Empty(schema.Tables); 
 
             // ❌ אל תבדוק IsIncrementalAnalysis - הוא false כשהרשימה ריקה!
             Assert.False(schema.IsIncrementalAnalysis);  
