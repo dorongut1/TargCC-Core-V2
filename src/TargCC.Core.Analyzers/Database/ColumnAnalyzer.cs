@@ -12,7 +12,55 @@ namespace TargCC.Core.Analyzers.Database
 {
     /// <summary>
     /// Analyzes table columns including data types, nullability, defaults, and extended properties.
+    /// Implements TargCC naming convention detection for specialized column behaviors.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// ColumnAnalyzer is responsible for detecting and interpreting TargCC column prefixes
+    /// which define special behaviors like encryption, localization, and business logic.
+    /// </para>
+    /// <para>
+    /// <strong>Supported Prefixes:</strong>
+    /// <list type="bullet">
+    /// <item><term>eno</term><description>One-way encryption (SHA256 hashing)</description></item>
+    /// <item><term>ent</term><description>Two-way encryption (AES-256)</description></item>
+    /// <item><term>enm</term><description>Enumeration field (links to c_Enumeration table)</description></item>
+    /// <item><term>lkp</term><description>Lookup field (links to c_Lookup table)</description></item>
+    /// <item><term>loc</term><description>Localizable field (supports multiple languages)</description></item>
+    /// <item><term>clc_</term><description>Calculated field (read-only, computed)</description></item>
+    /// <item><term>blg_</term><description>Business logic field (server-side only)</description></item>
+    /// <item><term>agg_</term><description>Aggregate field (counters, sums)</description></item>
+    /// <item><term>spt_</term><description>Separately updated field (different permissions)</description></item>
+    /// <item><term>spl_</term><description>Separate list field (NewLine delimited)</description></item>
+    /// <item><term>upl_</term><description>Upload field (document management)</description></item>
+    /// <item><term>fui_</term><description>Fake unique index (computed column for indexing)</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Extended Properties:</strong>
+    /// Supports SQL Server extended properties for additional metadata:
+    /// <list type="bullet">
+    /// <item><term>ccType</term><description>Comma-separated list: blg,clc,spt,agg</description></item>
+    /// <item><term>ccDNA</term><description>Do Not Audit flag (1 = skip auditing)</description></item>
+    /// <item><term>ccUpdateXXXX</term><description>Partial update group definition</description></item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var analyzer = new ColumnAnalyzer(connectionString, logger);
+    /// var columns = await analyzer.AnalyzeColumnsAsync("dbo", "Customer");
+    /// 
+    /// foreach (var column in columns)
+    /// {
+    ///     Console.WriteLine($"{column.Name} ({column.DataType})");
+    ///     Console.WriteLine($"  Prefix: {column.Prefix}");
+    ///     Console.WriteLine($"  .NET Type: {column.DotNetType}");
+    ///     Console.WriteLine($"  Encrypted: {column.IsEncrypted}");
+    ///     Console.WriteLine($"  Read-Only: {column.IsReadOnly}");
+    /// }
+    /// </code>
+    /// </example>
     public class ColumnAnalyzer
     {
         private readonly string _connectionString;
@@ -35,9 +83,29 @@ namespace TargCC.Core.Analyzers.Database
         /// </summary>
         /// <param name="schemaName">Schema name of the table.</param>
         /// <param name="tableName">Name of the table.</param>
-        /// <returns>List of analyzed columns.</returns>
+        /// <returns>List of analyzed columns with complete metadata including prefixes, types, and extended properties.</returns>
         /// <exception cref="ArgumentNullException">Thrown when schemaName or tableName is null.</exception>
         /// <exception cref="SqlException">Thrown when database operation fails.</exception>
+        /// <example>
+        /// <code>
+        /// var analyzer = new ColumnAnalyzer(connectionString, logger);
+        /// 
+        /// // Analyze all columns in Customer table
+        /// var columns = await analyzer.AnalyzeColumnsAsync("dbo", "Customer");
+        /// 
+        /// // Find password column (one-way encrypted)
+        /// var passwordColumn = columns.FirstOrDefault(c => c.Prefix == ColumnPrefix.OneWayEncryption);
+        /// if (passwordColumn != null)
+        /// {
+        ///     Console.WriteLine($"Password field: {passwordColumn.Name}");
+        ///     Console.WriteLine($"Is encrypted: {passwordColumn.IsEncrypted}");
+        /// }
+        /// 
+        /// // Find all business logic columns
+        /// var businessLogicColumns = columns.Where(c => c.Prefix == ColumnPrefix.BusinessLogic);
+        /// Console.WriteLine($"Found {businessLogicColumns.Count()} business logic columns");
+        /// </code>
+        /// </example>
         public async Task<List<Column>> AnalyzeColumnsAsync(string schemaName, string tableName)
         {
             ValidateParameters(schemaName, tableName);
@@ -212,10 +280,52 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// Determines the column prefix based on naming convention.
+        /// Determines the column prefix based on TargCC naming conventions.
         /// </summary>
         /// <param name="columnName">Column name in lowercase.</param>
-        /// <returns>Column prefix enum value.</returns>
+        /// <returns>Column prefix enum value indicating the column's special behavior.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is the core method for detecting TargCC column conventions. The prefix determines
+        /// how the column behaves in generated code, including encryption, read-only status,
+        /// and UI rendering.
+        /// </para>
+        /// <para>
+        /// Prefix detection is performed in order, with earlier prefixes taking precedence.
+        /// For example, 'enoprivate' will be detected as OneWayEncryption, not Enumeration.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // One-way encryption (passwords)
+        /// var prefix1 = DetermineColumnPrefix("enopassword");
+        /// // Result: ColumnPrefix.OneWayEncryption
+        /// 
+        /// // Two-way encryption (credit cards)
+        /// var prefix2 = DetermineColumnPrefix("entcreditcard");
+        /// // Result: ColumnPrefix.TwoWayEncryption
+        /// 
+        /// // Enumeration (status fields)
+        /// var prefix3 = DetermineColumnPrefix("enmstatus");
+        /// // Result: ColumnPrefix.Enumeration
+        /// 
+        /// // Lookup (dropdown lists)
+        /// var prefix4 = DetermineColumnPrefix("lkpcountry");
+        /// // Result: ColumnPrefix.Lookup
+        /// 
+        /// // Calculated field (read-only)
+        /// var prefix5 = DetermineColumnPrefix("clc_totalamount");
+        /// // Result: ColumnPrefix.Calculated
+        /// 
+        /// // Business logic (server-side only)
+        /// var prefix6 = DetermineColumnPrefix("blg_creditlimit");
+        /// // Result: ColumnPrefix.BusinessLogic
+        /// 
+        /// // Regular column
+        /// var prefix7 = DetermineColumnPrefix("firstname");
+        /// // Result: ColumnPrefix.None
+        /// </code>
+        /// </example>
         private static ColumnPrefix DetermineColumnPrefix(string columnName)
         {
             return columnName switch
@@ -237,9 +347,43 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// Applies properties based on column prefix.
+        /// Applies behavioral properties based on detected column prefix.
         /// </summary>
         /// <param name="column">Column to apply properties to.</param>
+        /// <remarks>
+        /// <para>
+        /// Different prefixes trigger different column behaviors:
+        /// </para>
+        /// <para>
+        /// <strong>Encryption Prefixes (eno, ent):</strong>
+        /// Sets <c>IsEncrypted = true</c>, which tells code generators to:
+        /// - Hash before storing (eno = one-way)
+        /// - Encrypt/decrypt on save/load (ent = two-way)
+        /// - Use password textbox in UI (eno)
+        /// </para>
+        /// <para>
+        /// <strong>Read-Only Prefixes (clc_, blg_, agg_):</strong>
+        /// Sets <c>IsReadOnly = true</c>, which tells code generators to:
+        /// - Exclude from Update methods
+        /// - Use read-only controls in UI
+        /// - Server-side updates only (business logic)
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var column1 = new Column { Name = "enoPassword", Prefix = ColumnPrefix.OneWayEncryption };
+        /// ApplyPrefixProperties(column1);
+        /// // Result: column1.IsEncrypted = true
+        /// 
+        /// var column2 = new Column { Name = "blg_CreditScore", Prefix = ColumnPrefix.BusinessLogic };
+        /// ApplyPrefixProperties(column2);
+        /// // Result: column2.IsReadOnly = true
+        /// 
+        /// var column3 = new Column { Name = "FirstName", Prefix = ColumnPrefix.None };
+        /// ApplyPrefixProperties(column3);
+        /// // Result: No special properties set
+        /// </code>
+        /// </example>
         private static void ApplyPrefixProperties(Column column)
         {
             switch (column.Prefix)
@@ -323,11 +467,47 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// Handles special extended properties like ccType and ccDNA.
+        /// Handles special TargCC extended properties like ccType and ccDNA.
         /// </summary>
         /// <param name="column">Column to apply properties to.</param>
-        /// <param name="propertyName">Property name.</param>
-        /// <param name="propertyValue">Property value.</param>
+        /// <param name="propertyName">Extended property name (e.g., 'ccType', 'ccDNA').</param>
+        /// <param name="propertyValue">Extended property value.</param>
+        /// <remarks>
+        /// <para>
+        /// TargCC uses SQL Server extended properties to store metadata that affects
+        /// code generation and behavior. These properties are prefixed with 'cc' (Code Creator).
+        /// </para>
+        /// <para>
+        /// <strong>Recognized Properties:</strong>
+        /// <list type="bullet">
+        /// <item><term>ccType</term><description>Defines column behavior (blg, clc, spt, agg)</description></item>
+        /// <item><term>ccDNA</term><description>Do Not Audit flag - when set to '1', skips audit logging</description></item>
+        /// <item><term>ccUpdateXXXX</term><description>Partial update group definition</description></item>
+        /// <item><term>ccUsedForTableCleanup</term><description>Marks date field for automated cleanup</description></item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // ccDNA - Skip audit logging for sensitive data
+        /// EXEC sp_addextendedproperty 
+        ///     @name = 'ccDNA', 
+        ///     @value = '1',
+        ///     @level0type = 'SCHEMA', @level0name = 'dbo',
+        ///     @level1type = 'TABLE', @level1name = 'Customer',
+        ///     @level2type = 'COLUMN', @level2name = 'SSN';
+        /// // Result: column.DoNotAudit = true
+        /// 
+        /// // ccType - Define as business logic
+        /// EXEC sp_addextendedproperty 
+        ///     @name = 'ccType', 
+        ///     @value = 'blg',
+        ///     @level0type = 'SCHEMA', @level0name = 'dbo',
+        ///     @level1type = 'TABLE', @level1name = 'Order',
+        ///     @level2type = 'COLUMN', @level2name = 'TotalAmount';
+        /// // Result: column.Prefix = ColumnPrefix.BusinessLogic, column.IsReadOnly = true
+        /// </code>
+        /// </example>
         private void HandleSpecialProperty(Column column, string propertyName, string propertyValue)
         {
             if (propertyName.Equals("ccType", StringComparison.OrdinalIgnoreCase))
@@ -345,7 +525,42 @@ namespace TargCC.Core.Analyzers.Database
         /// Parses the ccType extended property and applies appropriate settings.
         /// </summary>
         /// <param name="column">Column to apply settings to.</param>
-        /// <param name="ccType">ccType value (comma-separated list).</param>
+        /// <param name="ccType">ccType value (comma-separated list of type identifiers).</param>
+        /// <remarks>
+        /// <para>
+        /// The ccType extended property allows defining column behavior without changing
+        /// the column name. This is useful when you cannot modify the schema but need
+        /// TargCC-specific behaviors.
+        /// </para>
+        /// <para>
+        /// Multiple types can be combined using commas: "blg,clc" means both
+        /// business logic AND calculated.
+        /// </para>
+        /// <para>
+        /// <strong>Supported ccType values:</strong>
+        /// <list type="bullet">
+        /// <item><term>blg</term><description>Business logic - read-only, server-side updates only</description></item>
+        /// <item><term>clc</term><description>Calculated - computed field, read-only</description></item>
+        /// <item><term>spt</term><description>Separate update - different permissions required</description></item>
+        /// <item><term>agg</term><description>Aggregate - counter/sum field, read-only</description></item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // In SQL Server:
+        /// EXEC sp_addextendedproperty 
+        ///     @name = 'ccType', 
+        ///     @value = 'blg,clc',
+        ///     @level0type = 'SCHEMA', @level0name = 'dbo',
+        ///     @level1type = 'TABLE', @level1name = 'Customer',
+        ///     @level2type = 'COLUMN', @level2name = 'TotalOrderAmount';
+        /// 
+        /// // The analyzer will detect this and set:
+        /// // column.Prefix = ColumnPrefix.BusinessLogic
+        /// // column.IsReadOnly = true
+        /// </code>
+        /// </example>
         private void ParseCcType(Column column, string ccType)
         {
             if (string.IsNullOrWhiteSpace(ccType))
@@ -394,10 +609,50 @@ namespace TargCC.Core.Analyzers.Database
         }
 
         /// <summary>
-        /// Maps SQL Server data type to .NET type string.
+        /// Maps SQL Server data type to .NET type string for code generation.
         /// </summary>
-        /// <param name="sqlType">SQL Server type name.</param>
-        /// <returns>.NET type name as string.</returns>
+        /// <param name="sqlType">SQL Server type name (e.g., 'int', 'nvarchar', 'datetime2').</param>
+        /// <returns>.NET type name as string (e.g., 'int', 'string', 'DateTime').</returns>
+        /// <remarks>
+        /// <para>
+        /// This mapping is used by code generators to create properly-typed .NET properties.
+        /// The mapping follows C# conventions and uses built-in type aliases where available.
+        /// </para>
+        /// <para>
+        /// For unknown types, returns 'object' as a safe fallback.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var mapper = new ColumnAnalyzer(connectionString, logger);
+        /// 
+        /// // Integer types
+        /// var type1 = mapper.MapSqlTypeToDotNet("int");        // Returns: "int"
+        /// var type2 = mapper.MapSqlTypeToDotNet("bigint");     // Returns: "long"
+        /// var type3 = mapper.MapSqlTypeToDotNet("tinyint");    // Returns: "byte"
+        /// 
+        /// // Text types
+        /// var type4 = mapper.MapSqlTypeToDotNet("nvarchar");   // Returns: "string"
+        /// var type5 = mapper.MapSqlTypeToDotNet("varchar");    // Returns: "string"
+        /// 
+        /// // Date/Time types
+        /// var type6 = mapper.MapSqlTypeToDotNet("datetime2");  // Returns: "DateTime"
+        /// var type7 = mapper.MapSqlTypeToDotNet("time");       // Returns: "TimeSpan"
+        /// 
+        /// // Decimal types
+        /// var type8 = mapper.MapSqlTypeToDotNet("decimal");    // Returns: "decimal"
+        /// var type9 = mapper.MapSqlTypeToDotNet("money");      // Returns: "decimal"
+        /// 
+        /// // Binary types
+        /// var type10 = mapper.MapSqlTypeToDotNet("varbinary"); // Returns: "byte[]"
+        /// 
+        /// // Boolean
+        /// var type11 = mapper.MapSqlTypeToDotNet("bit");       // Returns: "bool"
+        /// 
+        /// // Unknown type
+        /// var type12 = mapper.MapSqlTypeToDotNet("unknown");   // Returns: "object"
+        /// </code>
+        /// </example>
         private string MapSqlTypeToDotNet(string sqlType)
         {
             var dotNetType = sqlType.ToLower() switch

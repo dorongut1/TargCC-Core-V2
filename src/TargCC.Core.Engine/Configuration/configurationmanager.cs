@@ -28,7 +28,7 @@ public sealed class ConfigurationManager
     /// <summary>
     /// Gets the current TargCC configuration.
     /// </summary>
-    public TargCCConfiguration Configuration =>_targCCConfig ?? throw new InvalidOperationException("Configuration not loaded. Call LoadConfiguration first.");
+    public TargCCConfiguration Configuration => _targCCConfig ?? throw new InvalidOperationException("Configuration not loaded. Call LoadConfiguration first.");
 
     /// <summary>
     /// Loads configuration from the specified JSON file and environment variables.
@@ -60,7 +60,7 @@ public sealed class ConfigurationManager
             // Decrypt sensitive data if needed
             if (_targCCConfig.Database.IsEncrypted && !string.IsNullOrEmpty(_targCCConfig.Security.EncryptionKey))
             {
-                _targCCConfig.Database.ConnectionString = 
+                _targCCConfig.Database.ConnectionString =
                     Decrypt(_targCCConfig.Database.ConnectionString, _targCCConfig.Security.EncryptionKey);
                 _targCCConfig.Database.IsEncrypted = false; // Mark as decrypted in memory
             }
@@ -70,6 +70,7 @@ public sealed class ConfigurationManager
             {
                 ValidateConfiguration(_targCCConfig);
             }
+
             _logger.LogInformation("Configuration loaded successfully");
             return _targCCConfig;
         }
@@ -98,14 +99,11 @@ public sealed class ConfigurationManager
             var configToSave = CloneConfiguration(_targCCConfig);
 
             // Encrypt sensitive data if needed
-            if (encryptSensitiveData && !string.IsNullOrEmpty(configToSave.Security.EncryptionKey))
+            if (encryptSensitiveData && !string.IsNullOrEmpty(configToSave.Security.EncryptionKey) && !configToSave.Database.IsEncrypted)
             {
-                if (!configToSave.Database.IsEncrypted)
-                {
-                    configToSave.Database.ConnectionString = 
+                    configToSave.Database.ConnectionString =
                         Encrypt(configToSave.Database.ConnectionString, configToSave.Security.EncryptionKey);
                     configToSave.Database.IsEncrypted = true;
-                }
             }
 
             // Serialize to JSON with indentation
