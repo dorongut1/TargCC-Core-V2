@@ -101,14 +101,16 @@ public sealed class PluginManager : IDisposable
             try
             {
                 _logger.LogDebug("Initializing plugin: {Name}", metadata.Plugin.Name);
-                
+
                 await metadata.Plugin.InitializeAsync(_serviceProvider, cancellationToken);
-                
+
                 metadata.IsInitialized = true;
                 initializedCount++;
-                
-                _logger.LogInformation("Plugin initialized: {Name} v{Version}", 
-                    metadata.Plugin.Name, metadata.Plugin.Version);
+
+                _logger.LogInformation(
+                    "Plugin initialized: {Name} v{Version}",
+                    metadata.Plugin.Name,
+                    metadata.Plugin.Version);
             }
             catch (Exception ex)
             {
@@ -155,7 +157,7 @@ public sealed class PluginManager : IDisposable
                 }
                 else
                 {
-                    _logger.LogWarning("Dependency not found: {Dependency} for plugin {Plugin}", 
+                    _logger.LogWarning("Dependency not found: {Dependency} for plugin {Plugin}",
                         depName, name);
                 }
             }

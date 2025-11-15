@@ -23,7 +23,7 @@ namespace TargCC.Core.Analyzers.Database;
 /// <example>
 /// <code>
 /// var analyzer = new DatabaseAnalyzer(connectionString, logger);
-/// 
+///
 /// // Full analysis
 /// var schema = await analyzer.AnalyzeAsync();
 /// Console.WriteLine($"Found {schema.Tables.Count} tables");
@@ -96,7 +96,7 @@ public class DatabaseAnalyzer : IAnalyzer
 
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             _logger.LogInformation("Database connection successful");
             return true;
         }
