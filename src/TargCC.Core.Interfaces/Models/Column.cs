@@ -123,6 +123,11 @@ public class Column
     public string DataType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the SQL data type (alias for DataType for backward compatibility).
+    /// </summary>
+    public string SqlDataType => DataType;
+
+    /// <summary>
     /// Gets or sets the .NET data type.
     /// </summary>
     public string DotNetType { get; set; } = string.Empty;
@@ -148,14 +153,30 @@ public class Column
     public int? MaxLength { get; set; }
 
     /// <summary>
-    /// Gets or sets the precision (for numeric types).
+    /// Gets the maximum length as a string for SQL generation.
+    /// Returns "MAX" for -1, otherwise the numeric value.
     /// </summary>
-    public int? Precision { get; set; }
+    public string MaxLengthString => MaxLength == -1 ? "MAX" : MaxLength?.ToString() ?? string.Empty;
 
     /// <summary>
-    /// Gets or sets the scale (for numeric types).
+    /// Gets the precision as a string for SQL generation.
     /// </summary>
-    public int? Scale { get; set; }
+    public string? Precision => PrecisionNumeric?.ToString();
+
+    /// <summary>
+    /// Gets or sets the numeric precision (for numeric types).
+    /// </summary>
+    public int? PrecisionNumeric { get; set; }
+
+    /// <summary>
+    /// Gets the scale as a string for SQL generation.
+    /// </summary>
+    public string? Scale => ScaleNumeric?.ToString();
+
+    /// <summary>
+    /// Gets or sets the numeric scale (for numeric types).
+    /// </summary>
+    public int? ScaleNumeric { get; set; }
 
     /// <summary>
     /// Gets or sets the default value.

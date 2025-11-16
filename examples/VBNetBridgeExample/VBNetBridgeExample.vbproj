@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>VBNetBridgeExample</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionStrict>On</OptionStrict>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TargCC.Bridge\TargCC.Bridge.vbproj" />
+    <ProjectReference Include="..\..\src\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

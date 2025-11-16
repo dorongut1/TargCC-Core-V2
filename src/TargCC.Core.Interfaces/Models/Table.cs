@@ -390,7 +390,7 @@ public class Table
     /// var customerTable = new Table
     /// {
     ///     Name = "Customer",
-    ///     ExtendedProperties = new Dictionary&lt;string, string&gt;
+    ///     ExtendedProperties = new Dictionary&lt;strinשg, string&gt;
     ///     {
     ///         { "ccAuditLevel", "2" },
     ///         { "ccUsedForIdentity", "1" },  // Users can be linked to customers

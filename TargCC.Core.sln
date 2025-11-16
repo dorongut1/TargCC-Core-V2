@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TargCC.Core.Analyzers", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TargCC.Core.Tests", "src\TargCC.Core.Tests\TargCC.Core.Tests.csproj", "{44444444-4444-4444-4444-444444444444}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TargCC.Core.Generators", "src\TargCC.Core.Generators\TargCC.Core.Generators.csproj", "{55555555-5555-5555-5555-555555555555}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5F6C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
@@ -42,6 +44,10 @@ Global
 		{44444444-4444-4444-4444-444444444444}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44444444-4444-4444-4444-444444444444}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44444444-4444-4444-4444-444444444444}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55555555-5555-5555-5555-555555555555}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55555555-5555-5555-5555-555555555555}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55555555-5555-5555-5555-555555555555}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55555555-5555-5555-5555-555555555555}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +57,7 @@ Global
 		{22222222-2222-2222-2222-222222222222} = {4F6C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}
 		{33333333-3333-3333-3333-333333333333} = {4F6C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}
 		{44444444-4444-4444-4444-444444444444} = {4F6C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}
+		{55555555-5555-5555-5555-555555555555} = {4F6C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6F7C8B22-8C5E-4E3F-9A1A-1E2D3C4B5A6F}
