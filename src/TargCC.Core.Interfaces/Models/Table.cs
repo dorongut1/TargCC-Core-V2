@@ -103,8 +103,8 @@ namespace TargCC.Core.Interfaces.Models;
 ///     }
 /// };
 ///
-/// // System table (c_ prefix) → used for TargCC's internal operations
-/// // UI properties → controls what gets generated in WinForms
+/// System table (c_ prefix) → used for TargCC's internal operations
+/// UI properties → controls what gets generated in WinForms
 /// </code>
 /// </example>
 public class Table

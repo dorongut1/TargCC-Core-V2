@@ -42,6 +42,15 @@ public class ColumnBuilder
     }
 
     /// <summary>
+    /// Sets the SQL data type (alias for WithDataType).
+    /// </summary>
+    public ColumnBuilder WithSqlType(string sqlType)
+    {
+        _dataType = sqlType;
+        return this;
+    }
+
+    /// <summary>
     /// Makes the column an INT type.
     /// </summary>
     public ColumnBuilder AsInt()
@@ -79,6 +88,15 @@ public class ColumnBuilder
     {
         _dataType = "nvarchar";
         _dotNetType = "string";
+        _maxLength = length;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the maximum length for string columns.
+    /// </summary>
+    public ColumnBuilder WithMaxLength(int length)
+    {
         _maxLength = length;
         return this;
     }
@@ -338,8 +356,8 @@ public class ColumnBuilder
             IsPrimaryKey = _isPrimaryKey,
             IsIdentity = _isIdentity,
             MaxLength = _maxLength,
-            //Precision = _precision,
-            //Scale = _scale,
+            PrecisionNumeric = _precision,
+            ScaleNumeric = _scale,
             DefaultValue = _defaultValue,
             Prefix = _prefix,
             IsEncrypted = _isEncrypted,

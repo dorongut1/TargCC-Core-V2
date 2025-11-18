@@ -28,6 +28,7 @@
     <ProjectReference Include="..\TargCC.Core.Engine\TargCC.Core.Engine.csproj" />
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
     <ProjectReference Include="..\TargCC.Core.Analyzers\TargCC.Core.Analyzers.csproj" />
+    <ProjectReference Include="..\TargCC.Core.Generators\TargCC.Core.Generators.csproj" />
   </ItemGroup>
 
 </Project>
