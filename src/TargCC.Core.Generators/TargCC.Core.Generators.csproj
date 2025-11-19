@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Common\ColumnPrefixDetector.cs" />
     <Compile Remove="Sql\Templates\LogHelpers.cs" />
   </ItemGroup>
 
