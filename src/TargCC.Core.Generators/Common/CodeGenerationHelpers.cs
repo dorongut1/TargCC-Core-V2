@@ -110,7 +110,7 @@ public static class CodeGenerationHelpers
     /// <returns>Complete method name.</returns>
     public static string BuildMethodName(string methodPrefix, IEnumerable<string> columnNames)
     {
-        var sanitized = columnNames.Select(SanitizeColumnName);
+        var sanitized = columnNames.Select(CodeGenerationHelpers.SanitizeColumnName);
         return methodPrefix + string.Join("And", sanitized);
     }
 

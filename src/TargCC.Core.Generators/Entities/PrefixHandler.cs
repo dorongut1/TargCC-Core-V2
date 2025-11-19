@@ -7,6 +7,7 @@ namespace TargCC.Core.Generators.Entities
     using System;
     using System.Globalization;
     using System.Text;
+    using TargCC.Core.Generators.Common;
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -93,7 +94,7 @@ namespace TargCC.Core.Generators.Entities
             }
 
             var propertyName = GetPropertyName(column);
-            return string.Format(CultureInfo.InvariantCulture, "private string _{0}Encrypted;", ToCamelCase(propertyName));
+            return string.Format(CultureInfo.InvariantCulture, "private string _{0}Encrypted;", CodeGenerationHelpers.ToCamelCase(propertyName));
         }
 
         private static string GenerateOneWayEncryptionProperty(Column column, string csharpType)
@@ -123,7 +124,7 @@ namespace TargCC.Core.Generators.Entities
         private static string GenerateTwoWayEncryptionProperty(Column column, string csharpType)
         {
             var propertyName = GetPropertyName(column);
-            var backingField = string.Format(CultureInfo.InvariantCulture, "_{0}Encrypted", ToCamelCase(propertyName));
+            var backingField = string.Format(CultureInfo.InvariantCulture, "_{0}Encrypted", CodeGenerationHelpers.ToCamelCase(propertyName));
             var sb = new StringBuilder();
 
             sb.AppendLine("        /// <summary>");
@@ -331,16 +332,6 @@ namespace TargCC.Core.Generators.Entities
             }
 
             return columnName;
-        }
-
-        private static string ToCamelCase(string pascalCase)
-        {
-            if (string.IsNullOrEmpty(pascalCase))
-            {
-                return pascalCase;
-            }
-
-            return char.ToLowerInvariant(pascalCase[0]) + pascalCase.Substring(1);
         }
     }
 }
