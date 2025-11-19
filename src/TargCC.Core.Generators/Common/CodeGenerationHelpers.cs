@@ -139,15 +139,26 @@ public static class CodeGenerationHelpers
     /// <summary>
     /// Pluralizes an entity name for DbSet property naming.
     /// </summary>
+    /// <param name="singular">The singular form of the entity name to pluralize.</param>
     /// <remarks>
     /// Simple pluralization rules:
+    /// - Words ending in 'z' → double z and add 'es' (e.g., Quiz → Quizzes)
     /// - Words ending in 'y' → replace with 'ies' (e.g., Category → Categories)
-    /// - Words ending in 's', 'x', 'z', 'ch', 'sh' → add 'es' (e.g., Address → Addresses)
+    /// - Words ending in 's', 'x', 'ch', 'sh' → add 'es' (e.g., Address → Addresses)
     /// - Default → add 's' (e.g., Customer → Customers).
     /// </remarks>
+    /// <returns>MakePlural.</returns>
     public static string MakePlural(string singular)
     {
         // Simple pluralization rules
+
+        // Special case: 'z' needs to be doubled before adding 'es'
+        // Quiz → Quizzes (not Quizes)
+        if (singular.EndsWith('z'))
+        {
+            return singular + "zes";
+        }
+
         if (singular.EndsWith('s') ||
             singular.EndsWith('x') ||
             singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
