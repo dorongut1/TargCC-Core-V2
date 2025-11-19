@@ -744,8 +744,8 @@ namespace TargCC.Core.Analyzers.Database
         {
             try
             {
-                var parent = tables.FirstOrDefault(t => t.FullName == parentTable);
-                var referenced = tables.FirstOrDefault(t => t.FullName == referencedTable);
+                var parent = tables.Find(t => t.FullName == parentTable);
+                var referenced = tables.Find(t => t.FullName == referencedTable);
 
                 if (parent == null || referenced == null)
                 {

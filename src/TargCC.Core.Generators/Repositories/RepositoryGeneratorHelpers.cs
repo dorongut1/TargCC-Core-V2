@@ -1,0 +1,146 @@
+namespace TargCC.Core.Generators.Repositories;
+
+using System.Globalization;
+
+/// <summary>
+/// Helper methods shared by repository generators.
+/// Provides common functionality for code generation including type mapping,
+/// naming conventions, and TargCC prefix handling.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This class centralizes common logic used across multiple generators to:
+/// </para>
+/// <list type="bullet">
+/// <item>Avoid code duplication (DRY principle)</item>
+/// <item>Ensure consistent behavior across generators</item>
+/// <item>Simplify maintenance and testing</item>
+/// </list>
+/// </remarks>
+public static class RepositoryGeneratorHelpers
+{
+    /// <summary>
+    /// Maps SQL data types to C# types.
+    /// </summary>
+    /// <param name="sqlType">SQL Server data type (e.g., "int", "nvarchar", "datetime").</param>
+    /// <returns>Corresponding C# type as string (e.g., "int", "string", "DateTime").</returns>
+    /// <remarks>
+    /// <para>
+    /// This mapping ensures consistent type conversion across all generators.
+    /// Uses invariant culture for case-insensitive comparison.
+    /// </para>
+    /// </remarks>
+    public static string GetCSharpType(string sqlType)
+    {
+        return sqlType.ToUpperInvariant() switch
+        {
+            "INT" => "int",
+            "BIGINT" => "long",
+            "SMALLINT" => "short",
+            "TINYINT" => "byte",
+            "BIT" => "bool",
+            "DECIMAL" or "NUMERIC" or "MONEY" or "SMALLMONEY" => "decimal",
+            "FLOAT" => "double",
+            "REAL" => "float",
+            "DATETIME" or "DATETIME2" or "DATE" or "SMALLDATETIME" => "DateTime",
+            "TIME" => "TimeSpan",
+            "DATETIMEOFFSET" => "DateTimeOffset",
+            "UNIQUEIDENTIFIER" => "Guid",
+            "VARCHAR" or "NVARCHAR" or "CHAR" or "NCHAR" or "TEXT" or "NTEXT" => "string",
+            "VARBINARY" or "BINARY" or "IMAGE" => "byte[]",
+            _ => "string"
+        };
+    }
+
+    /// <summary>
+    /// Removes TargCC prefixes from column names for cleaner property and parameter names.
+    /// </summary>
+    /// <param name="columnName">Column name potentially containing a TargCC prefix.</param>
+    /// <returns>Column name with prefix removed.</returns>
+    public static string SanitizeColumnName(string columnName)
+    {
+        // Remove TargCC prefixes
+        string[] prefixes = { "eno_", "ent_", "lkp_", "enm_", "loc_", "clc_", "blg_", "agg_", "spt_", "upl_", "scb_", "spl_", "FUI_" };
+
+        var matchedPrefix = Array.Find(prefixes, prefix =>
+            columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+
+        return matchedPrefix != null
+            ? columnName.Substring(matchedPrefix.Length)
+            : columnName;
+    }
+
+    /// <summary>
+    /// Converts a string to camelCase for parameter names.
+    /// </summary>
+    /// <param name="value">String to convert (typically PascalCase).</param>
+    /// <returns>String in camelCase format.</returns>
+    public static string ToCamelCase(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return char.ToLowerInvariant(value[0]) + value.Substring(1);
+    }
+
+    /// <summary>
+    /// Formats a string using invariant culture for consistent generated code.
+    /// </summary>
+    /// <param name="format">Format string.</param>
+    /// <param name="args">Format arguments.</param>
+    /// <returns>Formatted string.</returns>
+    public static string FormatInvariant(string format, params object[] args)
+    {
+        return string.Format(CultureInfo.InvariantCulture, format, args);
+    }
+
+    /// <summary>
+    /// Generates a stored procedure name following TargCC conventions.
+    /// </summary>
+    /// <param name="prefix">Procedure prefix (e.g., "SP_Get", "SP_Update").</param>
+    /// <param name="tableName">Table name.</param>
+    /// <param name="suffix">Optional suffix (e.g., "ByID", "ByEmail").</param>
+    /// <returns>Complete stored procedure name.</returns>
+    public static string GetStoredProcedureName(string prefix, string tableName, string suffix)
+    {
+        return suffix.Length > 0
+            ? FormatInvariant("{0}{1}{2}", prefix, tableName, suffix)
+            : FormatInvariant("{0}{1}", prefix, tableName);
+    }
+
+    /// <summary>
+    /// Builds a method name from column names (e.g., "GetByEmailAndPhone").
+    /// </summary>
+    /// <param name="methodPrefix">Method prefix (e.g., "GetBy").</param>
+    /// <param name="columnNames">List of column names to include.</param>
+    /// <returns>Complete method name.</returns>
+    public static string BuildMethodName(string methodPrefix, IEnumerable<string> columnNames)
+    {
+        var sanitized = columnNames.Select(SanitizeColumnName);
+        return methodPrefix + string.Join("And", sanitized);
+    }
+
+    /// <summary>
+    /// Determines if a column is an aggregate column (has agg_ prefix).
+    /// </summary>
+    /// <param name="columnName">Column name to check.</param>
+    /// <returns>True if column is an aggregate column.</returns>
+    public static bool IsAggregateColumn(string columnName)
+    {
+        return columnName.StartsWith("agg_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Determines if a column is read-only (calculated, business logic, or aggregate).
+    /// </summary>
+    /// <param name="columnName">Column name to check.</param>
+    /// <returns>True if column is read-only.</returns>
+    public static bool IsReadOnlyColumn(string columnName)
+    {
+        return columnName.StartsWith("clc_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("blg_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("agg_", StringComparison.OrdinalIgnoreCase);
+    }
+}

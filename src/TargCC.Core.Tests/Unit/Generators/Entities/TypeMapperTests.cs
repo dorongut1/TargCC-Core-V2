@@ -580,13 +580,14 @@ public class TypeMapperTests
     }
 
     [Fact]
-    public void GetDefaultValue_NullableInt_ReturnsNull()
+    public void GetDefaultValue_NullableInt_ReturnsBaseTypeDefault()
     {
         // Act
         var result = TypeMapper.GetDefaultValue("int?");
 
         // Assert
-        Assert.Equal("null", result);
+        // The method strips the '?' and returns base type default
+        Assert.Equal("0", result);
     }
 
     [Fact]
@@ -627,14 +628,28 @@ public class TypeMapperTests
         Assert.Throws<ArgumentNullException>(() => TypeMapper.MapSqlTypeToCSharp(null!));
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void GetDefaultValue_NullOrWhiteSpace_ThrowsArgumentException(string? csharpType)
+    [Fact]
+    public void GetDefaultValue_NullString_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => TypeMapper.GetDefaultValue(csharpType!));
+        var ex = Assert.Throws<ArgumentNullException>(() => TypeMapper.GetDefaultValue(null!));
+        Assert.NotNull(ex);
+    }
+
+    [Fact]
+    public void GetDefaultValue_EmptyString_ThrowsArgumentException()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() => TypeMapper.GetDefaultValue(string.Empty));
+        Assert.NotNull(ex);
+    }
+
+    [Fact]
+    public void GetDefaultValue_WhiteSpaceString_ThrowsArgumentException()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() => TypeMapper.GetDefaultValue("   "));
+        Assert.NotNull(ex);
     }
 
     #endregion

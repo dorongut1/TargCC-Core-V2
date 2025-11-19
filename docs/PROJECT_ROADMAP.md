@@ -1,835 +1,688 @@
-# 🗺️ TargCC Core V2 - מפת דרכים מלאה
+# 🗺️ TargCC Core V2 - Project Roadmap
 
-**תאריך:** 15/11/2025  
-**גרסה:** 2.0  
-**סטטוס:** Phase 1 @ 85% Complete
-
----
-
-## 🎯 סקירה כללית
-
-**TargCC Core V2** הוא דור חדש של מערכת יצירת קוד, המבוססת על 3 עקרונות:
-1. **Build Errors = Safety Net** - לא באג, אלא feature!
-2. **Incremental Generation** - רק מה שהשתנה
-3. **Smart, Not Automatic** - המערכת מציעה, אתה מחליט
+**Last Updated:** 18/11/2025  
+**Version:** 3.0 (Revised for Clean Architecture)  
+**Current Status:** Phase 1.5 @ 100% Complete ✅
 
 ---
 
-## 📊 מבנה השלבים
+## 🎯 Executive Summary
+
+**TargCC Core V2** is a modern code generation platform that creates complete applications from database schemas using **Clean Architecture**, **CQRS**, and **REST API**.
+
+### Core Philosophy:
+1. **Build Errors = Safety Net** - Intentional, not bugs!
+2. **Incremental Generation** - Only what changed
+3. **Smart Assistance** - System suggests, you decide
+
+### Major Architectural Decision (Nov 2025):
+
+**Changed from:** Legacy 8-project VB.NET structure  
+**Changed to:** Modern Clean Architecture (5 layers)
+
+**Read:** [Architecture Decision Document](ARCHITECTURE_DECISION.md)
+
+---
+
+## 📊 Project Phases Overview
 
 ```
-Phase 1: Core Engine (85% - 6 שבועות) ← כמעט שם!
-    ↓
-Phase 1.5: MVP Generators (0% - 2 שבועות) ← הבא!
-    ↓
-Phase 2: Full Code Generation (0% - 4-5 שבועות)
-    ↓
-Phase 3: Advanced Features (0% - 6-8 שבועות)
-    ↓
-Phase 4: Enterprise & Cloud (0% - עתידי)
+✅ Phase 1: Core Engine (6 weeks) - 100% COMPLETE
+✅ Phase 1.5: MVP Generators (2 weeks) - 100% COMPLETE
+🔨 Phase 2: Modern Architecture (4-5 weeks) - 0% IN PLANNING
+📋 Phase 3: UI + AI Features (6-8 weeks) - 0% PLANNED
+💡 Phase 4: Enterprise & Cloud (TBD) - FUTURE
 ```
 
-**סה"כ זמן צפוי:** 18-21 שבועות (~5 חודשים)
+**Total Timeline:** ~5-6 months to v2.0.0
 
 ---
 
-## 🏗️ Phase 1: Core Engine (85% Complete) ✅
+## ✅ Phase 1: Core Engine (100% Complete)
 
-**מטרה:** בניית תשתית יציבה ומודרנית  
-**זמן:** 6 שבועות  
-**סטטוס:** 11/14 משימות ✅
+**Duration:** 6 weeks  
+**Status:** ✅ DONE  
+**Completion Date:** 15/11/2025
 
-### ✅ הושלם (Week 1-5):
-1. ✅ DatabaseAnalyzer - ניתוח DB מלא
-2. ✅ TableAnalyzer - טבלאות + Indexes
-3. ✅ ColumnAnalyzer - עמודות + Types + Prefixes
-4. ✅ RelationshipAnalyzer - Foreign Keys
-5. ✅ Plugin System - ארכיטקטורה מודולרית
-6. ✅ Configuration Manager - JSON + הצפנה
-7. ✅ Code Quality Tools - StyleCop, SonarQube, CI/CD
-8. ✅ Refactoring - 32 helper methods, Grade A
-9. ✅ Testing Framework - 63 tests, 80%+ coverage
-10. ✅ Documentation - XML Comments (90%)
+### Achievements:
 
-### 🔄 בעבודה (Week 5):
-11. ⏳ Documentation - Models נותרו (10%)
+#### 1. Database Analysis ✅
+- ✅ **DatabaseAnalyzer** - Complete DB analysis
+- ✅ **TableAnalyzer** - Tables, Primary Keys, Indexes
+- ✅ **ColumnAnalyzer** - Columns, Types, Nullability, Defaults
+- ✅ **RelationshipAnalyzer** - Foreign Keys, relationships
 
-### ⏸️ מושהה (לא רלוונטי עכשיו):
-12. ❌ VB.NET Bridge - דחוי לשלב מאוחר
-13. ❌ System Tests - דחוי (אין מה לבדוק)
-14. ❌ Release Candidate - דחוי
+**Result:** Complete `DatabaseSchema` object with all metadata
 
-**תוצרים:**
-- ✅ DatabaseSchema מלא ומדויק
-- ✅ 4 Analyzers פועלים מעולה
-- ✅ Plugin Architecture מוכן
-- ✅ Code Quality: Grade A
-- ✅ Test Coverage: 80%+
+#### 2. Infrastructure ✅
+- ✅ **Plugin System** - Modular architecture, dynamic loading
+- ✅ **Configuration Manager** - JSON + Encryption
+- ✅ **Dependency Injection** - Microsoft.Extensions.DI
 
-**→ Ready for Generators! 🎉**
+#### 3. Quality ✅
+- ✅ **Code Quality Tools** - StyleCop, SonarQube, EditorConfig
+- ✅ **CI/CD Pipeline** - GitHub Actions
+- ✅ **Testing Framework** - xUnit, Moq, FluentAssertions
+- ✅ **63 Tests** - 80%+ coverage
+- ✅ **Grade A** - SonarQube analysis
 
----
+#### 4. Documentation ✅
+- ✅ **XML Comments** - 90%+ APIs documented
+- ✅ **README.md** - Project overview
+- ✅ **Architecture docs** - ADRs, diagrams
 
-## ⚡ Phase 1.5: MVP Generators (2 שבועות) 🆕
+### Deliverables:
 
-**מטרה:** יצירת Generators בסיסיים שמייצרים קוד פונקציונלי  
-**זמן:** 2 שבועות (10 ימי עבודה)  
-**סטטוס:** 0/5 משימות
-
-### למה Phase 1.5?
-- ✅ Proof of Concept - רואים משהו עובד end-to-end
-- ✅ מבין את האתגרים האמיתיים
-- ✅ מוודא ש-Analyzers מספיקים טובים
-- ✅ Quick Win + Motivation!
-
----
-
-### 📅 שבוע 1: SQL & Entity Generators
-
-#### משימה 15: SQL Generator - Stored Procedures (3 ימים)
-**מטרה:** יצירת Stored Procedures בסיסיים מ-DatabaseSchema
-
-**יכולות:**
-```sql
--- יצירת SP_GetByID
-CREATE PROCEDURE dbo.SP_GetCustomerByID
-    @CustomerID INT
-AS
-    SELECT * FROM Customer WHERE ID = @CustomerID
-
--- יצירת SP_Update
-CREATE PROCEDURE dbo.SP_UpdateCustomer
-    @CustomerID INT,
-    @Name NVARCHAR(100),
-    @Email NVARCHAR(100)
-    -- ...
-AS
-    UPDATE Customer SET
-        Name = @Name,
-        Email = @Email
-        -- ...
-    WHERE ID = @CustomerID
-
--- יצירת SP_Delete
-CREATE PROCEDURE dbo.SP_DeleteCustomer
-    @CustomerID INT
-AS
-    DELETE FROM Customer WHERE ID = @CustomerID
+```
+src/
+├── TargCC.Core.Engine/       ✅
+├── TargCC.Core.Interfaces/   ✅
+├── TargCC.Core.Analyzers/    ✅
+└── TargCC.Core.Tests/        ✅
 ```
 
-**מה ליצור:**
-- `SqlGenerator.cs` - מנוע ראשי
-- `SpGetByIdTemplate.cs` - template ל-SP_GetByID
-- `SpUpdateTemplate.cs` - template ל-SP_Update
-- `SpDeleteTemplate.cs` - template ל-SP_Delete
-- `SqlGeneratorTests.cs` - 10+ tests
-
-**טיפול ב-Prefixes:**
-- `eno_` → hash parameter
-- `ent_` → encrypt/decrypt
-- `lkp_`, `enm_` → join to lookup tables
-- `clc_`, `blg_`, `agg_` → read-only (לא ב-Update)
-
-**זמן:** 3 ימים
+**Metrics:**
+- ✅ 4 Projects
+- ✅ 50+ Classes
+- ✅ 63 Tests passing
+- ✅ 80%+ Coverage
+- ✅ Grade A (SonarQube)
 
 ---
 
-#### משימה 16: Entity Generator - C# Classes (3 ימים)
-**מטרה:** יצירת Entity classes מ-Table schema
+## ✅ Phase 1.5: MVP Generators (100% Complete)
 
-**דוגמה:**
-```csharp
-// מטבלה: Customer (ID, Name, Email, eno_Password, ent_CreditCard)
-public class Customer
-{
-    // Properties
-    public int ID { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    
-    // eno_ = hashed
-    public string PasswordHashed { get; set; }
-    
-    // ent_ = encrypted
-    public string CreditCard { get; set; }
-    
-    // Relationships
-    public List<Order> Orders { get; set; }
-    
-    // Metadata
-    public DateTime AddedOn { get; private set; }
-    public string AddedBy { get; private set; }
-    public DateTime ChangedOn { get; private set; }
-    public string ChangedBy { get; private set; }
-    
-    // Methods
-    public Customer() { }
-    public override string ToString() { ... }
-    public Customer Clone() { ... }
-}
+**Duration:** 2 weeks  
+**Status:** ✅ DONE  
+**Completion Date:** 18/11/2025
+
+### Achievements:
+
+#### 1. SQL Generators ✅
+- ✅ **SpGetByIdTemplate** - SELECT by Primary Key
+- ✅ **SpGetByIndexTemplate** - SELECT by Index
+- ✅ **SpUpdateTemplate** - UPDATE with validation
+- ✅ **SpDeleteTemplate** - DELETE with cascade
+- ✅ **SpUpdateFriendTemplate** - UPDATE including BLG columns
+- ✅ **SpUpdateAggregatesTemplate** - UPDATE aggregates
+
+**Result:** Complete SQL SPs for any table
+
+#### 2. Entity Generators ✅
+- ✅ **EntityGenerator** - Main orchestrator
+- ✅ **TypeMapper** - SQL → C# types (44 tests)
+- ✅ **PrefixHandler** - 12 prefix types (36 tests)
+- ✅ **PropertyGenerator** - C# properties (22 tests)
+- ✅ **MethodGenerator** - Constructors, ToString, Clone (33 tests)
+- ✅ **RelationshipGenerator** - Navigation properties (17 tests)
+
+**Result:** Complete C# entity classes with all features
+
+#### 3. Prefix Support ✅
+- ✅ `eno_` - Hashed (one-way encryption)
+- ✅ `ent_` - Encrypted (two-way encryption)
+- ✅ `lkp_` - Lookup (foreign key + text)
+- ✅ `enm_` - Enum
+- ✅ `loc_` - Localized
+- ✅ `clc_` - Calculated (read-only)
+- ✅ `blg_` - Business Logic (server-side)
+- ✅ `agg_` - Aggregate (computed)
+- ✅ `spt_` - Separate update
+- ✅ `upl_` - Upload/File
+- ✅ `scb_` - Separate Changed By
+- ✅ `spl_` - Split/Delimited List
+
+#### 4. File Management ✅
+- ✅ **FileWriter** - Write files to disk
+- ✅ **FileProtection** - Protect *.prt files
+- ✅ **BackupManager** - Backup before overwrite
+
+### Deliverables:
+
+```
+src/
+├── TargCC.Core.Generators/
+│   ├── Sql/
+│   │   └── Templates/       ✅ 6 templates
+│   └── Entities/
+│       ├── EntityGenerator   ✅
+│       ├── TypeMapper       ✅
+│       ├── PrefixHandler    ✅
+│       ├── PropertyGenerator✅
+│       ├── MethodGenerator  ✅
+│       └── RelationshipGen  ✅
+└── TargCC.Core.Tests/
+    └── Unit/Generators/     ✅ 205+ tests
 ```
 
-**מה ליצור:**
-- `EntityGenerator.cs` - מנוع ראשי
-- `PropertyGenerator.cs` - יצירת Properties
-- `TypeMapper.cs` - SQL → C# type mapping
-- `PrefixHandler.cs` - טיפול ב-Prefixes
-- `RelationshipGenerator.cs` - Navigation properties
-- `EntityGeneratorTests.cs` - 15+ tests
-
-**טיפול ב-Prefixes:**
-- `eno_` → suffix: "Hashed", read-only setter
-- `ent_` → get/set עם encryption/decryption
-- `lkp_`, `enm_` → FK property + Text property
-- `loc_` → Localized property
-- `clc_` → calculated, read-only
-- `blg_` → business logic, read-only client-side
-- `agg_` → aggregate, read-only client-side
-- `spt_` → separate update method
-
-**זמן:** 3 ימים
+**Metrics:**
+- ✅ 6 SQL Templates
+- ✅ 6 Entity Generators
+- ✅ 205+ Tests passing
+- ✅ 85%+ Coverage
+- ✅ Grade A (SonarQube)
 
 ---
 
-### 📅 שבוע 2: File Writer & Integration
+## 🔨 Phase 2: Modern Architecture (In Planning)
 
-#### משימה 17: File Writer (2 ימים)
-**מטרה:** כתיבת קבצים לדיסק עם הגנה על *.prt
+**Duration:** 4-5 weeks  
+**Status:** 🔨 IN PLANNING  
+**Start Date:** TBD (after approval)
 
-**יכולות:**
-```csharp
-public class FileWriter
-{
-    // כתיבת קובץ חדש
-    Task WriteFileAsync(string path, string content);
-    
-    // עדכון קובץ קיים (str_replace logic)
-    Task UpdateFileAsync(string path, 
-        string oldContent, string newContent);
-    
-    // בדיקת *.prt protection
-    bool IsProtectedFile(string path);
-    
-    // גיבוי לפני כתיבה
-    Task BackupFileAsync(string path);
-}
+### Goals:
+
+Transform from building blocks → Complete application
+
+**What we have:** SQL + Entity  
+**What we need:** Repository + CQRS + API
+
+### Architecture:
+
 ```
+Modern Clean Architecture:
 
-**מה ליצור:**
-- `FileWriter.cs` - כתיבה לדיסק
-- `FileProtection.cs` - הגנה על *.prt
-- `BackupManager.cs` - גיבויים
-- `FileWriterTests.cs` - 10+ tests
+Domain/                    ← Entities (Phase 1.5 ✅)
+    ├── Entities/         ✅
+    └── Interfaces/       🆕
 
-**הגנה על *.prt:**
-- זיהוי קבצים עם `.prt.vb` או `.prt.cs`
-- סירוב לדרוס
-- רישום warning ב-log
-- יצירת Build Error במכוון
+Application/               🆕
+    └── Features/
+        ├── Queries/      🆕 (CQRS)
+        └── Commands/     🆕 (CQRS)
 
-**זמן:** 2 ימים
+Infrastructure/            🆕
+    ├── Data/             🆕 (DbContext)
+    ├── Repositories/     🆕
+    └── Sql/              ✅ (Phase 1.5)
+
+API/                       🆕
+    └── Controllers/      🆕 (REST)
+
+UI.Web/                    📋 (Phase 3)
+    └── React SPA         📋
+```
 
 ---
 
-#### משימה 18: Integration Tests - End-to-End (1.5 ימים)
-**מטרה:** בדיקה מלאה של כל התהליך
+### 📅 Week-by-Week Plan
 
-**תרחיש:**
-```
-1. ניתוח DB (TargCCOrders)
-   ↓
-2. יצירת Stored Procedures
-   ↓
-3. יצירת Entity classes
-   ↓
-4. כתיבה לדיסק
-   ↓
-5. Build + Verify
-```
+#### Week 1: Repository Pattern (5 days)
 
-**מה ליצור:**
-- `EndToEndTests.cs` - טסט מלא
-- `TestDatabase.sql` - DB לבדיקות
-- `ExpectedOutputs/` - פלטים צפויים
+**Day 1: Repository Interfaces**
+- 🆕 `IRepositoryInterfaceGenerator`
+- 🆕 Generate `ICustomerRepository.cs`
+- 🆕 CRUD methods: GetById, GetAll, Add, Update, Delete
+- 🆕 Special methods: Aggregates, Separate Updates
+- 🆕 10+ tests
 
-**בדיקות:**
-- ✅ SP נוצר נכון
-- ✅ Entity נוצר נכון
-- ✅ Prefixes מטופלים
-- ✅ *.prt לא נדרס
-- ✅ Build עובר
+**Day 2-3: Repository Implementation**
+- 🆕 `IRepositoryGenerator`
+- 🆕 Generate `CustomerRepository.cs`
+- 🆕 Dapper integration (for performance)
+- 🆕 SP calls (using Phase 1.5 SPs)
+- 🆕 Error handling + Logging
+- 🆕 15+ tests
 
-**זמן:** 1.5 ימים
+**Day 4-5: DbContext + Configuration**
+- 🆕 `IDbContextGenerator`
+- 🆕 Generate `ApplicationDbContext.cs`
+- 🆕 Entity configurations
+- 🆕 Integration tests
+- 🆕 10+ tests
+
+**Deliverable:** Repository layer complete
 
 ---
 
-#### משימה 19: Documentation & Examples (0.5 יום)
-**מטרה:** תיעוד השימוש ב-Generators
+#### Week 2: CQRS + MediatR (5 days)
 
-**מה ליצור:**
-- `GENERATORS.md` - תיעוד מלא
-- `Examples/` - דוגמאות
-- README updates
+**Day 1-2: Query Generator**
+- 🆕 `IQueryGenerator`
+- 🆕 Generate Queries:
+  - `GetCustomerQuery.cs`
+  - `GetCustomerHandler.cs`
+  - `GetCustomerValidator.cs`
+  - `CustomerDto.cs`
+- 🆕 Query types: GetById, GetAll, GetByIndex
+- 🆕 20+ tests
 
-**תוכן:**
-```markdown
-# Using Generators
+**Day 3-4: Command Generator**
+- 🆕 `ICommandGenerator`
+- 🆕 Generate Commands:
+  - `CreateCustomerCommand.cs`
+  - `CreateCustomerHandler.cs`
+  - `CreateCustomerValidator.cs`
+- 🆕 Command types: Create, Update, Delete
+- 🆕 20+ tests
 
-## SQL Generator
-```csharp
-var sqlGen = new SqlGenerator();
-var sp = sqlGen.GenerateGetByIdSP(table);
-await fileWriter.WriteFileAsync($"SP_Get{table.Name}.sql", sp);
-```
+**Day 5: DTO + Validator Generators**
+- 🆕 `IDtoGenerator`
+- 🆕 `IValidatorGenerator`
+- 🆕 FluentValidation rules
+- 🆕 AutoMapper profiles
+- 🆕 15+ tests
 
-## Entity Generator
-```csharp
-var entityGen = new EntityGenerator();
-var entity = entityGen.Generate(table);
-await fileWriter.WriteFileAsync($"{table.Name}.cs", entity);
-```
-```
-
-**זמן:** 0.5 יום
-
----
-
-### ✅ Phase 1.5 Deliverables
-
-| רכיב | פלט |
-|------|-----|
-| **SQL Generator** | Stored Procedures (Get, Update, Delete) |
-| **Entity Generator** | C# Entity classes |
-| **File Writer** | כתיבה + *.prt protection |
-| **Tests** | 35+ tests, 80%+ coverage |
-| **Docs** | GENERATORS.md + Examples |
-
-**Success Criteria:**
-- ✅ יוצר SP מלא לטבלה
-- ✅ יוצר Entity מלא
-- ✅ מטפל ב-12 סוגי Prefixes
-- ✅ מגן על *.prt
-- ✅ End-to-End test עובר
-
-**→ Ready for Phase 2! 🎉**
+**Deliverable:** CQRS application layer complete
 
 ---
 
-## 🚀 Phase 2: Full Code Generation (4-5 שבועות)
+#### Week 3: REST API (5 days)
 
-**מטרה:** יצירת 8 פרויקטים מלאים  
-**זמן:** 4-5 שבועות  
-**סטטוס:** 0/8 משימות
+**Day 1-3: API Controller Generator**
+- 🆕 `IApiControllerGenerator`
+- 🆕 Generate `CustomersController.cs`
+- 🆕 HTTP verbs: GET, POST, PUT, DELETE
+- 🆕 Swagger/OpenAPI annotations
+- 🆕 Error handling
+- 🆕 20+ tests
 
-### מה נוצר:
-1. **DBController** - Business Logic layer
-2. **DBStdController** - .NET Standard wrapper
-3. **TaskManager** - Background jobs
-4. **WS** (Web Service) - ASMX endpoints
-5. **WSController** - Client-side logic
-6. **WSStdController** - .NET Standard wrapper
-7. **WinF** - Windows Forms UI
-8. **Dependencies** - Shared assemblies
+**Day 4: Middleware & Filters**
+- 🆕 Exception handling middleware
+- 🆕 Request logging middleware
+- 🆕 Performance middleware
+- 🆕 Validation filter
+- 🆕 10+ tests
+
+**Day 5: DI Setup + Configuration**
+- 🆕 `ServiceCollectionExtensions`
+- 🆕 DI registration
+- 🆕 Swagger configuration
+- 🆕 CORS setup
+- 🆕 JWT authentication
+- 🆕 5+ tests
+
+**Deliverable:** Complete REST API
 
 ---
 
-### 📅 שבוע 1-2: Controllers (10 ימים)
+#### Week 4: Integration & Polish (5 days)
 
-#### משימה 20: DBController Generator (5 ימים)
-**מה נוצר:**
+**Day 1-2: End-to-End Tests**
+- 🆕 Full integration tests
+- 🆕 API endpoint tests (all CRUD)
+- 🆕 Database tests
+- 🆕 Performance benchmarks
+
+**Day 3-4: Documentation**
+- 🆕 Swagger/OpenAPI docs
+- 🆕 Architecture diagrams
+- 🆕 Code examples
+- 🆕 Migration guide
+
+**Day 5: Release Preparation**
+- 🆕 Code review
+- 🆕 Bug fixes
+- 🆕 Performance optimization
+- 🆕 Tag: v2.0.0-rc1
+
+**Deliverable:** Production-ready Phase 2
+
+---
+
+### Generators to Build:
+
+| # | Generator | Input | Output | Tests |
+|---|-----------|-------|--------|-------|
+| 1 | RepositoryInterfaceGenerator | Table | ICustomerRepository.cs | 10+ |
+| 2 | RepositoryGenerator | Table | CustomerRepository.cs | 15+ |
+| 3 | DbContextGenerator | Schema | ApplicationDbContext.cs | 10+ |
+| 4 | QueryGenerator | Table | Query + Handler + Validator | 20+ |
+| 5 | CommandGenerator | Table | Command + Handler + Validator | 20+ |
+| 6 | DtoGenerator | Entity | CustomerDto.cs | 10+ |
+| 7 | ValidatorGenerator | Command/Query | FluentValidation rules | 15+ |
+| 8 | ApiControllerGenerator | Table | CustomersController.cs | 20+ |
+| 9 | MiddlewareGenerator | - | Exception/Logging middleware | 10+ |
+| 10 | DIConfigGenerator | Schema | DI registration | 5+ |
+
+**Total:** 10 new generators, 135+ new tests
+
+---
+
+### Success Criteria:
+
+#### Functional:
+- ✅ Generates complete Repository for each table
+- ✅ Generates CQRS (Query + Command) for each operation
+- ✅ Generates REST API Controller for each entity
+- ✅ All tests pass (350+ total)
+- ✅ Swagger documentation complete
+- ✅ Build succeeds with no errors
+
+#### Quality:
+- ✅ Code Coverage: 80%+
+- ✅ SonarQube Grade: A
+- ✅ API Response Time: <50ms
+- ✅ Build Time: <30 seconds
+- ✅ All APIs documented (XML + Swagger)
+
+#### Performance:
+- ✅ Small DB (<20 tables): <1 minute generation
+- ✅ Medium DB (50 tables): <3 minutes generation
+- ✅ Large DB (200 tables): <10 minutes generation
+
+---
+
+### Deliverables:
+
 ```
-DBController/
-├── CC/
-│   ├── ccCustomer.vb
-│   ├── ccCustomerCollection.vb
-│   ├── ccOrder.vb
-│   └── ...
-├── PartialFiles/
-│   ├── ccCustomer.prt.vb ← מוגן!
-│   └── ...
-├── TargCCConfig.config
-└── TargCCController.vb
+After Phase 2, from ONE table:
+
+Input: Customer table
+Output:
+  ✅ Customer.cs (Domain)
+  ✅ ICustomerRepository.cs (Domain)
+  ✅ CustomerRepository.cs (Infrastructure)
+  ✅ ApplicationDbContext.cs (Infrastructure)
+  ✅ SP_*.sql (Infrastructure) ← Phase 1.5
+  ✅ GetCustomerQuery.cs + Handler (Application)
+  ✅ CreateCustomerCommand.cs + Handler (Application)
+  ✅ UpdateCustomerCommand.cs + Handler (Application)
+  ✅ DeleteCustomerCommand.cs + Handler (Application)
+  ✅ CustomerDto.cs (Application)
+  ✅ Validators (Application)
+  ✅ CustomersController.cs (API)
+  ✅ 30+ Tests
+
+→ Complete CRUD API ready! 🚀
 ```
 
-**יכולות:**
-- GetByXXX methods (מכל Index)
-- Update/UpdateFriend methods
-- Delete method
-- FillByXXX methods (Collections)
-- LoadDependants
-- Business Logic hooks
+---
 
-**Prefix Handling:**
-- `eno_` → Hash before save
-- `ent_` → Encrypt before save
-- `clc_`, `blg_`, `agg_` → UpdateFriend only
-- `spt_` → UpdateSeparateXXX method
+## 📋 Phase 3: UI + AI Features (Planned)
 
-**זמן:** 5 ימים
+**Duration:** 6-8 weeks  
+**Status:** 📋 PLANNED  
+**Start Date:** After Phase 2 completion
+
+### Goals:
+
+**Modern UI + Intelligent Assistance**
 
 ---
 
-#### משימה 21: WSController Generator (3 ימים)
-**מה נוצר:**
+### 📅 Week-by-Week Plan
+
+#### Week 1-2: React UI Foundation (10 days)
+
+**UI Architecture:**
 ```
-WSController/
-├── CC/
-│   ├── ccCustomer.vb
-│   ├── ccCustomerCollection.vb
-│   └── ...
-└── PartialFiles/
-    └── ccCustomer.prt.vb ← מוגן!
-```
-
-**יכולות:**
-- מעטפת ל-Web Service calls
-- Serialization/Deserialization
-- Error handling
-- Same API as DBController
-
-**זמן:** 3 ימים
-
----
-
-#### משימה 22: Web Service Generator (2 ימים)
-**מה נוצר:**
-```
-WS/
-├── CC/
-│   └── CC.asmx
-├── ccAPI.aspx
-└── Web.config
-```
-
-**יכולות:**
-- ASMX Web Service
-- Expose DBController methods
-- Authentication
-- Logging
-
-**זמן:** 2 ימים
-
----
-
-### 📅 שבוע 3: UI & Support (5 ימים)
-
-#### משימה 23: WinForms Generator (3 ימים)
-**מה נוצר:**
-```
-WinF/
-├── CC/
-│   ├── ctlCustomer.vb
-│   ├── ctlCustomerCollection.vb
-│   ├── frmCustomer.vb
-│   └── ...
-├── PartialFiles/
-│   └── ctlCustomer.prt.vb ← מוגן!
-└── frmMain.vb
-```
-
-**יכולות:**
-- Entity controls (Form + TextBoxes)
-- Collection controls (DataGridView)
-- Master-Detail UI
-- Lookup ComboBoxes
-- Image upload (upl_ prefix)
-
-**זמן:** 3 ימים
-
----
-
-#### משימה 24: Support Projects (2 ימים)
-**מה נוצר:**
-- DBStdController (.NET Standard)
-- WSStdController (.NET Standard)
-- TaskManager (Console app)
-- Dependencies (Shared)
-
-**זמן:** 2 ימים
-
----
-
-### 📅 שבוע 4-5: Testing & Polish (5 ימים)
-
-#### משימה 25: Integration Tests (3 ימים)
-**בדיקות:**
-- ✅ כל 8 הפרויקטים build בהצלחה
-- ✅ WinF מתחבר ל-WSController
-- ✅ WSController מתחבר ל-WS
-- ✅ WS מתחבר ל-DBController
-- ✅ DBController מתחבר ל-DB
-- ✅ End-to-End: CRUD operations
-
-**זמן:** 3 ימים
-
----
-
-#### משימה 26: Documentation & Samples (2 ימים)
-**מה ליצור:**
-- `FULL_GENERATION.md` - תיעוד מלא
-- Sample project: TargCCOrders
-- Video tutorial (optional)
-
-**זמן:** 2 ימים
-
----
-
-### ✅ Phase 2 Deliverables
-
-| רכיב | פלט |
-|------|-----|
-| **8 Projects** | מלאים ופועלים |
-| **Stored Procedures** | כל הטבלאות |
-| **Entities** | כל הטבלאות |
-| **Controllers** | DB + WS |
-| **UI** | WinForms מלא |
-| **Tests** | 100+ integration tests |
-| **Docs** | תיעוד מקיף |
-
-**Success Criteria:**
-- ✅ יוצר פרויקט מלא מ-DB
-- ✅ Build בלי שגיאות
-- ✅ CRUD operations עובדות
-- ✅ *.prt מוגנים
-- ✅ Performance: < 2 דקות ל-DB בינוני
-
-**→ Ready for Phase 3! 🎉**
-
----
-
-## 🎨 Phase 3: Advanced Features (6-8 שבועות)
-
-**מטרה:** הפיכת TargCC למערכת מתקדמת  
-**זמן:** 6-8 שבועות  
-**סטטוס:** 0/6 משימות
-
----
-
-### 📅 שבועות 1-2: Modern UI (10 ימים)
-
-#### משימה 27: Web UI - React (7 ימים)
-**מה נוצר:**
-```
-TargCC.UI.Web/
+UI.Web/
 ├── src/
 │   ├── components/
-│   │   ├── SchemaDesigner/
-│   │   ├── CodePreview/
-│   │   └── GenerationProgress/
-│   └── pages/
-│       ├── Dashboard.tsx
-│       ├── Designer.tsx
-│       └── Settings.tsx
-└── package.json
+│   │   └── customers/
+│   │       ├── CustomerForm.tsx       🆕
+│   │       ├── CustomerList.tsx       🆕
+│   │       └── CustomerCard.tsx       🆕
+│   ├── pages/
+│   │   ├── Dashboard.tsx              🆕
+│   │   └── Customers/
+│   ├── services/
+│   │   └── api/
+│   │       └── customersApi.ts        🆕
+│   └── hooks/
+│       └── useCustomers.ts            🆕
+└── public/
 ```
 
-**יכולות:**
-- Visual Schema Designer
-- Drag & Drop tables
-- Live Preview
-- Real-time Progress
-- Impact Analysis
+**Generators:**
+- 🆕 ReactComponentGenerator
+- 🆕 ReactFormGenerator
+- 🆕 ReactListGenerator
+- 🆕 ApiServiceGenerator
 
-**טכנולוגיות:**
+**Tech Stack:**
 - React 18 + TypeScript
-- TailwindCSS
-- React Flow (schema designer)
-- Socket.io (real-time)
-
-**זמן:** 7 ימים
-
----
-
-#### משימה 28: REST API Backend (3 ימים)
-**מה נוצר:**
-```
-TargCC.API/
-├── Controllers/
-│   ├── AnalyzeController.cs
-│   ├── GenerateController.cs
-│   └── SettingsController.cs
-└── SignalR/
-    └── GenerationHub.cs
-```
-
-**יכולות:**
-- RESTful API
-- OpenAPI/Swagger
-- SignalR for real-time
-- Authentication
-
-**זמן:** 3 ימים
+- Material-UI (MUI)
+- React Query (data fetching)
+- React Hook Form (forms)
+- Yup (validation)
 
 ---
 
-### 📅 שבועות 3-4: Smart Features (10 ימים)
+#### Week 3-4: AI Assistant (10 days)
 
-#### משימה 29: Smart Error Guide (4 ימים)
-**מה נוצר:**
-- `ErrorAnalyzer.cs` - ניתוח Build Errors
-- `NavigationHelper.cs` - ניווט לקוד
-- `DiffViewer.cs` - Side-by-side comparison
+**Features:**
+- 🆕 Smart code suggestions
+- 🆕 Schema optimization recommendations
+- 🆕 Best practices analyzer
+- 🆕 Auto-naming conventions
+- 🆕 Security scan
 
-**יכולות:**
-- זיהוי Build Errors אוטומטי
-- ניווט ישיר לשורה
-- הצגת Diff
-- המלצות לתיקון
+**Implementation:**
+- Claude API / OpenAI API
+- Prompt engineering
+- Context management
 
-**UI:**
+**Example:**
 ```
-⚠️  3 Build Errors נמצאו
-
-1. OrderUI.prt.vb:45 - Cannot convert string to int
-   [View Code] [Show Diff] [Quick Fix]
-
-2. CustomLogic.prt.vb:23 - Type mismatch
-   [View Code] [Show Diff] [Quick Fix]
+AI: "I noticed you created an Email column.
+     Should I add:
+     ✅ Unique Index (prevent duplicates)?
+     ✅ Email validation?
+     ⚠️  Or encrypt it with ent_ prefix?
+     
+     [Apply All] [Choose] [Ignore]"
 ```
-
-**זמן:** 4 ימים
 
 ---
 
-#### משימה 30: Predictive Analysis (3 ימים)
-**מה נוצר:**
-- `ImpactAnalyzer.cs` - ניתוח השפעות
-- `ChangePredictor.cs` - חיזוי שינויים
+#### Week 5: Smart Error Guide (5 days)
 
-**יכולות:**
+**Features:**
+- 🆕 Build error analysis
+- 🆕 Direct navigation to error location
+- 🆕 Side-by-side diff viewer
+- 🆕 Quick fix suggestions
+- 🆕 Impact analysis
+
+**Example:**
 ```
-שינוי: CustomerID מ-string ל-int
+⚠️  3 Build Errors Found
 
-השפעות:
-✅ 5 קבצים אוטומטיים יתעדכנו
-⚠️  3 קבצים ידניים ידרשו תיקון ידני
-📊 זמן משוער: 15 דקות
-
-קבצים מושפעים:
-- Customer.cs (אוטומטי)
-- SP_GetCustomer.sql (אוטומטי)
-- OrderUI.prt.vb (ידני - 5 דקות)
+1. OrderUI.prt.cs:45
+   Error: Cannot convert string to int
+   
+   Suggestion:
+   Old: var id = txtCustomerID.Text;
+   New: var id = int.Parse(txtCustomerID.Text);
+   
+   [Apply Fix] [View Code] [Ignore]
 ```
-
-**זמן:** 3 ימים
 
 ---
 
-#### משימה 31: Version Control Integration (3 ימים)
-**מה נוצר:**
-- `GitIntegration.cs` - LibGit2Sharp
-- `SnapshotManager.cs` - גיבויים
-- `RollbackManager.cs` - חזרה אחורה
+#### Week 6: Migration Tool (5 days)
 
-**יכולות:**
-- Snapshot אוטומטי לפני Generate
-- Git commit עם מסר מפורט
-- Timeline של שינויים
-- One-click rollback
+**Features:**
+- 🆕 VB.NET → C# Converter
+- 🆕 Legacy project analyzer
+- 🆕 Migration report
+- 🆕 Step-by-step guide
 
-**UI:**
+**Use Case:**
 ```
-Timeline:
-📅 15/11/2025 14:30 - Added Email column to Customer
-📅 15/11/2025 12:15 - Changed CustomerID type
-📅 14/11/2025 16:45 - Created Order table
-[Rollback to this point]
+Input: Legacy VB.NET TargCC project
+Output:
+  ✅ Analysis report
+  ✅ Migration plan
+  ✅ Converted code (Draft)
+  ✅ Manual steps guide
 ```
-
-**זמן:** 3 ימים
 
 ---
 
-### 📅 שבועות 5-6: AI Integration (10 ימים)
+#### Week 7-8: Polish & Integration (10 days)
 
-#### משימה 32: AI Assistant (7 ימים)
-**מה נוצר:**
-- `AIService.cs` - Claude/OpenAI API
-- `SmartSuggestions.cs` - המלצות
-- `NamingConventions.cs` - שמות חכמים
-
-**יכולות:**
-```
-AI: "אני רואה שיצרת טבלת Order. האם רצית:
-- להוסיף Foreign Key ל-Customer?
-- ליצור Index על OrderDate?
-- להוסיף Status enum?"
-
-[Apply All] [Choose] [Ignore]
-```
-
-**טיפול ב-Prefixes:**
-```
-AI: "השדה Email נראה כמו מידע רגיש.
-     האם להוסיף prefix ent_ (encrypted)?"
-[Yes] [No] [Learn More]
-```
-
-**זמן:** 7 ימים
+- 🆕 Performance optimization
+- 🆕 UI/UX improvements
+- 🆕 Documentation
+- 🆕 Video tutorials
+- 🆕 Release v2.0.0
 
 ---
 
-#### משימה 33: Best Practices Analyzer (3 ימים)
-**מה נוצר:**
-- `BestPracticesEngine.cs` - כללים
-- `SecurityScanner.cs` - בדיקות אבטחה
+### Phase 3 Deliverables:
 
-**יכולות:**
-```
-✅ Best Practices Score: 87/100
-
-Issues:
-⚠️  Table 'User' חסר Index על Email (Performance)
-⚠️  Column 'Password' ללא encryption (Security)
-✅ Naming conventions: Good
-✅ Relationships: Complete
-
-[Fix All] [Details]
-```
-
-**זמן:** 3 ימים
+| Feature | Description | Impact |
+|---------|-------------|--------|
+| **React UI** | Modern SPA with Material-UI | 10x faster UI development |
+| **AI Assistant** | Smart suggestions | 50% fewer errors |
+| **Smart Error Guide** | Build error analysis | 80% faster debugging |
+| **Migration Tool** | VB.NET → C# converter | Easy legacy migration |
 
 ---
 
-### 📅 שבועות 7-8: Polish (5 ימים)
+## 💡 Phase 4: Enterprise & Cloud (Future)
 
-#### משימה 34: Performance Optimization (3 ימים)
-**מה לעשות:**
-- Parallel generation
-- Caching
-- Incremental build
-- Memory optimization
+**Status:** 💡 CONCEPT STAGE
 
-**יעד:**
-- DB קטן (< 20 tables): < 30 שניות
-- DB בינוני (50 tables): < 2 דקות
-- DB גדול (200 tables): < 10 דקות
+### Potential Features:
 
-**זמן:** 3 ימים
-
----
-
-#### משימה 35: Documentation & Training (2 ימים)
-**מה ליצור:**
-- User Manual מלא
-- Video tutorials
-- Interactive demos
-- Migration guide
-
-**זמן:** 2 ימים
-
----
-
-### ✅ Phase 3 Deliverables
-
-| רכיב | פלט |
-|------|-----|
-| **Modern UI** | React Web + Desktop |
-| **Smart Error Guide** | ניווט + המלצות |
-| **Predictive Analysis** | Impact + Time estimation |
-| **Version Control** | Git integration + Rollback |
-| **AI Assistant** | סיוע חכם + Best practices |
-| **Performance** | < 2 דקות ל-DB בינוני |
-
-**Success Criteria:**
-- ✅ UI מודרני ונוח
-- ✅ Smart Error Guide עובד
-- ✅ AI Assistant מועיל
-- ✅ Performance מעולה
-- ✅ Git integration חלק
-
-**→ Ready for Production! 🎉**
-
----
-
-## 🌐 Phase 4: Enterprise & Cloud (עתידי)
-
-**מטרה:** פיצ'רים ברמת Enterprise  
-**זמן:** 6-8 שבועות  
-**סטטוס:** תכנון
-
-### משימות:
-- Microservices support
-- Docker containers
-- Kubernetes deployment
-- Cloud templates (Azure, AWS)
+#### Enterprise:
 - Multi-tenant support
+- Advanced security (SSO, RBAC)
+- Audit logging
 - Custom plugin marketplace
 - Team collaboration
-- Audit & compliance
+
+#### Cloud:
+- Docker containers
+- Kubernetes deployment
+- Azure/AWS templates
+- CI/CD pipelines
+- Auto-scaling
+
+#### Advanced:
+- Microservices support
+- Event Sourcing
+- GraphQL API
+- Real-time (SignalR)
+- Mobile apps (MAUI)
+
+**Timeline:** TBD based on demand
 
 ---
 
-## 📊 סיכום Timeline
+## 📊 Overall Timeline
 
-| Phase | משימות | זמן | סטטוס |
-|-------|--------|-----|-------|
-| **Phase 1** | 14 | 6 שבועות | 85% ✅ |
-| **Phase 1.5** | 5 | 2 שבועות | 0% ⏳ |
-| **Phase 2** | 7 | 4-5 שבועות | 0% 📋 |
-| **Phase 3** | 9 | 6-8 שבועות | 0% 📋 |
-| **Phase 4** | TBD | 6-8 שבועות | 0% 💡 |
-| **סה"כ** | **35+** | **24-29 שבועות** | **~6 חודשים** |
+```
+Timeline Overview:
 
----
+┌─────────────────────────────────────────────────────┐
+│ Phase 1: Core Engine                                │
+│ ████████████████████████ (6 weeks) ✅ DONE         │
+├─────────────────────────────────────────────────────┤
+│ Phase 1.5: MVP Generators                           │
+│ ████████ (2 weeks) ✅ DONE                          │
+├─────────────────────────────────────────────────────┤
+│ Phase 2: Modern Architecture                        │
+│ ████████████████ (4-5 weeks) 🔨 IN PLANNING        │
+├─────────────────────────────────────────────────────┤
+│ Phase 3: UI + AI                                    │
+│ ████████████████████████ (6-8 weeks) 📋 PLANNED    │
+├─────────────────────────────────────────────────────┤
+│ Phase 4: Enterprise & Cloud                         │
+│ ████████████████████████ (TBD) 💡 FUTURE           │
+└─────────────────────────────────────────────────────┘
 
-## 🎯 Milestones חשובים
-
-| תאריך | Milestone | תוצר |
-|-------|-----------|------|
-| ✅ 13/11/2025 | Core Engine 85% | Analyzers מוכנים |
-| 🎯 22/11/2025 | Phase 1 Complete | תיעוד 100% |
-| 🎯 06/12/2025 | Phase 1.5 Complete | MVP Generators |
-| 🎯 10/01/2026 | Phase 2 Complete | Full Generation |
-| 🎯 28/02/2026 | Phase 3 Complete | Advanced Features |
-| 🎯 Q2 2026 | Phase 4 Complete | Enterprise Ready |
-
----
-
-## 💡 עקרונות מנחים בכל שלב
-
-### 1. Build Errors = Safety Net 🛡️
-בכל שלב, שמור על העיקרון:
-- Build Errors במכוון
-- Manual Review חובה
-- *.prt protected
-
-### 2. Incremental 💨
-בכל Generator:
-- Change Detection
-- רק מה שהשתנה
-- מהיר ויעיל
-
-### 3. Smart, Not Automatic 🤖
-בכל פיצ'ר:
-- המלצות, לא החלטות
-- Preview תמיד
-- אתה בשליטה
+Total to v2.0.0: ~5-6 months
+```
 
 ---
 
-## 📈 KPIs & Success Metrics
+## 🎯 Milestones
 
-| מדד | Phase 1 | Phase 1.5 | Phase 2 | Phase 3 |
-|------|---------|-----------|---------|---------|
-| **Code Coverage** | 80%+ | 80%+ | 75%+ | 80%+ |
-| **Build Time** | N/A | < 1 min | < 2 min | < 2 min |
-| **Generation Time** | N/A | 30 sec | 2 min | 1 min |
-| **Quality Grade** | A | A | A | A+ |
-| **User Satisfaction** | N/A | N/A | 7/10 | 9/10 |
-
----
-
-## 🚀 הצעד הבא
-
-**עכשיו:** Phase 1 @ 85%  
-**הבא:** סיום תיעוד Models (45 דקות)  
-**אחרי זה:** Phase 1.5 - MVP Generators!
-
-**מוכן להמשיך? בואו נסיים את Phase 1! 💪**
+| Date | Milestone | Deliverable |
+|------|-----------|-------------|
+| ✅ 13/11/2025 | Phase 1 Complete | Core Analyzers |
+| ✅ 18/11/2025 | Phase 1.5 Complete | MVP Generators |
+| 🎯 TBD | Phase 2 Start | Kick-off meeting |
+| 🎯 +4 weeks | Phase 2 Complete | v2.0.0-rc1 |
+| 🎯 +10 weeks | Phase 3 Complete | v2.0.0 |
+| 💡 TBD | Phase 4 | Enterprise features |
 
 ---
 
-**תאריך עדכון:** 15/11/2025  
-**גרסה:** 2.0  
-**עודכן על ידי:** Doron + Claude
+## 📈 Success Metrics
+
+### Development Velocity:
+
+| Task | Legacy | Modern | Improvement |
+|------|--------|--------|-------------|
+| Add Entity | 2-4 hours | **10-20 min** | **85-90%** |
+| Add Field | 1-2 hours | **5-10 min** | **90%** |
+| CRUD Screen | 4-8 hours | **30-60 min** | **87%** |
+| API Endpoint | 2-3 hours | **10-20 min** | **90%** |
+| Unit Tests | 1-2 hours | **Auto** | **100%** |
+
+**Average: 90% time savings! ⚡**
+
+---
+
+### Code Quality:
+
+| Metric | Target | Current |
+|--------|--------|---------|
+| Code Coverage | 80%+ | **85%** ✅ |
+| SonarQube Grade | A | **A** ✅ |
+| Build Time | <30s | **25s** ✅ |
+| API Response | <50ms | **TBD** |
+| Test Pass Rate | 100% | **100%** ✅ |
+
+---
+
+## 🔄 Release Cycle
+
+```
+Development → Testing → RC → Release
+
+Phase 2:
+- Week 1-3: Development
+- Week 4: Testing + RC
+- Week 5: v2.0.0-rc1
+
+Phase 3:
+- Week 1-6: Development
+- Week 7: Testing + RC
+- Week 8: v2.0.0 🎉
+```
+
+---
+
+## 📚 Related Documents
+
+- [Architecture Decision](ARCHITECTURE_DECISION.md) - Why Clean Architecture?
+- [Phase 2 Specification](PHASE2_MODERN_ARCHITECTURE.md) - Detailed plan
+- [Phase 3 Features](PHASE3_ADVANCED_FEATURES.md) - UI + AI details
+- [Core Principles](CORE_PRINCIPLES.md) - Philosophy
+- [README](../README.md) - Getting started
+
+---
+
+## 🚀 Next Steps
+
+**Immediate (This Week):**
+1. ✅ Finalize documentation
+2. ✅ Architecture approval
+3. 🔨 Plan Phase 2 sprint
+
+**Short Term (Next Month):**
+1. 🔨 Implement Repository layer
+2. 🔨 Implement CQRS layer
+3. 🔨 Implement API layer
+4. 🔨 Release v2.0.0-rc1
+
+**Long Term (Next Quarter):**
+1. 📋 Implement React UI
+2. 📋 Implement AI features
+3. 📋 Release v2.0.0
+4. 💡 Plan Phase 4
+
+---
+
+**Last Updated:** 18/11/2025  
+**Maintained By:** Doron + Claude  
+**Version:** 3.0 (Clean Architecture Edition)
+
+**🎯 Current Focus: Phase 2 Planning & Preparation**

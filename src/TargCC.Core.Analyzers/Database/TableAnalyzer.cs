@@ -53,7 +53,7 @@ namespace TargCC.Core.Analyzers.Database
     /// Console.WriteLine($"Indexes: {table.Indexes.Count}");
     /// 
     /// // Find the primary key column
-    /// var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+    /// var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
     /// Console.WriteLine($"PK Column: {pkColumn?.Name} ({pkColumn?.DataType})");
     /// 
     /// // List all unique indexes (for GetBy methods)
@@ -417,7 +417,7 @@ namespace TargCC.Core.Analyzers.Database
         {
             foreach (var pkColumn in table.PrimaryKeyColumns)
             {
-                var column = table.Columns.FirstOrDefault(c => c.Name == pkColumn);
+                var column = table.Columns.Find(c => c.Name == pkColumn);
                 if (column != null)
                 {
                     column.IsPrimaryKey = true;

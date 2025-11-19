@@ -211,7 +211,7 @@ public class DatabaseAnalyzer : IAnalyzer
     /// Console.WriteLine($"Relationships: {schema.Relationships.Count}");
     /// 
     /// // Access specific table
-    /// var customerTable = schema.Tables.FirstOrDefault(t => t.Name == "Customer");
+    /// var customerTable = schema.Tables.Find(t => t.Name == "Customer");
     /// if (customerTable != null)
     /// {
     ///     Console.WriteLine($"Columns in Customer: {customerTable.Columns.Count}");
@@ -523,7 +523,7 @@ public class DatabaseAnalyzer : IAnalyzer
     {
         try
         {
-            var previousTable = previousSchema.Tables.FirstOrDefault(t => t.FullName == tableName);
+            var previousTable = previousSchema.Tables.Find(t => t.FullName == tableName);
             if (previousTable == null)
             {
                 return true; // New table

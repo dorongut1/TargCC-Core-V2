@@ -117,6 +117,44 @@ public class TableBuilder
     }
 
     /// <summary>
+    /// Adds a column with basic properties.
+    /// </summary>
+    /// <param name="name">Column name.</param>
+    /// <param name="dataType">SQL data type.</param>
+    /// <param name="maxLength">Maximum length (for string types).</param>
+    /// <param name="precision">Precision (for decimal types).</param>
+    /// <param name="scale">Scale (for decimal types).</param>
+    /// <param name="isNullable">Whether the column is nullable.</param>
+    /// <param name="isPrimaryKey">Whether this is a primary key column.</param>
+    /// <param name="isIdentity">Whether this is an identity column.</param>
+    /// <param name="isForeignKey">Whether this is a foreign key column.</param>
+    /// <returns>The builder instance.</returns>
+    public TableBuilder WithColumn(
+        string name,
+        string dataType,
+        int? maxLength = null,
+        int? precision = null,
+        int? scale = null,
+        bool isNullable = true,
+        bool isPrimaryKey = false,
+        bool isIdentity = false,
+        bool isForeignKey = false)
+    {
+        var column = new Column
+        {
+            Name = name,
+            DataType = dataType,
+            MaxLength = maxLength ?? -1,
+            IsNullable = isNullable,
+            IsPrimaryKey = isPrimaryKey,
+            IsIdentity = isIdentity,
+            IsForeignKey = isForeignKey,
+        };
+
+        return this.WithColumn(column);
+    }
+
+    /// <summary>
     /// Adds an index to the table.
     /// </summary>
     /// <param name="index">The index to add.</param>
@@ -134,6 +172,29 @@ public class TableBuilder
     /// <returns>The builder instance.</returns>
     public TableBuilder AddIndex(Index index)
     {
+        return this.WithIndex(index);
+    }
+
+    /// <summary>
+    /// Adds an index with specified properties.
+    /// </summary>
+    /// <param name="indexName">Index name.</param>
+    /// <param name="isUnique">Whether the index is unique.</param>
+    /// <param name="columns">Column names in the index.</param>
+    /// <param name="isPrimaryKey">Whether this is a primary key index.</param>
+    /// <param name="isClustered">Whether the index is clustered.</param>
+    /// <returns>The builder instance.</returns>
+    public TableBuilder WithIndex(string indexName, bool isUnique, string[] columns, bool isPrimaryKey = false, bool isClustered = false)
+    {
+        var index = new Index
+        {
+            Name = indexName,
+            IsUnique = isUnique,
+            IsClustered = isClustered,
+            IsPrimaryKey = isPrimaryKey,
+            ColumnNames = columns.ToList(),
+        };
+
         return this.WithIndex(index);
     }
 
@@ -187,7 +248,7 @@ public class TableBuilder
         // Mark columns as primary key
         foreach (var colName in columnNames)
         {
-            var column = this.columns.FirstOrDefault(c => c.Name == colName);
+            var column = this.columns.Find(c => c.Name == colName);
             if (column != null)
             {
                 column.IsPrimaryKey = true;

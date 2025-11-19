@@ -94,7 +94,7 @@ namespace TargCC.Core.Analyzers.Database
         /// var columns = await analyzer.AnalyzeColumnsAsync("dbo", "Customer");
         /// 
         /// // Find password column (one-way encrypted)
-        /// var passwordColumn = columns.FirstOrDefault(c => c.Prefix == ColumnPrefix.OneWayEncryption);
+        /// var passwordColumn = columns.Find(c => c.Prefix == ColumnPrefix.OneWayEncryption);
         /// if (passwordColumn != null)
         /// {
         ///     Console.WriteLine($"Password field: {passwordColumn.Name}");
