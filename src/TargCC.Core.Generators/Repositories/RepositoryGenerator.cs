@@ -3,6 +3,7 @@ namespace TargCC.Core.Generators.Repositories;
 using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using TargCC.Core.Generators.Common;
 using TargCC.Core.Interfaces.Models;
 
 /// <summary>
@@ -211,7 +212,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string pkType = RepositoryGeneratorHelpers.GetCSharpType(pkColumn.DataType);
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
         string spName = $"SP_Get{entityName}ByID";
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -362,7 +363,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string pkType = RepositoryGeneratorHelpers.GetCSharpType(pkColumn.DataType);
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default)");
@@ -417,8 +418,8 @@ public class RepositoryGenerator : IRepositoryGenerator
     private static void GenerateSingleIndexMethod(StringBuilder sb, Table table, Index index, string entityName)
     {
         // Build method name and SP name
-        string methodName = RepositoryGeneratorHelpers.BuildMethodName("GetBy", index.ColumnNames);
-        string spName = $"SP_Get{entityName}By{string.Join("And", index.ColumnNames.Select(RepositoryGeneratorHelpers.SanitizeColumnName))}";
+        string methodName = CodeGenerationHelpers.BuildMethodName("GetBy", index.ColumnNames);
+        string spName = $"SP_Get{entityName}By{string.Join("And", index.ColumnNames.Select(CodeGenerationHelpers.SanitizeColumnName))}";
 
         // Build parameters
         var (paramList, paramDictStr) = BuildIndexMethodParameters(table, index);
@@ -440,10 +441,10 @@ public class RepositoryGenerator : IRepositoryGenerator
             var column = table.Columns.Find(c => c.Name == columnName);
             if (column != null)
             {
-                string paramType = RepositoryGeneratorHelpers.GetCSharpType(column.DataType);
-                string paramName = RepositoryGeneratorHelpers.ToCamelCase(
-                    RepositoryGeneratorHelpers.SanitizeColumnName(columnName));
-                string columnNameSanitized = RepositoryGeneratorHelpers.SanitizeColumnName(columnName);
+                string paramType = CodeGenerationHelpers.GetCSharpType(column.DataType);
+                string paramName = CodeGenerationHelpers.ToCamelCase(
+                    CodeGenerationHelpers.SanitizeColumnName(columnName));
+                string columnNameSanitized = CodeGenerationHelpers.SanitizeColumnName(columnName);
 
                 parameters.Add($"{paramType} {paramName}");
 
@@ -545,7 +546,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string pkType = RepositoryGeneratorHelpers.GetCSharpType(pkColumn.DataType);
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         // Build parameter list
         var parameters = new List<string> { $"{pkType} id" };
@@ -553,10 +554,10 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         foreach (var column in aggColumns)
         {
-            string paramType = RepositoryGeneratorHelpers.GetCSharpType(column.DataType);
-            string paramName = RepositoryGeneratorHelpers.ToCamelCase(
-                RepositoryGeneratorHelpers.SanitizeColumnName(column.Name));
-            string columnNameSanitized = RepositoryGeneratorHelpers.SanitizeColumnName(column.Name);
+            string paramType = CodeGenerationHelpers.GetCSharpType(column.DataType);
+            string paramName = CodeGenerationHelpers.ToCamelCase(
+                CodeGenerationHelpers.SanitizeColumnName(column.Name));
+            string columnNameSanitized = CodeGenerationHelpers.SanitizeColumnName(column.Name);
 
             parameters.Add($"{paramType} {paramName}");
 
@@ -603,7 +604,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string pkType = RepositoryGeneratorHelpers.GetCSharpType(pkColumn.DataType);
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
         string spName = $"SP_Get{entityName}ByID";
 
         sb.AppendLine("    /// <inheritdoc/>");

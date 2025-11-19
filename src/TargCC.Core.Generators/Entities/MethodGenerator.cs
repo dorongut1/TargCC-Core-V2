@@ -8,6 +8,7 @@ namespace TargCC.Core.Generators.Entities
     using System.Globalization;
     using System.Linq;
     using System.Text;
+    using TargCC.Core.Generators.Common;
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -51,7 +52,7 @@ namespace TargCC.Core.Generators.Entities
                         if (childTable != null)
                         {
                             var childClassName = GetClassName(childTable.Name);
-                            var propertyName = MakePlural(childClassName);
+                            var propertyName = CodeGenerationHelpers.MakePlural(childClassName);
                             sb.Append(CultureInfo.InvariantCulture, $"            this.{propertyName} = new List<{childClassName}>();");
                             sb.AppendLine();
                         }
@@ -377,31 +378,6 @@ namespace TargCC.Core.Generators.Entities
         {
             return tableName.Replace("tbl_", string.Empty, StringComparison.OrdinalIgnoreCase)
                            .Replace("tbl", string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string MakePlural(string singular)
-        {
-            if (singular.EndsWith('s') ||
-                singular.EndsWith('x') ||
-                singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-            {
-                return singular + "es";
-            }
-
-            if (singular.EndsWith('y') &&
-                singular.Length > 1 &&
-                !IsVowel(singular[^2]))
-            {
-                return string.Concat(singular.AsSpan(0, singular.Length - 1), "ies");
-            }
-
-            return singular + "s";
-        }
-
-        private static bool IsVowel(char c)
-        {
-            return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
         }
     }
 }

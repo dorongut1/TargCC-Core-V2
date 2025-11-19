@@ -1,11 +1,10 @@
-namespace TargCC.Core.Generators.Repositories;
+namespace TargCC.Core.Generators.Common;
 
 using System.Globalization;
 
 /// <summary>
-/// Helper methods shared by repository generators.
-/// Provides common functionality for code generation including type mapping,
-/// naming conventions, and TargCC prefix handling.
+/// Shared helper methods for all code generators.
+/// Provides common functionality including type mapping, naming conventions, and TargCC prefix handling.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,19 +16,13 @@ using System.Globalization;
 /// <item>Simplify maintenance and testing</item>
 /// </list>
 /// </remarks>
-public static class RepositoryGeneratorHelpers
+public static class CodeGenerationHelpers
 {
     /// <summary>
     /// Maps SQL data types to C# types.
     /// </summary>
     /// <param name="sqlType">SQL Server data type (e.g., "int", "nvarchar", "datetime").</param>
     /// <returns>Corresponding C# type as string (e.g., "int", "string", "DateTime").</returns>
-    /// <remarks>
-    /// <para>
-    /// This mapping ensures consistent type conversion across all generators.
-    /// Uses invariant culture for case-insensitive comparison.
-    /// </para>
-    /// </remarks>
     public static string GetCSharpType(string sqlType)
     {
         return sqlType.ToUpperInvariant() switch
@@ -59,7 +52,6 @@ public static class RepositoryGeneratorHelpers
     /// <returns>Column name with prefix removed.</returns>
     public static string SanitizeColumnName(string columnName)
     {
-        // Remove TargCC prefixes
         string[] prefixes = { "eno_", "ent_", "lkp_", "enm_", "loc_", "clc_", "blg_", "agg_", "spt_", "upl_", "scb_", "spl_", "FUI_" };
 
         var matchedPrefix = Array.Find(prefixes, prefix =>
@@ -142,5 +134,40 @@ public static class RepositoryGeneratorHelpers
         return columnName.StartsWith("clc_", StringComparison.OrdinalIgnoreCase) ||
                columnName.StartsWith("blg_", StringComparison.OrdinalIgnoreCase) ||
                columnName.StartsWith("agg_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Pluralizes an entity name for DbSet property naming.
+    /// </summary>
+    /// <remarks>
+    /// Simple pluralization rules:
+    /// - Words ending in 'y' → replace with 'ies' (e.g., Category → Categories)
+    /// - Words ending in 's', 'x', 'z', 'ch', 'sh' → add 'es' (e.g., Address → Addresses)
+    /// - Default → add 's' (e.g., Customer → Customers).
+    /// </remarks>
+    public static string MakePlural(string singular)
+    {
+        // Simple pluralization rules
+        if (singular.EndsWith('s') ||
+            singular.EndsWith('x') ||
+            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+        {
+            return singular + "es";
+        }
+
+        if (singular.EndsWith('y') &&
+            singular.Length > 1 &&
+            !IsVowel(singular[^2]))
+        {
+            return string.Concat(singular.AsSpan(0, singular.Length - 1), "ies");
+        }
+
+        return singular + "s";
+    }
+
+    private static bool IsVowel(char c)
+    {
+        return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
     }
 }

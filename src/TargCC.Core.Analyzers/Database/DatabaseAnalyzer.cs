@@ -1,7 +1,6 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-using Serilog;
 using TargCC.Core.Interfaces;
 using TargCC.Core.Interfaces.Models;
 

@@ -1,8 +1,12 @@
 # Phase 2: Modern Architecture - Daily Checklist 📋
 
 **Created:** 18/11/2025  
+**Last Updated:** 19/11/2025  
 **Status:** Ready to Start  
 **Architecture:** Clean Architecture (5 Layers)
+
+> **Note:** This checklist has been updated to align with PHASE2_MODERN_ARCHITECTURE.md.  
+> Week 1 focuses on Repository Pattern + DbContext (no Service Layer - that's part of Application/CQRS in Week 2).
 
 ---
 
@@ -121,12 +125,12 @@ Output: Complete Clean Architecture
 
 ---
 
-### 📆 Day 2-3: Repository Implementation Generator (Tue-Wed)
+### 📆 Day 2: Repository Implementation Generator (Tuesday)
 
-**Time:** 6-8 hours (2 days)  
-**Goal:** Generate complete Repository with Dapper
+**Time:** 3-4 hours  
+**Goal:** Generate complete Repository with Dapper (Part 1)
 
-#### Day 2 Morning (2-3 hours):
+#### Morning (2-3 hours):
 
 - [ ] **Task 2.1:** Create `IRepositoryGenerator.cs`
   - [ ] Interface definition
@@ -152,7 +156,7 @@ Output: Complete Clean Architecture
   }
   ```
 
-#### Day 2 Afternoon (2-3 hours):
+#### Afternoon (1-2 hours):
 
 - [ ] **Task 2.3:** Implement GetByIdAsync
   ```csharp
@@ -172,7 +176,23 @@ Output: Complete Clean Architecture
   - [ ] Support filtering
   - [ ] Support paging (skip/take)
 
-#### Day 3 Morning (2-3 hours):
+#### End of Day 2 Checkpoint:
+- [ ] Repository class structure complete
+- [ ] GetByIdAsync implemented
+- [ ] GetAllAsync implemented
+- [ ] Basic tests passing
+- [ ] Git commit: "feat: Add RepositoryGenerator (Part 1)"
+
+**Day 2 Status:** ☐ Not Started | ☐ In Progress | ☐ Complete
+
+---
+
+### 📆 Day 3: Repository Implementation Generator (Wednesday)
+
+**Time:** 3-4 hours  
+**Goal:** Complete Repository with all CRUD operations
+
+#### Morning (2-3 hours):
 
 - [ ] **Task 2.5:** Implement AddAsync
   ```csharp
@@ -194,7 +214,7 @@ Output: Complete Clean Architecture
 
 - [ ] **Task 2.7:** Implement DeleteAsync
 
-#### Day 3 Afternoon (2-3 hours):
+#### Afternoon (1-2 hours):
 
 - [ ] **Task 2.8:** Special methods
   - [ ] UpdateAggregatesAsync (if agg_ columns)
@@ -216,12 +236,13 @@ Output: Complete Clean Architecture
   - [ ] **Target:** 15+ tests
 
 #### End of Day 3 Checkpoint:
-- [ ] All tests passing
+- [ ] All CRUD methods complete
+- [ ] Special methods (aggregates, etc.) complete
+- [ ] All tests passing (15+)
 - [ ] Generated repository compiles
-- [ ] Dapper calls work
-- [ ] Git commit: "feat: Add RepositoryGenerator"
+- [ ] Dapper integration working
+- [ ] Git commit: "feat: Complete RepositoryGenerator"
 
-**Day 2 Status:** ☐ Not Started | ☐ In Progress | ☐ Complete  
 **Day 3 Status:** ☐ Not Started | ☐ In Progress | ☐ Complete
 
 ---

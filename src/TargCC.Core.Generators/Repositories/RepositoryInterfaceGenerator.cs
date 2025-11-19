@@ -3,6 +3,7 @@ namespace TargCC.Core.Generators.Repositories;
 using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using TargCC.Core.Generators.Common;
 using TargCC.Core.Interfaces.Models;
 
 /// <summary>
@@ -247,13 +248,13 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             }
 
             // Build method name from index columns using LINQ
-            string methodName = "GetBy" + string.Join("And", index.ColumnNames.Select(RepositoryGeneratorHelpers.SanitizeColumnName));
+            string methodName = "GetBy" + string.Join("And", index.ColumnNames.Select(CodeGenerationHelpers.SanitizeColumnName));
 
             // Build parameter list using LINQ
             var parameters = index.ColumnNames
                 .Select(columnName => table.Columns.Find(c => c.Name == columnName))
                 .Where(column => column != null)
-                .Select(column => $"{GetCSharpType(column!.DataType)} {RepositoryGeneratorHelpers.ToCamelCase(RepositoryGeneratorHelpers.SanitizeColumnName(column.Name))}")
+                .Select(column => $"{GetCSharpType(column!.DataType)} {CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(column.Name))}")
                 .ToList();
 
             string paramList = string.Join(", ", parameters);
@@ -269,8 +270,8 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
                 var paramDocs = index.ColumnNames
                     .Select(columnName => table.Columns.Find(c => c.Name == columnName))
                     .Where(column => column != null)
-                    .Select(column => (paramName: RepositoryGeneratorHelpers.ToCamelCase(RepositoryGeneratorHelpers.SanitizeColumnName(column!.Name)),
-                                       sanitized: RepositoryGeneratorHelpers.SanitizeColumnName(column.Name)));
+                    .Select(column => (paramName: CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(column!.Name)),
+                                       sanitized: CodeGenerationHelpers.SanitizeColumnName(column.Name)));
 
                 foreach (var (paramName, sanitized) in paramDocs)
                 {
@@ -290,8 +291,8 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
                 var paramDocs = index.ColumnNames
                     .Select(columnName => table.Columns.Find(c => c.Name == columnName))
                     .Where(column => column != null)
-                    .Select(column => (paramName: RepositoryGeneratorHelpers.ToCamelCase(RepositoryGeneratorHelpers.SanitizeColumnName(column!.Name)),
-                                       sanitized: RepositoryGeneratorHelpers.SanitizeColumnName(column.Name)));
+                    .Select(column => (paramName: CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(column!.Name)),
+                                       sanitized: CodeGenerationHelpers.SanitizeColumnName(column.Name)));
 
                 foreach (var (paramName, sanitized) in paramDocs)
                 {
@@ -336,7 +337,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         var parameters = new List<string> { $"{pkType} id" };
         parameters.AddRange(
             aggColumns.Select(column =>
-                $"{GetCSharpType(column.DataType)} {RepositoryGeneratorHelpers.ToCamelCase(RepositoryGeneratorHelpers.SanitizeColumnName(column.Name))}"));
+                $"{GetCSharpType(column.DataType)} {CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(column.Name))}"));
 
         string paramList = string.Join(", ", parameters);
 
@@ -353,8 +354,8 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         // Generate param docs using LINQ
         var aggParamDocs = aggColumns.Select(column =>
-            (paramName: RepositoryGeneratorHelpers.ToCamelCase(RepositoryGeneratorHelpers.SanitizeColumnName(column.Name)),
-             sanitized: RepositoryGeneratorHelpers.SanitizeColumnName(column.Name)));
+            (paramName: CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(column.Name)),
+             sanitized: CodeGenerationHelpers.SanitizeColumnName(column.Name)));
 
         foreach (var (paramName, sanitized) in aggParamDocs)
         {
