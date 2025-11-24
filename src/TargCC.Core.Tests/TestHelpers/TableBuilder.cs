@@ -145,6 +145,8 @@ public class TableBuilder
             Name = name,
             DataType = dataType,
             MaxLength = maxLength ?? -1,
+            PrecisionNumeric = precision,
+            ScaleNumeric = scale,
             IsNullable = isNullable,
             IsPrimaryKey = isPrimaryKey,
             IsIdentity = isIdentity,
