@@ -89,10 +89,10 @@ namespace TargCC.Core.Analyzers.Database
         /// <example>
         /// <code>
         /// var analyzer = new ColumnAnalyzer(connectionString, logger);
-        /// 
+        ///
         /// // Analyze all columns in Customer table
         /// var columns = await analyzer.AnalyzeColumnsAsync("dbo", "Customer");
-        /// 
+        ///
         /// // Find password column (one-way encrypted)
         /// var passwordColumn = columns.Find(c => c.Prefix == ColumnPrefix.OneWayEncryption);
         /// if (passwordColumn != null)
@@ -100,7 +100,7 @@ namespace TargCC.Core.Analyzers.Database
         ///     Console.WriteLine($"Password field: {passwordColumn.Name}");
         ///     Console.WriteLine($"Is encrypted: {passwordColumn.IsEncrypted}");
         /// }
-        /// 
+        ///
         /// // Find all business logic columns
         /// var businessLogicColumns = columns.Where(c => c.Prefix == ColumnPrefix.BusinessLogic);
         /// Console.WriteLine($"Found {businessLogicColumns.Count()} business logic columns");

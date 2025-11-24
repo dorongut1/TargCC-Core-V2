@@ -1,5 +1,5 @@
-// <copyright file="IQueryGenerator.cs" company="TargCC">
-// Copyright (c) TargCC. All rights reserved.
+// <copyright file="IQueryGenerator.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace TargCC.Core.Generators.CQRS;
@@ -147,10 +147,10 @@ public class QueryGenerationResult
 /// <code>
 /// var generator = new QueryGenerator(logger);
 /// var result = await generator.GenerateAsync(customerTable, QueryType.GetById);
-/// 
+///
 /// // result.QueryCode contains:
 /// // public record GetCustomerQuery(int Id) : IRequest&lt;Result&lt;CustomerDto&gt;&gt;;
-/// 
+///
 /// // result.HandlerCode contains:
 /// // public class GetCustomerHandler : IRequestHandler&lt;GetCustomerQuery, Result&lt;CustomerDto&gt;&gt;
 /// // { ... }
@@ -180,9 +180,9 @@ public interface IQueryGenerator
     ///     .WithColumn("ID", "int", isPrimaryKey: true)
     ///     .WithColumn("Name", "nvarchar", maxLength: 100)
     ///     .Build();
-    /// 
+    ///
     /// var result = await generator.GenerateAsync(table, QueryType.GetById);
-    /// 
+    ///
     /// await File.WriteAllTextAsync("GetCustomerQuery.cs", result.QueryCode);
     /// await File.WriteAllTextAsync("GetCustomerHandler.cs", result.HandlerCode);
     /// </code>
@@ -205,7 +205,7 @@ public interface IQueryGenerator
     /// <code>
     /// var emailIndex = table.Indexes.First(i => i.Name == "IX_Customer_Email");
     /// var result = await generator.GenerateByIndexAsync(table, emailIndex);
-    /// 
+    ///
     /// // Generates GetCustomerByEmailQuery if index is unique
     /// // Generates GetCustomersByEmailQuery if index is non-unique
     /// </code>

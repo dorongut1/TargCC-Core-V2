@@ -245,7 +245,9 @@ public sealed class ConfigurationManager
     private static string Decrypt(string cipherText, string key)
     {
         if (string.IsNullOrEmpty(cipherText))
+        {
             return cipherText;
+        }
 
         var fullCipher = Convert.FromBase64String(cipherText);
 
@@ -270,8 +272,7 @@ public sealed class ConfigurationManager
     /// </summary>
     private static byte[] DeriveKey(string key)
     {
-        using var sha = SHA256.Create();
-        return sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+        return SHA256.HashData(Encoding.UTF8.GetBytes(key));
     }
 
     /// <summary>

@@ -300,3 +300,6 @@ dotnet_diagnostic.CA1716.severity = suggestion
 
 # CA2007: Consider calling ConfigureAwait on the awaited task
 dotnet_diagnostic.CA2007.severity = none
+
+# IDE0305: Collection initialization can be simplified (conflicts with SA1010)
+dotnet_diagnostic.IDE0305.severity = none

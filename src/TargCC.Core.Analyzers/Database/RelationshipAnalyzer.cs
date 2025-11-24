@@ -44,23 +44,23 @@ namespace TargCC.Core.Analyzers.Database
     /// <example>
     /// <code>
     /// var analyzer = new RelationshipAnalyzer(connectionString, logger);
-    /// 
+    ///
     /// // Analyze all relationships
     /// var relationships = await analyzer.AnalyzeRelationshipsAsync(tables);
-    /// 
+    ///
     /// // Find all relationships for Customer table
     /// var customerRelationships = relationships
     ///     .Where(r => r.ParentTable == "dbo.Customer" || r.ReferencedTable == "dbo.Customer")
     ///     .ToList();
-    /// 
+    ///
     /// // Get parent tables (tables this table references)
     /// var parents = analyzer.GetParentTables("dbo.Order", relationships);
     /// // Result: ["dbo.Customer", "dbo.Shipper"]
-    /// 
+    ///
     /// // Get child tables (tables that reference this table)
     /// var children = analyzer.GetChildTables("dbo.Customer", relationships);
     /// // Result: ["dbo.Order", "dbo.CustomerAddress"]
-    /// 
+    ///
     /// // Build relationship graph for visualization
     /// var graph = analyzer.BuildRelationshipGraph(relationships);
     /// foreach (var node in graph)

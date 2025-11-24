@@ -203,12 +203,12 @@ public class DatabaseAnalyzer : IAnalyzer
     /// <code>
     /// var analyzer = new DatabaseAnalyzer(connectionString, logger);
     /// var schema = await analyzer.AnalyzeAsync();
-    /// 
+    ///
     /// Console.WriteLine($"Database: {schema.DatabaseName}");
     /// Console.WriteLine($"Server: {schema.ServerName}");
     /// Console.WriteLine($"Tables: {schema.Tables.Count}");
     /// Console.WriteLine($"Relationships: {schema.Relationships.Count}");
-    /// 
+    ///
     /// // Access specific table
     /// var customerTable = schema.Tables.Find(t => t.Name == "Customer");
     /// if (customerTable != null)

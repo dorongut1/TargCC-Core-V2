@@ -1,6 +1,8 @@
 namespace TargCC.Core.Generators.Common;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 
 /// <summary>
 /// Shared helper methods for all code generators.
@@ -67,11 +69,23 @@ public static class CodeGenerationHelpers
     /// </summary>
     /// <param name="value">String to convert (typically PascalCase).</param>
     /// <returns>String in camelCase format.</returns>
+    /// <remarks>
+    /// Handles special cases:
+    /// - All uppercase strings (like "ID", "URL") are converted entirely to lowercase.
+    /// - Standard PascalCase strings have only the first letter lowercased.
+    /// </remarks>
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "CamelCase requires lowercase for parameter names in code generation.")]
     public static string ToCamelCase(string value)
     {
         if (string.IsNullOrEmpty(value))
         {
             return value;
+        }
+
+        // If the entire string is uppercase (like "ID", "URL"), convert to all lowercase
+        if (value.All(char.IsUpper))
+        {
+            return value.ToLowerInvariant();
         }
 
         return char.ToLowerInvariant(value[0]) + value.Substring(1);
