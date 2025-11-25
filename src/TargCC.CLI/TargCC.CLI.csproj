@@ -48,4 +48,9 @@
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\Analyze\" />
+    <Folder Include="Services\Analysis\" />
+  </ItemGroup>
+
 </Project>

@@ -73,6 +73,9 @@ public class Program
         // Services
         services.AddSingleton<IOutputService, OutputService>();
         services.AddSingleton<IGenerationService, GenerationService>();
+        services.AddSingleton<IErrorSuggestionService, ErrorSuggestionService>();
+        services.AddSingleton<Services.Analysis.IAnalysisService, Services.Analysis.AnalysisService>();
+        services.AddSingleton<Documentation.IDocumentationGenerator, Documentation.DocumentationGenerator>();
 
         // Commands
         services.AddSingleton<Commands.RootCommand>();

@@ -1,9 +1,11 @@
 using System.CommandLine;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using TargCC.CLI.Commands.Analyze;
 using TargCC.CLI.Commands.Generate;
 using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
+using TargCC.CLI.Services.Analysis;
 using TargCC.CLI.Services.Generation;
 
 namespace TargCC.CLI.Commands;
@@ -17,6 +19,7 @@ public class RootCommand : Command
     private readonly IConfigurationService _configService;
     private readonly IOutputService _output;
     private readonly IGenerationService _generationService;
+    private readonly IAnalysisService _analysisService;
     private readonly ILoggerFactory _loggerFactory;
 
     /// <summary>
@@ -26,12 +29,14 @@ public class RootCommand : Command
     /// <param name="configService">Configuration service.</param>
     /// <param name="output">Output service.</param>
     /// <param name="generationService">Generation service.</param>
+    /// <param name="analysisService">Analysis service.</param>
     /// <param name="loggerFactory">Logger factory.</param>
     public RootCommand(
         ILogger<RootCommand> logger,
         IConfigurationService configService,
         IOutputService output,
         IGenerationService generationService,
+        IAnalysisService analysisService,
         ILoggerFactory loggerFactory)
         : base("targcc", "TargCC Core V2 - Modern code generation platform")
     {
@@ -39,20 +44,36 @@ public class RootCommand : Command
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
+        _analysisService = analysisService ?? throw new ArgumentNullException(nameof(analysisService));
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
         // Add global options
         var verboseOption = new Option<bool>(
             aliases: new[] { "--verbose", "-v" },
             description: "Enable verbose output");
-
         AddGlobalOption(verboseOption);
+
+        var configOption = new Option<string?>(
+            aliases: new[] { "--config" },
+            description: "Path to configuration file (default: targcc.json in current directory)");
+        AddGlobalOption(configOption);
+
+        var noColorOption = new Option<bool>(
+            aliases: new[] { "--no-color" },
+            description: "Disable colored output");
+        AddGlobalOption(noColorOption);
+
+        var quietOption = new Option<bool>(
+            aliases: new[] { "--quiet", "-q" },
+            description: "Minimal output (errors only)");
+        AddGlobalOption(quietOption);
 
         // Add commands
         AddCommand(CreateVersionCommand());
         AddCommand(CreateInitCommand());
         AddCommand(CreateConfigCommand());
         AddCommand(new GenerateCommand(_loggerFactory, _configService, _output, _generationService));
+        AddCommand(new AnalyzeCommand(_loggerFactory, _configService, _output, _analysisService));
 
         // Set default handler
         this.SetHandler(() =>
@@ -80,6 +101,8 @@ public class RootCommand : Command
         _output.Info("Commands:");
         _output.Info("  init           Initialize TargCC in current directory");
         _output.Info("  config         Manage configuration");
+        _output.Info("  generate       Generate code from database tables");
+        _output.Info("  analyze        Analyze database schema and code quality");
         _output.Info("  version        Show version information");
         _output.BlankLine();
         _output.Info("Use 'targcc [command] --help' for more information about a command");

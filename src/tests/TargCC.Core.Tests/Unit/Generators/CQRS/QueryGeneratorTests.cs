@@ -137,7 +137,7 @@ public class QueryGeneratorTests
         var result = await _generator.GenerateAsync(table, QueryType.GetById);
 
         // Assert
-        result.QueryCode.Should().Contain("public record GetCustomerQuery(int ID)");
+        result.QueryCode.Should().Contain("public record GetCustomerQuery(int Id)");
         result.QueryCode.Should().Contain("IRequest<Result<CustomerDto>>");
         result.QueryCode.Should().Contain("namespace TargCC.Application.Features.Customers.Queries");
     }
@@ -182,7 +182,7 @@ public class QueryGeneratorTests
 
         // Assert
         result.ValidatorCode.Should().Contain("AbstractValidator<GetCustomerQuery>");
-        result.ValidatorCode.Should().Contain("RuleFor(x => x.ID)");
+        result.ValidatorCode.Should().Contain("RuleFor(x => x.Id)");
         result.ValidatorCode.Should().Contain("GreaterThan(0)");
     }
 
@@ -409,7 +409,7 @@ public class QueryGeneratorTests
 
         // Assert
         result.Should().Contain("public class CustomerDto");
-        result.Should().Contain("public int ID { get; init; }");
+        result.Should().Contain("public int Id { get; init; }");
         result.Should().Contain("public string Name { get; init; } = string.Empty;");
         result.Should().Contain("public string Email { get; init; } = string.Empty;");
     }
