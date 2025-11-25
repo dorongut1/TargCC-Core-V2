@@ -1,7 +1,8 @@
 # 🏛️ TargCC Core V2 - החלטה ארכיטקטונית
 
 **תאריך החלטה:** 18/11/2025  
-**גרסה:** 2.0  
+**עדכון אחרון:** 24/11/2025  
+**גרסה:** 3.0 (CLI + Web UI Edition)  
 **סטטוס:** מאושר
 
 ---
@@ -11,10 +12,11 @@
 1. [רקע וקונטקסט](#רקע-וקונטקסט)
 2. [הבעיה](#הבעיה)
 3. [החלטה](#החלטה)
-4. [השוואה מפורטת](#השוואה-מפורטת)
-5. [נימוקים טכניים](#נימוקים-טכניים)
-6. [השפעות ותוצאות](#השפעות-ותוצאות)
-7. [מסלול הטמעה](#מסלול-הטמעה)
+4. [ממשק משתמש: CLI + Local Web UI](#ממשק-משתמש-cli--local-web-ui)
+5. [השוואה מפורטת](#השוואה-מפורטת)
+6. [נימוקים טכניים](#נימוקים-טכניים)
+7. [השפעות ותוצאות](#השפעות-ותוצאות)
+8. [מסלול הטמעה](#מסלול-הטמעה)
 
 ---
 
@@ -95,9 +97,9 @@ Problem: שינוי ב-Entity
 ```
 New Architecture (C# .NET 8):
 
-TargCC.Modern/
+TargCC.Core/                        ← Code Generation Engine
 │
-├── 1. Domain/                     ← Entities + Interfaces
+├── 1. Domain/                     ← Entities + Interfaces (GENERATED)
 │   ├── Entities/
 │   │   ├── Customer.cs
 │   │   └── Order.cs
@@ -106,7 +108,7 @@ TargCC.Modern/
 │   └── Common/
 │       └── BaseEntity.cs
 │
-├── 2. Application/                ← Business Logic (CQRS)
+├── 2. Application/                ← Business Logic - CQRS (GENERATED)
 │   ├── Features/
 │   │   └── Customers/
 │   │       ├── Queries/
@@ -127,7 +129,7 @@ TargCC.Modern/
 │   │   └── Exceptions/
 │   └── Abstractions/
 │
-├── 3. Infrastructure/             ← Data Access + External Services
+├── 3. Infrastructure/             ← Data Access + External Services (GENERATED)
 │   ├── Data/
 │   │   ├── ApplicationDbContext.cs
 │   │   └── Configurations/
@@ -141,7 +143,7 @@ TargCC.Modern/
 │       ├── StoredProcedures/
 │       └── Migrations/
 │
-├── 4. API/                        ← REST API
+├── 4. API/                        ← REST API (GENERATED)
 │   ├── Controllers/
 │   │   ├── CustomersController.cs
 │   │   └── OrdersController.cs
@@ -149,7 +151,7 @@ TargCC.Modern/
 │   ├── Filters/
 │   └── Program.cs
 │
-└── 5. UI.Web/                     ← React SPA
+└── 5. UI.Web/                     ← React SPA (GENERATED)
     ├── src/
     │   ├── components/
     │   │   └── customers/
@@ -157,14 +159,160 @@ TargCC.Modern/
     │   ├── services/
     │   └── hooks/
     └── public/
+
+TargCC Tool/                        ← The Generator Tool Itself
+│
+├── 6. TargCC.CLI/                 ← Command Line Interface (CORE)
+│   ├── Commands/
+│   │   ├── GenerateCommand.cs
+│   │   ├── AnalyzeCommand.cs
+│   │   └── SuggestCommand.cs
+│   ├── Services/
+│   └── Program.cs
+│
+├── 7. TargCC.AI/                  ← AI Integration Service
+│   ├── Services/
+│   │   ├── AIAssistantService.cs
+│   │   ├── SchemaAnalyzer.cs
+│   │   └── SecurityScanner.cs
+│   └── Models/
+│
+├── 8. TargCC.Web/                 ← Local Web UI (wraps CLI)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Dashboard/
+│   │   │   ├── Wizard/
+│   │   │   ├── SchemaDesigner/
+│   │   │   └── AIChat/
+│   │   └── services/
+│   └── public/
+│
+└── 9. TargCC.API/                 ← Backend for Web UI
+    ├── Controllers/
+    │   ├── GenerationController.cs
+    │   └── AIController.cs
+    └── Hubs/
+        └── ProgressHub.cs
 ```
 
 **תוצאה:**
-- ✅ **5 פרויקטים** במקום 8
+- ✅ **5 פרויקטים נוצרים** (Domain, Application, Infrastructure, API, UI)
+- ✅ **4 פרויקטים לכלי** (CLI, AI, Web, API)
 - ✅ **Clean separation of concerns**
 - ✅ **Modern tech stack**
-- ✅ **Testable**
-- ✅ **Scalable**
+- ✅ **CLI-first approach** - Web UI עוטף את ה-CLI
+- ✅ **Testable & Scalable**
+
+---
+
+## 🖥️ ממשק משתמש: CLI + Local Web UI
+
+### החלטה: CLI-First Architecture
+
+**הכלי יעבוד בשתי צורות מקבילות:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    TargCC 2.0                           │
+│                                                         │
+│   ┌─────────────────┐      ┌───────────────────────┐   │
+│   │    CLI          │◄────►│   Local Web UI        │   │
+│   │   (Core)        │      │   (localhost:5000)    │   │
+│   │                 │      │                       │   │
+│   │ $ targcc gen    │      │ ┌─────────────────┐   │   │
+│   │ $ targcc analyze│      │ │ Wizard + AI     │   │   │
+│   │ $ targcc suggest│      │ │ Schema Designer │   │   │
+│   │                 │      │ │ Error Guide     │   │   │
+│   └────────┬────────┘      └─────────┬─────────┘   │   │
+│            │                         │              │   │
+│            ▼                         ▼              │   │
+│   ┌─────────────────────────────────────────────┐   │   │
+│   │  File System │ Database │ Git │ AI API      │   │   │
+│   └─────────────────────────────────────────────┘   │   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### למה CLI קודם?
+
+| יתרון | הסבר |
+|-------|------|
+| **Automation** | CI/CD pipelines, scripts, batch processing |
+| **Professional** | כמו Angular CLI, .NET CLI, Docker CLI |
+| **No Lock-in** | לא תלוי ב-UI, עובד מכל מקום |
+| **Testing** | קל יותר לבדוק CLI מאשר UI |
+| **Single Source of Truth** | Web UI רק "עוטף" את ה-CLI |
+
+### השוואה: CLI vs Web UI
+
+| צורך | CLI | Web UI | שניהם ביחד |
+|------|-----|--------|------------|
+| **Automation** (CI/CD, scripts) | ✅ | ❌ | ✅ |
+| **ממשק נוח** (wizard, designer) | ❌ | ✅ | ✅ |
+| **גישה ל-File System** | ✅ | ✅ (דרך CLI) | ✅ |
+| **גישה ל-Git** | ✅ | ✅ (דרך CLI) | ✅ |
+| **עובד Offline** | ✅ | ✅ | ✅ |
+| **לא צריך התקנה כבדה** | ✅ | ✅ | ✅ |
+
+### פקודות CLI עיקריות
+
+```bash
+# יצירת קוד
+targcc generate entity <table>        # Entity + Interface
+targcc generate sql <table>           # Stored Procedures
+targcc generate repo <table>          # Repository
+targcc generate cqrs <table>          # Queries + Commands
+targcc generate api <table>           # Controller
+targcc generate all <table>           # Everything
+targcc generate project               # Entire project
+
+# ניתוח
+targcc analyze schema                 # Database analysis
+targcc analyze impact --column X      # Impact analysis
+targcc analyze security               # Security scan
+
+# AI
+targcc suggest                        # AI recommendations
+targcc chat                           # Interactive AI
+
+# UI
+targcc ui                             # Launch Web UI
+```
+
+### Web UI Features
+
+```
+┌────────────────────────────────────────────────────┐
+│  TargCC Web UI - localhost:5000                    │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│  📊 Dashboard                                      │
+│  ├── Project overview                              │
+│  ├── Recent generations                            │
+│  └── Quick actions                                 │
+│                                                    │
+│  🧙 Generation Wizard                              │
+│  ├── Step 1: Select tables                         │
+│  ├── Step 2: Configure options                     │
+│  ├── Step 3: Preview code                          │
+│  └── Step 4: Generate & review                     │
+│                                                    │
+│  🎨 Schema Designer                                │
+│  ├── Visual table editor                           │
+│  ├── Drag & drop columns                           │
+│  └── Real-time preview                             │
+│                                                    │
+│  🤖 AI Chat Panel                                  │
+│  ├── Schema analysis                               │
+│  ├── Smart suggestions                             │
+│  └── Security recommendations                      │
+│                                                    │
+│  📋 Smart Error Guide                              │
+│  ├── Build error explanations                      │
+│  ├── Fix suggestions                               │
+│  └── One-click fixes                               │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -186,6 +334,8 @@ TargCC.Modern/
 | **Testing** | Minimal | **xUnit + Integration** | Full coverage |
 | **DI Container** | Manual | **Built-in .NET** | Native, powerful |
 | **Logging** | File-based | **Serilog + Seq** | Structured, searchable |
+| **Tool Interface** | GUI Only | **CLI + Web UI** | Professional, automation-friendly |
+| **AI Integration** | ❌ None | **Claude/GPT-4** | Smart suggestions, security scanning |
 
 ---
 
@@ -212,8 +362,9 @@ TargCC.Modern/
 
 ---
 
-#### Modern (5 projects):
+#### Modern (9 projects - 5 generated + 4 tool):
 
+**Generated Projects (מה שנוצר לאפליקציה):**
 ```
 ✅ Domain                  → Entities (zero dependencies!)
 ✅ Application             → Business Logic (CQRS)
@@ -222,11 +373,21 @@ TargCC.Modern/
 ✅ UI.Web                  → React SPA
 ```
 
+**Tool Projects (הכלי עצמו):**
+```
+✅ TargCC.CLI              → Command Line Interface (Core)
+✅ TargCC.AI               → AI Integration Service
+✅ TargCC.Web              → Local Web UI
+✅ TargCC.API              → Backend for Web UI
+```
+
 **יתרונות:**
 - 🟢 Zero duplication
 - 🟢 Clean dependencies (Domain ← Application ← Infrastructure)
 - 🟢 Easy to test (each layer isolated)
 - 🟢 Fast build time
+- 🟢 CLI-first: Web UI wraps CLI, no duplicate logic
+- 🟢 AI integrated from the start
 
 ---
 
@@ -517,18 +678,37 @@ export const CustomerForm = ({ customer, onSave }) => (
 
 ## 🛣️ מסלול הטמעה
 
-### Phase 2: Modern Architecture (4-5 שבועות)
+### תכנית ביצוע
 
 ```
-✅ Phase 1: Core Analyzers (DONE)
-✅ Phase 1.5: Basic Generators (DONE)
+✅ Phase 1: Core Analyzers (6 שבועות) - DONE (Nov 15, 2025)
+✅ Phase 1.5: Basic Generators (2 שבועות) - DONE (Nov 18, 2025)
+✅ Phase 2: Modern Architecture (4 שבועות) - DONE (Nov 24, 2025)
     ↓
-🔨 Phase 2: Modern Architecture
-    Week 1-2: Application Layer (CQRS)
-    Week 3: API Layer (REST)
-    Week 4: Infrastructure Layer
+🆕 Phase 3: CLI + AI + Web UI (9 שבועות) - STARTING NOW
+    │
+    ├── Phase 3A: CLI Core (2 שבועות)
+    │   ├── targcc generate (entities, sql, repos, api)
+    │   ├── targcc analyze (schema, impact, security)
+    │   └── targcc init (project setup)
+    │
+    ├── Phase 3B: AI Integration (2 שבועות)
+    │   ├── AI Service (Claude/GPT integration)
+    │   ├── targcc suggest (AI recommendations)
+    │   └── targcc chat (interactive AI)
+    │
+    ├── Phase 3C: Local Web UI (3 שבועות)
+    │   ├── React dashboard on localhost
+    │   ├── Schema Designer
+    │   ├── Generation Wizard + AI
+    │   └── Smart Error Guide
+    │
+    └── Phase 3D: Migration & Polish (2 שבועות)
+        ├── VB.NET → C# Converter
+        ├── Git integration
+        └── v2.0.0 Release
     ↓
-Phase 3: UI + AI (6-8 שבועות)
+📋 Phase 4: Enterprise & Cloud (TBD) - FUTURE
 ```
 
 ### תאימות לאחור
@@ -558,7 +738,8 @@ Eventually: 100% Modern
 
 ### מאושר:
 
-✅ **Clean Architecture** עם 5 layers  
+**ארכיטקטורה:**
+✅ **Clean Architecture** עם 5 layers (Generated)  
 ✅ **C# .NET 8** (במקום VB.NET)  
 ✅ **REST API** (במקום ASMX)  
 ✅ **React + Material-UI** (במקום WinForms)  
@@ -567,12 +748,18 @@ Eventually: 100% Modern
 ✅ **JWT Authentication**  
 ✅ **Swagger/OpenAPI**  
 
+**ממשק הכלי:**
+✅ **CLI-First Architecture** - CLI הוא הליבה  
+✅ **Local Web UI** - עוטף את ה-CLI, לא מחליף  
+✅ **AI Integration** - Claude/GPT-4 לניתוח והמלצות  
+
 ### לא כולל (בשלב זה):
 
 ❌ VB.NET Support  
 ❌ ASMX Web Services  
 ❌ WinForms UI  
-❌ Backward compatibility (תוסף בשלב מאוחר)
+❌ Cloud deployment (Phase 4)
+❌ Multi-tenant (Phase 4)
 
 ---
 
@@ -592,12 +779,15 @@ Eventually: 100% Modern
 **מסמך זה מהווה את ההחלטה הארכיטקטונית הרשמית לפרויקט TargCC Core V2.**
 
 **מאושר על ידי:** Doron + Claude  
-**תאריך:** 18/11/2025  
-**גרסה:** 1.0
+**תאריך יצירה:** 18/11/2025  
+**עדכון אחרון:** 24/11/2025  
+**גרסה:** 3.0 (CLI + Web UI Edition)
 
 ---
 
 **📚 מסמכים קשורים:**
-- [Phase 2 - Modern Architecture Spec](PHASE2_MODERN_ARCHITECTURE.md)
-- [Phase 3 - Advanced Features](PHASE3_ADVANCED_FEATURES.md)
+- [Phase 2 - Modern Architecture Spec](PHASE2_MODERN_ARCHITECTURE.md) ✅ Complete
+- [Phase 3 - Advanced Features](PHASE3_ADVANCED_FEATURES.md) 🆕 Current Focus
+- [Phase 3 Checklist](Phase3_Checklist.md) 🆕 Daily Tasks
+- [Phase 3 Progress](PHASE3_PROGRESS.md) 🆕 Tracking
 - [Project Roadmap](PROJECT_ROADMAP.md)

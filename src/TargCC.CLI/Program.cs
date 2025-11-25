@@ -1,0 +1,82 @@
+using System.CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using TargCC.CLI.Commands;
+using TargCC.CLI.Configuration;
+using TargCC.CLI.Services;
+using TargCC.CLI.Services.Generation;
+
+namespace TargCC.CLI;
+
+/// <summary>
+/// Main entry point for TargCC CLI application.
+/// </summary>
+public class Program
+{
+    /// <summary>
+    /// Main entry point.
+    /// </summary>
+    /// <param name="args">Command line arguments.</param>
+    /// <returns>Exit code.</returns>
+    public static async Task<int> Main(string[] args)
+    {
+        // Setup Serilog
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.File(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".targcc", "logs", "targcc-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7)
+            .CreateLogger();
+
+        try
+        {
+            // Build service provider
+            var services = ConfigureServices();
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Get root command and execute
+            var rootCommand = serviceProvider.GetRequiredService<Commands.RootCommand>();
+            return await rootCommand.InvokeAsync(args);
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Application terminated unexpectedly");
+            return 1;
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
+    }
+
+    /// <summary>
+    /// Configure dependency injection services.
+    /// </summary>
+    /// <returns>Service collection.</returns>
+    private static IServiceCollection ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Logging
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddSerilog();
+        });
+
+        // Configuration
+        services.AddSingleton<IConfigurationService, ConfigurationService>();
+
+        // Services
+        services.AddSingleton<IOutputService, OutputService>();
+        services.AddSingleton<IGenerationService, GenerationService>();
+
+        // Commands
+        services.AddSingleton<Commands.RootCommand>();
+
+        return services;
+    }
+}

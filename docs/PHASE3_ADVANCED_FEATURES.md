@@ -1,451 +1,769 @@
-# Phase 3: Advanced Features - Full Specification 🎨
+# Phase 3: CLI + AI + Web UI - Full Specification 🎯
 
-**Date:** 18/11/2025  
-**Duration:** 6-8 weeks  
-**Goal:** Transform TargCC into an intelligent, modern platform!
-
----
-
-## 🎯 What is Phase 3?
-
-**Phase 3 = Modern UI + AI Features + Migration Tools**
-
-```
-Phase 2 (Modern Architecture) ✅
-    ↓
-    Clean Architecture + REST API
-    ↓
-Phase 3 (Advanced Features) ← Here!
-    ↓
-    React UI + AI Assistant + Migration
-    ↓
-Production Ready v2.0.0! 🎉
-```
+**Date:** 24/11/2025  
+**Duration:** 9-10 weeks  
+**Goal:** Complete TargCC 2.0 with CLI, AI Assistant, and Local Web UI
 
 ---
 
-## 📋 Core Components
+## 🎯 Executive Summary
 
-### 1. React UI (2 weeks) ⚛️
-**Goal:** Modern, responsive user interface
+Phase 3 transforms TargCC into a professional developer tool with:
+- **CLI Core** - Command-line interface for automation and scripting
+- **AI Assistant** - Intelligent code suggestions and analysis
+- **Local Web UI** - Visual interface running on localhost
 
-**Capabilities:**
-- 📐 Visual Schema Designer - Drag & Drop
-- 👁️ Live Code Preview
-- 📊 Real-time Progress Monitoring
-- 🔍 Impact Analysis UI
-- ⚙️ Settings Management
-- 🎨 Material Design
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   TargCC 2.0                        │
+│                                                     │
+│   ┌─────────────┐      ┌───────────────────────┐   │
+│   │    CLI      │◄────►│   Local Web UI        │   │
+│   │   (Core)    │      │   (localhost:5000)    │   │
+│   └──────┬──────┘      └───────────────────────┘   │
+│          │                                          │
+│          ▼                                          │
+│   ┌─────────────────────────────────────────────┐  │
+│   │  Generators │ Analyzers │ AI Service │ Git  │  │
+│   └─────────────────────────────────────────────┘  │
+│          │                                          │
+│          ▼                                          │
+│   ┌─────────────────────────────────────────────┐  │
+│   │  File System │ Database │ Configuration     │  │
+│   └─────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+### Target Audience
+
+- **Developers** who want to save time on boilerplate code
+- **Teams** looking for consistent, high-quality code generation
+- **Projects** that need Clean Architecture scaffolding
+
+### Design Principles
+
+1. **CLI First** - All functionality accessible via command line
+2. **AI Assisted** - Smart suggestions, not automatic decisions
+3. **Developer Control** - System suggests, developer decides
+4. **Build Errors = Safety Net** - Protected files (*.prt) preserved
+
+---
+
+## 📋 Phase 3 Structure
+
+```
+Phase 3A: CLI Core (2 weeks)
+    ↓
+Phase 3B: AI Integration (2 weeks)
+    ↓
+Phase 3C: Local Web UI (3 weeks)
+    ↓
+Phase 3D: Migration & Polish (2 weeks)
+    ↓
+Release v2.0.0 🎉
+```
+
+---
+
+## 🔧 Phase 3A: CLI Core (2 weeks)
+
+**Goal:** Professional command-line interface for all TargCC operations
+
+### CLI Commands Overview
+
+```bash
+# Project Management
+targcc init                    # Initialize new TargCC project
+targcc config                  # Manage configuration
+
+# Code Generation
+targcc generate entity <table>      # Generate entity class
+targcc generate sql <table>         # Generate stored procedures
+targcc generate repo <table>        # Generate repository
+targcc generate cqrs <table>        # Generate queries & commands
+targcc generate api <table>         # Generate API controller
+targcc generate all <table>         # Generate everything for table
+targcc generate project             # Generate entire project
+
+# Analysis
+targcc analyze schema              # Analyze database schema
+targcc analyze impact <change>     # Predict impact of changes
+targcc analyze security            # Security scan
+targcc analyze quality             # Code quality check
+
+# AI Features
+targcc suggest                     # Get AI suggestions
+targcc chat                        # Interactive AI chat
+
+# UI
+targcc ui                          # Launch local web interface
+```
+
+### Week 1: CLI Foundation (5 days)
+
+#### Day 1: Project Structure & Configuration
+
+**Tasks:**
+- [ ] Create `TargCC.CLI` project (.NET 8 Console)
+- [ ] Setup `System.CommandLine` for command parsing
+- [ ] Implement `targcc init` command
+- [ ] Create `targcc.json` configuration schema
+- [ ] Implement `targcc config` commands
+- [ ] 10+ unit tests
+
+**Configuration Schema (targcc.json):**
+```json
+{
+  "version": "2.0",
+  "project": {
+    "name": "MyProject",
+    "namespace": "MyCompany.MyProject",
+    "outputPath": "./generated"
+  },
+  "database": {
+    "connectionString": "Server=...;Database=...;",
+    "provider": "SqlServer"
+  },
+  "generation": {
+    "architecture": "CleanArchitecture",
+    "includeTests": true,
+    "fileProtection": true
+  },
+  "ai": {
+    "enabled": true,
+    "provider": "Claude",
+    "apiKey": "${TARGCC_AI_KEY}"
+  }
+}
+```
+
+#### Day 2-3: Generate Commands
+
+**Tasks:**
+- [ ] Implement `targcc generate entity`
+- [ ] Implement `targcc generate sql`
+- [ ] Implement `targcc generate repo`
+- [ ] Implement `targcc generate cqrs`
+- [ ] Implement `targcc generate api`
+- [ ] Implement `targcc generate all`
+- [ ] Progress indicators and colored output
+- [ ] 15+ tests
+
+**Example Output:**
+```bash
+$ targcc generate all Customer
+
+🔍 Analyzing table: Customer...
+  ✓ 8 columns found
+  ✓ 2 indexes detected
+  ✓ 1 foreign key relationship
+
+📦 Generating code...
+  ✓ Domain/Entities/Customer.cs
+  ✓ Domain/Interfaces/ICustomerRepository.cs
+  ✓ Infrastructure/Repositories/CustomerRepository.cs
+  ✓ Infrastructure/Sql/SP_GetCustomerByID.sql
+  ✓ Infrastructure/Sql/SP_UpdateCustomer.sql
+  ✓ Infrastructure/Sql/SP_DeleteCustomer.sql
+  ✓ Application/Features/Customers/Queries/GetCustomerQuery.cs
+  ✓ Application/Features/Customers/Commands/CreateCustomerCommand.cs
+  ✓ API/Controllers/CustomersController.cs
+
+✅ Generated 9 files in 1.2s
+```
+
+#### Day 4: Analyze Commands
+
+**Tasks:**
+- [ ] Implement `targcc analyze schema`
+- [ ] Implement `targcc analyze impact`
+- [ ] Implement `targcc analyze security`
+- [ ] Implement `targcc analyze quality`
+- [ ] 10+ tests
+
+**Impact Analysis Example:**
+```bash
+$ targcc analyze impact --table Customer --column CustomerID --newType int
+
+📊 Impact Analysis: CustomerID (string → int)
+
+Affected Files:
+┌─────────────────────────────────────────────────────────┐
+│ Auto-Generated (will update automatically):             │
+│   ✓ Customer.cs                      ~5 min            │
+│   ✓ CustomerRepository.cs            ~3 min            │
+│   ✓ SP_GetCustomerByID.sql           ~2 min            │
+│   ✓ GetCustomerQuery.cs              ~3 min            │
+│   ✓ CustomersController.cs           ~2 min            │
+├─────────────────────────────────────────────────────────┤
+│ Manual Code (BUILD ERRORS expected):                    │
+│   ⚠ CustomerForm.prt.cs:45           ~10 min           │
+│   ⚠ ReportGenerator.prt.cs:23        ~5 min            │
+│   ⚠ DataImporter.prt.cs:67           ~8 min            │
+├─────────────────────────────────────────────────────────┤
+│ Total Estimated Time: ~38 minutes                       │
+└─────────────────────────────────────────────────────────┘
+
+Proceed with generation? [y/N]
+```
+
+#### Day 5: Help System & Documentation
+
+**Tasks:**
+- [ ] Implement comprehensive `--help` for all commands
+- [ ] Add examples for each command
+- [ ] Generate man pages / markdown docs
+- [ ] Error messages with suggestions
+- [ ] 5+ tests
+
+---
+
+### Week 2: Advanced CLI Features (5 days)
+
+#### Day 6-7: Project Generation
+
+**Tasks:**
+- [ ] Implement `targcc generate project`
+- [ ] Solution file generation
+- [ ] Project files (.csproj) generation
+- [ ] DI registration generation
+- [ ] Program.cs generation
+- [ ] 15+ tests
+
+**Full Project Generation:**
+```bash
+$ targcc generate project --database TargCCOrders
+
+🏗️ Generating Clean Architecture Project...
+
+📁 Creating solution structure:
+  ✓ TargCCOrders.sln
+  ✓ src/TargCCOrders.Domain/
+  ✓ src/TargCCOrders.Application/
+  ✓ src/TargCCOrders.Infrastructure/
+  ✓ src/TargCCOrders.API/
+  ✓ tests/TargCCOrders.Tests/
+
+📦 Generating from 12 tables:
+  ✓ Customer (9 files)
+  ✓ Order (9 files)
+  ✓ OrderItem (9 files)
+  ... 
+
+⚙️ Configuring:
+  ✓ DI Registration
+  ✓ DbContext
+  ✓ Swagger
+  ✓ Authentication
+
+✅ Project generated successfully!
+   108 files created in 4.5s
+
+Next steps:
+  cd TargCCOrders
+  dotnet restore
+  dotnet run --project src/TargCCOrders.API
+```
+
+#### Day 8: Watch Mode & Incremental Generation
+
+**Tasks:**
+- [ ] Implement `targcc watch` - auto-regenerate on schema changes
+- [ ] Change detection system
+- [ ] Incremental generation (only changed tables)
+- [ ] 10+ tests
+
+```bash
+$ targcc watch
+
+👁️ Watching for database changes...
+   Press Ctrl+C to stop
+
+[14:23:15] Schema change detected: Customer.Email (maxLength: 100 → 200)
+[14:23:15] Regenerating affected files...
+[14:23:16] ✓ 3 files updated
+
+[14:25:42] Schema change detected: New table 'Product'
+[14:25:42] Generating new entity...
+[14:25:43] ✓ 9 files created
+```
+
+#### Day 9-10: Integration & Testing
+
+**Tasks:**
+- [ ] End-to-end CLI tests
+- [ ] Error handling improvements
+- [ ] Performance optimization
+- [ ] Documentation updates
+- [ ] 20+ integration tests
+
+---
+
+## 🤖 Phase 3B: AI Integration (2 weeks)
+
+**Goal:** Intelligent assistance for code generation and analysis
+
+### AI Capabilities
+
+1. **Schema Analysis** - Understand database design
+2. **Smart Suggestions** - Recommend improvements
+3. **Code Review** - Check generated code quality
+4. **Security Scanning** - Identify vulnerabilities
+5. **Interactive Chat** - Natural language interface
+
+---
+
+### Week 3: AI Service Foundation (5 days)
+
+#### Day 11-12: AI Service Infrastructure
+
+**Tasks:**
+- [ ] Create `TargCC.AI` project
+- [ ] Claude API integration
+- [ ] OpenAI API integration (fallback)
+- [ ] Response caching
+- [ ] Rate limiting
+- [ ] 10+ tests
+
+**AI Service Interface:**
+```csharp
+public interface IAIService
+{
+    Task<SchemaAnalysis> AnalyzeSchemaAsync(DatabaseSchema schema);
+    Task<IEnumerable<Suggestion>> GetSuggestionsAsync(Table table);
+    Task<SecurityReport> ScanSecurityAsync(DatabaseSchema schema);
+    Task<string> ChatAsync(string message, ConversationContext context);
+}
+```
+
+#### Day 13-14: Schema Analysis & Suggestions
+
+**Tasks:**
+- [ ] Implement schema analysis prompts
+- [ ] Implement suggestion engine
+- [ ] Context-aware recommendations
+- [ ] Prompt templates
+- [ ] 15+ tests
+
+**Example Suggestions:**
+```bash
+$ targcc suggest --table Customer
+
+🤖 AI Analysis for table: Customer
+
+📋 Suggestions:
+
+1. 🔐 Security: Encrypt sensitive data
+   Column 'CreditCard' contains financial data.
+   Recommendation: Add 'ent_' prefix for encryption.
+   [Apply] [Ignore] [Learn More]
+
+2. 📊 Performance: Add index
+   Column 'Email' is frequently queried.
+   Recommendation: Add unique index on Email.
+   [Apply] [Ignore] [Learn More]
+
+3. 📝 Naming: Follow conventions
+   Column 'custStatus' doesn't follow naming convention.
+   Recommendation: Rename to 'Status' or 'lkp_Status'.
+   [Apply] [Ignore] [Learn More]
+
+4. 🔗 Relationship: Missing foreign key
+   Column 'CategoryID' appears to reference Categories table.
+   Recommendation: Add foreign key constraint.
+   [Apply] [Ignore] [Learn More]
+```
+
+#### Day 15: Interactive Chat
+
+**Tasks:**
+- [ ] Implement `targcc chat` command
+- [ ] Conversation context management
+- [ ] Code generation from chat
+- [ ] History persistence
+- [ ] 10+ tests
+
+**Chat Example:**
+```bash
+$ targcc chat
+
+🤖 TargCC AI Assistant
+   Type 'exit' to quit, 'help' for commands
+
+You: Add a Phone column to Customer table
+
+AI: I'll help you add a Phone column. Here's my recommendation:
+
+    Column: Phone
+    Type: NVARCHAR(20)
+    Nullable: Yes
+    
+    This will affect:
+    • Customer.cs - new property
+    • CustomerRepository.cs - updated mappings
+    • SP_UpdateCustomer.sql - new parameter
+    • CreateCustomerCommand.cs - new field
+    
+    Would you like me to:
+    1. Generate the migration SQL
+    2. Update all affected files
+    3. Show preview of changes
+    
+You: 2
+
+AI: Generating changes...
+    ✓ 6 files updated
+    ✓ 1 SQL migration created
+    
+    Run 'targcc analyze impact' to see full details.
+```
+
+---
+
+### Week 4: Advanced AI Features (5 days)
+
+#### Day 16-17: Security Scanner
+
+**Tasks:**
+- [ ] Implement security analysis
+- [ ] Common vulnerability detection
+- [ ] TargCC prefix recommendations
+- [ ] Security report generation
+- [ ] 15+ tests
+
+**Security Report:**
+```bash
+$ targcc analyze security
+
+🔐 Security Analysis Report
+
+Overall Score: 72/100 ⚠️
+
+┌─────────────────────────────────────────────────────────┐
+│ 🔴 HIGH PRIORITY (2 issues)                             │
+├─────────────────────────────────────────────────────────┤
+│ 1. Password stored without hashing                      │
+│    Table: Users, Column: Password                       │
+│    Fix: Rename to 'eno_Password' for auto-hashing      │
+│    [Apply Fix]                                          │
+│                                                         │
+│ 2. Credit card in plain text                           │
+│    Table: Customers, Column: CreditCard                │
+│    Fix: Rename to 'ent_CreditCard' for encryption      │
+│    [Apply Fix]                                          │
+├─────────────────────────────────────────────────────────┤
+│ 🟡 MEDIUM PRIORITY (3 issues)                           │
+├─────────────────────────────────────────────────────────┤
+│ 3. Missing audit columns                               │
+│    Table: Orders                                        │
+│    Fix: Add CreatedAt, UpdatedAt, CreatedBy columns    │
+│                                                         │
+│ 4. No soft delete                                      │
+│    Tables: All                                          │
+│    Fix: Add IsDeleted column for data recovery         │
+│                                                         │
+│ 5. SQL Injection risk in custom SP                     │
+│    File: SP_SearchCustomers.sql                        │
+│    Fix: Use parameterized queries                      │
+└─────────────────────────────────────────────────────────┘
+
+[Fix All] [Export Report] [Ignore]
+```
+
+#### Day 18-19: Code Quality Analyzer
+
+**Tasks:**
+- [ ] Best practices checker
+- [ ] Naming convention validator
+- [ ] Relationship analyzer
+- [ ] Performance recommendations
+- [ ] 15+ tests
+
+#### Day 20: AI Integration Testing
+
+**Tasks:**
+- [ ] End-to-end AI tests
+- [ ] Mock AI responses for testing
+- [ ] Error handling
+- [ ] Rate limit handling
+- [ ] 10+ tests
+
+---
+
+## 🌐 Phase 3C: Local Web UI (3 weeks)
+
+**Goal:** Visual interface for TargCC running on localhost
+
+### UI Features
+
+1. **Dashboard** - Project overview and status
+2. **Schema Designer** - Visual database design
+3. **Generation Wizard** - Step-by-step code generation
+4. **AI Chat Panel** - Interactive AI assistance
+5. **Smart Error Guide** - Build error navigation
+6. **Settings** - Configuration management
+
+---
+
+### Week 5: UI Foundation (5 days)
+
+#### Day 21-22: React Project Setup
+
+**Tasks:**
+- [ ] Create React + TypeScript project
+- [ ] Setup Material-UI (MUI)
+- [ ] Setup React Query for API calls
+- [ ] Setup React Router
+- [ ] Create basic layout (sidebar, header, content)
+- [ ] 10+ tests
 
 **Tech Stack:**
-- React 18 + TypeScript
-- Material-UI (MUI)
-- React Flow (schema designer)
-- React Query (data fetching)
-- Socket.io (real-time updates)
+```
+Frontend:
+├── React 18
+├── TypeScript
+├── Material-UI (MUI)
+├── React Query
+├── React Router
+├── Socket.io (real-time updates)
+└── Monaco Editor (code preview)
 
-**Time:** 10 days
+Backend (ASP.NET Core):
+├── Minimal API
+├── SignalR (real-time)
+├── Swagger
+└── Calls CLI commands internally
+```
+
+#### Day 23-24: Dashboard & Navigation
+
+**Tasks:**
+- [ ] Project dashboard component
+- [ ] Table list with status
+- [ ] Recent activity feed
+- [ ] Quick actions panel
+- [ ] Navigation sidebar
+- [ ] 10+ tests
+
+#### Day 25: API Integration Layer
+
+**Tasks:**
+- [ ] Create API service layer
+- [ ] Connect to backend
+- [ ] Error handling
+- [ ] Loading states
+- [ ] 10+ tests
 
 ---
 
-### 2. Smart Error Guide (1 week) 🔍
-**Goal:** Intelligent build error assistance
+### Week 6: Generation Wizard (5 days)
 
-**Capabilities:**
-- 🔍 Automatic Build Error Analysis
-- 🎯 Direct code navigation
-- 📊 Side-by-Side Diff Viewer
-- 💡 Quick Fix Suggestions
-- 📝 Ready-to-use code snippets
+#### Day 26-27: Wizard Foundation
 
-**UI Example:**
+**Tasks:**
+- [ ] Multi-step wizard component
+- [ ] Table selection step
+- [ ] Generation options step
+- [ ] Preview step
+- [ ] Confirmation step
+- [ ] 15+ tests
+
+**Wizard Flow:**
 ```
-⚠️  3 Build Errors Found in Manual Code
-
-1. OrderLogic.prt.cs:45
-   Error: Cannot convert string to int
-   
-   Context:
-   var customerId = txtCustomerID.Text;  // Changed from string to int
-   
-   💡 Suggested Fix:
-   var customerId = int.Parse(txtCustomerID.Text);
-   
-   [Apply Fix] [View Code] [Show Diff] [Ignore]
-
-2. ReportGenerator.prt.cs:23
-   Error: Property 'CustomerID' not found
-   
-   💡 Suggested Fix:
-   Update property name to 'CustomerId' (camelCase)
-   
-   [Apply Fix] [View Code]
-```
-
-**Time:** 5 days
-
----
-
-### 3. Predictive Impact Analysis (1 week) 🔮
-**Goal:** Predict change impact before generation
-
-**Capabilities:**
-- 🔮 "What if..." scenarios
-- 📊 Impact on manual code
-- ⏱️ Time estimation for fixes
-- 🔗 Dependency checking
-- 📈 Change history tracking
-
-**UI Example:**
-```
-Proposed Change: CustomerID from string → int
-
-📊 Impact Analysis:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Auto-Generated Files:
-✅ Customer.cs (Domain)                    0 min
-✅ CustomerRepository.cs (Infrastructure)  0 min
-✅ GetCustomerQuery.cs (Application)       0 min
-✅ CustomersController.cs (API)            0 min
-✅ SP_*.sql (Infrastructure)               0 min
-
-Manual Code Files:
-⚠️  CustomerForm.tsx (UI)                  5 min
-⚠️  ReportGenerator.prt.cs (Logic)         5 min
-⚠️  DataImporter.prt.cs (Logic)            5 min
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total Time Estimate: 15 minutes
-
-Breaking Changes:
-• 3 React components need updates
-• 2 manual logic files affected
-• No database migration needed
-
-[Show Detailed Diff] [Preview Changes] [Generate]
-```
-
-**Time:** 5 days
-
----
-
-### 4. Version Control Integration (1 week) 🔄
-**Goal:** Built-in Git + Snapshots + Rollback
-
-**Capabilities:**
-- 📸 Automatic snapshot before generation
-- 💾 Git commit with detailed message
-- 📅 Visual timeline of changes
-- ⏪ One-click rollback
-- 🔀 Branch management
-- 📦 Stash support
-
-**UI Example:**
-```
-📅 Change Timeline
-
-┌─────────────────────────────────────────────────────┐
-│ 18/11/2025 14:30 - feat: Add Email to Customer     │
-│ ✅ Auto-Generated: 5 files                          │
-│ ⚠️  Manual Updates: 3 files                         │
-│ [View Changes] [Rollback] [Create Branch]          │
-├─────────────────────────────────────────────────────┤
-│ 18/11/2025 12:15 - refactor: CustomerID to int     │
-│ ✅ Auto-Generated: 8 files                          │
-│ ⚠️  Manual Updates: 2 files                         │
-│ [View Changes] [Rollback]                           │
-├─────────────────────────────────────────────────────┤
-│ 17/11/2025 16:45 - feat: Create Order entity       │
-│ ✅ Auto-Generated: 12 files                         │
-│ ⚠️  Manual Updates: 0 files                         │
-│ [View Changes] [Rollback]                           │
-└─────────────────────────────────────────────────────┘
-
-Current Branch: main
-Uncommitted Changes: 0
-```
-
-**Technologies:**
-- LibGit2Sharp (.NET Git library)
-- Snapshot management system
-- Diff algorithms (Myers, Patience)
-
-**Time:** 5 days
-
----
-
-### 5. AI Assistant (2 weeks) 🤖
-**Goal:** Intelligent code generation assistance
-
-**Capabilities:**
-- 💬 Natural language interaction
-- 💡 Smart suggestions
-- 📝 Best practices recommendations
-- 🏷️ Auto-naming conventions
-- 🔍 Schema optimization
-- 🔒 Security scanning
-
-**Examples:**
-
-#### Schema Analysis:
-```
-AI: "I noticed you created a Customer table with an Email column.
-     
-     Would you like me to:
-     ✅ Add a unique index (prevent duplicates)?
-     ✅ Add email validation?
-     ✅ Consider encrypting it with ent_ prefix?
-     
-     [Apply All] [Choose Individually] [Learn More]"
-```
-
-#### Naming Conventions:
-```
-AI: "I see you have 3 tables with 'Order' prefix:
-     
-     📋 Current:
-     • Order
-     • OrderLine
-     • OrderStatus
-     
-     💡 Recommended (industry standard):
-     • Order → OrderMaster
-     • OrderLine → OrderDetail
-     • OrderStatus → OrderStatusLookup
-     
-     This improves clarity and follows naming best practices.
-     
-     [Apply Changes] [Customize] [Ignore]"
-```
-
-#### Security Scan:
-```
-AI: "⚠️  Security Issues Found:
-     
-     1. Password column without encryption
-        → Recommendation: Add eno_ prefix (hashed)
-        
-     2. CreditCard column in plain text
-        → Recommendation: Add ent_ prefix (encrypted)
-        
-     3. SSN column missing protection
-        → Recommendation: Add ent_ prefix (encrypted)
-     
-     [Fix All] [Fix Individually] [Details]"
-```
-
-#### Relationship Suggestions:
-```
-AI: "💡 Missing Relationships Detected:
-     
-     Table: Orders
-     Column: CustomerId (int)
-     
-     Suggested Foreign Key:
-     Orders.CustomerId → Customers.ID
-     
-     Benefits:
-     ✅ Data integrity
-     ✅ Auto-generated navigation properties
-     ✅ Cascading operations
-     
-     [Add Relationship] [Ignore]"
-```
-
-**Technologies:**
-- Anthropic Claude API / OpenAI GPT-4
-- Prompt engineering framework
-- Context window management
-- Response caching
-
-**Time:** 10 days
-
----
-
-### 6. Best Practices Analyzer (1 week) 📊
-**Goal:** Automated code quality & security scanning
-
-**Capabilities:**
-- 🔒 Security Scanner
-- 📈 Performance Analyzer
-- 📐 Naming Convention Checker
-- 🎯 Index Recommendations
-- ⚠️ Anti-pattern Detection
-- 📊 Quality Score
-
-**UI Example:**
-```
-🎯 Code Quality Dashboard
-
-Overall Score: 87/100 (Good)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Security: 75/100 ⚠️
+Step 1: Select Tables
 ┌─────────────────────────────────────────┐
-│ ⚠️  High Priority (2)                   │
-│ • Password without encryption           │
-│ • CreditCard in plain text              │
+│ Select tables to generate:              │
 │                                         │
-│ ⚠️  Medium Priority (1)                 │
-│ • Missing SSL requirement               │
+│ ☑ Customer                             │
+│ ☑ Order                                │
+│ ☐ OrderItem                            │
+│ ☑ Product                              │
+│                                         │
+│ [Select All] [Clear All]               │
+│                                         │
+│           [Back] [Next →]              │
 └─────────────────────────────────────────┘
 
-Performance: 90/100 ✅
+Step 2: Generation Options
 ┌─────────────────────────────────────────┐
-│ ⚠️  Warnings (1)                        │
-│ • Missing index on Orders.CustomerId    │
+│ What to generate:                       │
+│                                         │
+│ ☑ Entities                             │
+│ ☑ Repositories                         │
+│ ☑ CQRS (Queries & Commands)            │
+│ ☑ API Controllers                      │
+│ ☑ SQL Stored Procedures                │
+│ ☑ Unit Tests                           │
+│                                         │
+│ Architecture: [Clean Architecture ▼]   │
+│                                         │
+│           [← Back] [Next →]            │
 └─────────────────────────────────────────┘
 
-Naming: 95/100 ✅
+Step 3: AI Review
 ┌─────────────────────────────────────────┐
-│ ✅ Follows conventions                   │
-│ ℹ️  1 suggestion available              │
+│ 🤖 AI Suggestions:                      │
+│                                         │
+│ ⚠ Customer.CreditCard should be        │
+│   encrypted (ent_ prefix)              │
+│   [Apply] [Skip]                        │
+│                                         │
+│ 💡 Consider adding Email index         │
+│   for better query performance         │
+│   [Apply] [Skip]                        │
+│                                         │
+│           [← Back] [Next →]            │
 └─────────────────────────────────────────┘
 
-Relationships: 100/100 ✅
+Step 4: Preview & Generate
 ┌─────────────────────────────────────────┐
-│ ✅ All foreign keys defined              │
-│ ✅ No orphaned records possible          │
+│ Files to generate: 36                   │
+│                                         │
+│ 📁 Domain/                              │
+│   📄 Customer.cs                        │
+│   📄 Order.cs                           │
+│   📄 Product.cs                         │
+│ 📁 Infrastructure/                      │
+│   📄 CustomerRepository.cs              │
+│   ...                                   │
+│                                         │
+│ [Preview Code]                          │
+│                                         │
+│           [← Back] [Generate 🚀]       │
 └─────────────────────────────────────────┘
-
-[Fix All Issues] [Generate Report] [Ignore Warnings]
 ```
 
-**Time:** 5 days
+#### Day 28-29: Code Preview Panel
+
+**Tasks:**
+- [ ] Monaco Editor integration
+- [ ] Syntax highlighting
+- [ ] Diff view (before/after)
+- [ ] File tree navigation
+- [ ] 10+ tests
+
+#### Day 30: Generation Progress
+
+**Tasks:**
+- [ ] Real-time progress updates
+- [ ] File generation animation
+- [ ] Error display
+- [ ] Success summary
+- [ ] 5+ tests
 
 ---
 
-### 7. React Component Generator (2 weeks) ⚛️
-**Goal:** Automatic UI component generation
+### Week 7: Advanced UI Features (5 days)
 
-**Generated Components:**
+#### Day 31-32: Schema Designer
 
-#### Form Component:
-```tsx
-// Generated: CustomerForm.tsx
-import { useState } from 'react';
-import { TextField, Button, Card } from '@mui/material';
-import { useCreateCustomer } from '@/hooks/useCustomers';
+**Tasks:**
+- [ ] React Flow integration
+- [ ] Table visualization
+- [ ] Relationship lines
+- [ ] Drag & drop (optional)
+- [ ] 15+ tests
 
-export const CustomerForm = () => {
-  const [customer, setCustomer] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
-  
-  const createMutation = useCreateCustomer();
-
-  const handleSubmit = () => {
-    createMutation.mutate(customer);
-  };
-
-  return (
-    <Card>
-      <TextField
-        label="Name"
-        value={customer.name}
-        onChange={e => setCustomer({...customer, name: e.target.value})}
-        required
-      />
-      <TextField
-        label="Email"
-        type="email"
-        value={customer.email}
-        onChange={e => setCustomer({...customer, email: e.target.value})}
-        required
-      />
-      <TextField
-        label="Phone"
-        value={customer.phone}
-        onChange={e => setCustomer({...customer, phone: e.target.value})}
-      />
-      <Button onClick={handleSubmit} disabled={createMutation.isLoading}>
-        {createMutation.isLoading ? 'Saving...' : 'Save'}
-      </Button>
-    </Card>
-  );
-};
+**Schema Designer:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ Schema Designer                          [Zoom] [Fit]   │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│   ┌──────────────┐         ┌──────────────┐            │
+│   │  Customer    │         │    Order     │            │
+│   ├──────────────┤         ├──────────────┤            │
+│   │ ID (PK)      │────────►│ ID (PK)      │            │
+│   │ Name         │         │ CustomerID   │            │
+│   │ Email        │         │ OrderDate    │            │
+│   │ ent_CreditCard│        │ TotalAmount  │            │
+│   │ eno_Password │         │ lkp_Status   │            │
+│   └──────────────┘         └──────┬───────┘            │
+│                                    │                    │
+│                            ┌───────▼──────┐            │
+│                            │  OrderItem   │            │
+│                            ├──────────────┤            │
+│                            │ ID (PK)      │            │
+│                            │ OrderID      │            │
+│                            │ ProductID    │            │
+│                            │ Quantity     │            │
+│                            └──────────────┘            │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-#### List Component:
-```tsx
-// Generated: CustomerList.tsx
-import { DataGrid } from '@mui/x-data-grid';
-import { useCustomers } from '@/hooks/useCustomers';
+#### Day 33-34: AI Chat Panel
 
-export const CustomerList = () => {
-  const { data: customers, isLoading } = useCustomers();
+**Tasks:**
+- [ ] Chat interface component
+- [ ] Message history
+- [ ] Code snippets in chat
+- [ ] Action buttons (Apply, Preview)
+- [ ] 10+ tests
 
-  const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'name', headerName: 'Name', width: 200 },
-    { field: 'email', headerName: 'Email', width: 250 },
-    { field: 'phone', headerName: 'Phone', width: 150 },
-  ];
+#### Day 35: Smart Error Guide
 
-  return (
-    <DataGrid
-      rows={customers ?? []}
-      columns={columns}
-      loading={isLoading}
-      pageSize={10}
-      checkboxSelection
-    />
-  );
-};
+**Tasks:**
+- [ ] Build error list component
+- [ ] Error details panel
+- [ ] Quick fix suggestions
+- [ ] Navigation to file/line
+- [ ] 10+ tests
+
+**Smart Error Guide:**
 ```
-
-#### API Service:
-```ts
-// Generated: customersApi.ts
-import axios from 'axios';
-
-const API_BASE = '/api/customers';
-
-export const customersApi = {
-  getAll: () => axios.get(API_BASE),
-  getById: (id: number) => axios.get(`${API_BASE}/${id}`),
-  create: (data: CustomerCreateDto) => axios.post(API_BASE, data),
-  update: (id: number, data: CustomerUpdateDto) => 
-    axios.put(`${API_BASE}/${id}`, data),
-  delete: (id: number) => axios.delete(`${API_BASE}/${id}`)
-};
+┌─────────────────────────────────────────────────────────┐
+│ ⚠️ 3 Build Errors (Manual Code)                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ 1. CustomerForm.prt.cs:45                              │
+│    Error CS0029: Cannot convert 'string' to 'int'       │
+│                                                         │
+│    Context:                                             │
+│    ─────────────────────────────────────────────        │
+│    44│ // Changed from string to int                    │
+│    45│ var customerId = txtCustomerID.Text;  ← ERROR   │
+│    46│ LoadCustomer(customerId);                       │
+│    ─────────────────────────────────────────────        │
+│                                                         │
+│    💡 Suggested Fix:                                    │
+│    var customerId = int.Parse(txtCustomerID.Text);     │
+│                                                         │
+│    [Apply Fix] [View File] [Show Diff] [Ignore]        │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│ 2. ReportGenerator.prt.cs:23 ...                       │
+└─────────────────────────────────────────────────────────┘
 ```
-
-**Features:**
-- ✅ Material-UI components
-- ✅ React Query integration
-- ✅ Form validation (Yup)
-- ✅ Responsive design
-- ✅ Loading states
-- ✅ Error handling
-- ✅ TypeScript types
-
-**Time:** 10 days
 
 ---
 
-### 8. Migration Tool (1 week) 🔄
-**Goal:** VB.NET → C# converter for legacy projects
+## 🔄 Phase 3D: Migration & Polish (2 weeks)
 
-**Capabilities:**
-- 🔍 Legacy project analysis
-- 🔄 VB.NET → C# conversion
-- 📊 Migration report
-- 📋 Step-by-step guide
-- ⚠️ Issue detection
-- 💡 Manual step suggestions
+**Goal:** VB.NET migration tools and final release preparation
 
-**Workflow:**
+---
 
-#### Step 1: Analysis
-```
+### Week 8: Migration Tool (5 days)
+
+#### Day 36-37: Legacy Project Analyzer
+
+**Tasks:**
+- [ ] VB.NET project file parser
+- [ ] Legacy TargCC structure detection
+- [ ] File inventory
+- [ ] Complexity analysis
+- [ ] 15+ tests
+
+```bash
+$ targcc migrate analyze ./LegacyProject
+
 📊 Legacy Project Analysis
 
 Project: TargCCOrders (VB.NET)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+─────────────────────────────────────────
 
 Structure:
 ├── DBController/         8 entities, 450 files
@@ -457,274 +775,174 @@ Structure:
 
 Complexity Score: 8/10 (High)
 
+Manual Code (*.prt files):
+├── 23 .prt.vb files
+├── ~2,500 lines of custom code
+└── Will be preserved during migration
+
 Estimated Migration Time: 2-3 weeks
 
-[Continue] [View Details] [Cancel]
+[Generate Migration Plan] [Export Report]
 ```
 
-#### Step 2: Conversion Options
-```
-🔄 Migration Strategy
+#### Day 38-39: Migration Generator
 
-Choose Target Architecture:
+**Tasks:**
+- [ ] VB.NET → C# syntax converter
+- [ ] Project structure converter
+- [ ] Manual code preservation
+- [ ] Migration report generator
+- [ ] 15+ tests
 
-○ Legacy Mirror (8 projects → C# direct conversion)
-  ⏱️  Fast (1-2 weeks)
-  ⚠️  Still uses ASMX + WinForms
+#### Day 40: Migration Testing
 
-● Clean Architecture (Recommended) ✅
-  ⏱️  Medium (2-3 weeks)
-  ✅ Modern REST API
-  ✅ React UI
-  ✅ Clean separation
+**Tasks:**
+- [ ] Test with sample legacy project
+- [ ] Edge case handling
+- [ ] Error recovery
+- [ ] 10+ tests
 
-○ Hybrid (Gradual migration)
-  ⏱️  Slow (3-6 months)
-  ✅ Zero downtime
-  ⚠️  Complex management
+---
 
-[Next: Generate Plan]
-```
+### Week 9: Polish & Release (5 days)
 
-#### Step 3: Migration Report
-```
-📋 Migration Plan - Clean Architecture
+#### Day 41-42: Git Integration
 
-Phase 1: Database & Domain (Week 1)
-✅ Analyze database schema
-✅ Generate Domain entities
-✅ Generate SQL stored procedures
-✅ Generate Repositories
+**Tasks:**
+- [ ] LibGit2Sharp integration
+- [ ] Auto-commit on generation
+- [ ] Snapshot before changes
+- [ ] Rollback support
+- [ ] 10+ tests
 
-Phase 2: Application Layer (Week 2)
-✅ Generate CQRS handlers
-✅ Generate validators
-✅ Generate DTOs
-⚠️  Manual: 12 business logic files need review
+```bash
+$ targcc generate all Customer --git-commit
 
-Phase 3: API Layer (Week 2)
-✅ Generate REST controllers
-✅ Generate middleware
-⚠️  Manual: 3 custom endpoints need conversion
+📦 Generating code...
+  ✓ 9 files created
 
-Phase 4: UI Layer (Week 3)
-✅ Generate React components
-✅ Generate forms
-⚠️  Manual: 8 complex forms need redesign
+📸 Creating Git snapshot...
+  ✓ Snapshot: targcc-2024-11-24-143022
 
-Manual Work Required:
-• 12 business logic files (*.prt.vb)
-• 3 custom ASMX methods
-• 8 complex WinForms screens
+💾 Committing changes...
+  ✓ Commit: "feat(targcc): Generate Customer entity and related files"
 
-Auto-Conversion Rate: 85%
-Manual Review Rate: 15%
-
-[Start Migration] [Export Plan] [Cancel]
+✅ Done! Use 'git log' to see commit or 'targcc rollback' to undo.
 ```
 
-**Conversion Features:**
-- ✅ Syntax conversion (VB.NET → C#)
-- ✅ ASMX → REST API conversion
-- ✅ WinForms → React conversion (structure)
-- ✅ Business logic extraction
-- ✅ Test migration
-- ⚠️  Manual review suggestions
+#### Day 43-44: Testing & Bug Fixes
 
-**Time:** 5 days
+**Tasks:**
+- [ ] Full regression testing
+- [ ] Performance testing
+- [ ] Security audit
+- [ ] Bug fixes
+- [ ] 20+ tests
 
----
+#### Day 45: Release v2.0.0
 
-## 📅 Week-by-Week Plan
-
-### 🗓️ Week 1-2: React UI (10 days)
-
-#### Day 1-3: UI Foundation
-- 🆕 React Component Generator
-- 🆕 Form Generator (CRUD forms)
-- 🆕 List Generator (DataGrid)
-- 🆕 API Service Generator
-- 🆕 10+ component templates
-
-#### Day 4-7: Advanced Components
-- 🆕 Schema Designer (React Flow)
-- 🆕 Code Preview Panel
-- 🆕 Settings Management
-- 🆕 Real-time updates (Socket.io)
-
-#### Day 8-10: Integration & Polish
-- 🆕 Connect to API (Phase 2)
-- 🆕 State management (React Query)
-- 🆕 Responsive design
-- 🆕 20+ tests
-
-**Deliverable:** Complete React UI
+**Tasks:**
+- [ ] Final documentation review
+- [ ] README updates
+- [ ] Release notes
+- [ ] NuGet package (CLI)
+- [ ] GitHub release
 
 ---
 
-### 🗓️ Week 3: Smart Features (5 days)
+## 📊 Test Requirements
 
-#### Day 1-2: Smart Error Guide
-- 🆕 Build error analyzer
-- 🆕 Code navigation
-- 🆕 Diff viewer
-- 🆕 Quick fix engine
-
-#### Day 3-4: Predictive Analysis
-- 🆕 Impact analyzer
-- 🆕 Time estimator
-- 🆕 Change predictor
-- 🆕 Dependency checker
-
-#### Day 5: Version Control
-- 🆕 Git integration (LibGit2Sharp)
-- 🆕 Snapshot manager
-- 🆕 Rollback system
-
-**Deliverable:** Smart assistance tools
+| Phase | Unit Tests | Integration Tests | Total |
+|-------|------------|-------------------|-------|
+| Phase 3A (CLI) | 50+ | 20+ | 70+ |
+| Phase 3B (AI) | 40+ | 15+ | 55+ |
+| Phase 3C (UI) | 60+ | 25+ | 85+ |
+| Phase 3D (Migration) | 30+ | 15+ | 45+ |
+| **Total** | **180+** | **75+** | **255+** |
 
 ---
 
-### 🗓️ Week 4-5: AI Features (10 days)
+## 🎯 Success Criteria
 
-#### Day 1-5: AI Assistant
-- 🆕 Claude/GPT-4 integration
-- 🆕 Schema analysis
-- 🆕 Smart suggestions
-- 🆕 Naming conventions
-- 🆕 Security scanning
+### Functional Requirements
 
-#### Day 6-10: Best Practices Analyzer
-- 🆕 Quality scanner
-- 🆕 Performance analyzer
-- 🆕 Security checker
-- 🆕 Dashboard UI
+- ✅ CLI generates complete Clean Architecture project
+- ✅ AI provides relevant suggestions
+- ✅ Web UI wizard completes full generation
+- ✅ Schema Designer displays relationships
+- ✅ Smart Error Guide navigates to issues
+- ✅ Migration tool converts legacy projects
+- ✅ Git integration works seamlessly
 
-**Deliverable:** AI-powered assistance
+### Quality Requirements
 
----
+| Metric | Target |
+|--------|--------|
+| Code Coverage | 85%+ |
+| CLI Response Time | < 2s for single table |
+| UI Load Time | < 1s |
+| AI Response Time | < 3s |
+| Build Time | < 30s |
 
-### 🗓️ Week 6: Migration Tool (5 days)
+### Performance Requirements
 
-#### Day 1-3: VB.NET Converter
-- 🆕 Syntax converter
-- 🆕 Project analyzer
-- 🆕 ASMX → REST converter
-- 🆕 WinForms → React mapper
-
-#### Day 4-5: Migration Planning
-- 🆕 Migration report generator
-- 🆕 Step-by-step guide
-- 🆕 Issue detector
-
-**Deliverable:** Migration tool
+| Operation | Target |
+|-----------|--------|
+| Generate single entity | < 500ms |
+| Generate full table (all files) | < 2s |
+| Generate entire project (10 tables) | < 30s |
+| AI suggestion | < 3s |
+| Schema analysis | < 5s |
 
 ---
 
-### 🗓️ Week 7-8: Polish & Release (10 days)
+## 📚 Deliverables Summary
 
-#### Day 1-5: Testing & Quality
-- 🆕 End-to-end tests
-- 🆕 Performance optimization
-- 🆕 Security audit
-- 🆕 Bug fixes
+### Phase 3A: CLI Core
+- `TargCC.CLI` - Command-line application
+- 15+ commands implemented
+- Help system and documentation
+- 70+ tests
 
-#### Day 6-10: Documentation & Launch
-- 🆕 User manual
-- 🆕 Video tutorials
-- 🆕 Interactive demos
-- 🆕 Release v2.0.0! 🎉
+### Phase 3B: AI Integration
+- `TargCC.AI` - AI service library
+- Claude/OpenAI integration
+- Suggestion engine
+- Security scanner
+- 55+ tests
 
-**Deliverable:** Production release
+### Phase 3C: Local Web UI
+- `TargCC.Web` - React application
+- `TargCC.API` - ASP.NET Core backend
+- Dashboard, Wizard, Designer
+- AI Chat integration
+- 85+ tests
 
----
-
-## 📊 Success Criteria
-
-### Functional Requirements:
-
-- ✅ React UI generates all CRUD screens
-- ✅ Smart Error Guide detects and suggests fixes
-- ✅ AI Assistant provides relevant suggestions
-- ✅ Migration Tool converts 85%+ automatically
-- ✅ Version Control integrates seamlessly
-- ✅ All features documented
-
-### Quality Requirements:
-
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **UI Response Time** | <100ms | Lighthouse |
-| **AI Suggestion Accuracy** | 80%+ | User feedback |
-| **Migration Success Rate** | 85%+ | Automated tests |
-| **User Satisfaction** | 9/10 | Surveys |
-| **Documentation** | 100% | Coverage |
-
-### Performance Requirements:
-
-- ✅ UI load time: <1 second
-- ✅ Component generation: <5 seconds
-- ✅ AI response time: <3 seconds
-- ✅ Migration analysis: <30 seconds
+### Phase 3D: Migration & Polish
+- Migration tool
+- Git integration
+- Final testing
+- Release v2.0.0
+- 45+ tests
 
 ---
 
-## 🎯 Phase 3 Deliverables
+## 🚀 What's Next After Phase 3?
 
-```
-After Phase 3, complete workflow:
+**Phase 4 Options (Future):**
 
-1. Visual Schema Design (React)
-   ↓
-2. AI Suggestions & Validation
-   ↓
-3. Generate Code (Phase 2 + 3)
-   ↓
-4. Smart Error Guide (if needed)
-   ↓
-5. Git Commit & Snapshot
-   ↓
-6. Deploy to Production
-
-Time: Minutes, not hours! ⚡
-```
+- **Enterprise Features:** Multi-tenant, SSO, Team collaboration
+- **Cloud Deployment:** Docker, Kubernetes, Azure/AWS
+- **Plugin Marketplace:** Custom generators, themes
+- **Mobile Support:** MAUI generator
 
 ---
 
-## 💡 Next Steps After Phase 3
+**Created:** 24/11/2025  
+**Version:** 2.0 (CLI + Web UI Edition)  
+**Status:** Ready for Implementation
 
-**Phase 4 Options:**
-
-### Enterprise Features:
-- Multi-tenant support
-- Advanced security (SSO, RBAC)
-- Audit logging
-- Team collaboration
-- Custom plugin marketplace
-
-### Cloud Native:
-- Docker containers
-- Kubernetes deployment
-- Azure/AWS templates
-- CI/CD pipelines
-- Auto-scaling
-
-### Advanced:
-- Microservices support
-- Event Sourcing
-- GraphQL API
-- Real-time (SignalR)
-- Mobile apps (MAUI)
-
-**Timeline:** 6-8 weeks (based on demand)
-
----
-
-**Created:** 18/11/2025  
-**Status:** Planned  
-**Priority:** After Phase 2 completion
-
-**📚 Related:**
+**Related Documents:**
 - [Architecture Decision](ARCHITECTURE_DECISION.md)
-- [Phase 2 Specification](PHASE2_MODERN_ARCHITECTURE.md)
 - [Project Roadmap](PROJECT_ROADMAP.md)
+- [Phase 3 Checklist](Phase3_Checklist.md)

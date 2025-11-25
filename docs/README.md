@@ -1,12 +1,14 @@
 # TargCC Core V2 🚀
 
-**Modern Code Generation Platform - Clean Architecture Edition**
+**Modern Code Generation Platform - CLI + AI + Web UI Edition**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![.NET Version](https://img.shields.io/badge/.NET-8.0-blue)]()
 [![Phase 1](https://img.shields.io/badge/Phase%201-100%25-brightgreen)]()
 [![Phase 1.5](https://img.shields.io/badge/Phase%201.5-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-205%2B%20passing-success)]()
+[![Phase 2](https://img.shields.io/badge/Phase%202-100%25-brightgreen)]()
+[![Phase 3](https://img.shields.io/badge/Phase%203-Starting-blue)]()
+[![Tests](https://img.shields.io/badge/tests-360%2B%20passing-success)]()
 [![Coverage](https://img.shields.io/badge/coverage-85%25%2B-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
@@ -21,6 +23,26 @@
 1. ⚡ **Incremental Generation** - Only what changed
 2. 🛡️ **Build Errors as Safety Net** - Not bugs, features!
 3. 🤖 **Smart Assistance** - System suggests, you decide
+
+### Final Product Vision:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   TargCC 2.0                        │
+│                                                     │
+│   CLI (Professional)    +    Web UI (Visual)        │
+│   ─────────────────         ──────────────          │
+│   $ targcc generate all     • Wizard interface      │
+│   $ targcc analyze          • Schema Designer       │
+│   $ targcc suggest          • AI Chat panel         │
+│                                                     │
+│              Powered by AI Assistant                │
+│              ────────────────────────               │
+│              • Smart suggestions                    │
+│              • Security scanning                    │
+│              • Code review                          │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -50,9 +72,6 @@ Output: 5-Layer Clean Architecture
 ✅ API/
    └── CustomersController.cs         (REST API)
 
-✅ UI.Web/ (Phase 3)
-   └── CustomerForm.tsx               (React Component)
-
 → Complete CRUD API ready in minutes! 🚀
 ```
 
@@ -76,230 +95,87 @@ Changed CustomerID from string to int?
    Now you know exactly where to fix.
 ```
 
-**Read more:** [Core Principles](docs/CORE_PRINCIPLES.md)
+**Read more:** [Core Principles](CORE_PRINCIPLES.md)
 
 ---
 
-## 🏛️ Modern Architecture
+## 🚀 Usage (After Phase 3)
 
-### Clean Architecture (5 Layers):
-
-```
-Solution/
-├── Domain/                    ← Pure business logic
-│   ├── Entities/             (Customer, Order, Product)
-│   └── Interfaces/           (ICustomerRepository)
-│
-├── Application/               ← Use cases (CQRS)
-│   └── Features/
-│       └── Customers/
-│           ├── Queries/      (GetCustomer, GetCustomers)
-│           └── Commands/     (CreateCustomer, UpdateCustomer)
-│
-├── Infrastructure/            ← Data access & services
-│   ├── Repositories/         (CustomerRepository)
-│   ├── Data/                 (ApplicationDbContext)
-│   └── Sql/                  (Stored Procedures)
-│
-├── API/                       ← REST API
-│   └── Controllers/          (CustomersController)
-│
-└── UI.Web/                    ← React SPA (Phase 3)
-    └── src/components/
-```
-
-**Why Clean Architecture?**
-- ✅ **Testable** - Each layer tested independently
-- ✅ **Maintainable** - Clear separation of concerns
-- ✅ **Flexible** - Easy to swap implementations
-- ✅ **Modern** - Industry standard pattern
-
-**Read:** [Architecture Decision](docs/ARCHITECTURE_DECISION.md)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Visual Studio 2022 (17.8+)
-- .NET 8 SDK
-- SQL Server (2019+)
-
-### Installation
+### CLI Usage:
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/TargCC-Core-V2.git
-cd TargCC-Core-V2
+# Initialize project
+$ targcc init
 
-# Restore packages
-dotnet restore
+# Generate from single table
+$ targcc generate all Customer
 
-# Build solution
-dotnet build
+🔍 Analyzing table: Customer...
+  ✓ 8 columns found
+  ✓ 2 indexes detected
 
-# Run tests
-dotnet test
+📦 Generating code...
+  ✓ Domain/Entities/Customer.cs
+  ✓ Domain/Interfaces/ICustomerRepository.cs
+  ✓ Infrastructure/Repositories/CustomerRepository.cs
+  ✓ Infrastructure/Sql/SP_*.sql (6 files)
+  ✓ Application/Features/Customers/* (10 files)
+  ✓ API/Controllers/CustomersController.cs
 
-# Run API (after Phase 2)
-cd src/TargCC.API
-dotnet run
+✅ Generated 20 files in 2.1s
+
+# Generate entire project
+$ targcc generate project --database MyDatabase
+
+# Get AI suggestions
+$ targcc suggest --table Customer
+
+# Launch Web UI
+$ targcc ui
 ```
 
----
+### Web UI:
 
-## 📖 Usage Example
+```bash
+$ targcc ui
 
-### Step 1: Analyze Database
-
-```csharp
-using TargCC.Core.Analyzers;
-
-// Analyze database
-var analyzer = new DatabaseAnalyzer();
-var schema = await analyzer.AnalyzeAsync(connectionString);
-
-// Result: Complete DatabaseSchema with all metadata
-Console.WriteLine($"Found {schema.Tables.Count} tables");
+🌐 Starting TargCC Web UI...
+   Open http://localhost:5000 in your browser
 ```
 
----
-
-### Step 2: Generate SQL & Entities
-
-```csharp
-using TargCC.Core.Generators;
-
-// Get table
-var customerTable = schema.Tables.First(t => t.Name == "Customer");
-
-// Generate SQL
-var sqlGen = new SqlGenerator();
-var getSP = await sqlGen.GenerateGetByIdAsync(customerTable);
-var updateSP = await sqlGen.GenerateUpdateAsync(customerTable);
-
-// Generate Entity
-var entityGen = new EntityGenerator();
-var customerClass = await entityGen.GenerateAsync(customerTable);
-
-// Write to disk
-await File.WriteAllTextAsync("SP_GetCustomer.sql", getSP);
-await File.WriteAllTextAsync("SP_UpdateCustomer.sql", updateSP);
-await File.WriteAllTextAsync("Customer.cs", customerClass);
-```
-
----
-
-### Step 3: Generate Complete Application (Phase 2)
-
-```csharp
-// Generate Repository
-var repoGen = new RepositoryGenerator();
-var repository = await repoGen.GenerateAsync(customerTable);
-
-// Generate CQRS
-var queryGen = new QueryGenerator();
-var getQuery = await queryGen.GenerateGetByIdAsync(customerTable);
-var listQuery = await queryGen.GenerateGetAllAsync(customerTable);
-
-var commandGen = new CommandGenerator();
-var createCommand = await commandGen.GenerateCreateAsync(customerTable);
-var updateCommand = await commandGen.GenerateUpdateAsync(customerTable);
-
-// Generate API Controller
-var apiGen = new ApiControllerGenerator();
-var controller = await apiGen.GenerateAsync(customerTable);
-
-// Result: Complete CRUD API!
-```
-
----
-
-## 🎨 Special Features
-
-### 12 Column Prefixes Supported:
-
-| Prefix | Type | Example | Generated Code |
-|--------|------|---------|----------------|
-| `eno_` | Hashed | `eno_Password` | `public string PasswordHashed { get; private set; }` |
-| `ent_` | Encrypted | `ent_CreditCard` | Encrypt/Decrypt property |
-| `lkp_` | Lookup | `lkp_Status` | Foreign key + Text property |
-| `enm_` | Enum | `enm_Type` | Enum property |
-| `loc_` | Localized | `loc_Name` | Multi-language support |
-| `clc_` | Calculated | `clc_Total` | Read-only, calculated |
-| `blg_` | Business Logic | `blg_Discount` | Server-side only |
-| `agg_` | Aggregate | `agg_OrderCount` | Aggregate property |
-| `spt_` | Separate Update | `spt_Notes` | Separate SP |
-| `upl_` | Upload | `upl_Photo` | File handling |
-| `scb_` | Separate Changed By | `scb_Timestamp` | Audit trail |
-| `spl_` | Split List | `spl_Tags` | Delimited list |
-
-**Read more:** [Prefix Handling Guide](docs/PREFIX_GUIDE.md)
+- **Dashboard** - Project overview
+- **Generation Wizard** - Step-by-step generation
+- **Schema Designer** - Visual table design
+- **AI Chat** - Interactive AI assistance
 
 ---
 
 ## 📊 Project Status
 
 ### ✅ Phase 1: Core Engine (100% Complete)
-
-**Deliverables:**
-- ✅ DatabaseAnalyzer - Complete DB analysis
-- ✅ TableAnalyzer - Tables, indexes, keys
-- ✅ ColumnAnalyzer - Columns, types, prefixes
-- ✅ RelationshipAnalyzer - Foreign keys
-- ✅ Plugin System - Modular architecture
-- ✅ 63 Tests - 80%+ coverage
-- ✅ Grade A - SonarQube
-
----
+- DatabaseAnalyzer, TableAnalyzer, ColumnAnalyzer, RelationshipAnalyzer
+- Plugin System, Configuration Manager
+- 63 Tests, 80%+ coverage, Grade A
 
 ### ✅ Phase 1.5: MVP Generators (100% Complete)
+- SQL Generators (6 SP templates)
+- Entity Generators (12 prefix types)
+- 205+ Tests, 85%+ coverage
 
-**Deliverables:**
-- ✅ SqlGenerator - 6 SP templates
-- ✅ EntityGenerator - Complete C# classes
-- ✅ TypeMapper - 44 SQL→C# mappings
-- ✅ PrefixHandler - 12 prefix types
-- ✅ PropertyGenerator - All property types
-- ✅ MethodGenerator - Constructors, ToString, Clone
-- ✅ RelationshipGenerator - Navigation properties
-- ✅ 205+ Tests - 85%+ coverage
+### ✅ Phase 2: Modern Architecture (100% Complete)
+- Repository Pattern with Dapper
+- CQRS + MediatR
+- REST API Controllers
+- DbContext + Entity Configuration
+- 160+ Tests, 85%+ coverage
 
----
+### 🆕 Phase 3: CLI + AI + Web UI (Starting Now)
+- **Phase 3A:** CLI Core (2 weeks)
+- **Phase 3B:** AI Integration (2 weeks)
+- **Phase 3C:** Local Web UI (3 weeks)
+- **Phase 3D:** Migration & Polish (2 weeks)
 
-### 🔨 Phase 2: Modern Architecture (In Planning)
-
-**Goal:** Complete Clean Architecture implementation
-
-**Planned Generators:**
-- 🆕 RepositoryGenerator
-- 🆕 QueryGenerator (CQRS)
-- 🆕 CommandGenerator (CQRS)
-- 🆕 ApiControllerGenerator
-- 🆕 DbContextGenerator
-- 🆕 ValidatorGenerator
-- 🆕 DtoGenerator
-
-**Timeline:** 4-5 weeks
-
-**Read:** [Phase 2 Specification](docs/PHASE2_MODERN_ARCHITECTURE.md)
-
----
-
-### 📋 Phase 3: UI + AI Features (Planned)
-
-**Goal:** Modern UI + Intelligent assistance
-
-**Features:**
-- 🆕 React Component Generator
-- 🆕 Material-UI integration
-- 🆕 AI Assistant (smart suggestions)
-- 🆕 Smart Error Guide
-- 🆕 Migration Tool (VB.NET → C#)
-
-**Timeline:** 6-8 weeks
-
-**Read:** [Phase 3 Features](docs/PHASE3_ADVANCED_FEATURES.md)
+**Read:** [Phase 3 Specification](PHASE3_ADVANCED_FEATURES.md)
 
 ---
 
@@ -313,20 +189,7 @@ var controller = await apiGen.GenerateAsync(customerTable);
 | Add Field | 1-2 hours | **5-10 min** | **90%** |
 | CRUD Screen | 4-8 hours | **30-60 min** | **87%** |
 | API Endpoint | 2-3 hours | **10-20 min** | **90%** |
-| Unit Tests | 1-2 hours | **Auto** | **100%** |
-
-**Average: 90% time savings! ⚡**
-
----
-
-### Code Quality:
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| **Code Coverage** | 80%+ | **85%** ✅ |
-| **SonarQube Grade** | A | **A** ✅ |
-| **Build Time** | <30s | **25s** ✅ |
-| **Test Pass Rate** | 100% | **100%** ✅ |
+| Full Project | 1-2 weeks | **Minutes** | **99%** |
 
 ---
 
@@ -339,98 +202,38 @@ TargCC-Core-V2/
 │   ├── TargCC.Core.Interfaces/     ✅ Contracts
 │   ├── TargCC.Core.Analyzers/      ✅ Database analysis
 │   ├── TargCC.Core.Generators/     ✅ Code generation
-│   │   ├── Sql/                    ✅ SQL templates
-│   │   └── Entities/               ✅ Entity generation
-│   └── TargCC.Modern/              🔨 Clean Architecture (Phase 2)
-│       ├── Domain/
-│       ├── Application/
-│       ├── Infrastructure/
-│       ├── API/
-│       └── UI.Web/                 📋 React SPA (Phase 3)
+│   ├── TargCC.CLI/                 🆕 CLI application (Phase 3A)
+│   ├── TargCC.AI/                  🆕 AI service (Phase 3B)
+│   ├── TargCC.Web/                 🆕 React UI (Phase 3C)
+│   └── TargCC.API/                 🆕 Backend API (Phase 3C)
 │
 ├── tests/
-│   ├── TargCC.Core.Tests/          ✅ 205+ tests
-│   └── TargCC.Modern.Tests/        🔨 Phase 2 tests
+│   └── TargCC.Core.Tests/          ✅ 360+ tests
 │
 └── docs/
     ├── README.md                    ✅ This file
-    ├── ARCHITECTURE_DECISION.md    ✅ Why Clean Architecture?
-    ├── PHASE2_MODERN_ARCHITECTURE.md ✅ Phase 2 spec
-    ├── PHASE3_ADVANCED_FEATURES.md  📋 Phase 3 spec
-    └── PROJECT_ROADMAP.md           ✅ Complete roadmap
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md).
-
-### Development Setup:
-
-```bash
-# Clone repo
-git clone https://github.com/yourusername/TargCC-Core-V2.git
-
-# Install dependencies
-dotnet restore
-
-# Run tests
-dotnet test
-
-# Build
-dotnet build
+    ├── ARCHITECTURE_DECISION.md    ✅ Architecture
+    ├── PHASE2_MODERN_ARCHITECTURE.md ✅ Phase 2 (Done)
+    ├── PHASE3_ADVANCED_FEATURES.md  🆕 Phase 3 (Current)
+    ├── Phase3_Checklist.md          🆕 Daily tasks
+    └── PROJECT_ROADMAP.md           ✅ Roadmap
 ```
 
 ---
 
 ## 📚 Documentation
 
-### Getting Started:
-- [Quick Start Guide](docs/QUICK_START.md)
-- [Architecture Overview](docs/ARCHITECTURE_DECISION.md)
-- [Core Principles](docs/CORE_PRINCIPLES.md)
-
 ### Phase Specifications:
-- [Phase 1: Core Engine](docs/Phase1_Checklist.md) ✅
-- [Phase 1.5: MVP Generators](docs/PHASE1.5_MVP_GENERATORS.md) ✅
-- [Phase 2: Modern Architecture](docs/PHASE2_MODERN_ARCHITECTURE.md) 🔨
-- [Phase 3: UI + AI](docs/PHASE3_ADVANCED_FEATURES.md) 📋
+- [Phase 1: Core Engine](Phase1_Checklist.md) ✅ Complete
+- [Phase 1.5: MVP Generators](PHASE1_5_MVP_GENERATORS.md) ✅ Complete
+- [Phase 2: Modern Architecture](PHASE2_MODERN_ARCHITECTURE.md) ✅ Complete
+- [Phase 3: CLI + AI + Web UI](PHASE3_ADVANCED_FEATURES.md) 🆕 Starting
+- [Phase 3 Checklist](Phase3_Checklist.md) 🆕 Daily tasks
 
-### Developer Guides:
-- [Generator Development](docs/GENERATOR_GUIDE.md)
-- [Testing Strategy](docs/TESTING_GUIDE.md)
-- [Prefix Handling](docs/PREFIX_GUIDE.md)
-
----
-
-## 🔗 Related Projects
-
-- **TargCC Legacy** - Original VB.NET version
-- **TargCC.UI** - Legacy Windows Forms UI
-- **TargCC.Bridge** - VB.NET ↔ C# interop (future)
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Original TargCC concept and implementation
-- Clean Architecture principles by Robert C. Martin
-- .NET community for excellent tooling
-
----
-
-## 📞 Contact & Support
-
-- **Issues:** [GitHub Issues](https://github.com/yourusername/TargCC-Core-V2/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/TargCC-Core-V2/discussions)
-- **Email:** support@targcc.com
+### Architecture:
+- [Architecture Decision](ARCHITECTURE_DECISION.md)
+- [Core Principles](CORE_PRINCIPLES.md)
+- [Project Roadmap](PROJECT_ROADMAP.md)
 
 ---
 
@@ -439,18 +242,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```
 ✅ Phase 1: Core Engine (6 weeks) - DONE
 ✅ Phase 1.5: MVP Generators (2 weeks) - DONE
-🔨 Phase 2: Modern Architecture (4-5 weeks) - IN PLANNING
-📋 Phase 3: UI + AI (6-8 weeks) - PLANNED
-💡 Phase 4: Enterprise & Cloud (TBD) - FUTURE
+✅ Phase 2: Modern Architecture (4 weeks) - DONE
+🆕 Phase 3: CLI + AI + Web UI (9 weeks) - STARTING NOW
+📋 Phase 4: Enterprise & Cloud (TBD) - FUTURE
 ```
 
-**Current Focus:** Phase 2 - Modern Architecture
+**Current Focus:** Phase 3A - CLI Core
 
-**See:** [Complete Roadmap](docs/PROJECT_ROADMAP.md)
+**See:** [Complete Roadmap](PROJECT_ROADMAP.md)
 
 ---
 
-**Built with ❤️ by Doron**
+**Built with ❤️ by Doron + Claude**
 
-**Last Updated:** 18/11/2025  
-**Version:** 2.0.0-alpha (Phase 1.5 Complete)
+**Last Updated:** 24/11/2025  
+**Version:** 2.0.0-beta (Phase 2 Complete, Phase 3 Starting)
