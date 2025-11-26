@@ -76,6 +76,19 @@ public class Program
         services.AddSingleton<IErrorSuggestionService, ErrorSuggestionService>();
         services.AddSingleton<Services.Analysis.IAnalysisService, Services.Analysis.AnalysisService>();
         services.AddSingleton<Documentation.IDocumentationGenerator, Documentation.DocumentationGenerator>();
+        services.AddSingleton<IProjectGenerationService, ProjectGenerationService>();
+        
+        // Watch Mode Services
+        services.AddSingleton<Core.Analyzers.ISchemaChangeDetector, Core.Analyzers.SchemaChangeDetector>();
+        services.AddSingleton<Core.Services.IGenerationTracker, Core.Services.GenerationTracker>();
+
+        // Project Generators
+        services.AddSingleton<Core.Generators.Project.ISolutionGenerator, Core.Generators.Project.SolutionGenerator>();
+        services.AddSingleton<Core.Generators.Project.IProjectStructureGenerator, Core.Generators.Project.ProjectStructureGenerator>();
+        services.AddSingleton<Core.Generators.Project.IProjectFileGenerator, Core.Generators.Project.ProjectFileGenerator>();
+        services.AddSingleton<Core.Generators.Project.IProgramCsGenerator, Core.Generators.Project.ProgramCsGenerator>();
+        services.AddSingleton<Core.Generators.Project.IAppSettingsGenerator, Core.Generators.Project.AppSettingsGenerator>();
+        services.AddSingleton<Core.Generators.Project.IDependencyInjectionGenerator, Core.Generators.Project.DependencyInjectionGenerator>();
 
         // Commands
         services.AddSingleton<Commands.RootCommand>();

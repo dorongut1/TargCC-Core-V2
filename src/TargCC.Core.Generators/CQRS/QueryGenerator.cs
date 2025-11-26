@@ -129,7 +129,9 @@ public class QueryGenerator : IQueryGenerator
     {
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
-        var pkParamName = CodeGenerationHelpers.ToCamelCase(pkColumn.Name);
+
+        // For property names, sanitize but preserve common acronyms like ID
+        var pkPropertyName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
 
         var queryClassName = $"Get{table.Name}Query";
         var handlerClassName = $"Get{table.Name}Handler";
@@ -138,8 +140,8 @@ public class QueryGenerator : IQueryGenerator
 
         return new QueryGenerationResult
         {
-            QueryCode = GenerateGetByIdQueryRecord(table, pkColumn, pkType, pkParamName, queryClassName, dtoClassName),
-            HandlerCode = GenerateGetByIdHandler(table, pkType, pkParamName, queryClassName, handlerClassName, dtoClassName),
+            QueryCode = GenerateGetByIdQueryRecord(table, pkColumn, pkType, pkPropertyName, queryClassName, dtoClassName),
+            HandlerCode = GenerateGetByIdHandler(table, pkType, pkPropertyName, queryClassName, handlerClassName, dtoClassName),
             ValidatorCode = GenerateGetByIdValidator(table, pkType, queryClassName, validatorClassName),
             DtoCode = GenerateDto(table),
             QueryClassName = queryClassName,
@@ -198,7 +200,7 @@ public class QueryGenerator : IQueryGenerator
         Table table,
         Column pkColumn,
         string pkType,
-        string pkParamName,
+        string pkPropertyName,
         string queryClassName,
         string dtoClassName)
     {
@@ -213,10 +215,9 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("/// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// Query to retrieve a {table.Name} by its primary key.");
         sb.AppendLine("/// </summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"/// <param name=\"{pkParamName}\">The {pkColumn.Name} of the {table.Name} to retrieve.</param>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// <param name=\"{pkPropertyName}\">The {pkColumn.Name} of the {table.Name} to retrieve.</param>");
 
-        var propertyName = char.ToUpperInvariant(pkParamName[0]).ToString() + pkParamName.AsSpan(1).ToString();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName}({pkType} {propertyName}) : IRequest<Result<{dtoClassName}>>;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName}({pkType} {pkPropertyName}) : IRequest<Result<{dtoClassName}>>;");
 
         return sb.ToString();
     }
@@ -303,7 +304,7 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateGetByIdHandler(
         Table table,
         string pkType,
-        string pkParamName,
+        string pkPropertyName,
         string queryClassName,
         string handlerClassName,
         string dtoClassName)
@@ -353,7 +354,6 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(request);");
         sb.AppendLine();
 
-        var pkPropertyName = char.ToUpperInvariant(pkParamName[0]).ToString() + pkParamName.AsSpan(1).ToString();
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {table.Name} by ID: {{Id}}\", request.{pkPropertyName});");
         sb.AppendLine();
         sb.AppendLine("        try");

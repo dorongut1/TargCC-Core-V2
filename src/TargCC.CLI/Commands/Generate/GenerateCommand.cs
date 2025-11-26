@@ -18,11 +18,13 @@ public class GenerateCommand : Command
     /// <param name="configService">Configuration service.</param>
     /// <param name="output">Output service.</param>
     /// <param name="generationService">Generation service.</param>
+    /// <param name="projectGenerationService">Project generation service.</param>
     public GenerateCommand(
         ILoggerFactory loggerFactory,
         IConfigurationService configService,
         IOutputService output,
-        IGenerationService generationService)
+        IGenerationService generationService,
+        IProjectGenerationService projectGenerationService)
         : base("generate", "Generate code from database schema")
     {
         // Add subcommands
@@ -32,5 +34,6 @@ public class GenerateCommand : Command
         AddCommand(new GenerateCqrsCommand(loggerFactory.CreateLogger<GenerateCqrsCommand>(), configService, output, generationService));
         AddCommand(new GenerateApiCommand(loggerFactory.CreateLogger<GenerateApiCommand>(), configService, output, generationService));
         AddCommand(new GenerateAllCommand(loggerFactory.CreateLogger<GenerateAllCommand>(), configService, output, generationService));
+        AddCommand(new GenerateProjectCommand(loggerFactory.CreateLogger<GenerateProjectCommand>(), configService, output, projectGenerationService));
     }
 }

@@ -293,7 +293,7 @@ namespace TargCC.Core.Analyzers.Database
         /// <para>
         /// <strong>Graph Direction:</strong>
         /// The graph is directed from parent → referenced table.
-        /// For example: Order → Customer means Order.CustomerID references Customer.ID
+        /// For example: Order → Customer means Order.CustomerID references Customer.ID.
         /// </para>
         /// <para>
         /// <strong>Use Cases:</strong>

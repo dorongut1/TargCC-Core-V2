@@ -359,14 +359,14 @@ namespace TargCC.Core.Analyzers.Database
         /// Sets <c>IsEncrypted = true</c>, which tells code generators to:
         /// - Hash before storing (eno = one-way)
         /// - Encrypt/decrypt on save/load (ent = two-way)
-        /// - Use password textbox in UI (eno)
+        /// - Use password textbox in UI (eno).
         /// </para>
         /// <para>
         /// <strong>Read-Only Prefixes (clc_, blg_, agg_):</strong>
         /// Sets <c>IsReadOnly = true</c>, which tells code generators to:
         /// - Exclude from Update methods
         /// - Use read-only controls in UI
-        /// - Server-side updates only (business logic)
+        /// - Server-side updates only (business logic).
         /// </para>
         /// </remarks>
         /// <example>

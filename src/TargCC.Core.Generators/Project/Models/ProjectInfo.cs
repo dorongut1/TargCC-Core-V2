@@ -7,6 +7,8 @@
 
 #nullable enable
 
+using TargCC.Core.Interfaces.Models;
+
 namespace TargCC.Core.Generators.Project.Models;
 
 /// <summary>
@@ -48,6 +50,21 @@ public class ProjectInfo
     /// Gets or sets the root namespace.
     /// </summary>
     public string? RootNamespace { get; set; }
+
+    /// <summary>
+    /// Gets or sets the namespace for this specific project (may differ from RootNamespace).
+    /// </summary>
+    public string? Namespace { get; set; }
+
+    /// <summary>
+    /// Gets or sets the database connection string.
+    /// </summary>
+    public string? ConnectionString { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of tables for complete project generation.
+    /// </summary>
+    public List<Table>? Tables { get; set; }
 
     /// <summary>
     /// Gets or sets the list of project references.

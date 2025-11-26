@@ -46,6 +46,7 @@
     <ProjectReference Include="..\TargCC.Core.Analyzers\TargCC.Core.Analyzers.csproj" />
     <ProjectReference Include="..\TargCC.Core.Generators\TargCC.Core.Generators.csproj" />
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\TargCC.Core.Services\TargCC.Core.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

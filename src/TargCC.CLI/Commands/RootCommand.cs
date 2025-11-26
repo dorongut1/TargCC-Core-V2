@@ -19,8 +19,11 @@ public class RootCommand : Command
     private readonly IConfigurationService _configService;
     private readonly IOutputService _output;
     private readonly IGenerationService _generationService;
+    private readonly IProjectGenerationService _projectGenerationService;
     private readonly IAnalysisService _analysisService;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly Core.Analyzers.ISchemaChangeDetector _schemaChangeDetector;
+    private readonly Core.Services.IGenerationTracker _generationTracker;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RootCommand"/> class.
@@ -29,21 +32,32 @@ public class RootCommand : Command
     /// <param name="configService">Configuration service.</param>
     /// <param name="output">Output service.</param>
     /// <param name="generationService">Generation service.</param>
+    /// <param name="projectGenerationService">Project generation service.</param>
     /// <param name="analysisService">Analysis service.</param>
     /// <param name="loggerFactory">Logger factory.</param>
+    /// <param name="schemaChangeDetector">Schema change detector.</param>
+    /// <param name="generationTracker">Generation tracker.</param>
     public RootCommand(
         ILogger<RootCommand> logger,
         IConfigurationService configService,
         IOutputService output,
         IGenerationService generationService,
+        IProjectGenerationService projectGenerationService,
         IAnalysisService analysisService,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        Core.Analyzers.ISchemaChangeDetector schemaChangeDetector,
+        Core.Services.IGenerationTracker generationTracker)
         : base("targcc", "TargCC Core V2 - Modern code generation platform")
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
+        _projectGenerationService = projectGenerationService ?? throw new ArgumentNullException(nameof(projectGenerationService));
+        _analysisService = analysisService ?? throw new ArgumentNullException(nameof(analysisService));
+        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _schemaChangeDetector = schemaChangeDetector ?? throw new ArgumentNullException(nameof(schemaChangeDetector));
+        _generationTracker = generationTracker ?? throw new ArgumentNullException(nameof(generationTracker));
         _analysisService = analysisService ?? throw new ArgumentNullException(nameof(analysisService));
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
@@ -72,8 +86,9 @@ public class RootCommand : Command
         AddCommand(CreateVersionCommand());
         AddCommand(CreateInitCommand());
         AddCommand(CreateConfigCommand());
-        AddCommand(new GenerateCommand(_loggerFactory, _configService, _output, _generationService));
+        AddCommand(new GenerateCommand(_loggerFactory, _configService, _output, _generationService, _projectGenerationService));
         AddCommand(new AnalyzeCommand(_loggerFactory, _configService, _output, _analysisService));
+        AddCommand(new WatchCommand(_configService, _schemaChangeDetector, _generationService, _generationTracker, _output, _loggerFactory));
 
         // Set default handler
         this.SetHandler(() =>
@@ -103,6 +118,7 @@ public class RootCommand : Command
         _output.Info("  config         Manage configuration");
         _output.Info("  generate       Generate code from database tables");
         _output.Info("  analyze        Analyze database schema and code quality");
+        _output.Info("  watch          Watch database for changes and auto-regenerate");
         _output.Info("  version        Show version information");
         _output.BlankLine();
         _output.Info("Use 'targcc [command] --help' for more information about a command");

@@ -32,7 +32,7 @@ namespace TargCC.Core.Analyzers.Database;
 /// var incrementalSchema = await analyzer.AnalyzeIncrementalAsync(changes);
 /// </code>
 /// </example>
-public class DatabaseAnalyzer : IAnalyzer
+public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
 {
     private readonly string _connectionString;
     private readonly ILogger<DatabaseAnalyzer> _logger;
@@ -43,7 +43,7 @@ public class DatabaseAnalyzer : IAnalyzer
     /// Initializes a new instance of the <see cref="DatabaseAnalyzer"/> class.
     /// </summary>
     /// <param name="connectionString">SQL Server connection string. Must include database name and credentials.
-    /// Example: "Server=localhost;Database=MyDb;Integrated Security=true;"</param>
+    /// Example: "Server=localhost;Database=MyDb;Integrated Security=true;".</param>
     /// <param name="logger">Logger instance for tracking operations and diagnostics.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="connectionString"/> or <paramref name="logger"/> is null.</exception>
     /// <remarks>
@@ -241,6 +241,18 @@ public class DatabaseAnalyzer : IAnalyzer
             _logger.LogError(ex, "Error during database analysis");
             throw new InvalidOperationException("Database analysis failed", ex);
         }
+    }
+
+    /// <summary>
+    /// Analyzes a specific database schema using the provided connection string.
+    /// </summary>
+    /// <param name="connectionString">Database connection string.</param>
+    /// <returns>Complete database schema.</returns>
+    public async Task<DatabaseSchema> AnalyzeDatabaseAsync(string connectionString)
+    {
+        // Create a new analyzer with the provided connection string
+        var analyzer = new DatabaseAnalyzer(connectionString, _logger);
+        return await analyzer.AnalyzeAsync();
     }
 
     /// <summary>
