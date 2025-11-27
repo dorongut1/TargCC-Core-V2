@@ -51,7 +51,7 @@ dotnet run --project src/MyApp.API
 
 **Open browser:** `https://localhost:5001/swagger` 🎉
 
-**Read the full guide:** [QUICKSTART.md](docs/QUICKSTART.md)
+**Read the full guide:** [QUICKSTART.md](docs/current/QUICKSTART.md)
 
 ---
 
@@ -73,7 +73,7 @@ Changed CustomerID from string to int?
    Now you know exactly where to update your custom logic.
 ```
 
-**Read more:** [Core Principles](docs/CORE_PRINCIPLES.md)
+**Read more:** [Core Principles](docs/current/CORE_PRINCIPLES.md)
 
 ---
 
@@ -420,7 +420,7 @@ targcc watch
 # Files automatically regenerate!
 ```
 
-**More examples:** [USAGE-EXAMPLES.md](docs/USAGE-EXAMPLES.md)
+**More examples:** [USAGE-EXAMPLES.md](docs/current/USAGE-EXAMPLES.md)
 
 ---
 
@@ -452,19 +452,19 @@ dotnet test --filter "Category=Integration"
 ## 📚 Documentation
 
 ### Quick Start & Guides
-- [**Quickstart Guide**](docs/QUICKSTART.md) - 5 minutes from zero to running app
-- [**CLI Reference**](docs/CLI-REFERENCE.md) - Complete command reference
-- [**Usage Examples**](docs/USAGE-EXAMPLES.md) - Common scenarios (coming soon)
+- [**Quickstart Guide**](docs/current/QUICKSTART.md) - 5 minutes from zero to running app
+- [**CLI Reference**](docs/current/CLI-REFERENCE.md) - Complete command reference
+- [**Usage Examples**](docs/current/USAGE-EXAMPLES.md) - Common scenarios
 
 ### Architecture & Design
-- [Architecture Decision](docs/ARCHITECTURE_DECISION.md) - Why Clean Architecture?
-- [Core Principles](docs/CORE_PRINCIPLES.md) - Build Errors philosophy
-- [Project Roadmap](docs/PROJECT_ROADMAP.md) - Complete timeline
+- [Architecture Decision](docs/current/ARCHITECTURE_DECISION.md) - Why Clean Architecture?
+- [Core Principles](docs/current/CORE_PRINCIPLES.md) - Build Errors philosophy
+- [Project Roadmap](docs/progress/PROJECT_ROADMAP.md) - Complete timeline
 
 ### Phase Documentation
-- [Phase 3 Checklist](docs/Phase3_Checklist.md) - Detailed phase 3 plan
-- [Phase 3 Progress](docs/PHASE3_PROGRESS.md) - Current progress
-- [Phase 3 Advanced Features](docs/PHASE3_ADVANCED_FEATURES.md) - Future features
+- [Phase 3 Checklist](docs/progress/Phase3_Checklist.md) - Detailed phase 3 plan
+- [Phase 3 Progress](docs/progress/PHASE3_PROGRESS.md) - Current progress
+- [Phase 3 Advanced Features](docs/progress/PHASE3_ADVANCED_FEATURES.md) - Future features
 
 ### Technical Reference
 - [Entity Generator Spec](docs/ENTITY_GENERATOR_SPEC.md) - Generator details
@@ -569,7 +569,7 @@ cd MyProject
 targcc init
 
 # 4. Follow the quickstart guide
-# See: docs/QUICKSTART.md
+# See: docs/current/QUICKSTART.md
 ```
 
 ---
