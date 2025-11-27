@@ -1,12 +1,14 @@
 using System.CommandLine;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using TargCC.AI.Services;
 using TargCC.CLI.Commands.Analyze;
 using TargCC.CLI.Commands.Generate;
 using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
 using TargCC.CLI.Services.Analysis;
 using TargCC.CLI.Services.Generation;
+using TargCC.Core.Interfaces;
 
 namespace TargCC.CLI.Commands;
 
@@ -24,6 +26,8 @@ public class RootCommand : Command
     private readonly ILoggerFactory _loggerFactory;
     private readonly Core.Analyzers.ISchemaChangeDetector _schemaChangeDetector;
     private readonly Core.Services.IGenerationTracker _generationTracker;
+    private readonly IAIService _aiService;
+    private readonly IDatabaseAnalyzer _databaseAnalyzer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RootCommand"/> class.
@@ -37,6 +41,8 @@ public class RootCommand : Command
     /// <param name="loggerFactory">Logger factory.</param>
     /// <param name="schemaChangeDetector">Schema change detector.</param>
     /// <param name="generationTracker">Generation tracker.</param>
+    /// <param name="aiService">AI service.</param>
+    /// <param name="databaseAnalyzer">Database analyzer.</param>
     public RootCommand(
         ILogger<RootCommand> logger,
         IConfigurationService configService,
@@ -46,7 +52,9 @@ public class RootCommand : Command
         IAnalysisService analysisService,
         ILoggerFactory loggerFactory,
         Core.Analyzers.ISchemaChangeDetector schemaChangeDetector,
-        Core.Services.IGenerationTracker generationTracker)
+        Core.Services.IGenerationTracker generationTracker,
+        IAIService aiService,
+        IDatabaseAnalyzer databaseAnalyzer)
         : base("targcc", "TargCC Core V2 - Modern code generation platform")
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -58,8 +66,8 @@ public class RootCommand : Command
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _schemaChangeDetector = schemaChangeDetector ?? throw new ArgumentNullException(nameof(schemaChangeDetector));
         _generationTracker = generationTracker ?? throw new ArgumentNullException(nameof(generationTracker));
-        _analysisService = analysisService ?? throw new ArgumentNullException(nameof(analysisService));
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+        _databaseAnalyzer = databaseAnalyzer ?? throw new ArgumentNullException(nameof(databaseAnalyzer));
 
         // Add global options
         var verboseOption = new Option<bool>(
@@ -88,6 +96,7 @@ public class RootCommand : Command
         AddCommand(CreateConfigCommand());
         AddCommand(new GenerateCommand(_loggerFactory, _configService, _output, _generationService, _projectGenerationService));
         AddCommand(new AnalyzeCommand(_loggerFactory, _configService, _output, _analysisService));
+        AddCommand(new SuggestCommand(_aiService, _databaseAnalyzer, _output, _loggerFactory));
         AddCommand(new WatchCommand(_configService, _schemaChangeDetector, _generationService, _generationTracker, _output, _loggerFactory));
 
         // Set default handler
@@ -118,6 +127,7 @@ public class RootCommand : Command
         _output.Info("  config         Manage configuration");
         _output.Info("  generate       Generate code from database tables");
         _output.Info("  analyze        Analyze database schema and code quality");
+        _output.Info("  suggest        Get AI-powered suggestions for improvements");
         _output.Info("  watch          Watch database for changes and auto-regenerate");
         _output.Info("  version        Show version information");
         _output.BlankLine();

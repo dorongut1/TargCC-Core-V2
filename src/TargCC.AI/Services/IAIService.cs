@@ -1,6 +1,7 @@
 // Copyright (c) TargCC Team. All rights reserved.
 
 using TargCC.AI.Models;
+using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.AI.Services;
 
@@ -51,6 +52,22 @@ public interface IAIService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The security analysis response.</returns>
     Task<AIResponse> AnalyzeSecurityAsync(string code, string language, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Analyzes a table schema and provides structured suggestions.
+    /// </summary>
+    /// <param name="table">The table definition to analyze.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The structured schema analysis result.</returns>
+    Task<SchemaAnalysisResult> AnalyzeTableSchemaAsync(Table table, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets structured suggestions for a specific table.
+    /// </summary>
+    /// <param name="table">The table to get suggestions for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The structured schema analysis result with suggestions.</returns>
+    Task<SchemaAnalysisResult> GetTableSuggestionsAsync(Table table, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if the AI service is available and configured correctly.

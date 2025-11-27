@@ -3,10 +3,12 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TargCC.AI.Configuration;
 using TargCC.AI.Models;
+using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.AI.Services;
 
@@ -264,6 +266,85 @@ Provide specific line numbers and remediation suggestions.";
         return await this.CompleteAsync(request, cancellationToken);
     }
 
+    /// <summary>
+    /// Analyzes a table schema and provides structured suggestions.
+    /// </summary>
+    /// <param name="table">The table definition to analyze.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A structured analysis result with suggestions.</returns>
+    public async Task<SchemaAnalysisResult> AnalyzeTableSchemaAsync(
+        Table table,
+        CancellationToken cancellationToken = default)
+    {
+        if (table == null)
+        {
+            throw new ArgumentNullException(nameof(table));
+        }
+
+        this.logger.LogInformation("Analyzing table schema: {TableName}", table.Name);
+
+        // Build the prompt using SchemaAnalysisPromptBuilder
+        var promptBuilder = new Prompts.SchemaAnalysisPromptBuilder(table);
+        var systemMessage = promptBuilder.GetSystemMessage();
+        var userMessage = promptBuilder.Build();
+
+        // Create AI request
+        var request = new AIRequest(
+            userMessage,
+            systemMessage: systemMessage,
+            temperature: 0.3); // Lower temperature for structured output
+
+        // Call AI service
+        var response = await this.CompleteAsync(request, cancellationToken);
+
+        if (!response.Success)
+        {
+            this.logger.LogError("Failed to analyze schema: {Error}", response.ErrorMessage);
+            throw new InvalidOperationException($"Schema analysis failed: {response.ErrorMessage}");
+        }
+
+        // Parse the response
+        var parser = new Parsers.SchemaAnalysisParser();
+        var result = parser.Parse(response.Content);
+
+        this.logger.LogInformation(
+            "Schema analysis completed for {TableName}. Quality Score: {Score}, Suggestions: {Count}",
+            table.Name,
+            result.QualityScore,
+            result.Suggestions.Count);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Gets structured suggestions for a specific table.
+    /// </summary>
+    /// <param name="table">The table to get suggestions for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The structured schema analysis result with suggestions.</returns>
+    public async Task<SchemaAnalysisResult> GetTableSuggestionsAsync(
+        Table table,
+        CancellationToken cancellationToken = default)
+    {
+        if (table == null)
+        {
+            throw new ArgumentNullException(nameof(table));
+        }
+
+        this.logger.LogInformation("Getting suggestions for table: {TableName}", table.Name);
+
+        // Use AnalyzeTableSchemaAsync as it provides structured suggestions
+        var result = await this.AnalyzeTableSchemaAsync(table, cancellationToken);
+
+        // Filter to show only suggestions (not the full analysis)
+        this.logger.LogInformation(
+            "Retrieved {Count} suggestions for {TableName}",
+            result.Suggestions.Count,
+            table.Name);
+
+        return result;
+    }
+
     /// <inheritdoc/>
     public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
     {
@@ -338,32 +419,43 @@ Provide specific line numbers and remediation suggestions.";
     // Claude API response models
     private sealed class ClaudeApiResponse
     {
+        [JsonPropertyName("id")]
         public string? Id { get; set; }
 
+        [JsonPropertyName("type")]
         public string? Type { get; set; }
 
+        [JsonPropertyName("role")]
         public string? Role { get; set; }
 
+        [JsonPropertyName("content")]
         public List<ContentBlock> Content { get; set; } = new();
 
+        [JsonPropertyName("model")]
         public string? Model { get; set; }
 
+        [JsonPropertyName("stop_reason")]
         public string? StopReason { get; set; }
 
+        [JsonPropertyName("usage")]
         public UsageInfo? Usage { get; set; }
     }
 
     private sealed class ContentBlock
     {
+        [JsonPropertyName("type")]
         public string? Type { get; set; }
 
+        [JsonPropertyName("text")]
         public string? Text { get; set; }
     }
 
     private sealed class UsageInfo
     {
+        [JsonPropertyName("input_tokens")]
         public int InputTokens { get; set; }
 
+        [JsonPropertyName("output_tokens")]
         public int OutputTokens { get; set; }
     }
 }

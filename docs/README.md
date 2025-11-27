@@ -67,14 +67,14 @@ Legacy documentation from Phase 1 and Phase 2 (kept for reference):
 
 | What do you want? | Where to go |
 |------------------|-------------|
-| **Continue from last session** | [Session_Handoff.md](Session_Handoff.md) 🔥 |
+| **🔥 START NEW SESSION** | **[Session_Handoff.md](Session_Handoff.md)** |
 | **Get started quickly** | [current/QUICKSTART.md](current/QUICKSTART.md) |
 | **Learn CLI commands** | [current/CLI-REFERENCE.md](current/CLI-REFERENCE.md) |
 | **See examples** | [current/USAGE-EXAMPLES.md](current/USAGE-EXAMPLES.md) |
 | **Understand philosophy** | [current/CORE_PRINCIPLES.md](current/CORE_PRINCIPLES.md) |
 | **Check project status** | [progress/PHASE3_PROGRESS.md](progress/PHASE3_PROGRESS.md) |
+| **See detailed checklist** | [progress/Phase3_Checklist.md](progress/Phase3_Checklist.md) |
 | **See what's next** | [progress/PROJECT_ROADMAP.md](progress/PROJECT_ROADMAP.md) |
-| **Day 13 Opening** | [archive/Day13_Opening.md](archive/Day13_Opening.md) |
 
 ---
 

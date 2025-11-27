@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 

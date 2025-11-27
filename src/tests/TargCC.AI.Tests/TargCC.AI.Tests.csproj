@@ -46,6 +46,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\TargCC.AI\TargCC.AI.csproj" />
+    <ProjectReference Include="..\..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
