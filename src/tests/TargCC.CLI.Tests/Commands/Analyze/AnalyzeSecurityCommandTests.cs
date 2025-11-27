@@ -1,33 +1,31 @@
-// <copyright file="AnalyzeSchemaCommandTests.cs" company="Doron Vaida">
+// <copyright file="AnalyzeSecurityCommandTests.cs" company="Doron Vaida">
 // Copyright (c) Doron Vaida. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using TargCC.CLI.Commands.Analyze;
+using TargCC.CLI.Services;
 using TargCC.CLI.Services.Analysis;
-using TargCC.CLI.Services.Output;
-using Xunit;
+
 
 namespace TargCC.CLI.Tests.Commands.Analyze;
 
 /// <summary>
-/// Tests for <see cref="AnalyzeSchemaCommand"/>.
+/// Tests for <see cref="AnalyzeSecurityCommand"/>.
 /// </summary>
-public class AnalyzeSchemaCommandTests
+public class AnalyzeSecurityCommandTests
 {
     private readonly Mock<IAnalysisService> mockAnalysisService;
     private readonly Mock<IOutputService> mockOutputService;
     private readonly Mock<ILoggerFactory> mockLoggerFactory;
-    private readonly Mock<ILogger<AnalyzeSchemaCommand>> mockLogger;
+    private readonly Mock<ILogger<AnalyzeSecurityCommand>> mockLogger;
 
-    public AnalyzeSchemaCommandTests()
+    public AnalyzeSecurityCommandTests()
     {
         this.mockAnalysisService = new Mock<IAnalysisService>();
         this.mockOutputService = new Mock<IOutputService>();
         this.mockLoggerFactory = new Mock<ILoggerFactory>();
-        this.mockLogger = new Mock<ILogger<AnalyzeSchemaCommand>>();
+        this.mockLogger = new Mock<ILogger<AnalyzeSecurityCommand>>();
 
         this.mockLoggerFactory
             .Setup(x => x.CreateLogger(It.IsAny<string>()))
@@ -38,22 +36,22 @@ public class AnalyzeSchemaCommandTests
     public void Constructor_WithValidParameters_CreatesCommand()
     {
         // Act
-        var command = new AnalyzeSchemaCommand(
+        var command = new AnalyzeSecurityCommand(
             this.mockAnalysisService.Object,
             this.mockOutputService.Object,
             this.mockLoggerFactory.Object);
 
         // Assert
         command.Should().NotBeNull();
-        command.Name.Should().Be("schema");
-        command.Description.Should().Be("Analyze database schema structure");
+        command.Name.Should().Be("security");
+        command.Description.Should().Be("Analyze security issues in schema");
     }
 
     [Fact]
     public void Constructor_WithNullAnalysisService_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => new AnalyzeSchemaCommand(
+        var act = () => new AnalyzeSecurityCommand(
             null!,
             this.mockOutputService.Object,
             this.mockLoggerFactory.Object);
@@ -67,7 +65,7 @@ public class AnalyzeSchemaCommandTests
     public void Constructor_WithNullOutputService_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => new AnalyzeSchemaCommand(
+        var act = () => new AnalyzeSecurityCommand(
             this.mockAnalysisService.Object,
             null!,
             this.mockLoggerFactory.Object);
@@ -81,7 +79,7 @@ public class AnalyzeSchemaCommandTests
     public void Constructor_WithNullLoggerFactory_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => new AnalyzeSchemaCommand(
+        var act = () => new AnalyzeSecurityCommand(
             this.mockAnalysisService.Object,
             this.mockOutputService.Object,
             null!);

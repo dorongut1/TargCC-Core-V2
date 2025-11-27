@@ -68,7 +68,7 @@ public class GenerateAllCommand : Command
             namespaceOption);
     }
 
-    private async Task<int> ExecuteAsync(
+    public async Task<int> ExecuteAsync(
         string tableName,
         string? connectionString,
         string? outputDirectory,

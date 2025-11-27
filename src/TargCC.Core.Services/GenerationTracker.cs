@@ -1,5 +1,5 @@
-// <copyright file="GenerationTracker.cs" company="Doron">
-// Copyright (c) Doron. All rights reserved.
+// <copyright file="GenerationTracker.cs" company="Doron Vaida">
+// Copyright (c) Doron Vaida. All rights reserved.
 // </copyright>
 
 using System.Security.Cryptography;
@@ -29,7 +29,7 @@ public class GenerationTracker : IGenerationTracker
         string? trackingDirectory = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
+
         var directory = trackingDirectory ?? Path.Combine(Directory.GetCurrentDirectory(), ".targcc");
         _trackingFilePath = Path.Combine(directory, "generated.json");
     }
@@ -59,14 +59,15 @@ public class GenerationTracker : IGenerationTracker
 
         // Remove existing entry for this file if it exists
         tableInfo.Files.RemoveAll(f => f.FilePath == fileInfo.FilePath);
-        
+
         // Add the new entry
         tableInfo.Files.Add(fileInfo);
 
         await SaveTrackingDataAsync(data, cancellationToken);
 
-        _logger.LogInformation("Tracked file: {FilePath} for table {TableName}", 
-            fileInfo.FilePath, 
+        _logger.LogInformation(
+            "Tracked file: {FilePath} for table {TableName}",
+            fileInfo.FilePath,
             fileInfo.TableName);
     }
 
@@ -99,8 +100,9 @@ public class GenerationTracker : IGenerationTracker
         var fileInfo = tableInfo.Files.FirstOrDefault(f => f.FileType == fileType);
         if (fileInfo == null)
         {
-            _logger.LogDebug("File type {FileType} not found for {TableName} - needs generation", 
-                fileType, 
+            _logger.LogDebug(
+                "File type {FileType} not found for {TableName} - needs generation",
+                fileType,
                 tableName);
             return true;
         }
@@ -183,7 +185,7 @@ public class GenerationTracker : IGenerationTracker
         try
         {
             var json = await File.ReadAllTextAsync(_trackingFilePath, cancellationToken);
-            _cachedData = JsonSerializer.Deserialize<GenerationTrackingData>(json) 
+            _cachedData = JsonSerializer.Deserialize<GenerationTrackingData>(json)
                 ?? new GenerationTrackingData();
 
             _logger.LogDebug("Loaded tracking data: {TableCount} tables", _cachedData.Tables.Count);

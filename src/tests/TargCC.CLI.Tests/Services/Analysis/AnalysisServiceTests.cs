@@ -6,7 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TargCC.CLI.Services.Analysis;
-using TargCC.CLI.Services.Configuration;
+using TargCC.CLI.Configuration;
 using Xunit;
 
 namespace TargCC.CLI.Tests.Services.Analysis;
@@ -16,13 +16,13 @@ namespace TargCC.CLI.Tests.Services.Analysis;
 /// </summary>
 public class AnalysisServiceTests
 {
-    private readonly Mock<IConfigService> mockConfigService;
+    private readonly Mock<IConfigurationService> mockConfigurationService;
     private readonly Mock<ILoggerFactory> mockLoggerFactory;
     private readonly Mock<ILogger<AnalysisService>> mockLogger;
 
     public AnalysisServiceTests()
     {
-        this.mockConfigService = new Mock<IConfigService>();
+        this.mockConfigurationService = new Mock<IConfigurationService>();
         this.mockLoggerFactory = new Mock<ILoggerFactory>();
         this.mockLogger = new Mock<ILogger<AnalysisService>>();
 
@@ -36,7 +36,7 @@ public class AnalysisServiceTests
     {
         // Act
         var service = new AnalysisService(
-            this.mockConfigService.Object,
+            this.mockConfigurationService.Object,
             this.mockLoggerFactory.Object);
 
         // Assert
@@ -53,7 +53,7 @@ public class AnalysisServiceTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
-            .WithParameterName("configService");
+            .WithParameterName("configurationService");
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class AnalysisServiceTests
     {
         // Act
         var act = () => new AnalysisService(
-            this.mockConfigService.Object,
+            this.mockConfigurationService.Object,
             null!);
 
         // Assert

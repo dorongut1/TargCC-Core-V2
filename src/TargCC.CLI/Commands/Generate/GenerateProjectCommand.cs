@@ -77,7 +77,7 @@ public class GenerateProjectCommand : Command
             skipTestsOption);
     }
 
-    private async Task<int> ExecuteAsync(
+    public async Task<int> ExecuteAsync(
         string database,
         string outputDir,
         string? rootNamespace,

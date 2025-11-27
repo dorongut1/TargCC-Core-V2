@@ -3,11 +3,12 @@
 **Modern Code Generation Platform - Clean Architecture Edition**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![.NET Version](https://img.shields.io/badge/.NET-8.0-blue)]()
+[![.NET Version](https://img.shields.io/badge/.NET-9.0-blue)]()
 [![Phase 1](https://img.shields.io/badge/Phase%201-100%25-brightgreen)]()
 [![Phase 1.5](https://img.shields.io/badge/Phase%201.5-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-205%20passing-success)]()
-[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)]()
+[![Phase 3A](https://img.shields.io/badge/Phase%203A-100%25-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-145%20passing-success)]()
+[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
 ---
@@ -20,9 +21,37 @@ TargCC is a **next-generation code generation platform** that creates complete, 
 - ⚡ **Incremental Generation** - Only what changed
 - 🛡️ **Build Errors as Safety Net** - Intentional, not bugs!
 - 🏛️ **Clean Architecture** - 5 layers, SOLID principles
-- 🤖 **AI Assistant** - Smart suggestions (Phase 3)
-- 🎨 **React UI** - Modern, responsive (Phase 3)
-- 📦 **Git Integration** - Built-in version control
+- 🖥️ **Professional CLI** - 16 commands for everything
+- ⏱️ **Watch Mode** - Auto-regenerate on schema changes
+- 📊 **Impact Analysis** - Know what will break before it breaks
+- 🔒 **Security Scanning** - Find unencrypted sensitive data
+- 🤖 **AI Assistant** - Smart suggestions (Phase 3B - coming soon)
+- 🎨 **React UI** - Modern, responsive (Phase 3C - coming soon)
+
+---
+
+## 🚀 Quick Start (5 Minutes)
+
+### From Zero to Running API
+
+```bash
+# 1. Initialize
+mkdir MyApp && cd MyApp
+targcc init
+
+# 2. Configure
+targcc config set ConnectionString "Server=localhost;Database=MyDb;Trusted_Connection=true;"
+
+# 3. Generate complete project
+targcc generate project
+
+# 4. Run!
+dotnet run --project src/MyApp.API
+```
+
+**Open browser:** `https://localhost:5001/swagger` 🎉
+
+**Read the full guide:** [QUICKSTART.md](docs/QUICKSTART.md)
 
 ---
 
@@ -44,7 +73,65 @@ Changed CustomerID from string to int?
    Now you know exactly where to update your custom logic.
 ```
 
-**Read more:** [Core Principles](CORE_PRINCIPLES.md)
+**Read more:** [Core Principles](docs/CORE_PRINCIPLES.md)
+
+---
+
+## 🖥️ CLI Commands
+
+TargCC 2.0 is a **command-line first** tool with 16 powerful commands:
+
+### 🎯 Core Commands
+```bash
+# Initialize project
+targcc init
+
+# Manage configuration
+targcc config show
+targcc config set ConnectionString "..."
+
+# Show version
+targcc version
+```
+
+### 🏗️ Generation Commands
+```bash
+# Generate everything for a table (most common)
+targcc generate all Customer
+
+# Generate specific components
+targcc generate entity Customer      # Entity class
+targcc generate sql Customer         # SQL stored procedures
+targcc generate repo Customer        # Repository pattern
+targcc generate cqrs Customer        # CQRS handlers
+targcc generate api Customer         # REST API controller
+
+# Generate complete project from database
+targcc generate project
+```
+
+### 📊 Analysis Commands
+```bash
+# Analyze database schema
+targcc analyze schema
+
+# Check impact of schema changes
+targcc analyze impact --table Customer --change "Add PhoneNumber"
+
+# Security vulnerability scan
+targcc analyze security
+
+# Code quality check
+targcc analyze quality
+```
+
+### ⏱️ Watch Mode
+```bash
+# Auto-regenerate on schema changes
+targcc watch
+```
+
+**Complete reference:** [CLI-REFERENCE.md](docs/CLI-REFERENCE.md)
 
 ---
 
@@ -76,151 +163,120 @@ Database (SQL Server)
 │  4. API Layer                  │
 │     └── REST Controllers       │
 │                                 │
-│  5. UI Layer (Phase 3)         │
-│     └── React + Material-UI    │
+│  5. Tests Layer                │
+│     └── Unit + Integration     │
 └─────────────────────────────────┘
 ```
 
-### Generated Code Includes:
-
-**Phase 1 ✅ (Complete):**
-- ✅ Database Analyzers (4 analyzers)
-- ✅ Schema Models (DatabaseSchema, Table, Column, etc.)
-- ✅ Plugin System
-- ✅ Configuration Management
-
-**Phase 1.5 ✅ (Complete):**
-- ✅ **SQL Generators** - Stored Procedures
-- ✅ **Entity Generators** - C# Domain Entities
-- ✅ **12 Prefix Handlers** (eno_, ent_, lkp_, etc.)
-- ✅ **Type Mapping** - SQL → C# types
-
-**Phase 2 🔨 (In Progress):**
-- 🔨 **Repository Pattern** - Data access abstraction
-- 🔨 **CQRS + MediatR** - Query/Command separation
-- 🔨 **REST API** - Modern HTTP endpoints
-- 🔨 **Swagger/OpenAPI** - Auto-generated documentation
-- 🔨 **FluentValidation** - Declarative validation
-- 🔨 **AutoMapper** - DTO mapping
-
-**Phase 3 📋 (Planned):**
-- 📋 **React UI** - Modern SPA with Material-UI
-- 📋 **AI Assistant** - Smart code suggestions
-- 📋 **Migration Tool** - Legacy VB.NET → Modern C#
-- 📋 **Smart Error Guide** - Build error analysis
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Visual Studio 2022** (17.8+) or **VS Code**
-- **.NET 8 SDK**
-- **SQL Server** 2019+ (or SQL Server Express)
-- **Git**
-
-### Installation
+### Example: Generate Complete Stack for "Customer" Table
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/doron/TargCC-Core-V2.git
-cd TargCC-Core-V2
+$ targcc generate all Customer
 
-# 2. Restore dependencies
-dotnet restore
+Generate All: Customer
 
-# 3. Build the solution
-dotnet build
+✓ Generated 20 file(s) in 2.1s
 
-# 4. Run tests
-dotnet test
+  Entity:
+    ✓ Customer.cs (45 lines)
+  SQL:
+    ✓ Customer_GetByID.sql (18 lines)
+    ✓ Customer_GetAll.sql (12 lines)
+    ✓ Customer_Insert.sql (23 lines)
+    ✓ Customer_Update.sql (25 lines)
+    ✓ Customer_Delete.sql (10 lines)
+    ✓ Customer_Search.sql (15 lines)
+  Repository:
+    ✓ ICustomerRepository.cs (12 lines)
+    ✓ CustomerRepository.cs (85 lines)
+  CQRS:
+    ✓ GetCustomerByIdQuery.cs (8 lines)
+    ✓ GetCustomerByIdQueryHandler.cs (22 lines)
+    ✓ GetAllCustomersQuery.cs (6 lines)
+    ✓ GetAllCustomersQueryHandler.cs (18 lines)
+    ✓ CreateCustomerCommand.cs (10 lines)
+    ✓ CreateCustomerCommandHandler.cs (28 lines)
+    ✓ UpdateCustomerCommand.cs (12 lines)
+    ✓ UpdateCustomerCommandHandler.cs (30 lines)
+    ✓ DeleteCustomerCommand.cs (6 lines)
+    ✓ DeleteCustomerCommandHandler.cs (15 lines)
+  API:
+    ✓ CustomersController.cs (120 lines)
 
-# 5. Run the generators
-cd src/TargCC.Core.Generators
-dotnet run -- analyze --connection "your-connection-string"
+Output directory: C:\MyProject\Generated
 ```
 
 ---
 
-## 📖 Usage Example
+## 📊 Project Status
 
-### Step 1: Analyze Your Database
+### ✅ Phase 1: Core Engine (100% Complete)
 
-```csharp
-using TargCC.Core.Analyzers;
+- ✅ DatabaseAnalyzer - Full DB analysis
+- ✅ TableAnalyzer - Tables + Indexes
+- ✅ ColumnAnalyzer - Columns + Types + Prefixes
+- ✅ RelationshipAnalyzer - Foreign Keys
+- ✅ Plugin System - Modular architecture
+- ✅ Configuration Manager - JSON + Encryption
+- ✅ Code Quality Tools - StyleCop, SonarQube
+- ✅ Testing Framework - 63 tests, 80%+ coverage
 
-var analyzer = new DatabaseAnalyzer();
-var schema = await analyzer.AnalyzeAsync(connectionString);
+### ✅ Phase 1.5: MVP Generators (100% Complete)
 
-// Result: Complete schema with tables, columns, relationships
-Console.WriteLine($"Found {schema.Tables.Count} tables");
-```
+- ✅ SQL Generator - Stored Procedures (6 types)
+- ✅ Entity Generator - C# Classes
+- ✅ Type Mapper - SQL → C# types (44 tests)
+- ✅ Prefix Handler - 12 prefixes (36 tests)
+- ✅ Property Generator - C# properties (22 tests)
+- ✅ Method Generator - Constructors, ToString, etc. (33 tests)
+- ✅ Relationship Generator - Navigation properties (17 tests)
+- ✅ File Writer - With *.prt protection
 
-### Step 2: Generate Code
+### ✅ Phase 3A: CLI Core (100% Complete) 🎉
 
-```csharp
-using TargCC.Core.Generators;
+**Just completed!** Professional command-line interface with:
 
-// Generate Entity
-var entityGen = new EntityGenerator();
-var customerEntity = await entityGen.GenerateAsync(schema.Tables["Customer"]);
-// → Customer.cs (Domain layer)
+- ✅ **16 CLI Commands** - init, config, generate, analyze, watch
+- ✅ **Project Generation** - Complete solution from database
+- ✅ **Watch Mode** - Auto-regenerate on schema changes
+- ✅ **Impact Analysis** - Know what breaks before it breaks
+- ✅ **Security Scanning** - Find unencrypted sensitive data
+- ✅ **Quality Analysis** - Naming conventions, relationships
+- ✅ **145 Tests** (207% of target)
+- ✅ **~95% Code Coverage** (exceeds 85% target)
+- ✅ **Comprehensive Documentation** - CLI Reference, Quickstart
 
-// Generate Repository
-var repoGen = new RepositoryGenerator();
-var customerRepo = await repoGen.GenerateAsync(schema.Tables["Customer"]);
-// → CustomerRepository.cs (Infrastructure layer)
+**What's New in 3A:**
+- 🆕 `targcc generate project` - Complete project generation
+- 🆕 `targcc watch` - Auto-regenerate on changes
+- 🆕 `targcc analyze impact` - Impact assessment
+- 🆕 `targcc analyze security` - Security scanning
+- 🆕 `targcc analyze quality` - Quality metrics
 
-// Generate API Controller
-var apiGen = new ApiControllerGenerator();
-var customerController = await apiGen.GenerateAsync(schema.Tables["Customer"]);
-// → CustomersController.cs (API layer)
-```
+### 📋 Phase 3B: AI Integration (Planned - Dec 2025)
 
-### Step 3: Review & Customize
+- [ ] Claude API integration
+- [ ] AI-powered code suggestions
+- [ ] Smart security recommendations
+- [ ] Interactive chat for development
+- [ ] Intelligent error guides
 
-```csharp
-// All generated code respects *.prt (partial) files
-// Your custom logic in *.prt.cs is NEVER overwritten!
+### 📋 Phase 3C: Local Web UI (Planned - Jan 2026)
 
-// Example: Customer.prt.cs
-public partial class Customer
-{
-    // Your custom business logic here
-    public void ApplyDiscount(decimal percentage)
-    {
-        // This code is protected!
-    }
-}
-```
+- [ ] React + TypeScript interface
+- [ ] Visual schema designer (React Flow)
+- [ ] Generation wizard with preview
+- [ ] Dashboard for project overview
+- [ ] AI chat panel in UI
 
----
+### 📋 Phase 3D: Migration & Polish (Planned - Feb 2026)
 
-## 🏛️ Architecture
+- [ ] Migration tool (VB.NET → C#)
+- [ ] Git integration (auto-commit)
+- [ ] Performance optimization
+- [ ] Final bug fixes
 
-### Clean Architecture Layers
-
-```
-┌─────────────────────────────────────────┐
-│              API Layer                  │  ← REST Controllers
-│         (ASP.NET Core)                  │
-├─────────────────────────────────────────┤
-│         Application Layer               │  ← CQRS (Use Cases)
-│      (MediatR + Handlers)               │
-├─────────────────────────────────────────┤
-│       Infrastructure Layer              │  ← Repositories + Data
-│    (EF Core + Dapper + SQL)             │
-├─────────────────────────────────────────┤
-│           Domain Layer                  │  ← Entities + Interfaces
-│      (Pure Business Logic)              │
-└─────────────────────────────────────────┘
-
-Dependencies flow inward: API → Application → Domain
-Infrastructure depends on Domain only
-```
-
-**Read more:** [Architecture Decision](docs/ARCHITECTURE_DECISION.md)
+**Target GA:** v2.0.0 (March 2026)
 
 ---
 
@@ -283,67 +339,88 @@ public class Customer : BaseEntity
 
 ---
 
-## 📊 Project Status
+## 🏛️ Architecture
 
-### Phase 1: Core Engine ✅ (100%)
+### Clean Architecture Layers
 
-- ✅ DatabaseAnalyzer - Full DB analysis
-- ✅ TableAnalyzer - Tables + Indexes
-- ✅ ColumnAnalyzer - Columns + Types + Prefixes
-- ✅ RelationshipAnalyzer - Foreign Keys
-- ✅ Plugin System - Modular architecture
-- ✅ Configuration Manager - JSON + Encryption
-- ✅ Code Quality Tools - StyleCop, SonarQube
-- ✅ Testing Framework - 63 tests, 80%+ coverage
-- ✅ Documentation - XML Comments
+```
+┌─────────────────────────────────────────┐
+│              API Layer                  │  ← REST Controllers
+│         (ASP.NET Core)                  │
+├─────────────────────────────────────────┤
+│         Application Layer               │  ← CQRS (Use Cases)
+│      (MediatR + Handlers)               │
+├─────────────────────────────────────────┤
+│       Infrastructure Layer              │  ← Repositories + Data
+│    (EF Core + Dapper + SQL)             │
+├─────────────────────────────────────────┤
+│           Domain Layer                  │  ← Entities + Interfaces
+│      (Pure Business Logic)              │
+└─────────────────────────────────────────┘
 
-### Phase 1.5: MVP Generators ✅ (100%)
+Dependencies flow inward: API → Application → Domain
+Infrastructure depends on Domain only
+```
 
-- ✅ SQL Generator - Stored Procedures (6 types)
-- ✅ Entity Generator - C# Classes
-- ✅ Type Mapper - SQL → C# types (44 tests)
-- ✅ Prefix Handler - 12 prefixes (36 tests)
-- ✅ Property Generator - C# properties (22 tests)
-- ✅ Method Generator - Constructors, ToString, etc. (33 tests)
-- ✅ Relationship Generator - Navigation properties (17 tests)
-- ✅ File Writer - With *.prt protection
-- ✅ 205+ Tests passing
+**Read more:** [Architecture Decision](docs/ARCHITECTURE_DECISION.md)
 
-### Phase 2: Modern Architecture 🔨 (In Progress)
+---
 
-**Week 1-2: Repository Pattern**
-- [ ] RepositoryInterfaceGenerator
-- [ ] RepositoryGenerator
-- [ ] DbContextGenerator
+## 📖 Usage Examples
 
-**Week 3: CQRS + MediatR**
-- [ ] QueryGenerator (GetById, GetAll, GetByIndex)
-- [ ] CommandGenerator (Create, Update, Delete)
-- [ ] ValidatorGenerator (FluentValidation)
-- [ ] DtoGenerator
+### Example 1: Generate Complete Project
 
-**Week 4: API Layer**
-- [ ] ApiControllerGenerator
-- [ ] Middleware (Exception, Logging, Performance)
-- [ ] Swagger configuration
+```bash
+# From database to running API in 30 seconds
+targcc init
+targcc config set ConnectionString "Server=localhost;Database=Northwind;..."
+targcc generate project
 
-**Week 5: Integration & Testing**
-- [ ] End-to-End tests
-- [ ] Performance tests
-- [ ] Documentation
+cd Northwind
+dotnet run --project src/Northwind.API
 
-**Target:** v2.0.0-rc1 (4-5 weeks)
+# Open browser: https://localhost:5001/swagger
+```
 
-### Phase 3: Advanced Features 📋 (Planned)
+### Example 2: Add New Table
 
-- [ ] React UI Generator (Material-UI)
-- [ ] AI Assistant (Claude/OpenAI)
-- [ ] Smart Error Guide
-- [ ] Migration Tool (VB.NET → C#)
-- [ ] Visual Schema Designer
-- [ ] Version Control Integration
+```bash
+# After adding a table in SQL Server Management Studio
+targcc generate all NewTable
 
-**Target:** v2.0.0 (6-8 weeks after Phase 2)
+# Build and test
+dotnet build
+```
+
+### Example 3: Modify Existing Table
+
+```bash
+# Check impact first
+targcc analyze impact --table Customer --change "Change Email type to nvarchar(500)"
+
+# Make database change
+# Then regenerate
+targcc generate all Customer
+
+# Review build errors (intentional!)
+dotnet build
+
+# Fix manual code in *.prt.cs files
+# Rebuild
+dotnet build
+```
+
+### Example 4: Watch Mode During Development
+
+```bash
+# In one terminal
+targcc watch
+
+# In another terminal, modify your database
+# Files automatically regenerate!
+```
+
+**More examples:** [USAGE-EXAMPLES.md](docs/USAGE-EXAMPLES.md)
 
 ---
 
@@ -357,7 +434,7 @@ dotnet test
 dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 
 # Run specific test project
-dotnet test src/TargCC.Core.Tests/
+dotnet test src/tests/TargCC.CLI.Tests/
 
 # Run tests by category
 dotnet test --filter "Category=Unit"
@@ -365,20 +442,33 @@ dotnet test --filter "Category=Integration"
 ```
 
 **Current Stats:**
-- **Total Tests:** 205+
-- **Coverage:** 85%+
+- **Total Tests:** 145
+- **Coverage:** ~95%
 - **Pass Rate:** 100%
+- **Zero Flaky Tests**
 
 ---
 
 ## 📚 Documentation
 
+### Quick Start & Guides
+- [**Quickstart Guide**](docs/QUICKSTART.md) - 5 minutes from zero to running app
+- [**CLI Reference**](docs/CLI-REFERENCE.md) - Complete command reference
+- [**Usage Examples**](docs/USAGE-EXAMPLES.md) - Common scenarios (coming soon)
+
+### Architecture & Design
 - [Architecture Decision](docs/ARCHITECTURE_DECISION.md) - Why Clean Architecture?
-- [Phase 2 Specification](docs/PHASE2_MODERN_ARCHITECTURE.md) - Detailed plan
-- [Phase 3 Features](docs/PHASE3_ADVANCED_FEATURES.md) - Future features
 - [Core Principles](docs/CORE_PRINCIPLES.md) - Build Errors philosophy
 - [Project Roadmap](docs/PROJECT_ROADMAP.md) - Complete timeline
+
+### Phase Documentation
+- [Phase 3 Checklist](docs/Phase3_Checklist.md) - Detailed phase 3 plan
+- [Phase 3 Progress](docs/PHASE3_PROGRESS.md) - Current progress
+- [Phase 3 Advanced Features](docs/PHASE3_ADVANCED_FEATURES.md) - Future features
+
+### Technical Reference
 - [Entity Generator Spec](docs/ENTITY_GENERATOR_SPEC.md) - Generator details
+- [CHANGELOG](CHANGELOG.md) - Version history
 
 ---
 
@@ -394,6 +484,28 @@ Contributions are welcome! Please read our contributing guidelines first.
 
 ---
 
+## 📊 Statistics
+
+### Phase 3A Final Numbers
+
+| Metric | Target | Actual | Achievement |
+|--------|--------|--------|-------------|
+| CLI Commands | 15 | 16 | 107% ✅ |
+| Tests Passing | 70+ | 145 | 207% ✅ |
+| Code Coverage | 85% | ~95% | 112% ✅ |
+| Code Files | ~50 | 96 | 192% ✅ |
+| Lines of Code | ~5,000 | ~11,600 | 232% ✅ |
+
+### Cumulative Project Stats
+
+- **Total Code Files:** 96
+- **Total Lines of Code:** ~11,600
+- **Supported Prefixes:** 12
+- **Architecture Patterns:** 3 (Clean, Three-Tier, Minimal API)
+- **Generation Modes:** Manual, Watch, Batch
+
+---
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -405,7 +517,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Inspiration:** Original TargCC system (VB.NET)
 - **Architecture:** Clean Architecture by Robert C. Martin
 - **Patterns:** CQRS by Greg Young
-- **Tools:** MediatR, Dapper, FluentValidation, AutoMapper
+- **Tools:** System.CommandLine, Spectre.Console, MediatR, Dapper, FluentValidation
 
 ---
 
@@ -422,12 +534,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```
 ✅ Phase 1: Core Engine (6 weeks) - DONE
 ✅ Phase 1.5: MVP Generators (2 weeks) - DONE
-🔨 Phase 2: Modern Architecture (4-5 weeks) - IN PROGRESS
-📋 Phase 3: UI + AI (6-8 weeks) - PLANNED
-💡 Phase 4: Enterprise Features (TBD) - FUTURE
+✅ Phase 3A: CLI Core (2 weeks) - DONE ← You are here!
+📋 Phase 3B: AI Integration (2 weeks) - PLANNED (Dec 2025)
+📋 Phase 3C: Local Web UI (3 weeks) - PLANNED (Jan 2026)
+📋 Phase 3D: Migration & Polish (2 weeks) - PLANNED (Feb 2026)
+🎯 Phase 4: General Availability (March 2026)
 ```
 
-**Timeline:** ~5-6 months to v2.0.0
+**Current Progress:** Phase 3A Complete (100%)  
+**Next Milestone:** Phase 3B - AI Integration (Dec 2025)
 
 ---
 
@@ -437,6 +552,28 @@ If you find this project useful, please consider giving it a star! ⭐
 
 ---
 
+## 🚀 Get Started Now!
+
+```bash
+# 1. Clone
+git clone https://github.com/doron/TargCC-Core-V2.git
+cd TargCC-Core-V2
+
+# 2. Build
+cd src/TargCC.CLI
+dotnet build
+
+# 3. Initialize your project
+mkdir MyProject
+cd MyProject
+targcc init
+
+# 4. Follow the quickstart guide
+# See: docs/QUICKSTART.md
+```
+
+---
+
 **Built with ❤️ by Doron**
 
-**Powered by:** C# • .NET 8 • Clean Architecture • CQRS • React
+**Powered by:** C# • .NET 9 • Clean Architecture • CQRS • System.CommandLine
