@@ -67,12 +67,14 @@ Legacy documentation from Phase 1 and Phase 2 (kept for reference):
 
 | What do you want? | Where to go |
 |------------------|-------------|
+| **Continue from last session** | [Session_Handoff.md](Session_Handoff.md) 🔥 |
 | **Get started quickly** | [current/QUICKSTART.md](current/QUICKSTART.md) |
 | **Learn CLI commands** | [current/CLI-REFERENCE.md](current/CLI-REFERENCE.md) |
 | **See examples** | [current/USAGE-EXAMPLES.md](current/USAGE-EXAMPLES.md) |
 | **Understand philosophy** | [current/CORE_PRINCIPLES.md](current/CORE_PRINCIPLES.md) |
 | **Check project status** | [progress/PHASE3_PROGRESS.md](progress/PHASE3_PROGRESS.md) |
 | **See what's next** | [progress/PROJECT_ROADMAP.md](progress/PROJECT_ROADMAP.md) |
+| **Day 13 Opening** | [archive/Day13_Opening.md](archive/Day13_Opening.md) |
 
 ---
 
@@ -89,5 +91,5 @@ All documentation in `current/` follows these standards:
 ---
 
 **Last Updated:** 27/11/2025  
-**Current Phase:** Phase 3A Complete (100%)  
-**Next Phase:** Phase 3B - AI Integration
+**Current Phase:** Phase 3B - AI Integration (20% Complete)  
+**Next Up:** Day 13 - Schema Analysis with AI
