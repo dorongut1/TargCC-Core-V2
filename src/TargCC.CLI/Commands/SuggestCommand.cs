@@ -8,8 +8,10 @@ using Spectre.Console;
 using TargCC.AI.Formatters;
 using TargCC.AI.Models;
 using TargCC.AI.Services;
+using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
 using TargCC.Core.Interfaces;
+using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.CLI.Commands;
 
@@ -20,6 +22,7 @@ public class SuggestCommand : Command
 {
     private readonly IAIService aiService;
     private readonly IDatabaseAnalyzer databaseAnalyzer;
+    private readonly IConfigurationService configurationService;
     private readonly IOutputService outputService;
     private readonly ILogger<SuggestCommand> logger;
 
@@ -28,17 +31,20 @@ public class SuggestCommand : Command
     /// </summary>
     /// <param name="aiService">AI service.</param>
     /// <param name="databaseAnalyzer">Database analyzer.</param>
+    /// <param name="configurationService">Configuration service.</param>
     /// <param name="outputService">Output service.</param>
     /// <param name="loggerFactory">Logger factory.</param>
     public SuggestCommand(
         IAIService aiService,
         IDatabaseAnalyzer databaseAnalyzer,
+        IConfigurationService configurationService,
         IOutputService outputService,
         ILoggerFactory loggerFactory)
         : base("suggest", "Get AI-powered suggestions for schema improvements")
     {
         this.aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
         this.databaseAnalyzer = databaseAnalyzer ?? throw new ArgumentNullException(nameof(databaseAnalyzer));
+        this.configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         this.outputService = outputService ?? throw new ArgumentNullException(nameof(outputService));
         ArgumentNullException.ThrowIfNull(loggerFactory);
         this.logger = loggerFactory.CreateLogger<SuggestCommand>();
@@ -111,9 +117,14 @@ public class SuggestCommand : Command
             }
 
             // Get database schema
-            var schema = await this.outputService.SpinnerAsync(
+            var config = await this.configurationService.LoadAsync();
+            DatabaseSchema schema = null!;
+            await this.outputService.SpinnerAsync(
                 "Loading database schema...",
-                async () => await this.databaseAnalyzer.AnalyzeAsync());
+                async () =>
+                {
+                    schema = await this.databaseAnalyzer.AnalyzeDatabaseAsync(config.ConnectionString!);
+                });
 
             // Find the table
             var table = schema.Tables.FirstOrDefault(t =>
@@ -131,7 +142,7 @@ public class SuggestCommand : Command
                 "Analyzing schema and generating suggestions...",
                 async () =>
                 {
-                    result = await this.aiService.GetTableSuggestionsAsync(table);
+                    result = await this.aiService.AnalyzeTableSchemaAsync(table);
                 });
 
             // Filter suggestions if requested

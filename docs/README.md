@@ -1,95 +1,79 @@
-# TargCC Documentation
+# 📚 Documentation Directory
 
-**Organized documentation for TargCC Core V2**
-
----
-
-## 📁 Directory Structure
-
-```
-docs/
-├── current/          ← Active documentation (read these!)
-├── progress/         ← Project tracking & planning
-├── archive/          ← Historical session notes
-└── OLD/              ← Legacy Phase 1-2 docs
-```
+This directory contains project documentation, session handoffs, and technical notes.
 
 ---
 
-## 📖 Current Documentation
+## 📄 Files
 
-**Start here!** These are the active, up-to-date documents:
+### Session Handoffs
+- **`SESSION_HANDOFF_Day14.md`** - Latest session summary (Day 14: Suggestion Engine)
+  - What was completed
+  - Known issues discovered
+  - Next steps
+  - Commit messages
 
-### For Users
-- **[QUICKSTART.md](current/QUICKSTART.md)** - 5-minute guide from zero to running app
-- **[CLI-REFERENCE.md](current/CLI-REFERENCE.md)** - Complete CLI command reference
-- **[USAGE-EXAMPLES.md](current/USAGE-EXAMPLES.md)** - Real-world scenarios and workflows
+### Technical Documentation
+- **`KNOWN_ISSUES.md`** - Active technical debt and issues tracker
+  - Open issues with priority levels
+  - Detailed solutions
+  - Resolved issues history
 
-### For Developers
-- **[CORE_PRINCIPLES.md](current/CORE_PRINCIPLES.md)** - Philosophy and design principles
-- **[ARCHITECTURE_DECISION.md](current/ARCHITECTURE_DECISION.md)** - Why Clean Architecture?
-
----
-
-## 📊 Progress Tracking
-
-Project management and planning documents:
-
-- **[Phase3_Checklist.md](progress/Phase3_Checklist.md)** - Detailed Phase 3 task list
-- **[PHASE3_PROGRESS.md](progress/PHASE3_PROGRESS.md)** - Current progress tracking
-- **[Day10_Summary.md](progress/Day10_Summary.md)** - Phase 3A completion summary
-- **[PROJECT_ROADMAP.md](progress/PROJECT_ROADMAP.md)** - Overall project timeline
-- **[PHASE3_ADVANCED_FEATURES.md](progress/PHASE3_ADVANCED_FEATURES.md)** - Future features
+### Planning Documents
+- **`Phase3_Checklist.md`** - Located in project root (`/mnt/project/`)
+  - Daily task breakdown
+  - Progress tracking
+  - Completion criteria
 
 ---
 
-## 📦 Archive
+## 🔄 Session Handoff Pattern
 
-Historical session notes and handoffs (reference only):
+Each major session creates a handoff document with:
+1. ✅ What was completed
+2. 🐛 Issues discovered  
+3. 🎯 Next steps
+4. 💾 Commit message
+5. 📝 Notes for next session
 
-- Day 8, 9, 10 opening/summary documents
-- Development session handoffs
-- Historical progress notes
-
----
-
-## 🗂️ OLD
-
-Legacy documentation from Phase 1 and Phase 2 (kept for reference):
-
-- Original architecture documents
-- Phase 1-2 specifications
-- Legacy quickstart guides
+**Naming Convention:** `SESSION_HANDOFF_Day{N}.md`
 
 ---
 
-## 🚀 Quick Links
+## 🐛 Known Issues Tracking
 
-| What do you want? | Where to go |
-|------------------|-------------|
-| **🔥 START NEW SESSION** | **[Session_Handoff.md](Session_Handoff.md)** |
-| **Get started quickly** | [current/QUICKSTART.md](current/QUICKSTART.md) |
-| **Learn CLI commands** | [current/CLI-REFERENCE.md](current/CLI-REFERENCE.md) |
-| **See examples** | [current/USAGE-EXAMPLES.md](current/USAGE-EXAMPLES.md) |
-| **Understand philosophy** | [current/CORE_PRINCIPLES.md](current/CORE_PRINCIPLES.md) |
-| **Check project status** | [progress/PHASE3_PROGRESS.md](progress/PHASE3_PROGRESS.md) |
-| **See detailed checklist** | [progress/Phase3_Checklist.md](progress/Phase3_Checklist.md) |
-| **See what's next** | [progress/PROJECT_ROADMAP.md](progress/PROJECT_ROADMAP.md) |
+The `KNOWN_ISSUES.md` file tracks:
+- 🔴 **High Priority** - Blocks progress, fix immediately
+- 🟡 **Medium Priority** - Fix during current phase
+- 🟢 **Low Priority** - Nice to have, future enhancement
+- ✅ **Resolved** - Historical reference
+
+Each issue includes:
+- Clear problem description
+- Affected code/tests
+- Step-by-step solution
+- Estimated effort
+- When to fix
 
 ---
 
-## 📝 Documentation Standards
+## 📊 Current Status (Day 14)
 
-All documentation in `current/` follows these standards:
+- **Phase:** 3B - AI Integration
+- **Progress:** 14/45 days (31%)
+- **Open Issues:** 1 medium priority
+- **Test Status:** 8 passing, 3 skipped (documented)
 
-✅ **Based on actual code** - Not assumptions  
-✅ **Real examples** - Not foo/bar  
-✅ **Real output** - What users actually see  
-✅ **Cross-linked** - Easy navigation  
-✅ **Up-to-date** - Reflects current codebase  
+---
+
+## 🎯 Key Technical Debt
+
+1. **IAnsiConsoleWrapper** (Medium Priority)
+   - Affects 3 unit tests in SuggestCommand
+   - Solution documented in KNOWN_ISSUES.md
+   - Plan to fix: Day 10 or Phase 3D
 
 ---
 
 **Last Updated:** 27/11/2025  
-**Current Phase:** Phase 3B - AI Integration (20% Complete)  
-**Next Up:** Day 13 - Schema Analysis with AI
+**For Questions:** See SESSION_HANDOFF_Day14.md for latest context

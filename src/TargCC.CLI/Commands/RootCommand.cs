@@ -96,7 +96,7 @@ public class RootCommand : Command
         AddCommand(CreateConfigCommand());
         AddCommand(new GenerateCommand(_loggerFactory, _configService, _output, _generationService, _projectGenerationService));
         AddCommand(new AnalyzeCommand(_loggerFactory, _configService, _output, _analysisService));
-        AddCommand(new SuggestCommand(_aiService, _databaseAnalyzer, _output, _loggerFactory));
+        AddCommand(new SuggestCommand(_aiService,_databaseAnalyzer, _configService, _output, _loggerFactory));
         AddCommand(new WatchCommand(_configService, _schemaChangeDetector, _generationService, _generationTracker, _output, _loggerFactory));
 
         // Set default handler
