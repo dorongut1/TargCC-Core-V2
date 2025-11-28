@@ -1,200 +1,303 @@
-# 📚 Documentation - TargCC Core V2
+# TargCC Core V2 - Documentation Index
 
-**Last Updated:** November 28, 2025  
-**Current Status:** Phase 3B - Day 17 Complete ✅  
-**Next:** Day 18-19 - Code Quality Analyzer
-
----
-
-## 🚀 START HERE - Next Session
-
-### 📄 Main Document for Next Chat
-**[current/HANDOFF_Day18-19.md](./current/HANDOFF_Day18-19.md)** ⭐
-- Quick start guide for Day 18-19
-- Step-by-step checklist
-- Code examples and patterns
-- **Read this first!**
+**Last Updated:** 28/11/2025  
+**Project Status:** Phase 3B - 95% Complete
 
 ---
 
-## 📋 Current Documentation (Active Work)
+## 📚 Documentation Files
 
-**Location:** `docs/current/`
+### 1. **Phase3_Checklist.md** 📋
+**Purpose:** Detailed daily checklist for Phase 3 (CLI + AI + Web UI)
 
-### Essential Documents
-1. **[HANDOFF_Day18-19.md](./current/HANDOFF_Day18-19.md)** - Start here for next session
-2. **[QUICKSTART.md](./current/QUICKSTART.md)** - Quick reference guide
-3. **[CLI-REFERENCE.md](./current/CLI-REFERENCE.md)** - Command-line usage
-4. **[ARCHITECTURE_DECISION.md](./current/ARCHITECTURE_DECISION.md)** - Design decisions
-5. **[CORE_PRINCIPLES.md](./current/CORE_PRINCIPLES.md)** - Project principles
-6. **[USAGE-EXAMPLES.md](./current/USAGE-EXAMPLES.md)** - Code examples
+**Contents:**
+- 45-day implementation plan
+- Daily tasks and checkpoints
+- Progress tracking (✅ Complete, 🔄 In Progress, ☐ Not Started)
+- Test requirements per day
+- Success criteria for each phase
 
----
+**Current Status:** Day 20 Part 1 Complete (43% overall)
 
-## 📊 Planning & Progress
-
-### Main Planning Document
-**[../Phase3_Checklist.md](../Phase3_Checklist.md)** (in project root)
-- Complete 45-day plan for Phase 3
-- Daily task breakdowns with checkboxes
-- Progress tracking (17/45 days = 38%)
-- Updated after each session
-
-### Current Status
-- **Phase 3B Progress:** 7/10 days (70%)
-- **Days Completed:** Day 16-17 (Security Scanner) ✅
-- **Next Milestone:** Day 18-19 (Code Quality Analyzer)
-- **Total Tests:** 675+ (all passing)
+**Use When:**
+- Starting a new work session
+- Checking what tasks remain
+- Verifying completion criteria
+- Planning next steps
 
 ---
 
-## 📁 Historical Documentation
+### 2. **PROGRESS.md** 📊
+**Purpose:** High-level progress tracker with detailed achievements
 
-### Session Summaries
-**Location:** `docs/sessions/`
+**Contents:**
+- Phase summary with statistics
+- Detailed daily accomplishments
+- Test metrics and code coverage
+- Technical highlights and features
+- Code structure overview
+- Next steps and session handoff
 
-Latest: **[Session_2025-11-28_Day16-17_Complete.md](./sessions/Session_2025-11-28_Day16-17_Complete.md)**
-- Complete Day 16-17 implementation details
-- 37 new tests (22 unit + 15 CLI)
-- Statistics and metrics
-- Key learnings
+**Current Status:** 705+ tests, 85% coverage, 95% Phase 3B complete
 
-### Archive
-**Location:** `docs/archive/`
-- Completed session handoffs
-- Historical summaries
-- Git commit logs
+**Use When:**
+- Reviewing what's been accomplished
+- Understanding technical details of implementations
+- Checking test coverage and metrics
+- Onboarding new team members
+- Preparing status reports
 
 ---
 
-## 🗂️ Project Structure
+### 3. **NEXT_SESSION.md** 📝
+**Purpose:** Complete briefing for the next work session
 
+**Contents:**
+- Current status summary
+- Detailed task descriptions
+- Implementation code examples
+- Step-by-step instructions
+- Testing checklist
+- Success criteria
+- Troubleshooting guide
+
+**Current Status:** Ready for Day 20 Part 2 - HandleAsync implementation
+
+**Use When:**
+- **Starting your next session** ⬅️ START HERE!
+- Need implementation guidance
+- Want to see expected output
+- Need to verify completion
+
+---
+
+## 🔄 Typical Session Workflow
+
+### 1️⃣ **Start of Session:**
 ```
-C:\Disk1\TargCC-Core-V2\
-│
-├── Phase3_Checklist.md          ← Master plan (45 days)
-│
-├── docs\
-│   ├── README.md                ← This file
-│   │
-│   ├── current\                 ← Active documentation
-│   │   ├── HANDOFF_Day18-19.md ← START HERE! ⭐
-│   │   ├── QUICKSTART.md
-│   │   ├── CLI-REFERENCE.md
-│   │   └── [other current docs]
-│   │
-│   ├── sessions\                ← Session summaries
-│   │   └── Session_2025-11-28_Day16-17_Complete.md
-│   │
-│   └── archive\                 ← Historical documents
-│       └── [completed sessions]
-│
-├── src\                         ← Source code
-│   ├── TargCC.AI\
-│   ├── TargCC.CLI\
-│   └── [other projects]
-│
-└── tests\                       ← Test projects
-    ├── TargCC.AI.Tests\
-    └── [other test projects]
+1. Read NEXT_SESSION.md (complete briefing)
+2. Check Phase3_Checklist.md (verify current day/tasks)
+3. Review PROGRESS.md (understand recent work)
+```
+
+### 2️⃣ **During Session:**
+```
+1. Follow NEXT_SESSION.md implementation steps
+2. Check off tasks in Phase3_Checklist.md
+3. Run tests frequently
+4. Document issues/decisions
+```
+
+### 3️⃣ **End of Session:**
+```
+1. Update Phase3_Checklist.md (mark completed tasks)
+2. Update PROGRESS.md (add new achievements)
+3. Create new NEXT_SESSION.md (brief for next time)
+4. Git commit with descriptive message
 ```
 
 ---
 
-## 🎯 Quick Navigation by Task
+## 📍 Quick Status Check
 
-### Starting New Session
-1. **[current/HANDOFF_Day18-19.md](./current/HANDOFF_Day18-19.md)** (5 min read)
-2. **[../Phase3_Checklist.md](../Phase3_Checklist.md)** (context)
-3. Start coding!
+### Where Are We?
+- **Phase:** 3B - AI Integration
+- **Day:** 20 Part 1 Complete, Part 2 Next
+- **Progress:** 43% overall (19.5/45 days)
+- **Tests:** 705+ passing
+- **Coverage:** 85%+
+- **Blockers:** None
 
-### During Development
-- Check **Phase3_Checklist.md** for daily tasks
-- Use **current/CLI-REFERENCE.md** for commands
-- Reference **current/USAGE-EXAMPLES.md** for patterns
+### What's Next?
+1. Implement `AnalyzeQualityCommand.HandleAsync()`
+2. Add integration test
+3. Complete Day 20
+4. Begin Phase 3C (Web UI)
 
-### End of Session
-1. Update **Phase3_Checklist.md** with completed tasks
-2. Create new session summary in **sessions/**
-3. Create new HANDOFF for next session in **current/**
+### What Works?
+- ✅ All Phase 3A CLI commands
+- ✅ AI service infrastructure
+- ✅ Schema analysis
+- ✅ Suggestion engine
+- ✅ Interactive chat
+- ✅ Security scanner
+- ✅ Code quality analyzer (service layer)
 
----
-
-## 📊 Statistics Summary
-
-| Metric | Count | Status |
-|--------|-------|--------|
-| Phase 1 Tests | 200+ | ✅ Complete |
-| Phase 2 Tests | 410+ | ✅ Complete |
-| Phase 3B Tests (Days 11-17) | 65+ | ✅ Complete |
-| **Total Project Tests** | **675+** | ✅ All Passing |
-| Target (Phase 3 Complete) | 840+ | 🎯 80% Complete |
-
-### Current Milestone Progress
-- ✅ Day 11-15: AI Infrastructure (Complete)
-- ✅ Day 16-17: Security Scanner (Complete)
-- 🎯 Day 18-19: Code Quality Analyzer (Next)
-- ⏳ Day 20: AI Integration Testing (Pending)
+### What Needs Work?
+- 🔄 Code quality analyzer CLI (HandleAsync method)
+- ☐ Phase 3C (Web UI) - not started
+- ☐ Phase 3D (Migration) - not started
 
 ---
 
-## 💡 Documentation Principles
+## 🎯 Current Priorities
 
-### What Goes Where
+### Priority 1: Complete Day 20 Part 2
+- Implement HandleAsync in AnalyzeQualityCommand
+- Add integration test
+- Verify all tests pass
+- **Estimated Time:** 2-3 hours
 
-**`current/`** = Active work, read these now
-- HANDOFF documents for next sessions
-- Reference guides actively used
-- Architecture decisions being made
+### Priority 2: Phase 3B Completion
+- Final verification of all AI commands
+- Update all documentation
+- Git commit with phase completion
+- **Estimated Time:** 1 hour
 
-**`sessions/`** = Historical record, reference when needed
-- Detailed session summaries
-- Implementation notes
-- Statistics and metrics
-
-**`archive/`** = Completed work, rarely accessed
-- Old handoffs
-- Superseded documents
-- Historical context
-
----
-
-## 🔗 External References
-
-### Official Documentation
-- .NET 9 Documentation
-- xUnit Testing Framework
-- FluentAssertions Library
-- Anthropic Claude API
-
-### Project Phases
-- ✅ Phase 1: Core Engine (Complete)
-- ✅ Phase 2: Modern Architecture (Complete)
-- 🔄 Phase 3B: AI Integration (70% complete)
-- ⏳ Phase 3C: Web UI (Pending)
-- ⏳ Phase 3D: Migration & Polish (Pending)
+### Priority 3: Phase 3C Planning
+- Review Web UI requirements
+- Plan React project structure
+- Identify dependencies
+- **Estimated Time:** Planning phase
 
 ---
 
-## 📞 Quick Reference
+## 📁 File Locations
 
-**Project Lead:** Doron  
-**Repository:** C:\Disk1\TargCC-Core-V2\  
-**Tech Stack:** .NET 9, C#, xUnit, FluentAssertions, Moq  
-**AI Integration:** Claude 3.5 Sonnet (Anthropic)
+### Documentation
+```
+C:\Disk1\TargCC-Core-V2\docs\
+├── Phase3_Checklist.md    (Daily tasks)
+├── PROGRESS.md            (Achievements)
+├── NEXT_SESSION.md        (Next work session)
+└── README.md              (This file)
+```
+
+### Source Code
+```
+C:\Disk1\TargCC-Core-V2\src\
+├── TargCC.Core\           (Domain entities)
+├── TargCC.Application\    (CQRS handlers)
+├── TargCC.Infrastructure\ (Data access)
+├── TargCC.Generators\     (Code generators)
+├── TargCC.AI\             (AI services)
+└── TargCC.CLI\            (Command-line interface)
+```
+
+### Tests
+```
+C:\Disk1\TargCC-Core-V2\src\tests\
+├── TargCC.Core.Tests\     (398+ tests)
+├── TargCC.AI.Tests\       (110+ tests)
+└── TargCC.CLI.Tests\      (197+ tests)
+```
 
 ---
 
-## ⚡ TL;DR - For Next Session
+## 💡 Tips for Effective Sessions
 
-1. **Read:** [current/HANDOFF_Day18-19.md](./current/HANDOFF_Day18-19.md)
-2. **Implement:** Code Quality Analyzer (4 methods, 30+ tests)
-3. **Time:** 5-8 hours
-4. **Status:** Ready to start! ✅
+### Before Coding:
+1. ✅ Read NEXT_SESSION.md completely
+2. ✅ Understand the task objectives
+3. ✅ Check current test count
+4. ✅ Verify build is clean
+
+### During Coding:
+1. 🧪 Write tests first (TDD)
+2. 💾 Commit frequently
+3. 🏗️ Build often
+4. 📝 Document as you go
+
+### After Coding:
+1. ✅ Run full test suite
+2. 📊 Check code coverage
+3. 📝 Update all 3 documentation files
+4. 🎯 Create clear handoff for next session
 
 ---
 
-**Generated:** November 28, 2025  
-**Status:** Documentation Organized ✅
+## 🔗 Related Resources
 
-**Next Action:** [Start Day 18-19 →](./current/HANDOFF_Day18-19.md) 🚀
+### Project Documentation:
+- **Main README:** `C:\Disk1\TargCC-Core-V2\README.md`
+- **Architecture:** `C:\Disk1\TargCC-Core-V2\docs\ARCHITECTURE.md` (if exists)
+- **API Docs:** Generated from XML comments
+
+### External Resources:
+- **Anthropic API:** https://docs.anthropic.com/
+- **System.CommandLine:** https://learn.microsoft.com/en-us/dotnet/standard/commandline/
+- **Spectre.Console:** https://spectreconsole.net/
+- **xUnit:** https://xunit.net/
+
+---
+
+## 🚀 Quick Commands
+
+### Build & Test:
+```bash
+# Full clean build
+dotnet clean
+dotnet restore
+dotnet build
+
+# Run all tests
+dotnet test --verbosity normal
+
+# Run specific test project
+dotnet test src/tests/TargCC.AI.Tests
+```
+
+### Git Workflow:
+```bash
+# Check status
+git status
+
+# Commit progress
+git add .
+git commit -m "feat: description"
+
+# View history
+git log --oneline -10
+```
+
+### CLI Testing:
+```bash
+# Navigate to CLI project
+cd src/TargCC.CLI
+
+# Run command
+dotnet run -- analyze quality --help
+dotnet run -- analyze security
+```
+
+---
+
+## 📞 Questions?
+
+If you're stuck or need clarification:
+
+1. **Check NEXT_SESSION.md** - Detailed implementation guide
+2. **Review PROGRESS.md** - See what was done recently
+3. **Look at Phase3_Checklist.md** - Verify task requirements
+4. **Check existing code** - Similar commands for reference
+5. **Run tests** - They document expected behavior
+
+---
+
+## ✨ Session Goals
+
+### Short-term (This Week):
+- Complete Phase 3B (AI Integration)
+- Begin Phase 3C planning (Web UI)
+- Maintain 85%+ test coverage
+- Zero build errors
+
+### Medium-term (This Month):
+- Complete Phase 3C (Web UI)
+- Begin Phase 3D (Migration & Polish)
+- Comprehensive integration testing
+- Performance optimization
+
+### Long-term (Release):
+- TargCC Core V2.0.0 release
+- Complete documentation
+- Migration guide for V1 users
+- Production-ready code generation
+
+---
+
+**Last Updated:** 28/11/2025  
+**Next Update:** After Day 20 Part 2 completion  
+**Document Maintained By:** Doron  
+
+**Happy Coding!** 🎉
