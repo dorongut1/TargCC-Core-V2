@@ -2,6 +2,7 @@
 // Copyright (c) Doron Vaida. All rights reserved.
 // </copyright>
 
+using TargCC.AI.Models;
 using TargCC.CLI.Models.Analysis;
 
 namespace TargCC.CLI.Services.Analysis;
@@ -16,7 +17,7 @@ public interface IAnalysisService
     /// </summary>
     /// <param name="tableName">Optional table name to analyze. If null, analyzes all tables.</param>
     /// <returns>Schema analysis result.</returns>
-    Task<SchemaAnalysisResult> AnalyzeSchemaAsync(string? tableName = null);
+    Task<CLI.Models.Analysis.SchemaAnalysisResult> AnalyzeSchemaAsync(string? tableName = null);
 
     /// <summary>
     /// Analyzes the impact of schema changes.
@@ -36,7 +37,7 @@ public interface IAnalysisService
     /// Analyzes security issues in the schema.
     /// </summary>
     /// <returns>Security analysis result.</returns>
-    Task<SecurityAnalysisResult> AnalyzeSecurityAsync();
+    Task<AI.Models.SecurityAnalysisResult> AnalyzeSecurityAsync();
 
     /// <summary>
     /// Analyzes schema quality.

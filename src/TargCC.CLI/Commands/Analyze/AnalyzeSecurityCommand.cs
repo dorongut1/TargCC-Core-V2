@@ -6,7 +6,7 @@ using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Rendering;
-using TargCC.CLI.Models.Analysis;
+using TargCC.AI.Models;
 using TargCC.CLI.Services;
 using TargCC.CLI.Services.Analysis;
 
@@ -48,7 +48,7 @@ public class AnalyzeSecurityCommand : Command
         {
             this.logger.LogInformation("Starting security analysis");
 
-            SecurityAnalysisResult result = null!;
+            AI.Models.SecurityAnalysisResult result = null!;
             await this.outputService.SpinnerAsync(
                 "Analyzing security...",
                 async () =>
@@ -70,7 +70,7 @@ public class AnalyzeSecurityCommand : Command
         }
     }
 
-    private void DisplayResults(SecurityAnalysisResult result)
+    private void DisplayResults(AI.Models.SecurityAnalysisResult result)
     {
         var panel = new Panel(this.BuildResultsMarkup(result))
         {
@@ -81,58 +81,123 @@ public class AnalyzeSecurityCommand : Command
         AnsiConsole.Write(panel);
     }
 
-    private IRenderable BuildResultsMarkup(SecurityAnalysisResult result)
+    private IRenderable BuildResultsMarkup(AI.Models.SecurityAnalysisResult result)
     {
-        var tree = new Tree($"[bold]Issues Found: {result.Issues.Count}[/]");
+        var tree = new Tree($"[bold]Security Score: {result.OverallScore.Score}/100 (Grade: {result.OverallScore.Grade})[/]");
 
-        if (result.Issues.Any())
+        // Add score summary
+        var scoreColor = result.OverallScore.Grade switch
         {
-            var highIssues = result.Issues.Where(i => i.Severity == SecuritySeverity.High).ToList();
-            var mediumIssues = result.Issues.Where(i => i.Severity == SecuritySeverity.Medium).ToList();
-            var lowIssues = result.Issues.Where(i => i.Severity == SecuritySeverity.Low).ToList();
+            "A" => "green",
+            "B" => "blue",
+            "C" => "yellow",
+            "D" => "orange",
+            _ => "red",
+        };
+        tree.AddNode($"[{scoreColor}]{result.OverallScore.Summary}[/]");
 
-            if (highIssues.Any())
+        // Add vulnerabilities section
+        if (result.Vulnerabilities.Any())
+        {
+            var vulnNode = tree.AddNode($"[red]⚠️  Vulnerabilities: {result.Vulnerabilities.Count}[/]");
+
+            var criticalVulns = result.Vulnerabilities.Where(v => v.Severity == AI.Models.SecuritySeverity.Critical).ToList();
+            var highVulns = result.Vulnerabilities.Where(v => v.Severity == AI.Models.SecuritySeverity.High).ToList();
+            var mediumVulns = result.Vulnerabilities.Where(v => v.Severity == AI.Models.SecuritySeverity.Medium).ToList();
+            var lowVulns = result.Vulnerabilities.Where(v => v.Severity == AI.Models.SecuritySeverity.Low).ToList();
+
+            if (criticalVulns.Any())
             {
-                var highNode = tree.AddNode($"[red]High Priority: {highIssues.Count}[/]");
-                foreach (var issue in highIssues)
+                var criticalNode = vulnNode.AddNode($"[red bold]🔴 Critical: {criticalVulns.Count}[/]");
+                foreach (var vuln in criticalVulns)
                 {
-                    this.AddIssueNode(highNode, issue);
+                    this.AddVulnerabilityNode(criticalNode, vuln);
                 }
             }
 
-            if (mediumIssues.Any())
+            if (highVulns.Any())
             {
-                var mediumNode = tree.AddNode($"[yellow]Medium Priority: {mediumIssues.Count}[/]");
-                foreach (var issue in mediumIssues)
+                var highNode = vulnNode.AddNode($"[red]High: {highVulns.Count}[/]");
+                foreach (var vuln in highVulns)
                 {
-                    this.AddIssueNode(mediumNode, issue);
+                    this.AddVulnerabilityNode(highNode, vuln);
                 }
             }
 
-            if (lowIssues.Any())
+            if (mediumVulns.Any())
             {
-                var lowNode = tree.AddNode($"[dim]Low Priority: {lowIssues.Count}[/]");
-                foreach (var issue in lowIssues)
+                var mediumNode = vulnNode.AddNode($"[yellow]Medium: {mediumVulns.Count}[/]");
+                foreach (var vuln in mediumVulns)
                 {
-                    this.AddIssueNode(lowNode, issue);
+                    this.AddVulnerabilityNode(mediumNode, vuln);
+                }
+            }
+
+            if (lowVulns.Any())
+            {
+                var lowNode = vulnNode.AddNode($"[dim]Low: {lowVulns.Count}[/]");
+                foreach (var vuln in lowVulns)
+                {
+                    this.AddVulnerabilityNode(lowNode, vuln);
                 }
             }
         }
-        else
+
+        // Add prefix recommendations section
+        if (result.PrefixRecommendations.Any())
         {
-            tree.AddNode("[green]✓ No security issues found[/]");
+            var prefixNode = tree.AddNode($"[yellow]📝 Prefix Recommendations: {result.PrefixRecommendations.Count}[/]");
+
+            foreach (var recommendation in result.PrefixRecommendations.Take(10))
+            {
+                var recNode = prefixNode.AddNode(
+                    $"[cyan]{recommendation.TableName}.{recommendation.CurrentColumnName}[/] → [green]{recommendation.RecommendedColumnName}[/]");
+                recNode.AddNode($"[dim]Reason: {recommendation.Reason}[/]");
+            }
+
+            if (result.PrefixRecommendations.Count > 10)
+            {
+                prefixNode.AddNode($"[dim]... and {result.PrefixRecommendations.Count - 10} more[/]");
+            }
         }
 
-        var compliancePercentage = (int)result.CompliancePercentage;
-        var complianceColor = compliancePercentage >= 90 ? "green" : compliancePercentage >= 70 ? "yellow" : "red";
-        tree.AddNode($"[{complianceColor}]✓ Compliant Fields: {result.CompliantFields}/{result.TotalFieldsChecked} ({compliancePercentage}%)[/]");
+        // Add encryption suggestions section
+        if (result.EncryptionSuggestions.Any())
+        {
+            var encryptNode = tree.AddNode($"[orange]🔐 Encryption Suggestions: {result.EncryptionSuggestions.Count}[/]");
+
+            foreach (var suggestion in result.EncryptionSuggestions.Take(10))
+            {
+                var suggNode = encryptNode.AddNode(
+                    $"[cyan]{suggestion.TableName}.{suggestion.ColumnName}[/] ({suggestion.SensitiveDataType})");
+                suggNode.AddNode($"[dim]→ {suggestion.RecommendedEncryptionMethod}[/]");
+                suggNode.AddNode($"[dim]{suggestion.Reason}[/]");
+            }
+
+            if (result.EncryptionSuggestions.Count > 10)
+            {
+                encryptNode.AddNode($"[dim]... and {result.EncryptionSuggestions.Count - 10} more[/]");
+            }
+        }
+
+        // If no issues found
+        if (result.TotalIssues == 0)
+        {
+            tree.AddNode("[green]✓ No security issues found - Excellent![/]");
+        }
 
         return tree;
     }
 
-    private void AddIssueNode(TreeNode parent, SecurityIssue issue)
+    private void AddVulnerabilityNode(TreeNode parent, SecurityVulnerability vulnerability)
     {
-        var issueNode = parent.AddNode($"[cyan]{issue.TableName}.{issue.ColumnName}[/] - {issue.Description}");
-        issueNode.AddNode($"[dim]→ {issue.Recommendation}[/]");
+        var vulnNode = parent.AddNode(
+            $"[cyan]{vulnerability.TableName}.{vulnerability.ColumnName}[/] - {vulnerability.Description}");
+        vulnNode.AddNode($"[dim]→ {vulnerability.Recommendation}[/]");
+
+        if (!string.IsNullOrWhiteSpace(vulnerability.AdditionalContext))
+        {
+            vulnNode.AddNode($"[dim italic]{vulnerability.AdditionalContext}[/]");
+        }
     }
 }

@@ -3,8 +3,10 @@
 // </copyright>
 
 using Microsoft.Extensions.Logging;
-using TargCC.CLI.Models.Analysis;
+using TargCC.AI.Analyzers;
+using TargCC.AI.Models;
 using TargCC.CLI.Configuration;
+using TargCC.CLI.Models.Analysis;
 using TargCC.Core.Analyzers.Database;
 using TargCC.Core.Interfaces.Models;
 
@@ -34,7 +36,7 @@ public class AnalysisService : IAnalysisService
     }
 
     /// <inheritdoc/>
-    public async Task<SchemaAnalysisResult> AnalyzeSchemaAsync(string? tableName = null)
+    public async Task<CLI.Models.Analysis.SchemaAnalysisResult> AnalyzeSchemaAsync(string? tableName = null)
     {
         this.logger.LogInformation("Analyzing schema for table: {TableName}", tableName ?? "all tables");
 
@@ -44,7 +46,7 @@ public class AnalysisService : IAnalysisService
 
         var schema = await analyzer.AnalyzeAsync();
 
-        var result = new SchemaAnalysisResult
+        var result = new CLI.Models.Analysis.SchemaAnalysisResult
         {
             TotalTables = schema.Tables.Count,
         };
@@ -160,84 +162,97 @@ public class AnalysisService : IAnalysisService
     }
 
     /// <inheritdoc/>
-    public async Task<SecurityAnalysisResult> AnalyzeSecurityAsync()
+    public async Task<AI.Models.SecurityAnalysisResult> AnalyzeSecurityAsync()
     {
-        this.logger.LogInformation("Analyzing security issues");
+        this.logger.LogInformation("Analyzing security issues using SecurityAnalyzer");
 
         var config = await this.configurationService.LoadAsync();
         var analyzerLogger = this.loggerFactory.CreateLogger<DatabaseAnalyzer>();
-        var analyzer = new DatabaseAnalyzer(config.ConnectionString!, analyzerLogger);
+        var databaseAnalyzer = new DatabaseAnalyzer(config.ConnectionString!, analyzerLogger);
 
-        var schema = await analyzer.AnalyzeAsync();
-        var tables = schema.Tables;
+        var schema = await databaseAnalyzer.AnalyzeAsync();
 
-        var result = new SecurityAnalysisResult();
-        var sensitivePatterns = new[]
+        // Create SecurityAnalyzer
+        var securityAnalyzerLogger = this.loggerFactory.CreateLogger<SecurityAnalyzer>();
+        var securityAnalyzer = new SecurityAnalyzer(securityAnalyzerLogger);
+
+        // Aggregate results from all tables
+        var allVulnerabilities = new List<SecurityVulnerability>();
+        var allPrefixRecommendations = new List<PrefixRecommendation>();
+        var allEncryptionSuggestions = new List<EncryptionSuggestion>();
+
+        foreach (var table in schema.Tables)
         {
-            "email", "phone", "credit", "card", "ssn", "password",
-            "social", "security", "tax", "id", "passport",
-        };
+            var tableResult = await securityAnalyzer.AnalyzeTableSecurityAsync(table, CancellationToken.None);
 
-        foreach (var table in tables)
-        {
-            foreach (var column in table.Columns)
-            {
-                result.TotalFieldsChecked++;
-
-                var columnLower = column.Name.ToLowerInvariant();
-                var isSensitive = sensitivePatterns.Any(p => columnLower.Contains(p));
-
-                if (!isSensitive)
-                {
-                    result.CompliantFields++;
-                    continue;
-                }
-
-                // Check if column has proper security prefix
-                var hasEncryptionPrefix = column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase);
-                var hasHashPrefix = column.Name.StartsWith("ent_", StringComparison.OrdinalIgnoreCase);
-
-                if (columnLower.Contains("password"))
-                {
-                    if (!hasHashPrefix)
-                    {
-                        result.Issues.Add(new SecurityIssue
-                        {
-                            TableName = table.Name,
-                            ColumnName = column.Name,
-                            Description = "Password field without ent_ prefix",
-                            Severity = SecuritySeverity.Medium,
-                            Recommendation = $"Rename to 'ent_{column.Name}' for hashed data",
-                        });
-                    }
-                    else
-                    {
-                        result.CompliantFields++;
-                    }
-                }
-                else if (hasEncryptionPrefix || hasHashPrefix)
-                {
-                    result.CompliantFields++;
-                }
-                else
-                {
-                    var severity = columnLower.Contains("credit") || columnLower.Contains("ssn")
-                        ? SecuritySeverity.High
-                        : SecuritySeverity.Medium;
-
-                    result.Issues.Add(new SecurityIssue
-                    {
-                        TableName = table.Name,
-                        ColumnName = column.Name,
-                        Description = "Sensitive data without encryption prefix",
-                        Severity = severity,
-                        Recommendation = $"Rename to 'eno_{column.Name}' for encrypted data",
-                    });
-                }
-            }
+            allVulnerabilities.AddRange(tableResult.Vulnerabilities);
+            allPrefixRecommendations.AddRange(tableResult.PrefixRecommendations);
+            allEncryptionSuggestions.AddRange(tableResult.EncryptionSuggestions);
         }
 
-        return result;
+        // Calculate overall security score
+        var criticalCount = this.CountBySeverity(allVulnerabilities, allPrefixRecommendations, allEncryptionSuggestions, AI.Models.SecuritySeverity.Critical);
+        var highCount = this.CountBySeverity(allVulnerabilities, allPrefixRecommendations, allEncryptionSuggestions, AI.Models.SecuritySeverity.High);
+        var mediumCount = this.CountBySeverity(allVulnerabilities, allPrefixRecommendations, allEncryptionSuggestions, AI.Models.SecuritySeverity.Medium);
+        var lowCount = this.CountBySeverity(allVulnerabilities, allPrefixRecommendations, allEncryptionSuggestions, AI.Models.SecuritySeverity.Low);
+
+        var score = 100 - (criticalCount * 25) - (highCount * 10) - (mediumCount * 5) - (lowCount * 2);
+        score = Math.Max(0, score);
+
+        var grade = score switch
+        {
+            >= 90 => "A",
+            >= 80 => "B",
+            >= 70 => "C",
+            >= 60 => "D",
+            _ => "F",
+        };
+
+        var totalIssues = criticalCount + highCount + mediumCount + lowCount;
+        var summary = totalIssues == 0
+            ? "Excellent security posture with no issues detected."
+            : $"Found {totalIssues} security issue(s). {criticalCount} critical, {highCount} high, {mediumCount} medium, {lowCount} low.";
+
+        var overallScore = new SecurityScore
+        {
+            Score = score,
+            Grade = grade,
+            CriticalCount = criticalCount,
+            HighCount = highCount,
+            MediumCount = mediumCount,
+            LowCount = lowCount,
+            Summary = summary,
+        };
+
+        this.logger.LogInformation(
+            "Security analysis completed: {TotalIssues} issues found, Score: {Score} ({Grade})",
+            totalIssues,
+            score,
+            grade);
+
+        return new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = allVulnerabilities,
+            PrefixRecommendations = allPrefixRecommendations,
+            EncryptionSuggestions = allEncryptionSuggestions,
+            OverallScore = overallScore,
+            AnalyzedAt = DateTime.UtcNow,
+        };
+    }
+
+    /// <summary>
+    /// Counts issues by severity across all issue types.
+    /// </summary>
+    private int CountBySeverity(
+        List<SecurityVulnerability> vulnerabilities,
+        List<PrefixRecommendation> prefixRecommendations,
+        List<EncryptionSuggestion> encryptionSuggestions,
+        AI.Models.SecuritySeverity severity)
+    {
+        var count = vulnerabilities.Count(v => v.Severity == severity);
+        count += prefixRecommendations.Count(p => p.Severity == severity);
+        count += encryptionSuggestions.Count(e => e.Severity == severity);
+        return count;
     }
 
     /// <inheritdoc/>
