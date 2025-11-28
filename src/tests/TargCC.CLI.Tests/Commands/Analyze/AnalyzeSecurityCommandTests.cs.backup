@@ -1,0 +1,826 @@
+// <copyright file="AnalyzeSecurityCommandTests.cs" company="Doron Vaida">
+// Copyright (c) Doron Vaida. All rights reserved.
+// </copyright>
+
+using System.CommandLine;
+using Microsoft.Extensions.Logging;
+using TargCC.CLI.Commands.Analyze;
+using TargCC.CLI.Services;
+using TargCC.CLI.Services.Analysis;
+
+
+namespace TargCC.CLI.Tests.Commands.Analyze;
+
+/// <summary>
+/// Tests for <see cref="AnalyzeSecurityCommand"/>.
+/// </summary>
+public class AnalyzeSecurityCommandTests
+{
+    private readonly Mock<IAnalysisService> mockAnalysisService;
+    private readonly Mock<IOutputService> mockOutputService;
+    private readonly Mock<ILoggerFactory> mockLoggerFactory;
+    private readonly Mock<ILogger<AnalyzeSecurityCommand>> mockLogger;
+
+    public AnalyzeSecurityCommandTests()
+    {
+        this.mockAnalysisService = new Mock<IAnalysisService>();
+        this.mockOutputService = new Mock<IOutputService>();
+        this.mockLoggerFactory = new Mock<ILoggerFactory>();
+        this.mockLogger = new Mock<ILogger<AnalyzeSecurityCommand>>();
+
+        this.mockLoggerFactory
+            .Setup(x => x.CreateLogger(It.IsAny<string>()))
+            .Returns(this.mockLogger.Object);
+    }
+
+    [Fact]
+    public void Constructor_WithValidParameters_CreatesCommand()
+    {
+        // Act
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Assert
+        command.Should().NotBeNull();
+        command.Name.Should().Be("security");
+        command.Description.Should().Be("Analyze security issues in schema");
+    }
+
+    [Fact]
+    public void Constructor_WithNullAnalysisService_ThrowsArgumentNullException()
+    {
+        // Act
+        var act = () => new AnalyzeSecurityCommand(
+            null!,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("analysisService");
+    }
+
+    [Fact]
+    public void Constructor_WithNullOutputService_ThrowsArgumentNullException()
+    {
+        // Act
+        var act = () => new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            null!,
+            this.mockLoggerFactory.Object);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("outputService");
+    }
+
+    [Fact]
+    public void Constructor_WithNullLoggerFactory_ThrowsArgumentNullException()
+    {
+        // Act
+        var act = () => new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            null!);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("loggerFactory");
+    }
+
+    #region HandleAsync Success Tests
+
+    [Fact]
+    public async Task HandleAsync_WithNoSecurityIssues_ShouldDisplayCleanReport()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Perfect security - no issues found!",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+        this.mockOutputService.Verify(x => x.Success(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithVulnerabilities_ShouldDisplayVulnerabilities()
+    {
+        // Arrange
+        var vulnerabilities = new List<AI.Models.SecurityVulnerability>
+        {
+            new()
+            {
+                VulnerabilityType = "PlainTextPassword",
+                TableName = "Users",
+                ColumnName = "Password",
+                Description = "Password stored in plain text",
+                Severity = AI.Models.SecuritySeverity.Critical,
+                Recommendation = "Use encryption",
+                AdditionalContext = "Critical security issue",
+            },
+            new()
+            {
+                VulnerabilityType = "UnencryptedSensitiveData",
+                TableName = "Users",
+                ColumnName = "Email",
+                Description = "Email not encrypted",
+                Severity = AI.Models.SecuritySeverity.High,
+                Recommendation = "Add eno_ prefix",
+            },
+        };
+
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = vulnerabilities,
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 45,
+                Grade = "F",
+                CriticalCount = 1,
+                HighCount = 1,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Critical security issues found",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithRecommendations_ShouldDisplayRecommendations()
+    {
+        // Arrange
+        var recommendations = new List<AI.Models.PrefixRecommendation>
+        {
+            new()
+            {
+                TableName = "Users",
+                CurrentColumnName = "SSN",
+                RecommendedPrefix = "eno_",
+                RecommendedColumnName = "eno_SSN",
+                Reason = "Should be encrypted",
+                Severity = AI.Models.SecuritySeverity.High,
+            },
+            new()
+            {
+                TableName = "Orders",
+                CurrentColumnName = "CreatedDate",
+                RecommendedPrefix = "ent_",
+                RecommendedColumnName = "ent_CreatedDate",
+                Reason = "Should track temporal changes",
+                Severity = AI.Models.SecuritySeverity.Medium,
+            },
+        };
+
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = recommendations,
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 75,
+                Grade = "C",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 2,
+                LowCount = 0,
+                Summary = "Some improvements recommended",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithEncryptionSuggestions_ShouldDisplaySuggestions()
+    {
+        // Arrange
+        var suggestions = new List<AI.Models.EncryptionSuggestion>
+        {
+            new()
+            {
+                TableName = "Users",
+                ColumnName = "CreditCard",
+                SensitiveDataType = "Credit Card",
+                RecommendedEncryptionMethod = "AES-256",
+                Reason = "PCI compliance requirement",
+                Severity = AI.Models.SecuritySeverity.High,
+            },
+        };
+
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = suggestions,
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 80,
+                Grade = "B",
+                CriticalCount = 0,
+                HighCount = 1,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Good security with minor improvements",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithMixedResults_ShouldDisplayAllSections()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>
+            {
+                new()
+                {
+                    VulnerabilityType = "WeakEncryption",
+                    TableName = "Users",
+                    ColumnName = "Password",
+                    Description = "Weak encryption",
+                    Severity = AI.Models.SecuritySeverity.Medium,
+                    Recommendation = "Use stronger algorithm",
+                },
+            },
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>
+            {
+                new()
+                {
+                    TableName = "Orders",
+                    CurrentColumnName = "Total",
+                    RecommendedPrefix = "clc_",
+                    RecommendedColumnName = "clc_Total",
+                    Reason = "Calculated field",
+                    Severity = AI.Models.SecuritySeverity.Low,
+                },
+            },
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>
+            {
+                new()
+                {
+                    TableName = "Payments",
+                    ColumnName = "CardNumber",
+                    SensitiveDataType = "Credit Card",
+                    RecommendedEncryptionMethod = "AES-256",
+                    Reason = "Sensitive payment data",
+                    Severity = AI.Models.SecuritySeverity.High,
+                },
+            },
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 70,
+                Grade = "C",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 3,
+                LowCount = 0,
+                Summary = "Multiple improvements needed",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+        this.mockOutputService.Verify(x => x.Success(It.IsAny<string>()), Times.Once);
+    }
+
+    #endregion
+
+    #region Display Tests
+
+    [Fact]
+    public async Task HandleAsync_WithPerfectScore_ShouldCompleteSuccessfully()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Perfect security!",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var act = async () => await command.InvokeAsync(string.Empty);
+
+        // Assert - Should not throw
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithCriticalVulnerabilities_ShouldCompleteSuccessfully()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>
+            {
+                new()
+                {
+                    VulnerabilityType = "CriticalIssue",
+                    TableName = "Users",
+                    ColumnName = "Password",
+                    Description = "Critical issue",
+                    Severity = AI.Models.SecuritySeverity.Critical,
+                    Recommendation = "Fix immediately",
+                },
+            },
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 30,
+                Grade = "F",
+                CriticalCount = 1,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Critical issues!",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var act = async () => await command.InvokeAsync(string.Empty);
+
+        // Assert - Should not throw
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithManyRecommendations_ShouldCompleteSuccessfully()
+    {
+        // Arrange
+        var recommendations = new List<AI.Models.PrefixRecommendation>();
+        for (int i = 0; i < 20; i++)
+        {
+            recommendations.Add(new AI.Models.PrefixRecommendation
+            {
+                TableName = $"Table{i}",
+                CurrentColumnName = $"Column{i}",
+                RecommendedPrefix = "eno_",
+                RecommendedColumnName = $"eno_Column{i}",
+                Reason = $"Reason {i}",
+                Severity = AI.Models.SecuritySeverity.Medium,
+            });
+        }
+
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = recommendations,
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 60,
+                Grade = "D",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 20,
+                LowCount = 0,
+                Summary = "Many improvements needed",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var act = async () => await command.InvokeAsync(string.Empty);
+
+        // Assert - Should not throw and should handle pagination
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithEmptyResults_ShouldShowSuccessMessage()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "No issues found",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(0);
+        this.mockOutputService.Verify(x => x.Success(It.IsAny<string>()), Times.Once);
+    }
+
+    #endregion
+
+    #region Error Handling Tests
+
+    [Fact]
+    public async Task HandleAsync_WhenServiceThrows_ShouldReturnErrorCode()
+    {
+        // Arrange
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ThrowsAsync(new InvalidOperationException("Test error"));
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(1);
+        this.mockOutputService.Verify(x => x.Error(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenServiceThrowsArgumentException_ShouldReturnErrorCode()
+    {
+        // Arrange
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ThrowsAsync(new ArgumentException("Invalid argument"));
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        var result = await command.InvokeAsync(string.Empty);
+
+        // Assert
+        result.Should().Be(1);
+        this.mockOutputService.Verify(
+            x => x.Error(It.Is<string>(s => s.Contains("Invalid argument"))),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenErrorOccurs_ShouldLogError()
+    {
+        // Arrange
+        var expectedException = new InvalidOperationException("Test error");
+        
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ThrowsAsync(expectedException);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        await command.InvokeAsync(string.Empty);
+
+        // Assert
+        this.mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => true),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region Service Interaction Tests
+
+    [Fact]
+    public async Task HandleAsync_ShouldCallAnalyzeSecurityAsyncOnce()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Perfect",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        await command.InvokeAsync(string.Empty);
+
+        // Assert
+        this.mockAnalysisService.Verify(x => x.AnalyzeSecurityAsync(), Times.Once);
+        this.mockAnalysisService.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldShowSpinnerDuringAnalysis()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Perfect",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        await command.InvokeAsync(string.Empty);
+
+        // Assert
+        this.mockOutputService.Verify(
+            x => x.SpinnerAsync("Analyzing security...", It.IsAny<Func<Task>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_OnSuccess_ShouldDisplaySuccessMessage()
+    {
+        // Arrange
+        var expectedResult = new AI.Models.SecurityAnalysisResult
+        {
+            Vulnerabilities = new List<AI.Models.SecurityVulnerability>(),
+            PrefixRecommendations = new List<AI.Models.PrefixRecommendation>(),
+            EncryptionSuggestions = new List<AI.Models.EncryptionSuggestion>(),
+            OverallScore = new AI.Models.SecurityScore
+            {
+                Score = 100,
+                Grade = "A",
+                CriticalCount = 0,
+                HighCount = 0,
+                MediumCount = 0,
+                LowCount = 0,
+                Summary = "Perfect",
+            },
+            AnalyzedAt = DateTime.UtcNow,
+        };
+
+        this.mockAnalysisService
+            .Setup(x => x.AnalyzeSecurityAsync())
+            .ReturnsAsync(expectedResult);
+
+        this.mockOutputService
+            .Setup(x => x.SpinnerAsync(It.IsAny<string>(), It.IsAny<Func<Task>>()))
+            .Returns<string, Func<Task>>((msg, func) => func());
+
+        var command = new AnalyzeSecurityCommand(
+            this.mockAnalysisService.Object,
+            this.mockOutputService.Object,
+            this.mockLoggerFactory.Object);
+
+        // Act
+        await command.InvokeAsync(string.Empty);
+
+        // Assert
+        this.mockOutputService.Verify(
+            x => x.Success("Security analysis completed"),
+            Times.Once);
+    }
+
+    #endregion
+}
