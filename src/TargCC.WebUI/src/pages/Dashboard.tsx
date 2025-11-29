@@ -6,7 +6,6 @@
 import { useEffect, useState } from 'react';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -23,8 +22,8 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { apiService } from '../services/api';
 import type { DashboardStats } from '../types/models';
+import { SystemHealth } from '../components/SystemHealth';
 
 /**
  * Stat card component for displaying key metrics
@@ -157,40 +156,32 @@ export const Dashboard: React.FC = () => {
       </Typography>
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Tables"
-            value={stats.totalTables}
-            icon={<TableChartIcon sx={{ color: 'white' }} />}
-            color="#1976d2"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Generated"
-            value={stats.generatedTables}
-            icon={<CheckCircleIcon sx={{ color: 'white' }} />}
-            color="#2e7d32"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Tests"
-            value={stats.totalTests}
-            icon={<BugReportIcon sx={{ color: 'white' }} />}
-            color="#ed6c02"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Coverage"
-            value={`${stats.testCoverage}%`}
-            icon={<TrendingUpIcon sx={{ color: 'white' }} />}
-            color="#9c27b0"
-          />
-        </Grid>
-      </Grid>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+        <StatCard
+          title="Total Tables"
+          value={stats.totalTables}
+          icon={<TableChartIcon sx={{ color: 'white' }} />}
+          color="#1976d2"
+        />
+        <StatCard
+          title="Generated"
+          value={stats.generatedTables}
+          icon={<CheckCircleIcon sx={{ color: 'white' }} />}
+          color="#2e7d32"
+        />
+        <StatCard
+          title="Tests"
+          value={stats.totalTests}
+          icon={<BugReportIcon sx={{ color: 'white' }} />}
+          color="#ed6c02"
+        />
+        <StatCard
+          title="Coverage"
+          value={`${stats.testCoverage}%`}
+          icon={<TrendingUpIcon sx={{ color: 'white' }} />}
+          color="#9c27b0"
+        />
+      </Box>
 
       {/* Quick Actions */}
       <Paper sx={{ p: 3, mb: 4 }}>
@@ -214,32 +205,42 @@ export const Dashboard: React.FC = () => {
       </Paper>
 
       {/* Recent Activity */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Recent Activity
-        </Typography>
-        <List>
-          {stats.recentActivity.map((activity, index) => (
-            <ListItem key={index} divider={index < stats.recentActivity.length - 1}>
-              <ListItemText
-                primary={activity.action}
-                secondary={
-                  <>
-                    {activity.description}
-                    <br />
-                    {activity.timestamp.toLocaleString()}
-                  </>
-                }
-              />
-              <Chip
-                label={activity.status}
-                color={getStatusColor(activity.status) as any}
-                size="small"
-              />
-            </ListItem>
-          ))}
-        </List>
-      </Paper>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Recent Activity
+          </Typography>
+          <List>
+            {stats.recentActivity.map((activity, index) => (
+              <ListItem key={index} divider={index < stats.recentActivity.length - 1}>
+                <ListItemText
+                  primary={activity.action}
+                  secondary={
+                    <>
+                      {activity.description}
+                      <br />
+                      {activity.timestamp.toLocaleString()}
+                    </>
+                  }
+                />
+                <Chip
+                  label={activity.status}
+                  color={getStatusColor(activity.status) as any}
+                  size="small"
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+
+        {/* System Health */}
+        <SystemHealth
+          cpuUsage={45}
+          memoryUsage={62}
+          diskUsage={38}
+          status="healthy"
+        />
+      </Box>
     </Box>
   );
 };

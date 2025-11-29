@@ -1,251 +1,561 @@
-# Next Session Briefing - Day 22: Dashboard Enhancement
+# Next Session: Day 23 - Navigation & Features
 
-**Session Date:** TBD  
-**Phase:** Phase 3C - Local Web UI  
-**Day:** 22 of 45  
-**Duration:** Half day session
-
----
-
-## 🎯 Session Overview
-
-**Primary Goal:** Enhance the Dashboard with more features and components
-
-**What We're Building:**
-Expanding the existing Dashboard with table list, better navigation, and additional widgets.
+**Date:** 29/11/2025  
+**Phase:** 3C - Local Web UI  
+**Day:** 23 of 45  
+**Duration:** ~4 hours  
+**Status:** Ready to Start
 
 ---
 
-## ✅ Current Status (Day 21 Complete)
+## 🎯 Day 23 Objectives
 
-### What's Working:
-- ✅ React 19 + TypeScript + Vite app running
-- ✅ Material-UI integrated
-- ✅ Basic Dashboard with 4 stat cards
-- ✅ Header and Sidebar components
-- ✅ React Router setup
-- ✅ API service layer ready
-- ✅ Type definitions complete
-- ✅ Application runs at http://localhost:5173
+### Primary Goal
+Enhance the React UI with additional dashboard widgets, table interactions, pagination, and advanced filtering.
 
-### Project Structure:
-```
-src/TargCC.WebUI/
-├── src/
-│   ├── types/models.ts
-│   ├── services/api.ts
-│   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── Layout.tsx
-│   ├── pages/
-│   │   └── Dashboard.tsx
-│   ├── __tests__/ (26 tests written)
-│   └── App.tsx
-└── package.json
-```
+### Specific Deliverables
 
-### Test Status:
-- ✅ 26 tests written
-- ⏳ Awaiting @testing-library/react update for React 19
-- ✅ All components render correctly in browser
+1. **Dashboard Widgets** (3-4 new widgets)
+   - Recent Generations widget
+   - Quick Stats widget
+   - Activity Timeline widget
+   - Schema Statistics widget
 
----
+2. **Table Enhancements**
+   - Sorting functionality
+   - Column filters
+   - Row selection
+   - Improved action buttons
 
-## 🎯 Day 22 Objectives
+3. **Pagination System**
+   - Table pagination component
+   - Configurable page size
+   - Page navigation controls
+   - Total count display
 
-### Main Tasks:
-1. **Create TableList Component** (1-2 hours)
-   - Display list of database tables
-   - Show generation status
-   - Add action buttons
-
-2. **Enhance Dashboard** (1 hour)
-   - Add more widgets
-   - Improve layout
-   - Better responsive design
-
-3. **Improve Navigation** (30 min)
-   - Active route highlighting
-   - Breadcrumbs (optional)
-
-4. **Write Tests** (when library updates)
-   - Component tests
-   - Integration tests
+4. **Advanced Filtering**
+   - Filter menu UI
+   - Multiple criteria support
+   - Filter chips display
+   - Clear filters functionality
 
 ---
 
 ## 📋 Detailed Implementation Plan
 
-### Task 1: TableList Component
+### Part 1: Dashboard Widgets (60 minutes)
 
-**File:** `src/pages/Tables.tsx`
+#### 1.1 Recent Generations Widget
+```typescript
+interface RecentGeneration {
+  id: string;
+  tableName: string;
+  type: 'Entity' | 'Repository' | 'API' | 'SQL';
+  timestamp: Date;
+  status: 'Success' | 'Failed';
+}
 
-**Features:**
-- MUI Table or DataGrid
-- Columns: Name, Schema, Status, Actions
-- Status indicators (Generated/Not Generated)
-- Action buttons (Generate, View, Edit)
-- Search/filter functionality
-
-**Example Structure:**
-```tsx
-export const Tables: React.FC = () => {
-  const [tables, setTables] = useState<Table[]>([]);
-  
-  // Load tables
-  // Render MUI Table
-  // Add action handlers
-  
-  return (
-    <Box>
-      <Typography variant="h4">Database Tables</Typography>
-      <TableContainer>
-        {/* Table content */}
-      </TableContainer>
-    </Box>
-  );
-};
+// Component features:
+- List of last 5 generations
+- Status icons (✓ / ✗)
+- Time ago format (e.g., "2 hours ago")
+- Click to view details
 ```
 
+#### 1.2 Quick Stats Widget
+```typescript
+// Display metrics:
+- Total Tables
+- Generated Files
+- Pending Updates
+- Last Generation Time
+
+// Use Card + Grid layout
+// Add icons for each stat
+// Use MUI Chip for values
+```
+
+#### 1.3 Activity Timeline Widget
+```typescript
+interface Activity {
+  id: string;
+  type: 'Generation' | 'Scan' | 'Analysis';
+  description: string;
+  timestamp: Date;
+  user: string;
+}
+
+// Features:
+- Vertical timeline
+- Icons per activity type
+- Hover for details
+- Max 10 items shown
+```
+
+#### 1.4 Schema Statistics Widget
+```typescript
+// Display:
+- Tables by schema
+- Average columns per table
+- Most common data types
+- Relationship count
+
+// Use Chart.js or MUI Chart
+// Pie chart for schemas
+// Bar chart for data types
+```
+
+**Tests:** Write 12-15 tests for all new widgets
+
 ---
 
-### Task 2: Enhanced Dashboard Widgets
+### Part 2: Table Enhancements (45 minutes)
 
-**Additions:**
-- Recent generations chart (optional)
-- System health indicator
-- Quick stats summary
-- Action cards
+#### 2.1 Sorting Functionality
+```typescript
+// Add to Tables.tsx:
+interface SortConfig {
+  field: 'name' | 'schema' | 'rowCount' | 'lastGenerated';
+  direction: 'asc' | 'desc';
+}
+
+// Features:
+- Click column header to sort
+- Toggle asc/desc
+- Sort indicator icon
+- Maintain sort state
+```
+
+#### 2.2 Column Filters
+```typescript
+// Per-column filtering:
+- Schema dropdown filter
+- Status filter (Generated/Not Generated)
+- Row count range filter
+- Date range filter
+
+// Use MUI Select for dropdowns
+// Use MUI Slider for ranges
+```
+
+#### 2.3 Row Selection
+```typescript
+// Add checkboxes:
+- Select individual rows
+- Select all checkbox
+- Bulk actions menu
+- Selection count display
+```
+
+**Tests:** Write 8-10 tests for table features
 
 ---
 
-### Task 3: Navigation Improvements
+### Part 3: Pagination System (30 minutes)
 
-**Updates to Sidebar.tsx:**
-- Highlight active route
-- Add tooltips
-- Collapsible sections (if needed)
+#### 3.1 Pagination Component
+```typescript
+interface PaginationProps {
+  total: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+// Features:
+- Page numbers
+- Previous/Next buttons
+- Page size selector (10, 25, 50, 100)
+- Total count display
+- Jump to page input
+```
+
+#### 3.2 Integration with Tables
+```typescript
+// Update Tables.tsx:
+- Slice data by page
+- Update URL params
+- Persist page state
+- Reset on filter change
+```
+
+**Tests:** Write 5-7 tests for pagination
+
+---
+
+### Part 4: Advanced Filtering (45 minutes)
+
+#### 4.1 Filter Menu UI
+```typescript
+interface FilterCriteria {
+  field: string;
+  operator: 'equals' | 'contains' | 'gt' | 'lt';
+  value: string | number;
+}
+
+// Create FilterMenu component:
+- Add filter button
+- Popover with filter form
+- Field selector
+- Operator selector
+- Value input
+```
+
+#### 4.2 Filter Chips Display
+```typescript
+// Active filters display:
+- Chip for each active filter
+- Delete button on chip
+- Clear all filters button
+- Filter summary count
+```
+
+#### 4.3 Filter Logic
+```typescript
+// Implement filtering:
+- Combine multiple criteria
+- AND/OR logic options
+- Apply to table data
+- Update URL params
+```
+
+**Tests:** Write 6-8 tests for filtering
 
 ---
 
 ## 🧪 Testing Strategy
 
-**When @testing-library/react updates:**
-1. Tables.test.tsx
-2. Enhanced Dashboard tests
-3. Navigation tests
+### Total Tests Target: 15-20 new tests
 
-**For Now:**
-- Manual testing in browser
-- Ensure components render
-- Test all interactive features
+#### Widget Tests (12-15 tests)
+```typescript
+// RecentGenerations.test.tsx
+- Renders recent generation items
+- Shows correct status icons
+- Displays time ago format
+- Handles empty state
+- Click navigation works
+
+// QuickStats.test.tsx
+- Displays all stat cards
+- Shows correct values
+- Icons render correctly
+- Layout responsive
+
+// ActivityTimeline.test.tsx
+- Renders timeline items
+- Shows correct icons
+- Displays timestamps
+- Handles max items limit
+
+// SchemaStats.test.tsx
+- Chart renders correctly
+- Data aggregation works
+- Handles empty data
+```
+
+#### Table Enhancement Tests (8-10 tests)
+```typescript
+// Tables.test.tsx additions
+- Sorting toggles correctly
+- Filter applies to data
+- Row selection works
+- Bulk actions enabled
+- Selected count updates
+```
+
+#### Pagination Tests (5-7 tests)
+```typescript
+// Pagination.test.tsx
+- Page changes correctly
+- Page size updates
+- Navigation buttons work
+- Total count displays
+- Jump to page works
+```
+
+#### Filter Tests (6-8 tests)
+```typescript
+// FilterMenu.test.tsx
+- Menu opens/closes
+- Filter criteria added
+- Chips display correctly
+- Clear filters works
+- Filter applies to data
+```
 
 ---
 
-## 📦 Dependencies
+## 📁 Files to Create/Modify
 
-**Already Installed:**
-- Material-UI
-- React Router
-- React Query
-- Axios
+### New Component Files
+```
+src/components/
+├── RecentGenerations.tsx        (New - 120 lines)
+├── QuickStats.tsx               (New - 80 lines)
+├── ActivityTimeline.tsx         (New - 150 lines)
+├── SchemaStats.tsx              (New - 140 lines)
+├── Pagination.tsx               (New - 100 lines)
+└── FilterMenu.tsx               (New - 180 lines)
+```
 
-**May Need:**
-- None (all dependencies ready)
+### New Test Files
+```
+src/__tests__/
+├── RecentGenerations.test.tsx   (New - 80 lines)
+├── QuickStats.test.tsx          (New - 60 lines)
+├── ActivityTimeline.test.tsx    (New - 90 lines)
+├── SchemaStats.test.tsx         (New - 70 lines)
+├── Pagination.test.tsx          (New - 80 lines)
+└── FilterMenu.test.tsx          (New - 100 lines)
+```
+
+### Modified Files
+```
+src/pages/
+├── Dashboard.tsx                (Add new widgets)
+└── Tables.tsx                   (Add sorting, filters, pagination)
+
+src/__tests__/
+├── Dashboard.test.tsx           (Add widget tests)
+└── Tables.test.tsx              (Add feature tests)
+```
 
 ---
 
-## 🚀 Getting Started
+## 🎨 UI/UX Guidelines
 
-### 1. Start Dev Server:
-```bash
-cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
-npm run dev
+### Design Principles
+1. **Consistency:** Use existing MUI components
+2. **Responsiveness:** Mobile-friendly layouts
+3. **Accessibility:** ARIA labels, keyboard navigation
+4. **Performance:** Optimize large data sets
+5. **Feedback:** Loading states, error messages
+
+### Color Scheme (from existing)
+- Primary: Blue (#1976d2)
+- Success: Green (#2e7d32)
+- Warning: Orange (#ed6c02)
+- Error: Red (#d32f2f)
+- Background: White/Gray
+
+### Component Patterns
+- Use `Card` for widgets
+- Use `Box` for spacing
+- Use `Typography` for text
+- Use `Chip` for status/tags
+- Use `IconButton` for actions
+
+---
+
+## 🔧 Technical Implementation Notes
+
+### State Management
+```typescript
+// Use React hooks:
+- useState for component state
+- useEffect for data fetching
+- useMemo for computed values
+- useCallback for event handlers
+
+// Example:
+const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+const [filters, setFilters] = useState<FilterCriteria[]>([]);
+const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(25);
+
+const filteredData = useMemo(() => {
+  let result = tables;
+  // Apply filters
+  // Apply sorting
+  return result;
+}, [tables, filters, sortConfig]);
+
+const paginatedData = useMemo(() => {
+  const start = (page - 1) * pageSize;
+  return filteredData.slice(start, start + pageSize);
+}, [filteredData, page, pageSize]);
 ```
 
-### 2. Open Browser:
-```
-http://localhost:5173
+### URL State Synchronization
+```typescript
+// Keep URL in sync with state:
+import { useSearchParams } from 'react-router-dom';
+
+const [searchParams, setSearchParams] = useSearchParams();
+
+// On state change:
+setSearchParams({
+  page: page.toString(),
+  pageSize: pageSize.toString(),
+  sort: `${sortConfig.field}:${sortConfig.direction}`,
+  filters: JSON.stringify(filters)
+});
 ```
 
-### 3. Create Tables Component:
-```bash
-# File: src/pages/Tables.tsx
-```
-
-### 4. Update App.tsx Routing:
-```tsx
-<Route path="/tables" element={<Tables />} />
+### Mock Data
+```typescript
+// Add realistic mock data:
+const mockGenerations: RecentGeneration[] = [
+  {
+    id: '1',
+    tableName: 'Customer',
+    type: 'Entity',
+    timestamp: new Date('2025-11-29T14:30:00'),
+    status: 'Success'
+  },
+  // ... more items
+];
 ```
 
 ---
 
 ## ✅ Success Criteria
 
-### Must Have:
-- [ ] TableList component created
-- [ ] Tables page displays correctly
-- [ ] Action buttons work (even if backend not ready)
-- [ ] Dashboard enhanced
-- [ ] Navigation improved
-- [ ] All components render without errors
+### Functionality
+- [ ] All 4 dashboard widgets render correctly
+- [ ] Table sorting works on all columns
+- [ ] Pagination navigates through data
+- [ ] Filters apply correctly to table
+- [ ] Row selection and bulk actions work
+- [ ] All interactions smooth and responsive
 
-### Nice to Have:
-- [ ] Search/filter on tables
-- [ ] Pagination
-- [ ] Sort functionality
-- [ ] Loading states
-- [ ] Error handling
+### Testing
+- [ ] 15-20 new tests written
+- [ ] All tests have correct logic
+- [ ] Tests cover happy paths and edge cases
+- [ ] Mock data and services used correctly
 
----
+### Code Quality
+- [ ] TypeScript strict mode compliant
+- [ ] No build errors or warnings
+- [ ] Components under 300 lines
+- [ ] Proper prop types and interfaces
+- [ ] Clean, readable code
 
-## 📝 Notes
-
-**React 19 Status:**
-- App is working perfectly
-- Tests written but waiting for library update
-- This is expected and acceptable
-
-**Backend API:**
-- API service layer ready
-- Endpoints defined but backend not implemented yet
-- Use mock data for now
-
-**Development Approach:**
-- Build UI components first
-- Wire up to API later
-- Focus on UX and design
+### Documentation
+- [ ] Updated Phase3_Checklist.md
+- [ ] Updated STATUS.md
+- [ ] Updated HANDOFF.md for Day 24
+- [ ] Code comments where needed
 
 ---
 
-## 🎯 End of Session Goals
+## 🚀 Getting Started
 
-**What Should Be Complete:**
-1. ✅ Tables component created and working
-2. ✅ Enhanced dashboard
-3. ✅ Better navigation
-4. ✅ Manual testing passed
-5. 📝 All documentation updated
+### 1. Environment Setup (5 min)
+```bash
+cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 
-**Next Session Preview:**
-- Day 23-24: Continue with more features
-- Add filtering and sorting
-- More advanced components
+# Verify app runs
+npm run dev
+# Open http://localhost:5173
+
+# Verify current state
+npm test
+```
+
+### 2. Create Component Structure (10 min)
+```bash
+# Create new component files:
+src/components/RecentGenerations.tsx
+src/components/QuickStats.tsx
+src/components/ActivityTimeline.tsx
+src/components/SchemaStats.tsx
+src/components/Pagination.tsx
+src/components/FilterMenu.tsx
+```
+
+### 3. Implementation Order
+1. Start with QuickStats (simplest)
+2. Then RecentGenerations
+3. Then ActivityTimeline
+4. Then SchemaStats
+5. Add Pagination to Tables
+6. Add FilterMenu last
+
+### 4. Testing As You Go
+- Write tests after each component
+- Run tests to verify (expect library errors)
+- Check components in browser
+- Commit after each major feature
 
 ---
 
-## 💡 Tips
+## 📚 Reference Resources
 
-1. **Use existing patterns** from Dashboard component
-2. **Material-UI components** are your friend
-3. **Mock data** is fine for now
-4. **Focus on UX** - make it look good!
-5. **Manual testing** is sufficient until tests can run
+### Material-UI Components
+- [Card](https://mui.com/material-ui/react-card/)
+- [Chip](https://mui.com/material-ui/react-chip/)
+- [Table](https://mui.com/material-ui/react-table/)
+- [Pagination](https://mui.com/material-ui/react-pagination/)
+- [Menu](https://mui.com/material-ui/react-menu/)
+- [Select](https://mui.com/material-ui/react-select/)
+
+### React Patterns
+- [Hooks](https://react.dev/reference/react)
+- [Memo/Callback](https://react.dev/reference/react/useMemo)
+- [State Management](https://react.dev/learn/managing-state)
+
+### Testing
+- [Vitest](https://vitest.dev/)
+- [Testing Library](https://testing-library.com/react)
+- [User Events](https://testing-library.com/docs/user-event/intro)
 
 ---
 
-**Document Created:** 29/11/2025  
-**Phase:** 3C - Local Web UI  
-**Day:** 22 of 45  
-**Ready to Start!** 🚀
+## 💡 Tips for Success
+
+### Development Workflow
+1. **Component First:** Build UI first, functionality second
+2. **Test Immediately:** Write tests right after component
+3. **Visual Check:** Always verify in browser
+4. **Iterate Fast:** Small changes, frequent checks
+
+### Common Pitfalls to Avoid
+- Don't over-engineer components
+- Keep state as simple as possible
+- Use TypeScript types properly
+- Don't skip error handling
+- Test both success and error paths
+
+### Performance Considerations
+- Use `useMemo` for expensive computations
+- Use `useCallback` for event handlers
+- Avoid unnecessary re-renders
+- Optimize table rendering for large datasets
+
+---
+
+## 📞 Quick Commands
+
+```bash
+# Development
+npm run dev              # Start dev server
+npm test                 # Run tests
+npm run build            # Build for production
+npm run type-check       # TypeScript check
+npm run lint             # ESLint check
+
+# Troubleshooting
+rm -rf node_modules package-lock.json
+npm install              # Reinstall dependencies
+
+# Git
+git status               # Check changes
+git add .               # Stage changes
+git commit -m "msg"     # Commit changes
+```
+
+---
+
+**Ready to Start:** ✅  
+**Estimated Duration:** 4 hours  
+**Expected Output:** Enhanced UI with 6 new components and 15-20 tests  
+**Next Day:** Day 24 - Advanced Features
+
+---
+
+**Created:** 29/11/2025  
+**Status:** Ready for Day 23! 🚀

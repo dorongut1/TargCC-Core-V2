@@ -13,6 +13,8 @@ export interface Table {
   primaryKey?: string;
   foreignKeys: ForeignKey[];
   isGenerated: boolean;
+  generationStatus: string;
+  rowCount?: number;
   lastGenerated?: Date;
 }
 

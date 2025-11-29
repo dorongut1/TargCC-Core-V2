@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
+import { Tables } from './pages/Tables';
 
 // Create a Material-UI theme
 const theme = createTheme({
@@ -41,8 +42,7 @@ function App() {
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              {/* Additional routes will be added in later days */}
-              <Route path="/tables" element={<div>Tables Page - Coming Soon</div>} />
+              <Route path="/tables" element={<Tables />} />
               <Route path="/generate" element={<div>Generate Page - Coming Soon</div>} />
               <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
               <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
