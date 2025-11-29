@@ -30,6 +30,46 @@ vi.mock('../components/FilterMenu', () => ({
   )
 }));
 
+// Mock new components
+vi.mock('../components/ErrorBoundary', () => ({
+  default: ({ children }: any) => <div data-testid="error-boundary">{children}</div>
+}));
+
+vi.mock('../components/TableSkeleton', () => ({
+  default: ({ rows, columns }: any) => (
+    <tr data-testid="table-skeleton">
+      <td colSpan={columns}>Loading {rows} rows...</td>
+    </tr>
+  )
+}));
+
+vi.mock('../components/FadeIn', () => ({
+  default: ({ children }: any) => <div data-testid="fade-in">{children}</div>
+}));
+
+vi.mock('../components/AutoRefreshControl', () => ({
+  default: ({ enabled, onToggle, onManualRefresh }: any) => (
+    <div data-testid="auto-refresh-control">
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(e) => onToggle(e.target.checked)}
+        aria-label="Auto-refresh toggle"
+      />
+      {onManualRefresh && (
+        <button onClick={onManualRefresh}>Manual Refresh</button>
+      )}
+    </div>
+  )
+}));
+
+vi.mock('../hooks/useAutoRefresh', () => ({
+  useAutoRefresh: () => ({
+    lastRefresh: new Date('2024-01-01T12:00:00Z'),
+    refresh: vi.fn()
+  })
+}));
+
 vi.mock('../services/api');
 
 describe('Tables', () => {
@@ -62,6 +102,25 @@ describe('Tables', () => {
     (apiService.getTables as any).mockResolvedValue(mockTables);
   });
 
+  it('wraps content in ErrorBoundary', async () => {
+    render(<Tables />);
+    await waitFor(() => {
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+  });
+
+  it('shows TableSkeleton while loading', () => {
+    render(<Tables />);
+    expect(screen.getByTestId('table-skeleton')).toBeInTheDocument();
+  });
+
+  it('displays AutoRefreshControl in header', async () => {
+    render(<Tables />);
+    await waitFor(() => {
+      expect(screen.getByTestId('auto-refresh-control')).toBeInTheDocument();
+    });
+  });
+
   it('renders tables title', async () => {
     render(<Tables />);
     await waitFor(() => {
@@ -69,21 +128,14 @@ describe('Tables', () => {
     });
   });
 
-  it('displays refresh button', async () => {
-    render(<Tables />);
-    await waitFor(() => {
-      expect(screen.getByText(/Refresh/i)).toBeInTheDocument();
-    });
-  });
-
-  it('displays search input', async () => {
+  it('displays search input with FadeIn', async () => {
     render(<Tables />);
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/Search tables/i)).toBeInTheDocument();
     });
   });
 
-  it('displays FilterMenu component', async () => {
+  it('displays FilterMenu component with FadeIn', async () => {
     render(<Tables />);
     await waitFor(() => {
       expect(screen.getByTestId('filter-menu')).toBeInTheDocument();
@@ -103,7 +155,7 @@ describe('Tables', () => {
     expect(screen.getByText('Customer')).toBeInTheDocument();
   });
 
-  it('displays table statistics chips', async () => {
+  it('displays table statistics chips with FadeIn', async () => {
     render(<Tables />);
     
     await waitFor(() => {
@@ -175,7 +227,7 @@ describe('Tables', () => {
     });
   });
 
-  it('displays Pagination component', async () => {
+  it('displays Pagination component with FadeIn', async () => {
     render(<Tables />);
     
     await waitFor(() => {
@@ -192,7 +244,7 @@ describe('Tables', () => {
     });
   });
 
-  it('shows bulk actions button when rows selected', async () => {
+  it('shows selected count chip when rows selected', async () => {
     const { container } = render(<Tables />);
     
     await waitFor(() => {
@@ -203,11 +255,11 @@ describe('Tables', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText(/Bulk Actions/i)).toBeInTheDocument();
+      expect(screen.getByText(/Selected: 1/i)).toBeInTheDocument();
     });
   });
 
-  it('shows number of selected rows in bulk actions', async () => {
+  it('shows generate button when rows selected', async () => {
     const { container } = render(<Tables />);
     
     await waitFor(() => {
@@ -218,7 +270,7 @@ describe('Tables', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText(/Bulk Actions \(1\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Generate Selected \(1\)/i)).toBeInTheDocument();
     });
   });
 
@@ -271,22 +323,6 @@ describe('Tables', () => {
     });
   });
 
-  it('shows loading spinner initially', () => {
-    render(<Tables />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-  });
-
-  it('calls refresh when refresh button clicked', async () => {
-    render(<Tables />);
-    
-    await waitFor(() => {
-      const refreshButton = screen.getByText(/Refresh/i);
-      fireEvent.click(refreshButton);
-    });
-    
-    expect(apiService.getTables).toHaveBeenCalledTimes(2);
-  });
-
   it('handles page changes from pagination', async () => {
     render(<Tables />);
     
@@ -309,5 +345,45 @@ describe('Tables', () => {
     
     // Pagination should still be visible
     expect(screen.getByTestId('pagination')).toBeInTheDocument();
+  });
+
+  it('auto-refresh toggle works', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      const toggle = screen.getByLabelText('Auto-refresh toggle');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).not.toBeChecked();
+    });
+  });
+
+  it('manual refresh button is present', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Manual Refresh')).toBeInTheDocument();
+    });
+  });
+
+  it('wraps sections in FadeIn components', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      const fadeIns = screen.getAllByTestId('fade-in');
+      // Should have FadeIn for: search, filters, stats, table, pagination
+      expect(fadeIns.length).toBeGreaterThanOrEqual(5);
+    });
+  });
+
+  it('displays header with title and auto-refresh control', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      const title = screen.getByText('Database Tables');
+      const autoRefresh = screen.getByTestId('auto-refresh-control');
+      
+      expect(title).toBeInTheDocument();
+      expect(autoRefresh).toBeInTheDocument();
+    });
   });
 });

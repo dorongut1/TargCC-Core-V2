@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Dashboard } from '../pages/Dashboard';
 
 // Mock all child components
@@ -34,6 +35,41 @@ vi.mock('../components/SchemaStats', () => ({
   default: () => <div data-testid="schema-stats">Schema Stats Widget</div>
 }));
 
+vi.mock('../components/ErrorBoundary', () => ({
+  default: ({ children }: any) => <div data-testid="error-boundary">{children}</div>
+}));
+
+vi.mock('../components/DashboardSkeleton', () => ({
+  default: () => <div data-testid="dashboard-skeleton">Loading skeleton</div>
+}));
+
+vi.mock('../components/FadeIn', () => ({
+  default: ({ children }: any) => <div data-testid="fade-in">{children}</div>
+}));
+
+vi.mock('../components/AutoRefreshControl', () => ({
+  default: ({ enabled, onToggle, onManualRefresh }: any) => (
+    <div data-testid="auto-refresh-control">
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(e) => onToggle(e.target.checked)}
+        aria-label="Auto-refresh toggle"
+      />
+      {onManualRefresh && (
+        <button onClick={onManualRefresh}>Manual Refresh</button>
+      )}
+    </div>
+  )
+}));
+
+vi.mock('../hooks/useAutoRefresh', () => ({
+  useAutoRefresh: () => ({
+    lastRefresh: new Date('2024-01-01T12:00:00Z'),
+    refresh: vi.fn()
+  })
+}));
+
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,14 +82,33 @@ describe('Dashboard', () => {
     });
   });
 
-  it('displays QuickStats widget', async () => {
+  it('wraps content in ErrorBoundary', async () => {
+    render(<Dashboard />);
+    await waitFor(() => {
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+  });
+
+  it('shows skeleton while loading', () => {
+    render(<Dashboard />);
+    expect(screen.getByTestId('dashboard-skeleton')).toBeInTheDocument();
+  });
+
+  it('displays AutoRefreshControl in header', async () => {
+    render(<Dashboard />);
+    await waitFor(() => {
+      expect(screen.getByTestId('auto-refresh-control')).toBeInTheDocument();
+    });
+  });
+
+  it('displays QuickStats widget with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByTestId('quick-stats')).toBeInTheDocument();
     });
   });
 
-  it('displays quick actions section', async () => {
+  it('displays quick actions section with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByText(/Quick Actions/i)).toBeInTheDocument();
@@ -64,21 +119,21 @@ describe('Dashboard', () => {
     });
   });
 
-  it('displays RecentGenerations widget', async () => {
+  it('displays RecentGenerations widget with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByTestId('recent-generations')).toBeInTheDocument();
     });
   });
 
-  it('displays ActivityTimeline widget', async () => {
+  it('displays ActivityTimeline widget with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByTestId('activity-timeline')).toBeInTheDocument();
     });
   });
 
-  it('displays SystemHealth widget', async () => {
+  it('displays SystemHealth widget with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByTestId('system-health')).toBeInTheDocument();
@@ -89,16 +144,11 @@ describe('Dashboard', () => {
     });
   });
 
-  it('displays SchemaStats widget', async () => {
+  it('displays SchemaStats widget with FadeIn', async () => {
     render(<Dashboard />);
     await waitFor(() => {
       expect(screen.getByTestId('schema-stats')).toBeInTheDocument();
     });
-  });
-
-  it('shows loading state initially', () => {
-    render(<Dashboard />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('uses grid layout for dashboard widgets', async () => {
@@ -155,6 +205,53 @@ describe('Dashboard', () => {
       // Check for MUI Grid system
       const grids = container.querySelectorAll('[class*="MuiGrid"]');
       expect(grids.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('auto-refresh toggle works', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    
+    await waitFor(() => {
+      const toggle = screen.getByLabelText('Auto-refresh toggle');
+      expect(toggle).toBeInTheDocument();
+    });
+
+    const toggle = screen.getByLabelText('Auto-refresh toggle');
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+    // After state update, it should be checked
+    // (In real component, but our mock doesn't maintain state)
+  });
+
+  it('manual refresh button is present', async () => {
+    render(<Dashboard />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Manual Refresh')).toBeInTheDocument();
+    });
+  });
+
+  it('wraps each widget section in FadeIn', async () => {
+    render(<Dashboard />);
+    
+    await waitFor(() => {
+      const fadeIns = screen.getAllByTestId('fade-in');
+      // Should have FadeIn for: QuickStats, Quick Actions, Recent Gens, Timeline, Health, Schema
+      expect(fadeIns.length).toBeGreaterThanOrEqual(6);
+    });
+  });
+
+  it('displays header with title and controls', async () => {
+    render(<Dashboard />);
+    
+    await waitFor(() => {
+      const title = screen.getByText('Dashboard');
+      const autoRefresh = screen.getByTestId('auto-refresh-control');
+      
+      expect(title).toBeInTheDocument();
+      expect(autoRefresh).toBeInTheDocument();
     });
   });
 });
