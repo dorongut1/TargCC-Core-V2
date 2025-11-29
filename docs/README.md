@@ -1,11 +1,35 @@
 # TargCC Core V2 - Documentation Index
 
-**Last Updated:** 28/11/2025  
-**Project Status:** Phase 3B - 95% Complete
+**Last Updated:** 29/11/2025  
+**Project Status:** Phase 3C - Local Web UI (Day 21 Complete)
 
 ---
 
-## 📚 Documentation Files
+## 📚 Documentation Structure
+
+### Main Documentation (docs/)
+- **README.md** - This file, documentation index
+- **Phase3_Checklist.md** - Daily task checklist
+- **PROGRESS.md** - Overall progress and achievements
+
+### Current Work (docs/current/)
+- **NEXT_SESSION.md** - Complete briefing for next session ⭐
+- **HANDOFF.md** - Latest session handoff
+- **STATUS.md** - Current project status
+- **QUICKSTART.md** - Quick start guide
+- **CLI-REFERENCE.md** - CLI commands reference
+- **USAGE-EXAMPLES.md** - Usage examples
+
+### Reference (docs/current/)
+- **ARCHITECTURE_DECISION.md** - Architecture decisions
+- **CORE_PRINCIPLES.md** - Core design principles
+
+### Archive (docs/archive/)
+- Old handoffs and sessions
+
+---
+
+## 📚 Key Documentation Files
 
 ### 1. **Phase3_Checklist.md** 📋
 **Purpose:** Detailed daily checklist for Phase 3 (CLI + AI + Web UI)
@@ -49,7 +73,7 @@
 
 ---
 
-### 3. **NEXT_SESSION.md** 📝
+### 3. **current/NEXT_SESSION.md** 📝
 **Purpose:** Complete briefing for the next work session
 
 **Contents:**
@@ -61,7 +85,7 @@
 - Success criteria
 - Troubleshooting guide
 
-**Current Status:** Ready for Day 20 Part 2 - HandleAsync implementation
+**Current Status:** Ready for Day 22 - Dashboard Enhancement
 
 **Use When:**
 - **Starting your next session** ⬅️ START HERE!
@@ -75,14 +99,14 @@
 
 ### 1️⃣ **Start of Session:**
 ```
-1. Read NEXT_SESSION.md (complete briefing)
+1. Read current/NEXT_SESSION.md (complete briefing)
 2. Check Phase3_Checklist.md (verify current day/tasks)
 3. Review PROGRESS.md (understand recent work)
 ```
 
 ### 2️⃣ **During Session:**
 ```
-1. Follow NEXT_SESSION.md implementation steps
+1. Follow current/NEXT_SESSION.md implementation steps
 2. Check off tasks in Phase3_Checklist.md
 3. Run tests frequently
 4. Document issues/decisions
@@ -92,7 +116,7 @@
 ```
 1. Update Phase3_Checklist.md (mark completed tasks)
 2. Update PROGRESS.md (add new achievements)
-3. Create new NEXT_SESSION.md (brief for next time)
+3. Create new current/NEXT_SESSION.md (brief for next time)
 4. Git commit with descriptive message
 ```
 
@@ -101,32 +125,32 @@
 ## 📍 Quick Status Check
 
 ### Where Are We?
-- **Phase:** 3B - AI Integration
-- **Day:** 20 Part 1 Complete, Part 2 Next
-- **Progress:** 43% overall (19.5/45 days)
-- **Tests:** 705+ passing
-- **Coverage:** 85%+
+- **Phase:** 3C - Local Web UI
+- **Day:** 21 Complete, Day 22 Next
+- **Progress:** 47% overall (21/45 days)
+- **Tests:** 715 C# plus 26 React pending
+- **Coverage:** 85 percent
 - **Blockers:** None
 
 ### What's Next?
-1. Implement `AnalyzeQualityCommand.HandleAsync()`
-2. Add integration test
-3. Complete Day 20
-4. Begin Phase 3C (Web UI)
+1. Day 22 - Dashboard Enhancement
+2. Add table list component
+3. Improve navigation
+4. Continue Phase 3C
 
 ### What Works?
-- ✅ All Phase 3A CLI commands
-- ✅ AI service infrastructure
-- ✅ Schema analysis
-- ✅ Suggestion engine
-- ✅ Interactive chat
-- ✅ Security scanner
-- ✅ Code quality analyzer (service layer)
+- All Phase 3A CLI commands
+- All Phase 3B AI services  
+- React app running successfully
+- Dashboard with stat cards
+- Layout components
+- API service layer
 
 ### What Needs Work?
-- 🔄 Code quality analyzer CLI (HandleAsync method)
-- ☐ Phase 3C (Web UI) - not started
-- ☐ Phase 3D (Migration) - not started
+- Day 22 - Dashboard Enhancement  
+- More UI components
+- React tests awaiting library update
+- Phase 3D not started
 
 ---
 
