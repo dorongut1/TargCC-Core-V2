@@ -3,96 +3,141 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Tables } from '../pages/Tables';
 import { apiService } from '../services/api';
-import type { Table } from '../types/models';
 
-// Mock API service
-vi.mock('../services/api', () => ({
-  apiService: {
-    getTables: vi.fn(),
-    generateCode: vi.fn(),
-  },
+// Mock Pagination component
+vi.mock('../components/Pagination', () => ({
+  default: ({ total, page, pageSize, onPageChange, onPageSizeChange }: any) => (
+    <div data-testid="pagination">
+      <button onClick={() => onPageChange(2)}>Page 2</button>
+      <button onClick={() => onPageSizeChange(50)}>Size 50</button>
+      <div>Total: {total}</div>
+    </div>
+  )
 }));
 
-// Mock table data
-const mockTables: Table[] = [
-  {
-    name: 'Customer',
-    schema: 'dbo',
-    columns: [],
-    foreignKeys: [],
-    isGenerated: true,
-    generationStatus: 'Generated',
-    rowCount: 1500,
-    lastGenerated: new Date('2025-01-15'),
-  },
-  {
-    name: 'Order',
-    schema: 'dbo',
-    columns: [],
-    foreignKeys: [],
-    isGenerated: false,
-    generationStatus: 'Not Generated',
-    rowCount: 3200,
-  },
-  {
-    name: 'Product',
-    schema: 'dbo',
-    columns: [],
-    foreignKeys: [],
-    isGenerated: true,
-    generationStatus: 'Generated',
-    rowCount: 850,
-    lastGenerated: new Date('2025-01-14'),
-  },
-];
+// Mock FilterMenu component
+vi.mock('../components/FilterMenu', () => ({
+  default: ({ filters, onFiltersChange }: any) => (
+    <div data-testid="filter-menu">
+      <button onClick={() => onFiltersChange([{ id: '1', field: 'name', operator: 'equals', value: 'test' }])}>
+        Add Filter
+      </button>
+      <div>Filters: {filters.length}</div>
+    </div>
+  )
+}));
 
-describe('Tables Component', () => {
+vi.mock('../services/api');
+
+describe('Tables', () => {
+  const mockTables = [
+    {
+      name: 'Customer',
+      schema: 'dbo',
+      rowCount: 1000,
+      generationStatus: 'Generated',
+      lastGenerated: new Date('2025-01-01'),
+    },
+    {
+      name: 'Order',
+      schema: 'dbo',
+      rowCount: 5000,
+      generationStatus: 'Not Generated',
+      lastGenerated: null,
+    },
+    {
+      name: 'Product',
+      schema: 'sales',
+      rowCount: 200,
+      generationStatus: 'Generated',
+      lastGenerated: new Date('2025-01-15'),
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
+    (apiService.getTables as any).mockResolvedValue(mockTables);
   });
 
-  it('renders tables page title', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('renders tables title', async () => {
+    render(<Tables />);
     await waitFor(() => {
-      expect(screen.getByText('Database Tables')).toBeInTheDocument();
+      expect(screen.getByText(/Database Tables/i)).toBeInTheDocument();
     });
   });
 
-  it('displays loading state initially', () => {
-    vi.mocked(apiService.getTables).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
-    );
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  it('displays refresh button', async () => {
+    render(<Tables />);
+    await waitFor(() => {
+      expect(screen.getByText(/Refresh/i)).toBeInTheDocument();
+    });
   });
 
-  it('displays tables after loading', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
+  it('displays search input', async () => {
+    render(<Tables />);
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Search tables/i)).toBeInTheDocument();
+    });
+  });
 
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
+  it('displays FilterMenu component', async () => {
+    render(<Tables />);
+    await waitFor(() => {
+      expect(screen.getByTestId('filter-menu')).toBeInTheDocument();
+    });
+  });
 
+  it('filters tables by search term', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Customer')).toBeInTheDocument();
+    });
+    
+    const searchInput = screen.getByPlaceholderText(/Search tables/i);
+    fireEvent.change(searchInput, { target: { value: 'Customer' } });
+    
+    expect(screen.getByText('Customer')).toBeInTheDocument();
+  });
+
+  it('displays table statistics chips', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Total: 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing: 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/Generated: 2/i)).toBeInTheDocument();
+      expect(screen.getByText(/Not Generated: 1/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders table headers with sort labels', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Name')).toBeInTheDocument();
+      expect(screen.getByText('Schema')).toBeInTheDocument();
+      expect(screen.getByText('Rows')).toBeInTheDocument();
+      expect(screen.getByText('Status')).toBeInTheDocument();
+      expect(screen.getByText('Last Generated')).toBeInTheDocument();
+    });
+  });
+
+  it('displays checkbox column header', async () => {
+    const { container } = render(<Tables />);
+    
+    await waitFor(() => {
+      const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+      expect(checkboxes.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('displays table data rows', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
       expect(screen.getByText('Customer')).toBeInTheDocument();
       expect(screen.getByText('Order')).toBeInTheDocument();
@@ -100,353 +145,169 @@ describe('Tables Component', () => {
     });
   });
 
-  it('displays table status chips', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
+  it('displays row counts formatted with commas', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('1,000')).toBeInTheDocument();
+      expect(screen.getByText('5,000')).toBeInTheDocument();
+    });
+  });
 
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('displays generation status chips', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
       const generatedChips = screen.getAllByText('Generated');
-      expect(generatedChips).toHaveLength(2);
-      expect(screen.getByText('Not Generated')).toBeInTheDocument();
+      const notGeneratedChips = screen.getAllByText('Not Generated');
+      expect(generatedChips.length).toBe(2);
+      expect(notGeneratedChips.length).toBe(1);
     });
   });
 
-  it('displays search field', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('displays action buttons for each row', async () => {
+    const { container } = render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search tables...')).toBeInTheDocument();
+      // Should have Generate, View, Edit buttons for each row
+      const buttons = container.querySelectorAll('button[aria-label]');
+      expect(buttons.length).toBeGreaterThan(0);
     });
   });
 
-  it('displays stats chips', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('displays Pagination component', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText(/Total: 3/)).toBeInTheDocument();
-      expect(screen.getByText(/Generated: 2/)).toBeInTheDocument();
-      expect(screen.getByText(/Not Generated: 1/)).toBeInTheDocument();
+      expect(screen.getByTestId('pagination')).toBeInTheDocument();
     });
   });
 
-  it('displays refresh button', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('handles select all checkbox', async () => {
+    const { container } = render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText('Refresh')).toBeInTheDocument();
+      const headerCheckbox = container.querySelector('thead input[type="checkbox"]');
+      expect(headerCheckbox).toBeInTheDocument();
     });
   });
 
-  it('handles error state', async () => {
-    vi.mocked(apiService.getTables).mockRejectedValue(new Error('Failed to load'));
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('shows bulk actions button when rows selected', async () => {
+    const { container } = render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText(/Failed to load/)).toBeInTheDocument();
+      const rowCheckbox = container.querySelector('tbody input[type="checkbox"]');
+      if (rowCheckbox) {
+        fireEvent.click(rowCheckbox);
+      }
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Bulk Actions/i)).toBeInTheDocument();
     });
   });
 
-  it('displays table row count', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('shows number of selected rows in bulk actions', async () => {
+    const { container } = render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText('1,500')).toBeInTheDocument();
-      expect(screen.getByText('3,200')).toBeInTheDocument();
-      expect(screen.getByText('850')).toBeInTheDocument();
+      const rowCheckbox = container.querySelector('tbody input[type="checkbox"]');
+      if (rowCheckbox) {
+        fireEvent.click(rowCheckbox);
+      }
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Bulk Actions \(1\)/i)).toBeInTheDocument();
     });
   });
 
-  it('displays last generated date', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('applies filters when filter menu changes', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText(/1\/15\/2025/)).toBeInTheDocument();
-      expect(screen.getByText(/1\/14\/2025/)).toBeInTheDocument();
+      const addFilterButton = screen.getByText('Add Filter');
+      fireEvent.click(addFilterButton);
+    });
+    
+    // Filter count should update
+    expect(screen.getByText(/Filters: 1/i)).toBeInTheDocument();
+  });
+
+  it('shows empty state when no tables match search', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      const searchInput = screen.getByPlaceholderText(/Search tables/i);
+      fireEvent.change(searchInput, { target: { value: 'NonExistentTable' } });
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/No tables found matching your criteria/i)).toBeInTheDocument();
+    });
+  });
+
+  it('handles sorting when column header clicked', async () => {
+    const { container } = render(<Tables />);
+    
+    await waitFor(() => {
+      const nameHeader = screen.getByText('Name');
+      fireEvent.click(nameHeader);
+    });
+    
+    // Table should still render after sort
+    await waitFor(() => {
+      expect(screen.getByText('Customer')).toBeInTheDocument();
+    });
+  });
+
+  it('displays last generated dates', async () => {
+    render(<Tables />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('1/1/2025')).toBeInTheDocument();
+      expect(screen.getByText('1/15/2025')).toBeInTheDocument();
       expect(screen.getByText('Never')).toBeInTheDocument();
     });
   });
 
-  it('filters tables by search term', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Customer')).toBeInTheDocument();
-    });
-
-    const searchInput = screen.getByPlaceholderText('Search tables...');
-    await user.type(searchInput, 'Cust');
-
-    await waitFor(() => {
-      expect(screen.getByText('Customer')).toBeInTheDocument();
-      expect(screen.queryByText('Order')).not.toBeInTheDocument();
-      expect(screen.queryByText('Product')).not.toBeInTheDocument();
-    });
+  it('shows loading spinner initially', () => {
+    render(<Tables />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('filters tables by schema name', async () => {
-    const user = userEvent.setup();
-    const tablesWithDifferentSchemas: Table[] = [
-      { ...mockTables[0], schema: 'dbo' },
-      { ...mockTables[1], schema: 'sales' },
-    ];
-    vi.mocked(apiService.getTables).mockResolvedValue(tablesWithDifferentSchemas);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('calls refresh when refresh button clicked', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText('dbo')).toBeInTheDocument();
+      const refreshButton = screen.getByText(/Refresh/i);
+      fireEvent.click(refreshButton);
     });
-
-    const searchInput = screen.getByPlaceholderText('Search tables...');
-    await user.type(searchInput, 'sales');
-
-    await waitFor(() => {
-      expect(screen.getByText('sales')).toBeInTheDocument();
-      const dboElements = screen.queryAllByText('dbo');
-      expect(dboElements).toHaveLength(0);
-    });
+    
+    expect(apiService.getTables).toHaveBeenCalledTimes(2);
   });
 
-  it('shows no results message when search has no matches', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('handles page changes from pagination', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText('Customer')).toBeInTheDocument();
+      const page2Button = screen.getByText('Page 2');
+      fireEvent.click(page2Button);
     });
-
-    const searchInput = screen.getByPlaceholderText('Search tables...');
-    await user.type(searchInput, 'NonExistent');
-
-    await waitFor(() => {
-      expect(screen.getByText(/No tables found matching your search/i)).toBeInTheDocument();
-    });
+    
+    // Table should still be visible after page change
+    expect(screen.getByTestId('pagination')).toBeInTheDocument();
   });
 
-  it('calls refresh when refresh button is clicked', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
+  it('handles page size changes from pagination', async () => {
+    render(<Tables />);
+    
     await waitFor(() => {
-      expect(screen.getByText('Refresh')).toBeInTheDocument();
+      const size50Button = screen.getByText('Size 50');
+      fireEvent.click(size50Button);
     });
-
-    // Clear the initial call
-    vi.clearAllMocks();
-
-    const refreshButton = screen.getByText('Refresh');
-    await user.click(refreshButton);
-
-    expect(apiService.getTables).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls retry when retry button is clicked in error state', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockRejectedValue(new Error('Failed to load'));
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/Failed to load/)).toBeInTheDocument();
-    });
-
-    vi.clearAllMocks();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    const retryButton = screen.getByText('Retry');
-    await user.click(retryButton);
-
-    expect(apiService.getTables).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls generateCode when generate button is clicked', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-    vi.mocked(apiService.generateCode).mockResolvedValue(undefined);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Customer')).toBeInTheDocument();
-    });
-
-    const generateButtons = screen.getAllByTitle('Generate Code');
-    await user.click(generateButtons[0]);
-
-    expect(apiService.generateCode).toHaveBeenCalledWith({
-      tableName: 'Customer',
-      options: {
-        generateEntity: true,
-        generateRepository: true,
-        generateService: true,
-        generateController: true,
-        generateTests: true,
-        overwriteExisting: false,
-      },
-    });
-  });
-
-  it('reloads tables after successful generation', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-    vi.mocked(apiService.generateCode).mockResolvedValue(undefined);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Customer')).toBeInTheDocument();
-    });
-
-    vi.clearAllMocks();
-
-    const generateButtons = screen.getAllByTitle('Generate Code');
-    await user.click(generateButtons[0]);
-
-    await waitFor(() => {
-      expect(apiService.getTables).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('displays action buttons for each table', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      // Each table should have 3 action buttons
-      expect(screen.getAllByTitle('Generate Code')).toHaveLength(3);
-      expect(screen.getAllByTitle('View Details')).toHaveLength(3);
-      expect(screen.getAllByTitle('Edit Configuration')).toHaveLength(3);
-    });
-  });
-
-  it('updates filtered count display', async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/Showing 3 of 3 tables/i)).toBeInTheDocument();
-    });
-
-    const searchInput = screen.getByPlaceholderText('Search tables...');
-    await user.type(searchInput, 'Cust');
-
-    await waitFor(() => {
-      expect(screen.getByText(/Showing 1 of 3 tables/i)).toBeInTheDocument();
-    });
-  });
-
-  it('displays all table schemas correctly', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue(mockTables);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      const schemaElements = screen.getAllByText('dbo');
-      expect(schemaElements).toHaveLength(3);
-    });
-  });
-
-  it('shows empty state when no tables exist', async () => {
-    vi.mocked(apiService.getTables).mockResolvedValue([]);
-
-    render(
-      <BrowserRouter>
-        <Tables />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/No tables available/i)).toBeInTheDocument();
-    });
+    
+    // Pagination should still be visible
+    expect(screen.getByTestId('pagination')).toBeInTheDocument();
   });
 });

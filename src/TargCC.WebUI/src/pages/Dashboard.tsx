@@ -17,6 +17,7 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  Grid,
 } from '@mui/material';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -24,6 +25,10 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import type { DashboardStats } from '../types/models';
 import { SystemHealth } from '../components/SystemHealth';
+import RecentGenerations from '../components/RecentGenerations';
+import QuickStats from '../components/QuickStats';
+import ActivityTimeline from '../components/ActivityTimeline';
+import SchemaStats from '../components/SchemaStats';
 
 /**
  * Stat card component for displaying key metrics
@@ -79,8 +84,8 @@ export const Dashboard: React.FC = () => {
       setError(null);
       // For now, use mock data since backend isn't ready
       const mockStats: DashboardStats = {
-        totalTables: 12,
-        generatedTables: 8,
+        totalTables: 24,
+        generatedTables: 21,
         totalTests: 715,
         testCoverage: 85,
         lastGenerationTime: new Date(),
@@ -155,31 +160,13 @@ export const Dashboard: React.FC = () => {
         Dashboard
       </Typography>
 
-      {/* Statistics Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
-        <StatCard
-          title="Total Tables"
-          value={stats.totalTables}
-          icon={<TableChartIcon sx={{ color: 'white' }} />}
-          color="#1976d2"
-        />
-        <StatCard
-          title="Generated"
-          value={stats.generatedTables}
-          icon={<CheckCircleIcon sx={{ color: 'white' }} />}
-          color="#2e7d32"
-        />
-        <StatCard
-          title="Tests"
-          value={stats.totalTests}
-          icon={<BugReportIcon sx={{ color: 'white' }} />}
-          color="#ed6c02"
-        />
-        <StatCard
-          title="Coverage"
-          value={`${stats.testCoverage}%`}
-          icon={<TrendingUpIcon sx={{ color: 'white' }} />}
-          color="#9c27b0"
+      {/* Quick Stats Cards */}
+      <Box sx={{ mb: 4 }}>
+        <QuickStats
+          totalTables={stats.totalTables}
+          generatedFiles={156}
+          pendingUpdates={3}
+          lastGeneration="2 hours ago"
         />
       </Box>
 
@@ -204,43 +191,43 @@ export const Dashboard: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Recent Activity */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Recent Activity
-          </Typography>
-          <List>
-            {stats.recentActivity.map((activity, index) => (
-              <ListItem key={index} divider={index < stats.recentActivity.length - 1}>
-                <ListItemText
-                  primary={activity.action}
-                  secondary={
-                    <>
-                      {activity.description}
-                      <br />
-                      {activity.timestamp.toLocaleString()}
-                    </>
-                  }
-                />
-                <Chip
-                  label={activity.status}
-                  color={getStatusColor(activity.status) as any}
-                  size="small"
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+      {/* Main Content Grid */}
+      <Grid container spacing={3}>
+        {/* Left Column */}
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={3}>
+            {/* Recent Generations */}
+            <Grid item xs={12}>
+              <RecentGenerations maxItems={5} />
+            </Grid>
 
-        {/* System Health */}
-        <SystemHealth
-          cpuUsage={45}
-          memoryUsage={62}
-          diskUsage={38}
-          status="healthy"
-        />
-      </Box>
+            {/* Activity Timeline */}
+            <Grid item xs={12}>
+              <ActivityTimeline maxItems={8} />
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* Right Column */}
+        <Grid item xs={12} md={4}>
+          <Grid container spacing={3}>
+            {/* System Health */}
+            <Grid item xs={12}>
+              <SystemHealth
+                cpuUsage={45}
+                memoryUsage={62}
+                diskUsage={38}
+                status="healthy"
+              />
+            </Grid>
+
+            {/* Schema Statistics */}
+            <Grid item xs={12}>
+              <SchemaStats />
+            </Grid>
+          </Grid>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
