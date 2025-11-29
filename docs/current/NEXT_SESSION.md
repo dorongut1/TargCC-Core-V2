@@ -1,352 +1,381 @@
-# Next Session: Day 24 - Advanced Features
+# Next Session: Day 26 - Generation Wizard Foundation (Part 1)
 
 **Date:** 30/11/2025  
 **Phase:** 3C - Local Web UI  
-**Day:** 24 of 45  
+**Day:** 26 of 45  
 **Duration:** ~3 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 24 Objectives
+## 🎯 Day 26 Objectives
 
 ### Primary Goal
-Enhance the React UI with advanced features: better loading states, error handling, auto-refresh, and smooth animations.
+Create the foundation for a multi-step Generation Wizard that guides users through the code generation process.
 
 ### Specific Deliverables
 
-1. **Loading Skeletons** (MUI Skeleton)
-   - Dashboard skeleton
-   - Table skeleton
-   - Widget skeletons
+1. **Wizard Component** (MUI Stepper)
+   - Multi-step wizard with 4 steps
+   - Step navigation (Next, Back, Finish)
+   - Step validation
+   - Progress tracking
 
-2. **Error Boundary Component**
-   - Catch rendering errors
-   - Fallback UI
-   - Error logging
-   - Reset functionality
+2. **Step 1: Table Selection**
+   - Table list with checkboxes
+   - Search and filter
+   - Select all/none
+   - Validation (at least 1 table)
 
-3. **Auto-Refresh System**
-   - Toggle auto-refresh
-   - Configurable interval
-   - Refresh indicators
-   - Last updated time
+3. **Step 2: Generation Options**
+   - Checkboxes for generation types
+   - Entity classes
+   - Repositories
+   - CQRS Handlers
+   - API Controllers
+   - Validation (at least 1 option)
 
-4. **Enhanced Animations**
-   - Smooth transitions
-   - Fade effects
-   - Loading animations
-
-5. **Testing**
-   - 10-15 new tests
-   - Error boundary tests
-   - Loading state tests
+4. **Testing**
+   - 15-20 new tests
+   - Wizard navigation tests
+   - Validation tests
+   - Step component tests
 
 ---
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Loading Skeletons (45 minutes)
+### Part 1: Wizard Component (60 minutes)
 
-#### 1.1 Dashboard Skeleton
+#### 1.1 GenerationWizard Component
 ```typescript
-// DashboardSkeleton.tsx
-import { Box, Grid, Skeleton, Card, CardContent } from '@mui/material';
+// GenerationWizard.tsx
+import { useState } from 'react';
+import {
+  Stepper,
+  Step,
+  StepLabel,
+  Box,
+  Button,
+  Paper
+} from '@mui/material';
 
-const DashboardSkeleton = () => {
+interface WizardStep {
+  label: string;
+  component: React.ComponentType<any>;
+  validate?: () => boolean;
+}
+
+const steps: WizardStep[] = [
+  { label: 'Select Tables', component: TableSelection },
+  { label: 'Choose Options', component: GenerationOptions },
+  { label: 'Review', component: ReviewStep },
+  { label: 'Generate', component: GenerationProgress }
+];
+
+const GenerationWizard = () => {
+  const [activeStep, setActiveStep] = useState(0);
+  const [wizardData, setWizardData] = useState({
+    selectedTables: [] as string[],
+    options: {
+      entities: true,
+      repositories: true,
+      handlers: true,
+      api: true
+    }
+  });
+
+  const handleNext = () => {
+    const currentStep = steps[activeStep];
+    if (currentStep.validate && !currentStep.validate()) {
+      return; // Validation failed
+    }
+    setActiveStep((prev) => prev + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+
+  const handleFinish = async () => {
+    // Trigger code generation
+    await generateCode(wizardData);
+  };
+
+  const CurrentStepComponent = steps[activeStep].component;
+
+  return (
+    <Box sx={{ width: '100%', p: 3 }}>
+      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        {steps.map((step) => (
+          <Step key={step.label}>
+            <StepLabel>{step.label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+
+      <Paper sx={{ p: 3, minHeight: 400 }}>
+        <CurrentStepComponent
+          data={wizardData}
+          onChange={setWizardData}
+        />
+      </Paper>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Button
+          disabled={activeStep === 0}
+          onClick={handleBack}
+        >
+          Back
+        </Button>
+        <Button
+          variant="contained"
+          onClick={activeStep === steps.length - 1 ? handleFinish : handleNext}
+        >
+          {activeStep === steps.length - 1 ? 'Generate' : 'Next'}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default GenerationWizard;
+```
+
+---
+
+### Part 2: Table Selection Step (45 minutes)
+
+#### 2.1 TableSelection Component
+```typescript
+// TableSelection.tsx
+import { useState } from 'react';
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Checkbox,
+  TextField,
+  Typography,
+  Button
+} from '@mui/material';
+import { Table as TableIcon } from '@mui/icons-material';
+
+interface TableSelectionProps {
+  data: WizardData;
+  onChange: (data: WizardData) => void;
+}
+
+const TableSelection = ({ data, onChange }: TableSelectionProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const allTables = ['Customer', 'Order', 'Product', 'Employee', 'Invoice'];
+
+  const filteredTables = allTables.filter((table) =>
+    table.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleToggle = (table: string) => {
+    const newSelection = data.selectedTables.includes(table)
+      ? data.selectedTables.filter((t) => t !== table)
+      : [...data.selectedTables, table];
+    
+    onChange({ ...data, selectedTables: newSelection });
+  };
+
+  const handleSelectAll = () => {
+    onChange({ ...data, selectedTables: filteredTables });
+  };
+
+  const handleSelectNone = () => {
+    onChange({ ...data, selectedTables: [] });
+  };
+
   return (
     <Box>
-      <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
-      
-      {/* QuickStats Skeletons */}
-      <Grid container spacing={2} mb={4}>
-        {[1, 2, 3, 4].map((i) => (
-          <Grid item xs={12} sm={6} md={3} key={i}>
-            <Card>
-              <CardContent>
-                <Skeleton variant="text" width="60%" />
-                <Skeleton variant="text" width="40%" height={40} />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      
-      {/* Widget Skeletons */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Skeleton variant="rectangular" height={300} />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Skeleton variant="rectangular" height={300} />
-        </Grid>
-      </Grid>
-    </Box>
-  );
-};
-```
+      <Typography variant="h6" gutterBottom>
+        Select Tables to Generate
+      </Typography>
 
-#### 1.2 Table Skeleton
-```typescript
-// TableSkeleton.tsx
-import { TableRow, TableCell, Skeleton } from '@mui/material';
-
-const TableSkeleton = ({ rows = 10, columns = 6 }) => {
-  return (
-    <>
-      {Array.from({ length: rows }).map((_, i) => (
-        <TableRow key={i}>
-          {Array.from({ length: columns }).map((_, j) => (
-            <TableCell key={j}>
-              <Skeleton variant="text" />
-            </TableCell>
-          ))}
-        </TableRow>
-      ))}
-    </>
-  );
-};
-```
-
----
-
-### Part 2: Error Boundary (45 minutes)
-
-#### 2.1 Error Boundary Component
-```typescript
-// ErrorBoundary.tsx
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
-import { Error as ErrorIcon } from '@mui/icons-material';
-
-interface Props {
-  children: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  handleReset = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <Paper sx={{ p: 4, maxWidth: 500, textAlign: 'center' }}>
-            <ErrorIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-            <Typography variant="h5" gutterBottom>
-              Something went wrong
-            </Typography>
-            <Typography color="text.secondary" paragraph>
-              {this.state.error?.message}
-            </Typography>
-            <Button variant="contained" onClick={this.handleReset}>
-              Try Again
-            </Button>
-          </Paper>
-        </Box>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;
-```
-
----
-
-### Part 3: Auto-Refresh System (45 minutes)
-
-#### 3.1 Auto-Refresh Hook
-```typescript
-// useAutoRefresh.ts
-import { useEffect, useRef, useState } from 'react';
-
-interface UseAutoRefreshOptions {
-  enabled?: boolean;
-  interval?: number; // milliseconds
-  onRefresh: () => void | Promise<void>;
-}
-
-export const useAutoRefresh = ({
-  enabled = false,
-  interval = 30000, // 30 seconds default
-  onRefresh
-}: UseAutoRefreshOptions) => {
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const intervalRef = useRef<NodeJS.Timeout>();
-
-  useEffect(() => {
-    if (enabled) {
-      intervalRef.current = setInterval(async () => {
-        await onRefresh();
-        setLastRefresh(new Date());
-      }, interval);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [enabled, interval, onRefresh]);
-
-  return { lastRefresh };
-};
-```
-
-#### 3.2 Auto-Refresh UI Component
-```typescript
-// AutoRefreshControl.tsx
-import { Box, Switch, FormControlLabel, Chip } from '@mui/material';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
-
-interface AutoRefreshControlProps {
-  enabled: boolean;
-  onToggle: (enabled: boolean) => void;
-  lastRefresh: Date;
-}
-
-const AutoRefreshControl = ({
-  enabled,
-  onToggle,
-  lastRefresh
-}: AutoRefreshControlProps) => {
-  const formatTimeAgo = (date: Date) => {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  };
-
-  return (
-    <Box display="flex" alignItems="center" gap={2}>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-        }
-        label="Auto-refresh"
-      />
-      {enabled && (
-        <Chip
-          icon={<RefreshIcon />}
-          label={`Updated ${formatTimeAgo(lastRefresh)}`}
-          size="small"
-          variant="outlined"
+      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search tables..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-      )}
+        <Button onClick={handleSelectAll}>Select All</Button>
+        <Button onClick={handleSelectNone}>Select None</Button>
+      </Box>
+
+      <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+        {filteredTables.map((table) => (
+          <ListItem key={table} disablePadding>
+            <ListItemButton onClick={() => handleToggle(table)}>
+              <ListItemIcon>
+                <Checkbox
+                  checked={data.selectedTables.includes(table)}
+                  tabIndex={-1}
+                  disableRipple
+                />
+              </ListItemIcon>
+              <ListItemIcon>
+                <TableIcon />
+              </ListItemIcon>
+              <ListItemText primary={table} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
+        {data.selectedTables.length} table(s) selected
+      </Typography>
     </Box>
   );
 };
+
+export default TableSelection;
 ```
 
 ---
 
-### Part 4: Smooth Animations (30 minutes)
+### Part 3: Generation Options Step (45 minutes)
 
-#### 4.1 Fade Transition Component
+#### 3.1 GenerationOptions Component
 ```typescript
-// FadeIn.tsx
-import { Box, Fade } from '@mui/material';
-import { ReactNode } from 'react';
+// GenerationOptions.tsx
+import {
+  Box,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Typography,
+  Alert
+} from '@mui/material';
 
-interface FadeInProps {
-  children: ReactNode;
-  delay?: number;
+interface GenerationOptionsProps {
+  data: WizardData;
+  onChange: (data: WizardData) => void;
 }
 
-const FadeIn = ({ children, delay = 0 }: FadeInProps) => {
+const GenerationOptions = ({ data, onChange }: GenerationOptionsProps) => {
+  const handleOptionChange = (option: keyof typeof data.options) => {
+    onChange({
+      ...data,
+      options: {
+        ...data.options,
+        [option]: !data.options[option]
+      }
+    });
+  };
+
+  const hasAnyOption = Object.values(data.options).some((v) => v);
+
   return (
-    <Fade in timeout={500} style={{ transitionDelay: `${delay}ms` }}>
-      <Box>{children}</Box>
-    </Fade>
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Choose What to Generate
+      </Typography>
+
+      {!hasAnyOption && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Please select at least one generation option
+        </Alert>
+      )}
+
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data.options.entities}
+              onChange={() => handleOptionChange('entities')}
+            />
+          }
+          label="Entity Classes (Domain Models)"
+        />
+        
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data.options.repositories}
+              onChange={() => handleOptionChange('repositories')}
+            />
+          }
+          label="Repositories (Data Access)"
+        />
+        
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data.options.handlers}
+              onChange={() => handleOptionChange('handlers')}
+            />
+          }
+          label="CQRS Handlers (Commands & Queries)"
+        />
+        
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data.options.api}
+              onChange={() => handleOptionChange('api')}
+            />
+          }
+          label="API Controllers (REST Endpoints)"
+        />
+      </FormGroup>
+
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
+        {Object.values(data.options).filter(Boolean).length} option(s) selected
+      </Typography>
+    </Box>
   );
 };
-```
 
-#### 4.2 Add Animations to Dashboard
-```typescript
-// In Dashboard.tsx, wrap widgets:
-<FadeIn delay={100}>
-  <QuickStats {...} />
-</FadeIn>
-
-<FadeIn delay={200}>
-  <RecentGenerations {...} />
-</FadeIn>
+export default GenerationOptions;
 ```
 
 ---
 
 ## 🧪 Testing Strategy
 
-### Total Tests Target: 10-15 new tests
+### Total Tests Target: 15-20 new tests
 
-#### Error Boundary Tests (5 tests)
+#### GenerationWizard Tests (7-8 tests)
 ```typescript
-// ErrorBoundary.test.tsx
-- Renders children when no error
-- Catches and displays error
-- Shows error message
-- Reset button works
-- Logs error to console
+// GenerationWizard.test.tsx
+- Renders all steps in stepper
+- Starts at step 0
+- Next button advances step
+- Back button goes to previous step
+- Back button disabled on first step
+- Finish button appears on last step
+- Validates current step before advancing
+- Updates wizard data correctly
 ```
 
-#### Loading Skeleton Tests (3 tests)
+#### TableSelection Tests (5-6 tests)
 ```typescript
-// DashboardSkeleton.test.tsx
-- Renders correct number of skeletons
-- Renders all skeleton types
-- Matches dashboard structure
-
-// TableSkeleton.test.tsx
-- Renders correct number of rows
-- Renders correct number of columns
+// TableSelection.test.tsx
+- Renders table list
+- Search filters tables
+- Toggle selection works
+- Select all selects filtered tables
+- Select none clears selection
+- Shows selected count
 ```
 
-#### Auto-Refresh Tests (5 tests)
+#### GenerationOptions Tests (5-6 tests)
 ```typescript
-// useAutoRefresh.test.ts
-- Calls onRefresh at interval when enabled
-- Does not refresh when disabled
-- Cleans up interval on unmount
-- Updates lastRefresh timestamp
-- Handles async refresh
-
-// AutoRefreshControl.test.tsx
-- Toggle switch works
-- Displays last refresh time
-- Shows/hides chip based on enabled state
+// GenerationOptions.test.tsx
+- Renders all option checkboxes
+- Toggle option works
+- Shows warning when no options selected
+- Shows selected count
+- Updates wizard data on change
 ```
 
 ---
@@ -355,34 +384,26 @@ const FadeIn = ({ children, delay = 0 }: FadeInProps) => {
 
 ### New Component Files
 ```
-src/components/
-├── ErrorBoundary.tsx           (80 lines)
-├── DashboardSkeleton.tsx       (60 lines)
-├── TableSkeleton.tsx           (40 lines)
-├── AutoRefreshControl.tsx      (70 lines)
-└── FadeIn.tsx                  (20 lines)
-
-src/hooks/
-└── useAutoRefresh.ts           (40 lines)
+src/components/wizard/
+├── GenerationWizard.tsx        (180 lines)
+├── TableSelection.tsx          (120 lines)
+├── GenerationOptions.tsx       (100 lines)
+├── ReviewStep.tsx              (80 lines) - Day 27
+└── GenerationProgress.tsx      (100 lines) - Day 27
 ```
 
 ### New Test Files
 ```
-src/__tests__/
-├── ErrorBoundary.test.tsx      (70 lines)
-├── DashboardSkeleton.test.tsx  (40 lines)
-├── TableSkeleton.test.tsx      (30 lines)
-├── useAutoRefresh.test.ts      (80 lines)
-└── AutoRefreshControl.test.tsx (60 lines)
+src/__tests__/wizard/
+├── GenerationWizard.test.tsx   (120 lines)
+├── TableSelection.test.tsx     (100 lines)
+└── GenerationOptions.test.tsx  (90 lines)
 ```
 
 ### Modified Files
 ```
-src/pages/
-├── Dashboard.tsx               (Add ErrorBoundary, Skeleton, FadeIn)
-└── Tables.tsx                  (Add ErrorBoundary, Skeleton, AutoRefresh)
-
-src/App.tsx                     (Wrap with ErrorBoundary)
+src/App.tsx                     (Add route for /wizard)
+src/pages/Dashboard.tsx         (Add "New Generation" button)
 ```
 
 ---
@@ -390,29 +411,30 @@ src/App.tsx                     (Wrap with ErrorBoundary)
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Loading skeletons show on initial load
-- [ ] Error boundary catches errors gracefully
-- [ ] Auto-refresh toggles and works correctly
-- [ ] Smooth fade animations on page load
-- [ ] All interactions smooth and responsive
+- [ ] Wizard renders with all 4 steps
+- [ ] Step navigation works (Next/Back)
+- [ ] Table selection works correctly
+- [ ] Generation options work correctly
+- [ ] Validation prevents advancement with invalid data
+- [ ] Wizard data updates properly
 
 ### Testing
-- [ ] 10-15 new tests written
+- [ ] 15-20 new tests written
 - [ ] All tests have correct logic
-- [ ] Tests cover happy paths and edge cases
-- [ ] Mock timers used for auto-refresh tests
+- [ ] Tests cover happy paths and validation
+- [ ] Tests cover edge cases
 
 ### Code Quality
 - [ ] TypeScript strict mode compliant
 - [ ] No build errors or warnings
-- [ ] Components under 100 lines each
+- [ ] Components under 200 lines each
 - [ ] Proper prop types and interfaces
 - [ ] Clean, readable code
 
 ### Documentation
 - [ ] Updated Phase3_Checklist.md
 - [ ] Updated STATUS.md
-- [ ] Updated HANDOFF.md for Day 25
+- [ ] Updated HANDOFF.md for Day 27
 - [ ] Code comments where needed
 
 ---
@@ -430,19 +452,21 @@ npm run dev
 
 ### 2. Create Directory Structure (2 min)
 ```bash
-# Create hooks directory
-mkdir src\hooks
+# Create wizard directory
+mkdir src\components\wizard
+mkdir src\__tests__\wizard
 
 # Verify structure
-dir src
+dir src\components
+dir src\__tests__
 ```
 
 ### 3. Implementation Order
-1. Start with ErrorBoundary (simplest)
-2. Then Loading Skeletons
-3. Then Auto-Refresh hook + UI
-4. Then Fade animations
-5. Write tests after each component
+1. Start with GenerationWizard (basic structure)
+2. Then TableSelection step
+3. Then GenerationOptions step
+4. Write tests after each component
+5. Test navigation flow end-to-end
 
 ---
 
@@ -455,16 +479,16 @@ dir src
 4. **Iterate Fast:** Small changes, frequent checks
 
 ### Common Pitfalls to Avoid
-- Don't skip error boundary - essential for production
-- Use MUI Skeleton for consistency
-- Test auto-refresh with mock timers
-- Don't overdo animations - keep subtle
+- Don't skip validation - essential for UX
+- Test navigation thoroughly
+- Keep wizard data immutable
+- Use MUI Stepper for consistency
 
 ### Performance Considerations
-- Use React.memo for heavy components
-- Debounce auto-refresh if needed
-- Lazy load skeletons if too many
-- Keep animations under 500ms
+- Use React.memo for step components
+- Debounce search input if needed
+- Keep wizard state simple
+- Validate only when needed
 
 ---
 
@@ -485,10 +509,10 @@ npm run dev              # Clear cache and restart
 
 **Ready to Start:** ✅  
 **Estimated Duration:** 3 hours  
-**Expected Output:** Enhanced UX with 5 new components and 10-15 tests  
-**Next Day:** Day 25 - Backend API
+**Expected Output:** Wizard foundation with 2 complete steps and 15-20 tests  
+**Next Day:** Day 27 - Wizard Completion (Review + Progress steps)
 
 ---
 
 **Created:** 29/11/2025  
-**Status:** Ready for Day 24! 🚀
+**Status:** Ready for Day 26! 🚀
