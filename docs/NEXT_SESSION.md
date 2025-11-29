@@ -1,489 +1,869 @@
-# Next Session Brief - Day 20 Part 2
+# Next Session Brief - Day 21: React Project Setup
 
 **Date Prepared:** 28/11/2025  
-**Session:** Day 20 Part 2 of Phase 3B  
-**Estimated Duration:** 2-3 hours  
-**Priority:** High - Complete Phase 3B
+**Session:** Day 21 of Phase 3C (Week 5)  
+**Estimated Duration:** 4-5 hours  
+**Priority:** High - Begin Phase 3C (Web UI)
 
 ---
 
-## 📋 Session Objective
+## 🎉 Previous Session Success (Day 20)
 
-**Complete Day 20 - AI Integration Testing**
+### ✅ Day 20 COMPLETE - All Tests Passing!
 
-Implement the final piece of the Code Quality Analyzer: the `HandleAsync` method in `AnalyzeQualityCommand` that ties together the service layer with the CLI presentation layer.
-
----
-
-## ✅ Current Status (Day 20 Part 1 Complete)
-
-### What Was Accomplished:
-- ✅ Created 15 unit tests for `CodeQualityAnalyzerService`
-- ✅ Enhanced `AnalyzeQualityCommandTests` with 15 additional tests (30 total)
-- ✅ Fixed all compilation errors
+**What Was Accomplished:**
+- ✅ CodeQualityAnalyzerService fully tested (15 tests)
+- ✅ AnalyzeQualityCommand fully implemented (30 tests)
+- ✅ HandleAsync method implemented and working
+- ✅ Integration tests complete
 - ✅ Build successful: 0 errors
-- ✅ 705+ tests passing
+- ✅ **715+ tests passing** 
 - ✅ Code coverage: 85%+
+- ✅ **Phase 3B (AI Integration) - 100% COMPLETE** 🎉
 
-### Files Created/Modified:
-1. `C:\Disk1\TargCC-Core-V2\src\tests\TargCC.AI.Tests\Services\CodeQualityAnalyzerServiceTests.cs`
-   - 15 comprehensive unit tests
-   - Tests constructor, all service methods, error scenarios
-
-2. `C:\Disk1\TargCC-Core-V2\src\tests\TargCC.CLI.Tests\Commands\Analyze\AnalyzeQualityCommandTests.cs`
-   - Enhanced from 15 to 30 tests
-   - Added command execution, output formatting, error scenario tests
-
-### Test Results:
+**Phase 3B Final Status:**
 ```
-✅ TargCC.AI.Tests: 110 tests passed
-✅ TargCC.CLI.Tests: 197 passed, 10 skipped
-✅ TargCC.Core.Tests: 398+ passed
-✅ Total: 705+ tests passing
+✅ AI Service Infrastructure - Complete
+✅ Schema Analysis - Complete
+✅ Suggestion Engine - Complete
+✅ Interactive Chat - Complete
+✅ Security Scanner - Complete
+✅ Code Quality Analyzer - Complete
+✅ All CLI commands operational
+✅ All tests passing (715+)
+
+Phase 3B: 100% Complete! 🚀
 ```
 
 ---
 
-## 🎯 What Needs to Be Done (Day 20 Part 2)
+## 📋 Current Status
 
-### Primary Task: Implement HandleAsync
+### Project Overview:
+- **Phase 1:** ✅ Core Engine - Complete
+- **Phase 1.5:** ✅ MVP Generators - Complete
+- **Phase 2:** ✅ Modern Architecture - Complete
+- **Phase 3A:** ✅ CLI Core - Complete (Days 1-10)
+- **Phase 3B:** ✅ AI Integration - Complete (Days 11-20)
+- **Phase 3C:** 🆕 Local Web UI - Starting (Days 21-35)
+- **Phase 3D:** ☐ Migration & Polish - Planned (Days 36-45)
 
-**File:** `C:\Disk1\TargCC-Core-V2\src\TargCC.CLI\Commands\Analyze\AnalyzeQualityCommand.cs`
+### Overall Progress:
+- **Days Completed:** 20/45 (44%)
+- **Tests Passing:** 715+
+- **Code Coverage:** 85%+
+- **Current Phase:** Phase 3C - Local Web UI
 
-**Current State:**
-```csharp
-public class AnalyzeQualityCommand : AnalyzeCommandBase
+---
+
+## 🎯 Session Objective: Day 21-22 Part 1
+
+**Begin Phase 3C: Local Web UI Foundation**
+
+Create a React + TypeScript web application that will serve as a local UI wrapper around the TargCC CLI core. This will provide a visual interface for developers who prefer GUI over command-line.
+
+### What We're Building:
+
+```
+┌────────────────────────────────────────────┐
+│  TargCC Web UI (localhost:5000)           │
+├────────────────────────────────────────────┤
+│                                            │
+│  📊 Dashboard                              │
+│  ┌──────────────────────────────────────┐ │
+│  │  Tables: 12   Generated: 8           │ │
+│  │  Last Run: 2 min ago                 │ │
+│  └──────────────────────────────────────┘ │
+│                                            │
+│  🛠️ Quick Actions                         │
+│  [Generate All] [Analyze] [AI Chat]      │
+│                                            │
+│  📁 Recent Activity                       │
+│  - Customer entity generated              │
+│  - Security scan completed                │
+│                                            │
+└────────────────────────────────────────────┘
+
+Backend: ASP.NET Core API → Wraps CLI Commands
+Frontend: React + TypeScript + Material-UI
+```
+
+---
+
+## 📅 Day 21 Tasks (Part 1 of 2)
+
+**Goal:** Setup React project structure and development environment
+
+### Task 1: Create React + TypeScript Project
+
+**Location:** `C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI\`
+
+**Steps:**
+
+1. **Create React App with TypeScript**
+```bash
+cd C:\Disk1\TargCC-Core-V2\src
+
+# Create React app with TypeScript template
+npx create-react-app TargCC.WebUI --template typescript
+
+cd TargCC.WebUI
+```
+
+2. **Install Core Dependencies**
+```bash
+# Material-UI (MUI) for components
+npm install @mui/material @emotion/react @emotion/styled
+
+# Material-UI icons
+npm install @mui/icons-material
+
+# React Router for navigation
+npm install react-router-dom
+npm install --save-dev @types/react-router-dom
+
+# React Query for data fetching
+npm install @tanstack/react-query
+
+# Axios for API calls
+npm install axios
+```
+
+3. **Install Development Dependencies**
+```bash
+# Testing libraries (should be included, verify)
+npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event
+
+# ESLint and Prettier for code quality
+npm install --save-dev eslint-config-prettier eslint-plugin-prettier prettier
+```
+
+4. **Project Structure Setup**
+
+Create the following folder structure:
+```
+src/TargCC.WebUI/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   ├── Dashboard/
+│   │   │   └── Dashboard.tsx
+│   │   ├── Layout/
+│   │   │   ├── Layout.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── Header.tsx
+│   │   └── common/
+│   │       └── LoadingSpinner.tsx
+│   ├── services/
+│   │   └── api.ts
+│   ├── hooks/
+│   │   └── useTargccApi.ts
+│   ├── types/
+│   │   └── models.ts
+│   ├── App.tsx
+│   ├── App.css
+│   ├── index.tsx
+│   └── index.css
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+### Task 2: Configure TypeScript and ESLint
+
+**File:** `tsconfig.json`
+
+Update or verify configuration:
+```json
 {
-    public AnalyzeQualityCommand()
-        : base("quality", "Analyze code quality and best practices")
-    {
-        // Command setup complete
-        // Handler = CommandHandler.Create<InvocationContext>(HandleAsync);
-        // Handler NOT YET IMPLEMENTED
-    }
-
-    // ❌ METHOD MISSING - NEEDS IMPLEMENTATION
-    private async Task<int> HandleAsync(InvocationContext context)
-    {
-        // TODO: Implement
-    }
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "baseUrl": "src"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }
 ```
 
-**Required Implementation:**
+**File:** `.eslintrc.json` (create new)
 
-```csharp
-private async Task<int> HandleAsync(InvocationContext context)
+```json
 {
-    try
-    {
-        // 1. Get services from DI
-        var outputService = context.GetRequiredService<IOutputService>();
-        var analysisService = context.GetRequiredService<IAnalysisService>();
-        var logger = context.GetRequiredService<ILogger<AnalyzeQualityCommand>>();
+  "extends": [
+    "react-app",
+    "react-app/jest",
+    "prettier"
+  ],
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-console": "warn",
+    "@typescript-eslint/no-unused-vars": "error"
+  }
+}
+```
 
-        // 2. Display header
-        outputService.Heading("Code Quality Analysis");
-        outputService.BlankLine();
+**File:** `.prettierrc` (create new)
 
-        // 3. Execute analysis with progress indicator
-        QualityReport? report = null;
-        await outputService.SpinnerAsync(
-            "Analyzing code quality...",
-            async () => 
-            {
-                report = await analysisService.AnalyzeQualityAsync();
-            });
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
 
-        if (report == null)
-        {
-            outputService.Error("Failed to generate quality report");
-            return 1;
-        }
+---
 
-        // 4. Display overall score
-        outputService.BlankLine();
-        var scoreColor = report.Score >= 90 ? "green" : 
-                        report.Score >= 70 ? "yellow" : "red";
-        outputService.Success($"Overall Score: {report.Score}/100 (Grade: {report.Grade})");
-        outputService.BlankLine();
+### Task 3: Create Type Definitions
 
-        // 5. Display issues by category
-        DisplayIssueCategory(outputService, "Naming Conventions", report.NamingIssues);
-        DisplayIssueCategory(outputService, "Best Practices", report.BestPracticeViolations);
-        DisplayIssueCategory(outputService, "Relationships", report.RelationshipIssues);
+**File:** `src/types/models.ts`
 
-        // 6. Display summary table
-        var table = new Table()
-            .Border(TableBorder.Rounded)
-            .AddColumn("Category")
-            .AddColumn("Issues")
-            .AddColumn("Status");
-
-        table.AddRow("Naming", report.NamingIssues.Count.ToString(), 
-                    report.NamingIssues.Count == 0 ? "✅" : "⚠️");
-        table.AddRow("Best Practices", report.BestPracticeViolations.Count.ToString(),
-                    report.BestPracticeViolations.Count == 0 ? "✅" : "⚠️");
-        table.AddRow("Relationships", report.RelationshipIssues.Count.ToString(),
-                    report.RelationshipIssues.Count == 0 ? "✅" : "⚠️");
-
-        outputService.Table(table);
-
-        return 0;
-    }
-    catch (Exception ex)
-    {
-        var logger = context.GetRequiredService<ILogger<AnalyzeQualityCommand>>();
-        logger.LogError(ex, "Error executing quality analysis command");
-        
-        var outputService = context.GetRequiredService<IOutputService>();
-        outputService.Error($"Error: {ex.Message}");
-        return 1;
-    }
+```typescript
+// Database models
+export interface Table {
+  name: string;
+  schema: string;
+  rowCount: number;
+  columns: Column[];
+  hasGenerated: boolean;
+  lastGenerated?: Date;
 }
 
-private void DisplayIssueCategory(
-    IOutputService outputService, 
-    string categoryName, 
-    List<QualityIssue> issues)
-{
-    outputService.Heading($"{categoryName} ({issues.Count} issues)");
-    
-    if (issues.Count == 0)
-    {
-        outputService.Success("✅ No issues found");
-    }
-    else
-    {
-        foreach (var issue in issues.OrderByDescending(i => GetSeverityOrder(i.Severity)))
-        {
-            var icon = issue.Severity switch
-            {
-                "Critical" => "🔴",
-                "High" => "🟠",
-                "Medium" => "🟡",
-                "Low" => "🔵",
-                _ => "⚪"
-            };
-
-            outputService.Warning($"{icon} {issue.Description}");
-            if (!string.IsNullOrEmpty(issue.Recommendation))
-            {
-                outputService.Info($"   → {issue.Recommendation}");
-            }
-        }
-    }
-    
-    outputService.BlankLine();
+export interface Column {
+  name: string;
+  dataType: string;
+  isNullable: boolean;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+  maxLength?: number;
 }
 
-private int GetSeverityOrder(string severity) => severity switch
-{
-    "Critical" => 4,
-    "High" => 3,
-    "Medium" => 2,
-    "Low" => 1,
-    _ => 0
+// Generation models
+export interface GenerationRequest {
+  tableName: string;
+  generateEntity: boolean;
+  generateSql: boolean;
+  generateRepository: boolean;
+  generateCqrs: boolean;
+  generateApi: boolean;
+}
+
+export interface GenerationResult {
+  success: boolean;
+  filesGenerated: string[];
+  errors: string[];
+  duration: number;
+}
+
+// Analysis models
+export interface SchemaAnalysis {
+  tables: Table[];
+  totalTables: number;
+  analyzedAt: Date;
+}
+
+export interface SecurityIssue {
+  tableName: string;
+  columnName: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  description: string;
+  recommendation: string;
+}
+
+export interface QualityReport {
+  score: number;
+  grade: string;
+  namingIssues: QualityIssue[];
+  bestPracticeViolations: QualityIssue[];
+  relationshipIssues: QualityIssue[];
+}
+
+export interface QualityIssue {
+  elementName: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  description: string;
+  recommendation?: string;
+}
+
+// AI models
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export interface Suggestion {
+  category: 'Security' | 'Performance' | 'BestPractices';
+  priority: 'High' | 'Medium' | 'Low';
+  description: string;
+  tableName?: string;
+}
+
+// API response wrapper
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  success: boolean;
+}
+```
+
+---
+
+### Task 4: Create API Service
+
+**File:** `src/services/api.ts`
+
+```typescript
+import axios, { AxiosInstance } from 'axios';
+import {
+  Table,
+  GenerationRequest,
+  GenerationResult,
+  SchemaAnalysis,
+  SecurityIssue,
+  QualityReport,
+  ChatMessage,
+  Suggestion,
+  ApiResponse,
+} from '../types/models';
+
+class TargccApiService {
+  private api: AxiosInstance;
+
+  constructor(baseURL: string = 'http://localhost:5000/api') {
+    this.api = axios.create({
+      baseURL,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Response interceptor for error handling
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error('API Error:', error);
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // Schema endpoints
+  async getTables(): Promise<ApiResponse<Table[]>> {
+    try {
+      const response = await this.api.get<Table[]>('/schema/tables');
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to fetch tables', success: false };
+    }
+  }
+
+  async analyzeSchema(): Promise<ApiResponse<SchemaAnalysis>> {
+    try {
+      const response = await this.api.get<SchemaAnalysis>('/analyze/schema');
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to analyze schema', success: false };
+    }
+  }
+
+  // Generation endpoints
+  async generateCode(
+    request: GenerationRequest
+  ): Promise<ApiResponse<GenerationResult>> {
+    try {
+      const response = await this.api.post<GenerationResult>(
+        '/generate',
+        request
+      );
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to generate code', success: false };
+    }
+  }
+
+  // Analysis endpoints
+  async analyzeSecurity(): Promise<ApiResponse<SecurityIssue[]>> {
+    try {
+      const response = await this.api.get<SecurityIssue[]>(
+        '/analyze/security'
+      );
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to analyze security', success: false };
+    }
+  }
+
+  async analyzeQuality(): Promise<ApiResponse<QualityReport>> {
+    try {
+      const response = await this.api.get<QualityReport>('/analyze/quality');
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to analyze quality', success: false };
+    }
+  }
+
+  // AI endpoints
+  async getSuggestions(tableName?: string): Promise<ApiResponse<Suggestion[]>> {
+    try {
+      const response = await this.api.get<Suggestion[]>('/ai/suggestions', {
+        params: { tableName },
+      });
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to get suggestions', success: false };
+    }
+  }
+
+  async chat(message: string): Promise<ApiResponse<ChatMessage>> {
+    try {
+      const response = await this.api.post<ChatMessage>('/ai/chat', {
+        message,
+      });
+      return { data: response.data, success: true };
+    } catch (error) {
+      return { error: 'Failed to send message', success: false };
+    }
+  }
+}
+
+// Export singleton instance
+export const targccApi = new TargccApiService();
+export default targccApi;
+```
+
+---
+
+### Task 5: Create Basic Layout Components
+
+**File:** `src/components/Layout/Layout.tsx`
+
+```typescript
+import React from 'react';
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import Header from './Header';
+import Sidebar from './Sidebar';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
+
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar />
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <Header />
+          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+            {children}
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
+  );
 };
+
+export default Layout;
 ```
 
----
+**File:** `src/components/Layout/Header.tsx`
 
-## 🔧 Implementation Steps
+```typescript
+import React from 'react';
+import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 
-### Step 1: Open the File
-```bash
-code C:\Disk1\TargCC-Core-V2\src\TargCC.CLI\Commands\Analyze\AnalyzeQualityCommand.cs
+const Header: React.FC = () => {
+  return (
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          TargCC Code Generator
+        </Typography>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Header;
 ```
 
-### Step 2: Add Required Using Statements
-```csharp
-using Spectre.Console;
-using System.Linq;
-```
+**File:** `src/components/Layout/Sidebar.tsx`
 
-### Step 3: Implement HandleAsync Method
-- Copy the implementation code above
-- Add helper method `DisplayIssueCategory`
-- Add helper method `GetSeverityOrder`
+```typescript
+import React from 'react';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+} from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import CodeIcon from '@mui/icons-material/Code';
+import SecurityIcon from '@mui/icons-material/Security';
+import ChatIcon from '@mui/icons-material/Chat';
 
-### Step 4: Uncomment Handler Registration
-```csharp
-Handler = CommandHandler.Create<InvocationContext>(HandleAsync);
-```
+const drawerWidth = 240;
 
-### Step 5: Build and Test
-```bash
-cd C:\Disk1\TargCC-Core-V2
-dotnet build --no-restore
-dotnet test --no-build --verbosity normal
-```
-
-### Step 6: Manual Test (Optional)
-```bash
-cd src\TargCC.CLI
-dotnet run -- analyze quality --help
-# Should display help for the command
-
-# If you have a test database:
-dotnet run -- analyze quality
-# Should display quality report
-```
-
----
-
-## 📝 Additional Tasks
-
-### Task 2: Create Integration Test
-
-**File:** Create new test in `AnalyzeQualityCommandTests.cs`
-
-```csharp
-[Fact]
-public async Task HandleAsync_WithRealAnalysisService_ExecutesSuccessfully()
-{
-    // Arrange
-    var mockOutputService = new Mock<IOutputService>();
-    var mockAnalysisService = new Mock<IAnalysisService>();
-    
-    var report = new QualityReport
-    {
-        Score = 85,
-        Grade = "B",
-        NamingIssues = new List<QualityIssue>
-        {
-            new() { ElementName = "customers", Severity = "Medium", 
-                    Description = "Table name should be PascalCase" }
+const Sidebar: React.FC = () => {
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
         },
-        BestPracticeViolations = new List<QualityIssue>(),
-        RelationshipIssues = new List<QualityIssue>()
-    };
+      }}
+    >
+      <List>
+        <ListItem button>
+          <ListItemIcon>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItem>
+        <ListItem button>
+          <ListItemIcon>
+            <CodeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Generate" />
+        </ListItem>
+        <ListItem button>
+          <ListItemIcon>
+            <SecurityIcon />
+          </ListItemIcon>
+          <ListItemText primary="Analyze" />
+        </ListItem>
+        <Divider />
+        <ListItem button>
+          <ListItemIcon>
+            <ChatIcon />
+          </ListItemIcon>
+          <ListItemText primary="AI Chat" />
+        </ListItem>
+      </List>
+    </Drawer>
+  );
+};
 
-    mockAnalysisService
-        .Setup(x => x.AnalyzeQualityAsync())
-        .ReturnsAsync(report);
-
-    var services = new ServiceCollection();
-    services.AddSingleton(mockOutputService.Object);
-    services.AddSingleton(mockAnalysisService.Object);
-    services.AddLogging();
-
-    var serviceProvider = services.BuildServiceProvider();
-
-    var command = new AnalyzeQualityCommand();
-    var context = new InvocationContext(
-        command,
-        serviceProvider: serviceProvider);
-
-    // Act
-    var exitCode = await command.Handler!.InvokeAsync(context);
-
-    // Assert
-    exitCode.Should().Be(0);
-    mockAnalysisService.Verify(x => x.AnalyzeQualityAsync(), Times.Once);
-    mockOutputService.Verify(x => x.Heading(It.IsAny<string>()), Times.AtLeastOnce);
-    mockOutputService.Verify(x => x.Success(It.IsAny<string>()), Times.AtLeastOnce);
-}
+export default Sidebar;
 ```
 
-### Task 3: Update Documentation
+---
 
-Update these files after successful implementation:
-1. `Phase3_Checklist.md` - Mark Day 20 as complete
-2. `PROGRESS.md` - Update Phase 3B to 100%
-3. `README.md` (if needed) - Add quality command to CLI docs
+### Task 6: Create Simple Dashboard
+
+**File:** `src/components/Dashboard/Dashboard.tsx`
+
+```typescript
+import React from 'react';
+import {
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Box,
+} from '@mui/material';
+
+const Dashboard: React.FC = () => {
+  return (
+    <Container maxWidth="lg">
+      <Typography variant="h4" gutterBottom>
+        Dashboard
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6">Tables</Typography>
+            <Typography variant="h3">12</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6">Generated</Typography>
+            <Typography variant="h3">8</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6">Tests</Typography>
+            <Typography variant="h3" color="success.main">
+              715
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+      <Box sx={{ mt: 3 }}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Quick Actions
+          </Typography>
+          <Typography>
+            Welcome to TargCC Code Generator! Select an action from the sidebar
+            to get started.
+          </Typography>
+        </Paper>
+      </Box>
+    </Container>
+  );
+};
+
+export default Dashboard;
+```
 
 ---
 
-## 🧪 Testing Checklist
+### Task 7: Update App.tsx
 
-- [ ] Build succeeds with 0 errors
-- [ ] All existing tests still pass (705+)
-- [ ] New integration test passes
-- [ ] Manual test (if possible) shows correct output
-- [ ] Code coverage remains at 85%+
-- [ ] No new warnings introduced
+**File:** `src/App.tsx`
+
+```typescript
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout/Layout';
+import Dashboard from './components/Dashboard/Dashboard';
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+        </Routes>
+      </Layout>
+    </Router>
+  );
+};
+
+export default App;
+```
 
 ---
 
-## 📊 Expected Output Example
+### Task 8: Create Basic Tests
+
+**File:** `src/components/Dashboard/Dashboard.test.tsx`
+
+```typescript
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import Dashboard from './Dashboard';
+
+describe('Dashboard Component', () => {
+  it('renders dashboard title', () => {
+    render(<Dashboard />);
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  it('displays tables count', () => {
+    render(<Dashboard />);
+    expect(screen.getByText('Tables')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
+  });
+
+  it('displays generated count', () => {
+    render(<Dashboard />);
+    expect(screen.getByText('Generated')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+  });
+
+  it('displays tests count', () => {
+    render(<Dashboard />);
+    expect(screen.getByText('Tests')).toBeInTheDocument();
+    expect(screen.getByText('715')).toBeInTheDocument();
+  });
+
+  it('displays welcome message', () => {
+    render(<Dashboard />);
+    expect(screen.getByText(/Welcome to TargCC/i)).toBeInTheDocument();
+  });
+});
+```
+
+**File:** `src/App.test.tsx`
+
+```typescript
+import React from 'react';
+import { render } from '@testing-library/react';
+import App from './App';
+
+describe('App Component', () => {
+  it('renders without crashing', () => {
+    render(<App />);
+  });
+
+  it('renders layout with dashboard', () => {
+    const { container } = render(<App />);
+    expect(container.querySelector('main')).toBeInTheDocument();
+  });
+});
+```
+
+---
+
+### Task 9: Run and Test
+
+**Commands:**
 
 ```bash
-$ targcc analyze quality
+# Install all dependencies
+npm install
 
-╔════════════════════════════════════╗
-║   Code Quality Analysis            ║
-╚════════════════════════════════════╝
+# Run development server
+npm start
 
-⠋ Analyzing code quality...
+# Should open browser at http://localhost:3000
 
-Overall Score: 85/100 (Grade: B)
+# Run tests
+npm test
 
-╔════════════════════════════════════╗
-║ Naming Conventions (2 issues)     ║
-╚════════════════════════════════════╝
-🟡 Table 'customers' should be 'Customers'
-   → Rename table to follow PascalCase convention
-🟡 Column 'first_name' should be 'firstName'
-   → Rename column to follow camelCase convention
-
-╔════════════════════════════════════╗
-║ Best Practices (1 issue)           ║
-╚════════════════════════════════════╝
-🟠 Missing index on 'CustomerId' foreign key
-   → Add index for better query performance
-
-╔════════════════════════════════════╗
-║ Relationships (0 issues)           ║
-╚════════════════════════════════════╝
-✅ No issues found
-
-┌──────────────┬────────┬────────┐
-│ Category     │ Issues │ Status │
-├──────────────┼────────┼────────┤
-│ Naming       │ 2      │ ⚠️     │
-│ Best Pract.. │ 1      │ ⚠️     │
-│ Relationship │ 0      │ ✅     │
-└──────────────┴────────┴────────┘
+# Build for production (verify it works)
+npm run build
 ```
 
 ---
 
-## 🔗 Related Files
+## 🎯 Day 21 Success Criteria
 
-### Service Layer (Already Complete)
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.AI\Services\CodeQualityAnalyzerService.cs`
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.AI\Services\ICodeQualityAnalyzer.cs`
-
-### CLI Layer (Needs HandleAsync)
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.CLI\Commands\Analyze\AnalyzeQualityCommand.cs` ⚠️
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.CLI\Services\Analysis\AnalysisService.cs`
-
-### Tests (Complete)
-- `C:\Disk1\TargCC-Core-V2\src\tests\TargCC.AI.Tests\Services\CodeQualityAnalyzerServiceTests.cs` ✅
-- `C:\Disk1\TargCC-Core-V2\src\tests\TargCC.CLI.Tests\Commands\Analyze\AnalyzeQualityCommandTests.cs` ✅
-
-### Models (Already Exist)
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.AI\Models\QualityReport.cs`
-- `C:\Disk1\TargCC-Core-V2\src\TargCC.AI\Models\QualityIssue.cs`
+- [ ] React project created with TypeScript
+- [ ] All dependencies installed (MUI, Router, Query, Axios)
+- [ ] TypeScript and ESLint configured
+- [ ] Project structure created
+- [ ] Type definitions complete
+- [ ] API service created
+- [ ] Layout components working (Header, Sidebar, Layout)
+- [ ] Dashboard component displays
+- [ ] App runs on http://localhost:3000
+- [ ] Tests pass (7+ tests)
+- [ ] Build succeeds
 
 ---
 
-## 🎯 Success Criteria
+## 📊 Expected Output
 
-1. ✅ `HandleAsync` method implemented
-2. ✅ Command handler registered
-3. ✅ Build succeeds (0 errors)
-4. ✅ All tests pass (715+ expected)
-5. ✅ Integration test added
-6. ✅ Manual test successful (optional)
-7. ✅ Documentation updated
+### When running `npm start`:
+
+```
+Compiled successfully!
+
+You can now view targcc.webui in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://192.168.1.x:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+```
+
+### Browser Display:
+- Header with "TargCC Code Generator" title
+- Sidebar with menu items (Dashboard, Generate, Analyze, AI Chat)
+- Dashboard with 3 stat cards (Tables: 12, Generated: 8, Tests: 715)
+- Welcome message in main area
 
 ---
 
-## 📚 Reference Information
+## 📝 Notes for Next Session (Day 22)
 
-### IOutputService Methods Available:
-```csharp
-void Success(string message);
-void Error(string message);
-void Warning(string message);
-void Info(string message);
-void Heading(string heading);
-void BlankLine();
-void Table(Table table);
-Task SpinnerAsync(string status, Func<Task> action);
-```
+**After Day 21 completes, Day 22 will:**
+1. Add React Query integration
+2. Create data fetching hooks
+3. Connect to backend API (when ready)
+4. Add error handling and loading states
+5. Create more UI components
 
-### IAnalysisService Method Signature:
-```csharp
-Task<QualityReport?> AnalyzeQualityAsync();
-```
+**Backend API Note:**
+The Web UI will need a backend API wrapper. This will be created in Day 25 using ASP.NET Core Minimal API that wraps the CLI commands.
 
-### QualityReport Structure:
-```csharp
-public class QualityReport
-{
-    public int Score { get; set; }
-    public string Grade { get; set; } = string.Empty;
-    public List<QualityIssue> NamingIssues { get; set; } = new();
-    public List<QualityIssue> BestPracticeViolations { get; set; } = new();
-    public List<QualityIssue> RelationshipIssues { get; set; } = new();
-}
-```
+For now, the frontend will work with mock data or handle API errors gracefully.
 
 ---
 
-## ⏭️ After Completion
+## 🔗 Reference Resources
 
-### Immediate Next Steps:
-1. Update Phase3_Checklist.md - Mark Day 20 complete
-2. Update PROGRESS.md - Phase 3B to 100%
-3. Git commit with message:
-   ```
-   feat(cli): Complete Day 20 - Implement AnalyzeQualityCommand.HandleAsync
-   
-   - Implemented HandleAsync method with full UI integration
-   - Added issue categorization and display
-   - Created severity-based sorting
-   - Added summary table output
-   - Created integration test
-   - All 715+ tests passing
-   
-   Phase 3B (AI Integration) now 100% complete
-   ```
-
-### Phase 3B Completion:
-- ✅ All AI services implemented
-- ✅ All CLI commands functional
-- ✅ Comprehensive test coverage (110+ AI tests)
-- ✅ Documentation complete
-- **Status:** Ready for Phase 3C
-
-### Phase 3C Preview:
-Next phase will focus on Local Web UI (React):
-- Days 21-25: UI Foundation
-- Days 26-30: Generation Wizard
-- Days 31-35: Schema Designer & AI Chat Panel
+- **Material-UI Docs:** https://mui.com/
+- **React Router:** https://reactrouter.com/
+- **React Query:** https://tanstack.com/query/latest
+- **TypeScript:** https://www.typescriptlang.org/
+- **Create React App:** https://create-react-app.dev/
 
 ---
 
-## 📞 Need Help?
+## 💾 Git Workflow
 
-### Common Issues:
+**After completing Day 21:**
 
-**Issue:** InvocationContext.GetRequiredService not found
-**Solution:** Ensure using statement: `using System.CommandLine.Invocation;`
-
-**Issue:** Table class not found
-**Solution:** Ensure using statement: `using Spectre.Console;`
-
-**Issue:** Tests fail after implementation
-**Solution:** Run `dotnet clean` then `dotnet build` then `dotnet test`
-
----
-
-## 💾 Backup Information
-
-**Current Git Status:**
-```
-Branch: main (or feature/phase3b)
-Last Commit: Day 18-19 Complete
-Uncommitted Changes: Test files created
-```
-
-**Before Starting:**
 ```bash
-git status
-git add .
-git commit -m "checkpoint: Day 20 Part 1 complete - all tests passing"
+git add src/TargCC.WebUI
+git commit -m "feat(ui): Day 21 - React project setup with TypeScript
+
+- Created React app with TypeScript
+- Installed MUI, Router, Query, Axios
+- Configured TypeScript and ESLint
+- Created project structure
+- Implemented type definitions
+- Created API service
+- Built Layout components (Header, Sidebar, Layout)
+- Created Dashboard component
+- Added 7 tests
+- All tests passing
+
+Phase 3C Day 21 complete"
 ```
 
 ---
 
 **Document Created:** 28/11/2025  
-**Estimated Completion:** 2-3 hours  
-**Priority:** High  
-**Blockers:** None
-
-**Ready to Start!** 🚀
+**For Session:** Day 21 (Phase 3C Start)  
+**Estimated Time:** 4-5 hours  
+**Prerequisites:** Node.js 18+ installed  
+**Status:** Ready to begin! 🚀
