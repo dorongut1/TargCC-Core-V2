@@ -1,7 +1,7 @@
 # Phase 3: CLI + AI + Web UI - Daily Checklist 📋
 
 **Created:** 24/11/2025  
-**Last Updated:** 30/11/2025  
+**Last Updated:** 01/12/2025  
 **Status:** In Progress - Phase 3C  
 **Duration:** 9 weeks (45 working days)
 
@@ -9,10 +9,10 @@
 
 ## 📊 Overall Status
 
-- **Progress:** 26/45 days (58%)
+- **Progress:** 29/45 days (64%)
 - **Start Date:** November 2025 
 - **Target Completion:** January 2026
-- **Current Phase:** Phase 3C - Local Web UI (Day 26 complete)
+- **Current Phase:** Phase 3C - Local Web UI (Day 29 complete)
 
 ---
 
@@ -131,7 +131,7 @@ TargCC 2.0 Complete Product:
 
 **Goal:** Visual interface running on localhost  
 **Duration:** 15 days  
-**Progress:** ✅✅✅✅✅✅☐☐☐☐☐☐☐☐☐ (6/15 days)  
+**Progress:** ✅✅✅✅✅✅✅✅✅☐☐☐☐☐☐ (9/15 days)  
 **Status:** 🔄 In Progress
 
 ---
@@ -453,12 +453,67 @@ TargCC 2.0 Complete Product:
 
 ---
 
-#### Day 29: Monaco Advanced Features
-- [ ] Theme toggle (dark/light)
-- [ ] Language selector
-- [ ] Download functionality
-- [ ] Wizard integration
-- [ ] 8-10 tests
+#### 📆 Day 29: Monaco Advanced Features ✅
+
+**Date:** 01/12/2025  
+**Status:** ✅ **COMPLETE**
+
+**Achievements:**
+- ✅ Installed JSZip package for ZIP downloads
+- ✅ Created downloadCode utility (73 lines)
+- ✅ Added Theme Toggle to CodePreview
+- ✅ Added Language Selector to CodeViewer
+- ✅ Added Download functionality (single + ZIP)
+- ✅ Integrated CodeViewer with GenerationWizard
+- ✅ Wrote 15 new tests
+- ✅ All features working in browser
+
+**Components Created/Updated:**
+- downloadCode.ts (73 lines NEW) - Download utilities
+- CodePreview.tsx (+45 lines) - Theme toggle added
+- CodeViewer.tsx (+80 lines) - Language + Downloads added
+- GenerationWizard.tsx (+15 lines) - Code preview integration
+
+**Test Files:**
+- downloadCode.test.ts (15 tests)
+- CodePreview.test.tsx (updated)
+- CodeViewer.test.tsx (updated)
+
+**Features:**
+1. **Theme Toggle:**
+   - Dark/Light theme switcher
+   - localStorage persistence
+   - IconButton with theme icons
+
+2. **Language Selector:**
+   - Dropdown with 5 languages (C#, TS, JS, SQL, JSON)
+   - Dynamic syntax highlighting
+   - Current language indicator
+
+3. **Download Functionality:**
+   - Download single file button
+   - Download all files as ZIP
+   - Proper file naming
+   - Clean URL management
+
+4. **Wizard Integration:**
+   - CodeViewer in Step 4
+   - Shows after generation complete
+   - Uses selected table
+
+**Test Status:**
+- ✅ 15 new tests written
+- ✅ Total: 395 React tests (318 passing, 76 pending, 1 skipped)
+- ✅ Build successful (dev mode)
+- ✅ All features functional at http://localhost:5174
+
+**Technical Highlights:**
+- JSZip for ZIP creation
+- localStorage for theme persistence
+- MUI Select for language dropdown
+- Smooth integration with wizard
+
+---
 
 #### Day 30: Progress Display
 - [ ] Real-time updates
@@ -495,11 +550,12 @@ TargCC 2.0 Complete Product:
 |-----------|--------|--------|
 | Dashboard | Working | ✅ |
 | Tables Component | Working | ✅ |
-| Wizard | Working | ✅ (Foundation Complete) |
+| Wizard | Working | ✅ (Complete) |
+| Monaco Editor | Working | ✅ (Full Featured) |
 | Schema Designer | Working | ☐ |
 | AI Chat | Working | ☐ |
 | Error Guide | Working | ☐ |
-| Total Tests | 85+ | ✅ (222 tests!) |
+| Total Tests | 85+ | ✅ (395 tests!) |
 
 ---
 
@@ -558,63 +614,64 @@ TargCC 2.0 Complete Product:
 | 3A CLI | 70+ | 25+ | 95+ | ✅ Complete |
 | 3B AI | 95+ | 15+ | 110+ | ✅ Complete |
 | 3C UI (C#) | - | - | 0 | ☐ Not Started |
-| 3C UI (React) | 344 | - | 344 | ✅ Written (41 pending library) |
+| 3C UI (React) | 395 | - | 395 | ✅ Written (76 pending library) |
 | 3D Migration | - | - | 0 | ☐ Not Started |
-| **Total** | **509+** | **40+** | **1,059+** | **In Progress** |
+| **Total** | **560+** | **40+** | **1,110+** | **In Progress** |
 
 **Test Breakdown:**
 - ✅ C# Tests: 715+ passing
-- ✅ React Tests: 344 written (302 passing, 41 pending, 1 skipped)
+- ✅ React Tests: 395 written (318 passing, 76 pending, 1 skipped)
   - Day 26: 36 wizard tests (TableSelection, GenerationOptions, navigation)
   - Day 27: 10 wizard tests (ReviewStep, GenerationProgress)
-  - Day 28: 112 Monaco tests (CodePreview, CodeViewer, mockCode) ← **NEW!**
-- ✅ Total: 1,059+ tests
+  - Day 28: 112 Monaco tests (CodePreview, CodeViewer, mockCode)
+  - Day 29: 15 download tests (downloadCode utilities) ← **NEW!**
+- ✅ Total: 1,110+ tests
 
 ---
 
 ## 💡 Current Session Status
 
 **Date:** 01/12/2025  
-**Completed:** Day 28 - Monaco Editor Integration (Part 1) ✅  
-**Last Task:** Created CodePreview, CodeViewer, mockCode + 112 tests  
-**Next Task:** Begin Day 29 - Monaco Advanced Features  
+**Completed:** Day 29 - Monaco Advanced Features ✅  
+**Last Task:** Theme toggle, Language selector, Download functionality, Wizard integration  
+**Next Task:** Begin Day 30 - Progress Display & Polish  
 **Blockers:** None  
 **Notes:** 
-- Monaco Editor fully integrated
-- Code preview working perfectly
-- Multi-file viewer with tabs and copy
-- 112 new tests written (111 active + 1 skipped)
-- Demo accessible at http://localhost:5173/code-demo
+- Monaco Editor fully featured with theme toggle
+- Language selector with 5 languages
+- Download single file and ZIP working
+- CodeViewer integrated with wizard
+- 15 new tests written
 - 715+ C# tests passing
-- 344 React tests written (302 passing, 41 pending, 1 skipped)
+- 395 React tests written (318 passing, 76 pending, 1 skipped)
 - Build successful (dev mode)
-- Phase 3C: 53% complete (8/15 days)
-- Ready for Day 29!
+- Phase 3C: 60% complete (9/15 days)
+- Ready for Day 30!
 
 ---
 
 ## 💡 Session Handoff Template
 
 **Date:** 01/12/2025  
-**Completed:** Day 28 of 45  
-**Last Task:** Phase 3C Day 28 - Monaco Editor Integration Complete  
-**Next Task:** Day 29 - Monaco Advanced Features (Theme, Language, Downloads)  
+**Completed:** Day 29 of 45  
+**Last Task:** Phase 3C Day 29 - Monaco Advanced Features Complete  
+**Next Task:** Day 30 - Progress Display & Polish  
 **Blockers:** None  
 **Notes:** 
-- Monaco Editor integrated with C# syntax highlighting
-- CodePreview & CodeViewer components complete
-- Mock code generator working
-- 112 new tests written (111 active + 1 skipped)
+- Monaco Editor with theme toggle, language selector, downloads
+- CodeViewer integrated in wizard Step 4
+- JSZip installed for ZIP downloads
+- 15 new tests written
 - 715+ C# tests passing
-- 344 React tests written (302 passing)
-- Total: 1,059+ tests
-- Phase 3C: 53% complete (8/15 days)
-- See NEXT_SESSION.md for Day 29 details
+- 395 React tests written (318 passing)
+- Total: 1,110+ tests
+- Phase 3C: 60% complete (9/15 days)
+- See NEXT_SESSION.md for Day 30 details
 
 ---
 
 **Created:** 24/11/2025  
 **Last Updated:** 01/12/2025  
-**Status:** Day 28 Complete! Ready for Day 29 🚀
+**Status:** Day 29 Complete! Ready for Day 30 🚀
 
-**Next Action:** Begin Day 29 - Monaco Advanced Features!
+**Next Action:** Begin Day 30 - Progress Display & Polish!

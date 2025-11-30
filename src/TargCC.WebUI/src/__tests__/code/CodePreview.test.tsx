@@ -35,12 +35,17 @@ describe('CodePreview Component', () => {
       const paper = container.querySelector('.MuiPaper-root');
       expect(paper).toBeInTheDocument();
     });
+
+    it('renders theme toggle button', () => {
+      render(<CodePreview code={sampleCode} />);
+      const button = screen.getByRole('button');
+      expect(button).toBeInTheDocument();
+    });
   });
 
   describe('Monaco Editor Configuration', () => {
     it('uses csharp language by default', () => {
       const { container } = render(<CodePreview code={sampleCode} />);
-      // Monaco editor should be initialized with csharp language
       expect(container).toBeInTheDocument();
     });
 
@@ -65,7 +70,6 @@ describe('CodePreview Component', () => {
 
     it('is read-only by default', () => {
       const { container } = render(<CodePreview code={sampleCode} />);
-      // Monaco editor should have readOnly option set to true
       expect(container).toBeInTheDocument();
     });
 
@@ -129,7 +133,7 @@ describe('CodePreview Component', () => {
 
     it('handles code with unicode characters', () => {
       const unicodeCode = '// משתנה עברי\nvar x = "שלום";';
-      const { container } = render(<CodePreview code={unicodeCode} />);
+      const { container} = render(<CodePreview code={unicodeCode} />);
       expect(container).toBeInTheDocument();
     });
   });

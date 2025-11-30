@@ -1,357 +1,360 @@
-# Next Session: Day 29 - Monaco Advanced Features
+# Next Session: Day 30 - Progress Display & Polish
 
 **Date:** Next Session  
 **Phase:** 3C - Local Web UI  
-**Day:** 29 of 45  
+**Day:** 30 of 45  
 **Duration:** ~3-4 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 29 Objectives
+## 🎯 Day 30 Objectives
 
 ### Primary Goal
-Add advanced features to Monaco Editor: theme toggle, language selector, download functionality, and integrate with the Generation Wizard.
+Add real-time progress tracking, status indicators, error handling, and polish the UI for a professional generation experience.
 
 ### Specific Deliverables
 
-1. **Theme Toggle** (60 min)
-   - Dark/light theme switcher
-   - Persist preference in localStorage
+1. **Progress Tracker Component** (60 min)
+   - Real-time status updates
+   - Current file indicator
+   - Percentage display
+   - Time estimates
+   - Visual progress bars
+
+2. **Status Indicators** (45 min)
+   - File type icons
+   - Generation status badges
+   - Color-coded states
+   - Success/Error indicators
+
+3. **Error Handling** (45 min)
+   - Improved error boundaries
+   - Retry functionality
+   - Clear error messages
+   - Validation feedback
+
+4. **Loading States** (45 min)
+   - Skeleton loaders
    - Smooth transitions
-   - IconButton with mode icons
+   - Better loading indicators
+   - Professional animations
 
-2. **Language Selector** (45 min)
-   - Dropdown for language selection
-   - Support: C#, TypeScript, JavaScript, SQL, JSON
-   - Dynamic syntax highlighting
-   - Current language indicator
-
-3. **Download Functionality** (45 min)
-   - Download single file button
-   - Download all files as ZIP
-   - Proper file extensions
-   - Progress feedback
-
-4. **Wizard Integration** (60 min)
-   - Add code preview to GenerationWizard
-   - Show in Step 4 (after generation)
-   - Use actual selected tables
-   - Modal or inline display
-
-5. **Testing** (30 min)
+5. **Testing & Polish** (45 min)
    - 8-10 new tests
-   - Theme switching tests
-   - Download tests
-   - Language selector tests
+   - UI polish
+   - Accessibility improvements
 
 ---
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Theme Toggle (60 minutes)
+### Part 1: Progress Tracker Component (60 minutes)
 
-#### 1.1 Update CodePreview Component
+#### 1.1 Create ProgressTracker Component
 
 ```typescript
-// src/components/code/CodePreview.tsx
+// src/components/wizard/ProgressTracker.tsx
 
-import { useState, useEffect } from 'react';
-import { IconButton, Tooltip } from '@mui/material';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
+import { Box, Paper, LinearProgress, Typography, Chip } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import ErrorIcon from '@mui/icons-material/Error';
 
-interface CodePreviewProps {
-  // ... existing props
-  theme?: 'vs-dark' | 'light';
-  onThemeChange?: (theme: 'vs-dark' | 'light') => void;
+interface ProgressItem {
+  id: string;
+  name: string;
+  status: 'pending' | 'processing' | 'complete' | 'error';
+  message?: string;
 }
 
-const CodePreview = ({ ... }: CodePreviewProps) => {
-  const [editorTheme, setEditorTheme] = useState<'vs-dark' | 'light'>(
-    () => (localStorage.getItem('monacoTheme') as 'vs-dark' | 'light') || 'vs-dark'
-  );
+interface ProgressTrackerProps {
+  items: ProgressItem[];
+  currentProgress: number;
+}
 
-  const toggleTheme = () => {
-    const newTheme = editorTheme === 'vs-dark' ? 'light' : 'vs-dark';
-    setEditorTheme(newTheme);
-    localStorage.setItem('monacoTheme', newTheme);
-    onThemeChange?.(newTheme);
-  };
-
-  return (
-    <Paper>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="h6">{title}</Typography>
-        
-        <Tooltip title={`Switch to ${editorTheme === 'vs-dark' ? 'light' : 'dark'} theme`}>
-          <IconButton onClick={toggleTheme} size="small">
-            {editorTheme === 'vs-dark' ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      <Editor
-        theme={editorTheme}
-        // ... other props
-      />
-    </Paper>
-  );
-};
-```
-
----
-
-### Part 2: Language Selector (45 minutes)
-
-#### 2.1 Add Language Selector to CodeViewer
-
-```typescript
-// src/components/code/CodeViewer.tsx
-
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-
-const CodeViewer = ({ files }: CodeViewerProps) => {
-  const [language, setLanguage] = useState('csharp');
-
-  const languages = [
-    { value: 'csharp', label: 'C#' },
-    { value: 'typescript', label: 'TypeScript' },
-    { value: 'javascript', label: 'JavaScript' },
-    { value: 'sql', label: 'SQL' },
-    { value: 'json', label: 'JSON' },
-  ];
-
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-        <Tabs value={activeTab} onChange={(_, val) => setActiveTab(val)}>
-          {/* ... tabs */}
-        </Tabs>
-
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Language</InputLabel>
-          <Select
-            value={language}
-            label="Language"
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            {languages.map((lang) => (
-              <MenuItem key={lang.value} value={lang.value}>
-                {lang.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Tooltip title="Copy">
-          <IconButton onClick={handleCopy}>
-            {/* ... */}
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      <CodePreview
-        code={files[activeTab].code}
-        language={language}
-        // ... other props
-      />
-    </Box>
-  );
-};
-```
-
----
-
-### Part 3: Download Functionality (45 minutes)
-
-#### 3.1 Install JSZip
-
-```bash
-npm install jszip
-npm install @types/jszip --save-dev
-```
-
-#### 3.2 Add Download Functions
-
-```typescript
-// src/utils/downloadCode.ts
-
-import JSZip from 'jszip';
-
-export const downloadFile = (filename: string, content: string) => {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
-export const downloadAllAsZip = async (
-  files: Array<{ name: string; code: string }>,
-  zipName: string = 'generated-code.zip'
-) => {
-  const zip = new JSZip();
-  
-  files.forEach(file => {
-    zip.file(file.name, file.code);
-  });
-
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = zipName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-```
-
-#### 3.3 Add Download Buttons to CodeViewer
-
-```typescript
-import DownloadIcon from '@mui/icons-material/Download';
-import FolderZipIcon from '@mui/icons-material/FolderZip';
-import { downloadFile, downloadAllAsZip } from '../../utils/downloadCode';
-
-const CodeViewer = ({ files }: CodeViewerProps) => {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownloadCurrent = () => {
-    downloadFile(files[activeTab].name, files[activeTab].code);
-  };
-
-  const handleDownloadAll = async () => {
-    setDownloading(true);
-    try {
-      await downloadAllAsZip(files, 'generated-code.zip');
-    } finally {
-      setDownloading(false);
+const ProgressTracker = ({ items, currentProgress }: ProgressTrackerProps) => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'complete': return <CheckCircleIcon color="success" />;
+      case 'error': return <ErrorIcon color="error" />;
+      case 'processing': return <PendingIcon color="primary" />;
+      default: return <PendingIcon color="disabled" />;
     }
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
-        {/* ... existing buttons */}
+    <Paper sx={{ p: 3 }} elevation={2}>
+      <Typography variant="h6" gutterBottom>
+        Generation Progress
+      </Typography>
 
-        <Tooltip title="Download current file">
-          <IconButton onClick={handleDownloadCurrent}>
-            <DownloadIcon />
-          </IconButton>
-        </Tooltip>
+      <LinearProgress 
+        variant="determinate" 
+        value={currentProgress} 
+        sx={{ mb: 2, height: 8, borderRadius: 4 }}
+      />
 
-        <Tooltip title="Download all as ZIP">
-          <IconButton onClick={handleDownloadAll} disabled={downloading}>
-            <FolderZipIcon />
-          </IconButton>
-        </Tooltip>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {items.map((item) => (
+          <Box 
+            key={item.id}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: 2,
+              p: 1,
+              borderRadius: 1,
+              bgcolor: item.status === 'processing' ? 'action.hover' : 'transparent'
+            }}
+          >
+            {getStatusIcon(item.status)}
+            <Typography variant="body2" sx={{ flex: 1 }}>
+              {item.name}
+            </Typography>
+            {item.message && (
+              <Typography variant="caption" color="text.secondary">
+                {item.message}
+              </Typography>
+            )}
+          </Box>
+        ))}
       </Box>
-    </Box>
+    </Paper>
   );
+};
+
+export default ProgressTracker;
+```
+
+---
+
+### Part 2: Status Indicators (45 minutes)
+
+#### 2.1 Create StatusBadge Component
+
+```typescript
+// src/components/common/StatusBadge.tsx
+
+import { Chip } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import PendingIcon from '@mui/icons-material/Pending';
+
+type Status = 'success' | 'error' | 'pending' | 'processing';
+
+interface StatusBadgeProps {
+  status: Status;
+  label?: string;
+}
+
+const StatusBadge = ({ status, label }: StatusBadgeProps) => {
+  const config = {
+    success: { color: 'success' as const, icon: <CheckCircleIcon fontSize="small" />, defaultLabel: 'Complete' },
+    error: { color: 'error' as const, icon: <ErrorIcon fontSize="small" />, defaultLabel: 'Error' },
+    pending: { color: 'default' as const, icon: <PendingIcon fontSize="small" />, defaultLabel: 'Pending' },
+    processing: { color: 'primary' as const, icon: <PendingIcon fontSize="small" />, defaultLabel: 'Processing' },
+  };
+
+  const { color, icon, defaultLabel } = config[status];
+
+  return (
+    <Chip
+      icon={icon}
+      label={label || defaultLabel}
+      color={color}
+      size="small"
+      variant="outlined"
+    />
+  );
+};
+
+export default StatusBadge;
+```
+
+#### 2.2 Add File Type Icons
+
+```typescript
+// src/utils/fileTypeIcons.tsx
+
+import DescriptionIcon from '@mui/icons-material/Description'; // Entity
+import StorageIcon from '@mui/icons-material/Storage'; // Repository
+import HandlerIcon from '@mui/icons-material/Autorenew'; // Handler
+import ApiIcon from '@mui/icons-material/Api'; // API
+
+export const getFileTypeIcon = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'entity': return <DescriptionIcon />;
+    case 'repository': return <StorageIcon />;
+    case 'handler': return <HandlerIcon />;
+    case 'api': return <ApiIcon />;
+    default: return <DescriptionIcon />;
+  }
 };
 ```
 
 ---
 
-### Part 4: Wizard Integration (60 minutes)
+### Part 3: Error Handling (45 minutes)
 
-#### 4.1 Update GenerationWizard
+#### 3.1 Enhanced Error Boundary
 
 ```typescript
-// src/components/wizard/GenerationWizard.tsx
+// src/components/common/ErrorBoundary.tsx
 
-import CodeViewer from '../code/CodeViewer';
-import { mockCodeFiles } from '../../utils/mockCode';
+import { Component, ReactNode } from 'react';
+import { Box, Paper, Typography, Button, Alert } from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
-const GenerationWizard = () => {
-  // ... existing state
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
 
-  const generatedFiles = selectedTables.length > 0
-    ? mockCodeFiles(selectedTables[0])
-    : [];
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
 
-  // In Step 4 (GenerationProgress)
-  const renderGenerationProgress = () => (
-    <Box>
-      {/* ... existing progress UI */}
+class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
-      {progress === 100 && (
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Generated Code Preview
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Paper sx={{ p: 4, textAlign: 'center', maxWidth: 600, mx: 'auto', mt: 4 }}>
+          <ErrorIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h5" gutterBottom>
+            Something went wrong
           </Typography>
-          <CodeViewer files={generatedFiles} />
-        </Box>
-      )}
+          <Alert severity="error" sx={{ my: 2, textAlign: 'left' }}>
+            {this.state.error?.message || 'An unexpected error occurred'}
+          </Alert>
+          <Button
+            variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={this.handleReset}
+          >
+            Try Again
+          </Button>
+        </Paper>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
+```
+
+---
+
+### Part 4: Loading States (45 minutes)
+
+#### 4.1 Skeleton Loader
+
+```typescript
+// src/components/common/LoadingSkeleton.tsx
+
+import { Box, Skeleton, Paper } from '@mui/material';
+
+interface LoadingSkeletonProps {
+  type?: 'table' | 'card' | 'list';
+  count?: number;
+}
+
+const LoadingSkeleton = ({ type = 'card', count = 3 }: LoadingSkeletonProps) => {
+  if (type === 'table') {
+    return (
+      <Paper sx={{ p: 2 }}>
+        <Skeleton variant="rectangular" height={40} sx={{ mb: 2 }} />
+        {Array.from({ length: count }).map((_, i) => (
+          <Skeleton key={i} variant="rectangular" height={60} sx={{ mb: 1 }} />
+        ))}
+      </Paper>
+    );
+  }
+
+  if (type === 'list') {
+    return (
+      <Box>
+        {Array.from({ length: count }).map((_, i) => (
+          <Box key={i} sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Skeleton variant="circular" width={40} height={40} />
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" width="60%" />
+              <Skeleton variant="text" width="40%" />
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Paper key={i} sx={{ p: 2 }}>
+          <Skeleton variant="rectangular" height={140} sx={{ mb: 2 }} />
+          <Skeleton variant="text" />
+          <Skeleton variant="text" width="60%" />
+        </Paper>
+      ))}
     </Box>
   );
 };
+
+export default LoadingSkeleton;
 ```
 
 ---
 
-### Part 5: Testing (30 minutes)
+### Part 5: Testing (45 minutes)
 
-#### 5.1 Theme Toggle Tests
+#### 5.1 ProgressTracker Tests
 
 ```typescript
-// src/__tests__/code/CodePreview.test.tsx
+// src/__tests__/wizard/ProgressTracker.test.tsx
 
-describe('Theme Toggle', () => {
-  it('toggles between dark and light themes', () => {
+describe('ProgressTracker', () => {
+  it('renders progress items', () => {
     // ...
   });
 
-  it('persists theme to localStorage', () => {
+  it('shows correct status icons', () => {
     // ...
   });
 
-  it('loads saved theme on mount', () => {
+  it('updates progress bar', () => {
     // ...
   });
 });
 ```
 
-#### 5.2 Language Selector Tests
+#### 5.2 StatusBadge Tests
 
 ```typescript
-// src/__tests__/code/CodeViewer.test.tsx
+// src/__tests__/common/StatusBadge.test.tsx
 
-describe('Language Selector', () => {
-  it('renders language dropdown', () => {
+describe('StatusBadge', () => {
+  it('renders success badge', () => {
     // ...
   });
 
-  it('changes language when selected', () => {
-    // ...
-  });
-
-  it('updates Monaco editor language', () => {
-    // ...
-  });
-});
-```
-
-#### 5.3 Download Tests
-
-```typescript
-describe('Download Functionality', () => {
-  it('downloads single file', () => {
-    // ...
-  });
-
-  it('downloads all files as ZIP', async () => {
-    // ...
-  });
-
-  it('shows loading state during ZIP', () => {
+  it('renders error badge', () => {
     // ...
   });
 });
@@ -359,28 +362,40 @@ describe('Download Functionality', () => {
 
 ---
 
-## 📝 Files to Create/Modify
+## 📁 Files to Create/Modify
 
 ### New Files
 ```
+src/components/wizard/
+└── ProgressTracker.tsx (120 lines)
+
+src/components/common/
+├── StatusBadge.tsx (40 lines)
+├── LoadingSkeleton.tsx (60 lines)
+└── ErrorBoundary.tsx (80 lines)
+
 src/utils/
-└── downloadCode.ts (50 lines)
+└── fileTypeIcons.tsx (25 lines)
 ```
 
 ### Modified Files
 ```
-src/components/code/
-├── CodePreview.tsx (+30 lines, theme toggle)
-└── CodeViewer.tsx (+60 lines, language + downloads)
-
 src/components/wizard/
-└── GenerationWizard.tsx (+20 lines, code preview)
+└── GenerationWizard.tsx (+30 lines, add ProgressTracker)
+
+src/App.tsx
+└── (+ErrorBoundary wrapper)
 ```
 
 ### New Test Files
 ```
-src/__tests__/utils/
-└── downloadCode.test.ts (40 lines)
+src/__tests__/wizard/
+└── ProgressTracker.test.tsx (50 lines)
+
+src/__tests__/common/
+├── StatusBadge.test.tsx (40 lines)
+├── LoadingSkeleton.test.tsx (30 lines)
+└── ErrorBoundary.test.tsx (50 lines)
 ```
 
 ---
@@ -388,81 +403,74 @@ src/__tests__/utils/
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Theme toggle works (dark ↔ light)
-- [ ] Theme persists in localStorage
-- [ ] Language selector works
-- [ ] Monaco updates language dynamically
-- [ ] Download single file works
-- [ ] Download all as ZIP works
-- [ ] Wizard shows code preview
-- [ ] Integration smooth
+- [ ] Progress tracker shows real-time updates
+- [ ] Status badges display correctly
+- [ ] Error boundary catches errors
+- [ ] Retry functionality works
+- [ ] Loading skeletons smooth
+- [ ] All transitions polished
 
 ### Testing
 - [ ] 8-10 new tests written
-- [ ] Theme tests pass
-- [ ] Download tests pass
-- [ ] Language tests pass
+- [ ] Progress tracker tested
+- [ ] Error handling tested
+- [ ] Loading states tested
 - [ ] Build successful (dev)
 
 ### Code Quality
 - [ ] TypeScript compliant
-- [ ] Components clean
+- [ ] Components under 200 lines
 - [ ] Proper error handling
+- [ ] Clean, readable code
 - [ ] No console warnings
 
 ### Documentation
 - [ ] STATUS.md updated
-- [ ] HANDOFF.md for Day 30
+- [ ] HANDOFF.md for Day 31
 - [ ] Phase3_Checklist.md updated
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Install Dependencies (5 min)
-```bash
-cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
-npm install jszip
-npm install @types/jszip --save-dev
-```
-
-### 2. Development Order
-1. Theme toggle in CodePreview
-2. Test theme switching
-3. Language selector in CodeViewer
-4. Download utilities
-5. Download buttons
-6. Wizard integration
+### 1. Development Order
+1. Create ProgressTracker component
+2. Create StatusBadge component
+3. Create LoadingSkeleton component
+4. Enhance ErrorBoundary
+5. Add file type icons
+6. Integrate with wizard
 7. Write tests
-8. Update docs
+8. Polish UI
+9. Update docs
 
 ---
 
 ## 💡 Tips for Success
 
-### Theme Switching
-- Monaco supports 3 built-in themes: 'vs-dark', 'light', 'hc-black'
-- Transition is instant (no animation needed)
-- Store preference in localStorage
-- Default to 'vs-dark'
+### Progress Tracking
+- Use state management for real-time updates
+- Update progress incrementally
+- Show current file being processed
+- Provide time estimates
 
-### Language Support
-- Monaco supports 60+ languages
-- Use exact IDs: 'csharp', 'typescript', 'javascript', 'sql', 'json'
-- Language changes are instant
-- Syntax highlighting updates automatically
+### Status Indicators
+- Use consistent color scheme
+- Add appropriate icons
+- Keep labels clear and short
+- Support multiple states
 
-### Downloads
-- Use Blob API for single files
-- JSZip for multiple files
-- Always revoke object URLs
-- Show loading state for ZIP (can be slow)
+### Error Handling
+- Provide clear error messages
+- Offer retry functionality
+- Log errors appropriately
+- Show fallback UI
 
-### Wizard Integration
-- Keep code preview optional
-- Show only after generation complete
-- Use selected table names
-- Consider modal for full-screen view
+### Loading States
+- Use skeleton loaders for better UX
+- Animate transitions smoothly
+- Show loading indicators
+- Provide visual feedback
 
 ---
 
@@ -475,21 +483,21 @@ npm run dev
 # Run tests
 npm test
 
-# Check package
-npm list jszip
+# Type check
+npx tsc --noEmit
 
-# Demo page
-# http://localhost:5173/code-demo
+# Demo URL
+http://localhost:5174/generate
 ```
 
 ---
 
 **Ready to Start:** ✅  
 **Estimated Duration:** 3-4 hours  
-**Expected Output:** Full-featured Monaco Editor  
-**Next Day:** Day 30 - Progress Display & Polish
+**Expected Output:** Professional progress display & polished UI  
+**Next Day:** Day 31 - Schema Designer Foundation
 
 ---
 
 **Created:** 01/12/2025  
-**Status:** Ready for Day 29! 🚀
+**Status:** Ready for Day 30! 🚀

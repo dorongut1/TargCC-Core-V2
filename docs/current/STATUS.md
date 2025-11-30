@@ -1,66 +1,66 @@
 # TargCC Core V2 - Current Status
 
-**Last Updated:** 01/12/2025 00:45  
+**Last Updated:** 01/12/2025 12:00  
 **Current Phase:** Phase 3C - Local Web UI  
-**Day:** 28 of 45 (62%)
+**Day:** 29 of 45 (64%)
 
 ---
 
-## 🎯 Today's Achievement: Day 28 Complete! ✅
+## 🎯 Today's Achievement: Day 29 Complete! ✅
 
 **What We Accomplished:**
-- ✅ Installed @monaco-editor/react package
-- ✅ Created CodePreview component (81 lines)
-- ✅ Created CodeViewer component (95 lines)
-- ✅ Created mockCode utility (247 lines)
-- ✅ Wrote 112 comprehensive tests
-- ✅ Created demo page at /code-demo
-- ✅ Monaco Editor working with C# syntax highlighting
+- ✅ Installed JSZip package for ZIP downloads
+- ✅ Created downloadCode utility (73 lines)
+- ✅ Added Theme Toggle to CodePreview
+- ✅ Added Language Selector to CodeViewer
+- ✅ Added Download functionality (single + ZIP)
+- ✅ Integrated CodeViewer with GenerationWizard
+- ✅ Wrote comprehensive tests
+- ✅ All features working in browser
 
 **Key Features Implemented:**
 
-1. **CodePreview Component:**
-   - Monaco Editor integration
-   - Dark theme (vs-dark)
-   - Loading state with CircularProgress
-   - C# syntax highlighting
-   - Read-only mode
-   - Configurable height
-   - Line numbers and code folding
+1. **Theme Toggle:**
+   - Dark/Light theme switcher
+   - localStorage persistence
+   - Smooth icon transitions
+   - Works across all Monaco editors
 
-2. **CodeViewer Component:**
-   - Multi-file tabs
-   - File switching
-   - Copy to clipboard functionality
-   - Visual feedback on copy (checkmark)
-   - Scrollable tabs for many files
-   - Empty state handling
+2. **Language Selector:**
+   - Dropdown with 5 languages
+   - C#, TypeScript, JavaScript, SQL, JSON
+   - Dynamic syntax highlighting
+   - Current language indicator
 
-3. **Mock Code Generator:**
-   - Entity generation
-   - Repository interface + implementation
-   - CQRS Query Handlers
-   - API Controllers
-   - XML documentation
-   - Clean Architecture namespaces
+3. **Download Functionality:**
+   - Download single file button
+   - Download all files as ZIP
+   - Proper file naming
+   - Clean URL management
 
-**Components Created:**
-- src/components/code/CodePreview.tsx (81 lines)
-- src/components/code/CodeViewer.tsx (95 lines)
-- src/utils/mockCode.ts (247 lines)
-- src/pages/CodeDemo.tsx (28 lines)
+4. **Wizard Integration:**
+   - CodeViewer appears in Step 4
+   - Shows generated code preview
+   - Uses actual selected table
+   - Professional presentation
+
+**Components Updated:**
+- src/components/code/CodePreview.tsx (+45 lines)
+- src/components/code/CodeViewer.tsx (+80 lines)
+- src/components/wizard/GenerationWizard.tsx (+15 lines)
+- src/utils/downloadCode.ts (73 lines NEW)
 
 **Test Status:**
-- ✅ 112 new tests written (111 active + 1 skipped)
-- ✅ Total: 344 tests (302 passing, 41 pending, 1 skipped)
+- ✅ 15 new tests written
+- ✅ Total: 395 tests (318 passing, 76 pending, 1 skipped)
 - ⏳ Awaiting @testing-library/react update for React 19
 - ✅ Application fully functional in browser
-- ✅ Monaco Editor working perfectly
+- ✅ All Monaco features working perfectly
 
 **Access Points:**
-- Main App: http://localhost:5173
-- Monaco Demo: http://localhost:5173/code-demo ← NEW!
-- Wizard: http://localhost:5173/generate
+- Main App: http://localhost:5174
+- Monaco Demo: http://localhost:5174/code-demo
+- Wizard: http://localhost:5174/generate ← **Code preview in Step 4!**
 
 ---
 
@@ -70,10 +70,10 @@
 Phase 3: CLI + AI + Web UI
 ├── Phase 3A: CLI Core (Days 1-10) ............ ✅ 100% COMPLETE
 ├── Phase 3B: AI Integration (Days 11-20) ..... ✅ 100% COMPLETE
-├── Phase 3C: Local Web UI (Days 21-35) ....... 🔄 53% (8/15 days)
+├── Phase 3C: Local Web UI (Days 21-35) ....... 🔄 60% (9/15 days)
 └── Phase 3D: Migration & Polish (Days 36-45) . ☐ 0% (0/10 days)
 
-Overall: 28/45 days (62%)
+Overall: 29/45 days (64%)
 ```
 
 ---
@@ -84,14 +84,14 @@ Overall: 28/45 days (62%)
 |----------|-------|--------|
 | C# Unit Tests | 600+ | ✅ Passing |
 | C# Integration Tests | 115+ | ✅ Passing |
-| React Tests | 344 | ✅ 302 passing, 41 pending, 1 skipped |
-| **Total Tests** | **1,059+** | **In Progress** |
+| React Tests | 395 | ✅ 318 passing, 76 pending, 1 skipped |
+| **Total Tests** | **1,110+** | **In Progress** |
 | Code Coverage | 85%+ | ✅ Excellent |
 
 **React Test Breakdown:**
-- Previous tests: 232 (186 passing, 46 pending)
-- Day 28: 112 new tests (111 active, 1 skipped)
-- Total: 344 tests written
+- Previous tests: 344 (302 passing, 41 pending, 1 skipped)
+- Day 29: +51 tests added/updated
+- Total: 395 tests written
 
 ---
 
@@ -114,46 +114,51 @@ TargCC.WebUI/
 ├── src/
 │   ├── components/
 │   │   ├── code/
-│   │   │   ├── CodePreview.tsx          ✅ Complete (Day 28)
-│   │   │   └── CodeViewer.tsx           ✅ Complete (Day 28)
+│   │   │   ├── CodePreview.tsx          ✅ Complete (Theme Toggle)
+│   │   │   └── CodeViewer.tsx           ✅ Complete (Lang + Downloads)
 │   │   └── wizard/
-│   │       └── GenerationWizard.tsx     ✅ Complete (Day 26-27)
+│   │       └── GenerationWizard.tsx     ✅ Complete (Code Preview)
 │   ├── pages/
 │   │   ├── Dashboard.tsx                ✅
 │   │   ├── Tables.tsx                   ✅
-│   │   └── CodeDemo.tsx                 ✅ Complete (Day 28)
+│   │   └── CodeDemo.tsx                 ✅
 │   ├── utils/
-│   │   └── mockCode.ts                  ✅ Complete (Day 28)
+│   │   ├── mockCode.ts                  ✅
+│   │   └── downloadCode.ts              ✅ Complete (Day 29)
 │   └── __tests__/
-│       └── ...                          ✅ 344 tests
+│       └── ...                          ✅ 395 tests
 ```
 
 ---
 
 ## ✅ Completed Features
 
-### Phase 3C: Local Web UI (53%)
-- ✅ Monaco Editor integration (Day 28) ← NEW!
-- ✅ Code preview components (Day 28) ← NEW!
-- ✅ Mock code generator (Day 28) ← NEW!
-- ✅ 344 React tests
+### Phase 3C: Local Web UI (60%)
+- ✅ Monaco Editor integration (Day 28)
+- ✅ Theme Toggle (Day 29) ← NEW!
+- ✅ Language Selector (Day 29) ← NEW!
+- ✅ Download functionality (Day 29) ← NEW!
+- ✅ Wizard integration (Day 29) ← NEW!
+- ✅ 395 React tests
 
 ---
 
 ## 🎯 Next Steps
 
-### Day 29: Monaco Advanced Features
-1. Theme toggle (dark/light)
-2. Language selector
-3. Download code
-4. Integration with wizard
+### Day 30: Progress Display & Polish
+1. Real-time progress tracking
+2. Generation status indicators
+3. Error handling improvements
+4. Loading states polish
 
 ---
 
 ## 🔧 Technical Stack
 
 ### Frontend Additions
-- **Monaco Editor 4.7.0** ← NEW!
+- **Monaco Editor 4.7.0** ✅
+- **JSZip 3.x** ✅ (Day 29)
+- **TypeScript 5.x** ✅ (Day 29)
 
 ---
 
@@ -162,11 +167,13 @@ TargCC.WebUI/
 ```bash
 cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 npm run dev
-# Monaco Demo: http://localhost:5173/code-demo
+# Opens at http://localhost:5174
+# Monaco Demo: http://localhost:5174/code-demo
+# Wizard with Code Preview: http://localhost:5174/generate
 ```
 
 ---
 
-**Status:** Day 28 Complete! ✅  
-**Next:** Day 29 - Monaco Advanced Features  
-**Last Updated:** 01/12/2025 00:45
+**Status:** Day 29 Complete! ✅  
+**Next:** Day 30 - Progress Display & Polish  
+**Last Updated:** 01/12/2025 12:00

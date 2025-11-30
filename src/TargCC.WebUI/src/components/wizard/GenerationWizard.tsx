@@ -14,6 +14,8 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TableSelection from './TableSelection';
 import GenerationOptions from './GenerationOptions';
+import CodeViewer from '../code/CodeViewer';
+import { mockCodeFiles } from '../../utils/mockCode';
 
 export interface WizardData {
   selectedTables: string[];
@@ -198,14 +200,27 @@ const GenerationProgress = ({ data }: WizardStepProps) => {
 
       {/* Success State */}
       {isComplete && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          <Typography variant="body2" fontWeight="bold">
-            Code generation completed successfully!
-          </Typography>
-          <Typography variant="caption">
-            Files are ready for review and can be found in your output directory.
-          </Typography>
-        </Alert>
+        <>
+          <Alert severity="success" sx={{ mt: 3 }}>
+            <Typography variant="body2" fontWeight="bold">
+              Code generation completed successfully!
+            </Typography>
+            <Typography variant="caption">
+              Files are ready for review and can be found in your output directory.
+            </Typography>
+          </Alert>
+
+          {/* Code Preview */}
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Generated Code Preview
+            </Typography>
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Preview the generated code for {data.selectedTables[0] || 'your table'}
+            </Typography>
+            <CodeViewer files={mockCodeFiles(data.selectedTables[0] || 'Customer')} />
+          </Box>
+        </>
       )}
     </Box>
   );

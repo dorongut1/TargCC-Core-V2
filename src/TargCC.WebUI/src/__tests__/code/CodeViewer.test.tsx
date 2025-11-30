@@ -62,6 +62,24 @@ describe('CodeViewer Component', () => {
       
       expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     });
+
+    it('renders language selector', () => {
+      render(<CodeViewer files={mockFiles} />);
+      
+      expect(screen.getByLabelText('Language')).toBeInTheDocument();
+    });
+
+    it('renders download current file button', () => {
+      render(<CodeViewer files={mockFiles} />);
+      
+      expect(screen.getByLabelText('Download current file')).toBeInTheDocument();
+    });
+
+    it('renders download all as ZIP button', () => {
+      render(<CodeViewer files={mockFiles} />);
+      
+      expect(screen.getByLabelText('Download all as ZIP')).toBeInTheDocument();
+    });
   });
 
   describe('Tab Switching', () => {
