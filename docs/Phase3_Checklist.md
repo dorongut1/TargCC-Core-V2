@@ -405,10 +405,60 @@ TargCC 2.0 Complete Product:
 
 ---
 
-#### Day 28-29: Code Preview
-- [ ] Monaco Editor
-- [ ] Diff view
-- [ ] 10+ tests
+#### 📆 Day 28: Monaco Editor Integration (Part 1) ✅
+
+**Date:** 01/12/2025  
+**Status:** ✅ **COMPLETE**
+
+**Achievements:**
+- ✅ Installed @monaco-editor/react v4.7.0
+- ✅ Created CodePreview component (81 lines)
+- ✅ Created CodeViewer component (95 lines)
+- ✅ Created mockCode utility (247 lines)
+- ✅ Wrote 112 comprehensive tests (111 active + 1 skipped)
+- ✅ Created demo page at /code-demo
+- ✅ Monaco Editor working with C# syntax highlighting
+
+**Components Created:**
+- CodePreview.tsx (81 lines) - Monaco wrapper
+- CodeViewer.tsx (95 lines) - Multi-file tabs + copy
+- mockCode.ts (247 lines) - C# code generator
+- CodeDemo.tsx (28 lines) - Demo page
+
+**Test Files Created:**
+- CodePreview.test.tsx (20 tests)
+- CodeViewer.test.tsx (45 tests, 1 skipped)
+- mockCode.test.ts (47 tests)
+
+**Features:**
+- Monaco Editor with dark theme
+- C# syntax highlighting
+- Multi-file tab system
+- Copy to clipboard with visual feedback
+- Mock code generation (Entity, Repository, Handler, Controller)
+- Loading states
+- Empty state handling
+
+**Test Status:**
+- ✅ 112 new tests (111 active + 1 skipped)
+- ✅ Total: 344 React tests (302 passing, 41 pending, 1 skipped)
+- ✅ Build successful (dev mode)
+- ✅ Demo accessible at http://localhost:5173/code-demo
+
+**Technical Highlights:**
+- Monaco Editor loads in 1-2 seconds
+- Scrollable tabs for many files
+- Proper cleanup with afterEach
+- Skip fake timer test (React 19 compatibility)
+
+---
+
+#### Day 29: Monaco Advanced Features
+- [ ] Theme toggle (dark/light)
+- [ ] Language selector
+- [ ] Download functionality
+- [ ] Wizard integration
+- [ ] 8-10 tests
 
 #### Day 30: Progress Display
 - [ ] Real-time updates
@@ -501,66 +551,70 @@ TargCC 2.0 Complete Product:
 
 ---
 
-## 📊 Test Summary (Updated 30/11/2025)
+## 📊 Test Summary (Updated 01/12/2025)
 
 | Phase | Unit | Integration | Total | Status |
 |-------|------|-------------|-------|--------|
 | 3A CLI | 70+ | 25+ | 95+ | ✅ Complete |
 | 3B AI | 95+ | 15+ | 110+ | ✅ Complete |
 | 3C UI (C#) | - | - | 0 | ☐ Not Started |
-| 3C UI (React) | 232+ | - | 232+ | ✅ Written (46 pending library) |
+| 3C UI (React) | 344 | - | 344 | ✅ Written (41 pending library) |
 | 3D Migration | - | - | 0 | ☐ Not Started |
-| **Total** | **397+** | **40+** | **947+** | **In Progress** |
+| **Total** | **509+** | **40+** | **1,059+** | **In Progress** |
 
 **Test Breakdown:**
 - ✅ C# Tests: 715+ passing
-- ✅ React Tests: 232+ written (186 passing, 46 awaiting @testing-library update)
+- ✅ React Tests: 344 written (302 passing, 41 pending, 1 skipped)
   - Day 26: 36 wizard tests (TableSelection, GenerationOptions, navigation)
-  - Day 27: 10 wizard tests (ReviewStep, GenerationProgress) ← **NEW!**
-- ✅ Total: 947+ tests
+  - Day 27: 10 wizard tests (ReviewStep, GenerationProgress)
+  - Day 28: 112 Monaco tests (CodePreview, CodeViewer, mockCode) ← **NEW!**
+- ✅ Total: 1,059+ tests
 
 ---
 
 ## 💡 Current Session Status
 
-**Date:** 30/11/2025  
-**Completed:** Day 27 - Wizard Completion (Part 2) ✅  
-**Last Task:** Enhanced ReviewStep & GenerationProgress with 10 new tests  
-**Next Task:** Begin Day 28 - Monaco Editor Integration  
+**Date:** 01/12/2025  
+**Completed:** Day 28 - Monaco Editor Integration (Part 1) ✅  
+**Last Task:** Created CodePreview, CodeViewer, mockCode + 112 tests  
+**Next Task:** Begin Day 29 - Monaco Advanced Features  
 **Blockers:** None  
 **Notes:** 
-- Generation Wizard fully complete (4 steps)
-- 22 wizard tests written (all functional)
-- ReviewStep: Chips, Edit buttons, Summary alert
-- GenerationProgress: Progress bar, Log, Simulation
+- Monaco Editor fully integrated
+- Code preview working perfectly
+- Multi-file viewer with tabs and copy
+- 112 new tests written (111 active + 1 skipped)
+- Demo accessible at http://localhost:5173/code-demo
 - 715+ C# tests passing
-- 232+ React tests written (186 passing)
-- Build successful (0 errors)
-- Phase 3C: 47% complete (7/15 days)
-- Ready for Day 28!
+- 344 React tests written (302 passing, 41 pending, 1 skipped)
+- Build successful (dev mode)
+- Phase 3C: 53% complete (8/15 days)
+- Ready for Day 29!
 
 ---
 
 ## 💡 Session Handoff Template
 
-**Date:** 30/11/2025  
-**Completed:** Day 27 of 45  
-**Last Task:** Phase 3C Day 27 - Wizard Completion Complete  
-**Next Task:** Day 28 - Monaco Editor Integration (Part 1)  
+**Date:** 01/12/2025  
+**Completed:** Day 28 of 45  
+**Last Task:** Phase 3C Day 28 - Monaco Editor Integration Complete  
+**Next Task:** Day 29 - Monaco Advanced Features (Theme, Language, Downloads)  
 **Blockers:** None  
 **Notes:** 
-- Wizard fully complete with 4 steps
-- ReviewStep & GenerationProgress enhanced
-- 22 wizard tests written (all functional)
+- Monaco Editor integrated with C# syntax highlighting
+- CodePreview & CodeViewer components complete
+- Mock code generator working
+- 112 new tests written (111 active + 1 skipped)
 - 715+ C# tests passing
-- 232+ React tests written (186 passing)
-- Phase 3C: 47% complete (7/15 days)
-- See NEXT_SESSION.md for Day 28 details
+- 344 React tests written (302 passing)
+- Total: 1,059+ tests
+- Phase 3C: 53% complete (8/15 days)
+- See NEXT_SESSION.md for Day 29 details
 
 ---
 
 **Created:** 24/11/2025  
-**Last Updated:** 30/11/2025  
-**Status:** Day 27 Complete! Ready for Day 28 🚀
+**Last Updated:** 01/12/2025  
+**Status:** Day 28 Complete! Ready for Day 29 🚀
 
-**Next Action:** Begin Day 28 - Monaco Editor Integration!
+**Next Action:** Begin Day 29 - Monaco Advanced Features!

@@ -10,6 +10,7 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Tables } from './pages/Tables';
 import GenerationWizard from './components/wizard/GenerationWizard';
+import CodeDemo from './pages/CodeDemo';
 
 // Create a Material-UI theme
 const theme = createTheme({
@@ -45,6 +46,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/tables" element={<Tables />} />
               <Route path="/generate" element={<GenerationWizard />} />
+              <Route path="/code-demo" element={<CodeDemo />} />
               <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
               <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
               <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
