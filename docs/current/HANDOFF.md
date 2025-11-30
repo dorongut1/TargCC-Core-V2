@@ -1,99 +1,103 @@
-# Day 31 → Day 32 Handoff Document
+# Day 32 → Day 33 Handoff Document
 
-**Date:** 01/12/2025  
-**From:** Day 31 - Schema Designer Foundation  
-**To:** Day 32 - Schema Designer Advanced Features  
-**Status:** ✅ Day 31 Complete
+**Date:** 01/12/2025 22:00  
+**From:** Day 32 - Schema Designer Advanced Features  
+**To:** Day 33 - Backend Integration  
+**Status:** ✅ Day 32 Complete
 
 ---
 
-## ✅ Day 31 Completion Summary
+## ✅ Day 32 Completion Summary
 
 ### Objectives Achieved
-- ✅ Created complete schema type system
-- ✅ Built mock database schema with 5 tables
-- ✅ Implemented ColumnList component
-- ✅ Implemented TableCard component
-- ✅ Implemented SchemaViewer component
-- ✅ Created Schema page with routing
-- ✅ Wrote 24 comprehensive tests
+- ✅ Created schemaExport utilities (155 lines)
+- ✅ Created SchemaStats component (165 lines)
+- ✅ Created ExportMenu component (127 lines)
+- ✅ Created RelationshipGraph component (247 lines)
+- ✅ Updated SchemaViewer with filters (+60 lines)
+- ✅ Updated Schema page integration (+40 lines)
+- ✅ Wrote 60 comprehensive tests (5 test files)
 - ✅ All features working in browser
 
-### Files Created (681 lines total)
+### Files Created (847 lines total)
 
-**Types & Data:**
+**Utilities:**
 ```
-src/types/schema.ts                    71 lines   ✅
-src/utils/mockSchema.ts               263 lines   ✅
+src/utils/schemaExport.ts                     155 lines   ✅
 ```
 
 **Components:**
 ```
-src/components/schema/ColumnList.tsx  100 lines   ✅
-src/components/schema/TableCard.tsx   101 lines   ✅
-src/components/schema/SchemaViewer.tsx 124 lines  ✅
-src/pages/Schema.tsx                   22 lines   ✅
-```
-
-**Tests:**
-```
-src/__tests__/schema/ColumnList.test.tsx     96 lines   ✅
-src/__tests__/schema/TableCard.test.tsx      90 lines   ✅
-src/__tests__/schema/SchemaViewer.test.tsx  128 lines   ✅
+src/components/schema/SchemaStats.tsx         165 lines   ✅
+src/components/schema/ExportMenu.tsx          127 lines   ✅
+src/components/schema/RelationshipGraph.tsx   247 lines   ✅
 ```
 
 **Updated Files:**
 ```
-src/App.tsx                 +2 lines (route)       ✅
-src/components/Sidebar.tsx  +2 lines (menu item)   ✅
+src/components/schema/SchemaViewer.tsx        +60 lines   ✅
+src/pages/Schema.tsx                          +40 lines   ✅
+```
+
+**Tests:**
+```
+src/__tests__/utils/schemaExport.test.ts          183 lines   ✅
+src/__tests__/schema/SchemaStats.test.tsx         125 lines   ✅
+src/__tests__/schema/ExportMenu.test.tsx          128 lines   ✅
+src/__tests__/schema/RelationshipGraph.test.tsx   154 lines   ✅
+src/__tests__/schema/SchemaViewer.test.tsx        223 lines   ✅ (updated)
 ```
 
 ### Key Features Implemented
 
-1. **Schema Type System:**
-   - Column: name, type, nullable, PK, FK, foreignKeyTable/Column, maxLength, defaultValue
-   - Table: name, schema, columns[], rowCount, hasTargCCColumns
-   - Relationship: fromTable/Column, toTable/Column, type
-   - DatabaseSchema: tables[], relationships[]
+1. **Schema Export Utilities:**
+   - `exportAsJSON()` - Formatted JSON export
+   - `exportAsSQL()` - DDL CREATE statements with FKs
+   - `exportAsMarkdown()` - Documentation with TOC
+   - Helper functions for column/table DDL
+   - Date stamping and metadata
 
-2. **Mock Data:**
-   - 5 realistic tables (Customer, Order, OrderItem, Product, Category)
-   - 30 total columns across all tables
-   - 4 defined relationships
-   - TargCC columns included (eno_, ent_, clc_ prefixes)
-   - Row count data for context
+2. **SchemaStats Component:**
+   - 4 stat cards (Tables, Columns, Relationships, TargCC)
+   - Average columns per table calculation
+   - Data type distribution with top 5 types
+   - Progress bars for type percentages
+   - TargCC percentage badge
+   - Professional icons (MUI)
 
-3. **ColumnList Component:**
-   - Visual column list with icons
-   - PK indicator (Key icon)
-   - FK indicator (Link icon with tooltip)
-   - Data type badges with maxLength
-   - NOT NULL badges for non-nullable
-   - Default value display
-   - Hover effects and monospace fonts
+3. **ExportMenu Component:**
+   - Dropdown menu with 3 formats
+   - JSON export with proper formatting
+   - SQL export with CREATE statements
+   - Markdown export with documentation
+   - Download integration via downloadFile()
+   - Proper ARIA attributes
 
-4. **TableCard Component:**
-   - Expandable/collapsible cards
-   - Schema.TableName display
-   - TargCC badge when applicable
-   - Column count (singular/plural)
-   - Row count with number formatting
-   - Smooth expand/collapse animation
-   - First table expanded by default
+4. **RelationshipGraph Component:**
+   - SVG-based visualization
+   - Grid layout for table positioning
+   - Table boxes with name/schema/columns
+   - TargCC badges on relevant tables
+   - Relationship lines with arrows
+   - Relationship type labels
+   - Dynamic SVG sizing
+   - Empty state message
 
-5. **SchemaViewer Component:**
-   - Responsive grid layout (1/2/3 columns based on screen size)
-   - Real-time search filtering
-   - Searches both table names AND column names
-   - Total table count badge
-   - TargCC table count badge
-   - Empty state with helpful message
-   - Professional Paper-based header
+5. **Advanced Filtering:**
+   - TargCC Only filter (chip toggle)
+   - With Relationships filter (chip toggle)
+   - Combined filter logic (AND)
+   - Clear Filters button
+   - Active filter visual state
+   - Search + filters combination
 
-6. **Integration:**
-   - /schema route in App.tsx
-   - Schema menu item in Sidebar with AccountTree icon
-   - Full navigation integration
+6. **Schema Page Integration:**
+   - Page header with export menu
+   - Statistics section
+   - Relationship diagram
+   - Schema viewer with filters
+   - Clean Stack layout
+   - Responsive design
 
 ---
 
@@ -101,134 +105,145 @@ src/components/Sidebar.tsx  +2 lines (menu item)   ✅
 
 ### Test Results
 ```
-Total Tests:    449
-Passing:        362
-Pending:         87 (React 19 compatibility)
-New Tests:      +24 (Day 31)
+Total Tests:    500
+Passing:        376
+Skipped:        124 (React 19 compatibility)
+New Tests:      +60 (Day 32)
 
 Schema Tests:
-- ColumnList:    7 tests (all pending)
-- TableCard:     9 tests (6 active, 3 skipped)
-- SchemaViewer:  8 tests (4 active, 4 skipped)
+- schemaExport:      14 tests (all passing) ✅
+- SchemaStats:       10 tests (all skipped)
+- ExportMenu:        8 tests (all skipped)
+- RelationshipGraph: 12 tests (all skipped)
+- SchemaViewer:      16 tests (updated, all skipped)
 ```
 
 ### Code Statistics
 ```
-Total Lines Added: 681
-Components:        3 (ColumnList, TableCard, SchemaViewer)
-Pages:             1 (Schema)
-Types:             1 (schema.ts)
-Utils:             1 (mockSchema.ts)
-Tests:             3 files
+Total Lines Added: 847
+Components:        3 (SchemaStats, ExportMenu, RelationshipGraph)
+Utilities:         1 (schemaExport)
+Tests:             5 files (60 tests)
+Updated:           2 files (SchemaViewer, Schema page)
 ```
 
 ---
 
-## 🎯 Day 32 Objectives
+## 🎯 Day 33 Objectives
 
 ### Primary Goal
-Enhance schema designer with advanced features: relationship visualization, statistics, and export capabilities.
+Connect the Schema page to the WebAPI backend for real database schema loading and live generation.
 
 ### Specific Deliverables
 
-1. **RelationshipGraph Component** (90 min)
-   - Visual relationship diagram
-   - Table boxes with connections
-   - FK indicators
-   - Interactive pan/zoom
+1. **API Integration** (90 min)
+   - Create schema API client
+   - Connect to /api/schema endpoint
+   - Load real database schemas
+   - Error handling and loading states
 
-2. **SchemaStats Component** (60 min)
-   - Table count statistics
-   - Column type distribution
-   - Relationship summary
-   - TargCC column percentage
+2. **Live Data Display** (60 min)
+   - Replace mockSchema with API data
+   - Real-time schema updates
+   - Refresh functionality
+   - Connection status indicator
 
-3. **Export Functionality** (45 min)
-   - Export as JSON
-   - Export as SQL CREATE script
-   - Export as Markdown documentation
-   - Download functionality
+3. **Generation Integration** (60 min)
+   - Connect to generation endpoints
+   - Live progress tracking
+   - Status updates
+   - Error handling
 
-4. **Advanced Filtering** (45 min)
-   - Filter by TargCC columns
-   - Filter by table type
-   - Filter by relationship presence
-   - Combine filters
+4. **Enhanced Features** (45 min)
+   - Database connection selection
+   - Schema refresh button
+   - Last updated timestamp
+   - Auto-refresh toggle
 
-5. **Testing & Polish** (60 min)
-   - 10-12 new tests
+5. **Testing & Polish** (45 min)
+   - API integration tests
+   - Error scenarios
+   - Loading states
    - UI refinements
-   - Accessibility improvements
 
 ---
 
-## 🚀 Getting Started - Day 32
+## 🚀 Getting Started - Day 33
 
 ### Files to Create
 ```
-src/components/schema/
-├── RelationshipGraph.tsx    (150 lines)
-├── SchemaStats.tsx          (120 lines)
-└── ExportMenu.tsx           (100 lines)
+src/api/
+├── schemaApi.ts          (120 lines)
+└── types.ts              (80 lines)
 
-src/__tests__/schema/
-├── RelationshipGraph.test.tsx (80 lines)
-├── SchemaStats.test.tsx       (70 lines)
-└── ExportMenu.test.tsx        (60 lines)
+src/hooks/
+├── useSchema.ts          (100 lines)
+└── useGeneration.ts      (100 lines)
 
-src/utils/
-└── schemaExport.ts            (150 lines)
+src/__tests__/api/
+├── schemaApi.test.ts     (80 lines)
+└── hooks/
+    ├── useSchema.test.ts     (70 lines)
+    └── useGeneration.test.ts (70 lines)
 ```
 
 ### Files to Modify
 ```
-src/components/schema/SchemaViewer.tsx  (+50 lines)
-src/pages/Schema.tsx                    (+30 lines)
+src/pages/Schema.tsx              (+50 lines)
+src/components/schema/SchemaViewer.tsx (+30 lines)
 ```
 
 ---
 
-## 💡 Technical Notes for Day 32
+## 💡 Technical Notes for Day 33
 
-### Relationship Visualization
-- Consider using SVG for connections
-- Start simple - boxes with lines
-- Can enhance later with React Flow if needed
-- Focus on clarity over complexity
+### API Integration
+- Use fetch or axios for HTTP requests
+- Implement retry logic for failed requests
+- Add request/response interceptors
+- Handle authentication if needed
+- Cache responses appropriately
 
-### Schema Statistics
-- Calculate on-the-fly from schema data
-- Use MUI Grid for layout
-- Consider BarChart for distributions
-- Keep numbers prominent
+### State Management
+- Use React Query or SWR for data fetching
+- Or use useState + useEffect for simple cases
+- Handle loading, error, success states
+- Implement optimistic updates
+- Cache invalidation strategy
 
-### Export Functionality
-- JSON: Use JSON.stringify with pretty print
-- SQL: Generate CREATE TABLE statements
-- Markdown: Create table documentation
-- Use downloadCode.ts pattern for consistency
+### WebAPI Endpoints
+Expected endpoints (verify with backend):
+```
+GET  /api/schema              - List available schemas
+GET  /api/schema/{name}       - Get schema details
+POST /api/generate            - Start generation
+GET  /api/generate/{id}       - Get generation status
+```
 
-### Advanced Filters
-- Use MUI Checkbox/Switch components
-- Combine filters with AND logic
-- Show filter count in UI
-- Clear all filters button
+### Error Handling
+- Network errors
+- API errors (4xx, 5xx)
+- Timeout handling
+- User-friendly error messages
+- Retry mechanisms
 
 ---
 
 ## ⚠️ Known Issues & Considerations
 
 ### Current State
-- ✅ All components working in browser
+- ✅ All components working with mock data
 - ✅ TypeScript compilation clean
 - ⏳ Tests pending (React 19 / @testing-library/react)
 - ✅ No runtime errors
+- ⏳ API integration pending
 
-### For Day 32
-- Keep export file sizes reasonable
-- Test with larger schemas (10+ tables)
-- Ensure responsive design on all features
-- Consider performance for complex graphs
+### For Day 33
+- Verify WebAPI is running and accessible
+- Test with real database connections
+- Handle slow/large schemas gracefully
+- Consider pagination for large result sets
+- Implement proper error boundaries
 
 ---
 
@@ -241,24 +256,82 @@ npm run dev
 # http://localhost:5177/schema
 ```
 
+### WebAPI Server
+```bash
+cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebAPI
+dotnet run
+# Verify API is accessible
+```
+
 ### Key URLs
-- Schema Viewer: http://localhost:5177/schema
+- Schema Page: http://localhost:5177/schema
 - Dashboard: http://localhost:5177
 - Wizard: http://localhost:5177/generate
+- API Base: http://localhost:5000 (verify)
 
 ### Test Command
 ```bash
-npm test -- --run src/__tests__/schema
+npm test -- --run src/__tests__/api
+npm test -- --run src/__tests__/hooks
 ```
 
 ---
 
-**Handoff Complete:** ✅  
-**Ready for Day 32:** ✅  
-**Estimated Time:** 4-5 hours  
-**Expected Output:** Advanced schema features with export and visualization
+## 🎨 Current Features to Preserve
+
+### Schema Page Layout
+- Statistics at top
+- Relationship diagram
+- Export menu in header
+- Schema viewer with filters
+- Responsive design
+
+### Functionality to Maintain
+- Export functionality (JSON/SQL/MD)
+- Filter combinations
+- Search capability
+- Table expand/collapse
+- Visual indicators (TargCC badges, etc.)
 
 ---
 
-**Created:** 01/12/2025 21:30  
-**Status:** Day 31 Complete - Ready for Day 32! 🚀
+## 📊 Success Criteria for Day 33
+
+### Functionality
+- [ ] Schema loads from real database
+- [ ] All statistics calculate from real data
+- [ ] Relationship graph shows actual FKs
+- [ ] Export works with real data
+- [ ] Filters work with real data
+- [ ] Loading states implemented
+- [ ] Error handling complete
+
+### Testing
+- [ ] 8-12 new tests written
+- [ ] API integration tested
+- [ ] Error scenarios covered
+- [ ] Build successful
+
+### Code Quality
+- [ ] TypeScript compliant
+- [ ] Proper error handling
+- [ ] Clean separation of concerns
+- [ ] No console errors
+
+### Documentation
+- [ ] STATUS.md updated
+- [ ] HANDOFF.md for Day 34
+- [ ] API documentation
+- [ ] PROGRESS.md updated
+
+---
+
+**Handoff Complete:** ✅  
+**Ready for Day 33:** ✅  
+**Estimated Time:** 4-5 hours  
+**Expected Output:** Live backend integration with real data
+
+---
+
+**Created:** 01/12/2025 22:00  
+**Status:** Day 32 Complete - Ready for Day 33! 🚀

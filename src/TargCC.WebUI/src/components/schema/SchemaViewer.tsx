@@ -5,9 +5,11 @@ import {
   Typography,
   InputAdornment,
   Chip,
-  Paper
+  Paper,
+  Stack
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import type { DatabaseSchema } from '../../types/schema';
 import TableCard from './TableCard';
 
@@ -38,16 +40,55 @@ interface SchemaViewerProps {
  */
 const SchemaViewer = ({ schema }: SchemaViewerProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    targccOnly: false,
+    withRelationships: false,
+  });
 
-  // Filter tables based on search term
-  const filteredTables = schema.tables.filter(table =>
-    table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    table.columns.some(col => 
-      col.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  // Filter tables based on search term and filters
+  const filteredTables = schema.tables.filter((table) => {
+    // Search filter
+    const matchesSearch =
+      table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      table.columns.some((col) =>
+        col.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-  const targccCount = schema.tables.filter(t => t.hasTargCCColumns).length;
+    // TargCC filter
+    const matchesTargCC = !filters.targccOnly || table.hasTargCCColumns;
+
+    // Relationships filter
+    const hasRelationship = schema.relationships.some(
+      (rel) => rel.fromTable === table.name || rel.toTable === table.name
+    );
+    const matchesRelationships = !filters.withRelationships || hasRelationship;
+
+    return matchesSearch && matchesTargCC && matchesRelationships;
+  });
+
+  const targccCount = schema.tables.filter((t) => t.hasTargCCColumns).length;
+  const hasActiveFilters = filters.targccOnly || filters.withRelationships;
+
+  /**
+   * Toggle TargCC filter
+   */
+  const toggleTargCCFilter = () => {
+    setFilters((prev) => ({ ...prev, targccOnly: !prev.targccOnly }));
+  };
+
+  /**
+   * Toggle relationships filter
+   */
+  const toggleRelationshipsFilter = () => {
+    setFilters((prev) => ({ ...prev, withRelationships: !prev.withRelationships }));
+  };
+
+  /**
+   * Clear all filters
+   */
+  const clearFilters = () => {
+    setFilters({ targccOnly: false, withRelationships: false });
+  };
 
   return (
     <Box>
@@ -82,9 +123,36 @@ const SchemaViewer = ({ schema }: SchemaViewerProps) => {
               <InputAdornment position="start">
                 <SearchIcon />
               </InputAdornment>
-            )
+            ),
           }}
+          sx={{ mb: 2 }}
         />
+
+        {/* Filters */}
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Chip
+            label="TargCC Only"
+            onClick={toggleTargCCFilter}
+            color={filters.targccOnly ? 'primary' : 'default'}
+            variant={filters.targccOnly ? 'filled' : 'outlined'}
+          />
+          <Chip
+            label="With Relationships"
+            onClick={toggleRelationshipsFilter}
+            color={filters.withRelationships ? 'primary' : 'default'}
+            variant={filters.withRelationships ? 'filled' : 'outlined'}
+          />
+          {hasActiveFilters && (
+            <Chip
+              label="Clear Filters"
+              onClick={clearFilters}
+              onDelete={clearFilters}
+              deleteIcon={<ClearIcon />}
+              variant="outlined"
+              color="secondary"
+            />
+          )}
+        </Stack>
       </Paper>
 
       {/* Table Grid */}

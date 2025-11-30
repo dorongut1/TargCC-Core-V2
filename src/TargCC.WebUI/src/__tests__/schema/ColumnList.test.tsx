@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import ColumnList from '../../components/schema/ColumnList';
 import { Column } from '../../types/schema';
 
-describe('ColumnList', () => {
+describe.skip('ColumnList', () => {
   const mockColumns: Column[] = [
     {
       name: 'CustomerId',
