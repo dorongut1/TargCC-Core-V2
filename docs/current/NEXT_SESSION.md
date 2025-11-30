@@ -1,381 +1,475 @@
-# Next Session: Day 26 - Generation Wizard Foundation (Part 1)
+# Next Session: Day 28 - Monaco Editor Integration (Part 1)
 
-**Date:** 30/11/2025  
+**Date:** Next Session  
 **Phase:** 3C - Local Web UI  
-**Day:** 26 of 45  
-**Duration:** ~3 hours  
+**Day:** 28 of 45  
+**Duration:** ~3-4 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 26 Objectives
+## 🎯 Day 28 Objectives
 
 ### Primary Goal
-Create the foundation for a multi-step Generation Wizard that guides users through the code generation process.
+Integrate Monaco Editor (the VS Code editor) into the React app for code preview functionality. This will allow users to see generated code with syntax highlighting, line numbers, and a professional editor experience.
 
 ### Specific Deliverables
 
-1. **Wizard Component** (MUI Stepper)
-   - Multi-step wizard with 4 steps
-   - Step navigation (Next, Back, Finish)
-   - Step validation
-   - Progress tracking
+1. **Monaco Editor Setup**
+   - Install @monaco-editor/react package
+   - Install TypeScript types
+   - Verify installation works
 
-2. **Step 1: Table Selection**
-   - Table list with checkboxes
-   - Search and filter
-   - Select all/none
-   - Validation (at least 1 table)
+2. **CodePreview Component**
+   - Create reusable editor component
+   - Configure for C# syntax highlighting
+   - Add loading state
+   - Apply dark theme
+   - Make read-only
 
-3. **Step 2: Generation Options**
-   - Checkboxes for generation types
-   - Entity classes
-   - Repositories
-   - CQRS Handlers
-   - API Controllers
-   - Validation (at least 1 option)
+3. **CodeViewer Component**
+   - Multi-file tabs
+   - File switching
+   - Copy to clipboard button
+   - Mock generated code display
 
 4. **Testing**
-   - 15-20 new tests
-   - Wizard navigation tests
-   - Validation tests
-   - Step component tests
+   - 8-10 new tests
+   - Monaco loading tests
+   - Code display tests
+   - File tab switching tests
 
 ---
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Wizard Component (60 minutes)
+### Part 1: Package Installation (15 minutes)
 
-#### 1.1 GenerationWizard Component
-```typescript
-// GenerationWizard.tsx
-import { useState } from 'react';
-import {
-  Stepper,
-  Step,
-  StepLabel,
-  Box,
-  Button,
-  Paper
-} from '@mui/material';
+#### 1.1 Install Packages
+```bash
+cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 
-interface WizardStep {
-  label: string;
-  component: React.ComponentType<any>;
-  validate?: () => boolean;
-}
+npm install @monaco-editor/react
+npm install @types/monaco-editor --save-dev
+```
 
-const steps: WizardStep[] = [
-  { label: 'Select Tables', component: TableSelection },
-  { label: 'Choose Options', component: GenerationOptions },
-  { label: 'Review', component: ReviewStep },
-  { label: 'Generate', component: GenerationProgress }
-];
-
-const GenerationWizard = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  const [wizardData, setWizardData] = useState({
-    selectedTables: [] as string[],
-    options: {
-      entities: true,
-      repositories: true,
-      handlers: true,
-      api: true
-    }
-  });
-
-  const handleNext = () => {
-    const currentStep = steps[activeStep];
-    if (currentStep.validate && !currentStep.validate()) {
-      return; // Validation failed
-    }
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
-
-  const handleFinish = async () => {
-    // Trigger code generation
-    await generateCode(wizardData);
-  };
-
-  const CurrentStepComponent = steps[activeStep].component;
-
-  return (
-    <Box sx={{ width: '100%', p: 3 }}>
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((step) => (
-          <Step key={step.label}>
-            <StepLabel>{step.label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Paper sx={{ p: 3, minHeight: 400 }}>
-        <CurrentStepComponent
-          data={wizardData}
-          onChange={setWizardData}
-        />
-      </Paper>
-
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-        <Button
-          disabled={activeStep === 0}
-          onClick={handleBack}
-        >
-          Back
-        </Button>
-        <Button
-          variant="contained"
-          onClick={activeStep === steps.length - 1 ? handleFinish : handleNext}
-        >
-          {activeStep === steps.length - 1 ? 'Generate' : 'Next'}
-        </Button>
-      </Box>
-    </Box>
-  );
-};
-
-export default GenerationWizard;
+#### 1.2 Verify Installation
+```bash
+npm list @monaco-editor/react
+# Should show version ~4.6.0 or higher
 ```
 
 ---
 
-### Part 2: Table Selection Step (45 minutes)
+### Part 2: CodePreview Component (60 minutes)
 
-#### 2.1 TableSelection Component
+#### 2.1 Create CodePreview.tsx
+
 ```typescript
-// TableSelection.tsx
+// src/components/code/CodePreview.tsx
 import { useState } from 'react';
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Checkbox,
-  TextField,
-  Typography,
-  Button
-} from '@mui/material';
-import { Table as TableIcon } from '@mui/icons-material';
+import Editor from '@monaco-editor/react';
+import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 
-interface TableSelectionProps {
-  data: WizardData;
-  onChange: (data: WizardData) => void;
+interface CodePreviewProps {
+  code: string;
+  language?: string;
+  height?: string;
+  readOnly?: boolean;
+  title?: string;
 }
 
-const TableSelection = ({ data, onChange }: TableSelectionProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const allTables = ['Customer', 'Order', 'Product', 'Employee', 'Invoice'];
-
-  const filteredTables = allTables.filter((table) =>
-    table.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleToggle = (table: string) => {
-    const newSelection = data.selectedTables.includes(table)
-      ? data.selectedTables.filter((t) => t !== table)
-      : [...data.selectedTables, table];
-    
-    onChange({ ...data, selectedTables: newSelection });
-  };
-
-  const handleSelectAll = () => {
-    onChange({ ...data, selectedTables: filteredTables });
-  };
-
-  const handleSelectNone = () => {
-    onChange({ ...data, selectedTables: [] });
-  };
+const CodePreview = ({ 
+  code, 
+  language = 'csharp', 
+  height = '400px',
+  readOnly = true,
+  title = 'Code Preview'
+}: CodePreviewProps) => {
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <Box>
+    <Paper sx={{ p: 2 }} elevation={2}>
       <Typography variant="h6" gutterBottom>
-        Select Tables to Generate
+        {title}
       </Typography>
-
-      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-        <TextField
-          fullWidth
-          placeholder="Search tables..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+      
+      {isLoading && (
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            height,
+            bgcolor: 'grey.900'
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+      
+      <Box sx={{ display: isLoading ? 'none' : 'block' }}>
+        <Editor
+          height={height}
+          language={language}
+          value={code}
+          theme="vs-dark"
+          options={{
+            readOnly,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 14,
+            lineNumbers: 'on',
+            folding: true,
+            automaticLayout: true,
+            wordWrap: 'on'
+          }}
+          onMount={() => setIsLoading(false)}
         />
-        <Button onClick={handleSelectAll}>Select All</Button>
-        <Button onClick={handleSelectNone}>Select None</Button>
       </Box>
-
-      <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-        {filteredTables.map((table) => (
-          <ListItem key={table} disablePadding>
-            <ListItemButton onClick={() => handleToggle(table)}>
-              <ListItemIcon>
-                <Checkbox
-                  checked={data.selectedTables.includes(table)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemIcon>
-                <TableIcon />
-              </ListItemIcon>
-              <ListItemText primary={table} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
-        {data.selectedTables.length} table(s) selected
-      </Typography>
-    </Box>
+    </Paper>
   );
 };
 
-export default TableSelection;
+export default CodePreview;
 ```
 
 ---
 
-### Part 3: Generation Options Step (45 minutes)
+### Part 3: CodeViewer with Tabs (60 minutes)
 
-#### 3.1 GenerationOptions Component
+#### 3.1 Create CodeViewer.tsx
+
 ```typescript
-// GenerationOptions.tsx
+// src/components/code/CodeViewer.tsx
+import { useState } from 'react';
 import {
   Box,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-  Typography,
+  Tabs,
+  Tab,
+  IconButton,
+  Tooltip,
   Alert
 } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import CodePreview from './CodePreview';
 
-interface GenerationOptionsProps {
-  data: WizardData;
-  onChange: (data: WizardData) => void;
+export interface CodeFile {
+  name: string;
+  code: string;
+  language: string;
 }
 
-const GenerationOptions = ({ data, onChange }: GenerationOptionsProps) => {
-  const handleOptionChange = (option: keyof typeof data.options) => {
-    onChange({
-      ...data,
-      options: {
-        ...data.options,
-        [option]: !data.options[option]
-      }
-    });
+interface CodeViewerProps {
+  files: CodeFile[];
+}
+
+const CodeViewer = ({ files }: CodeViewerProps) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(files[activeTab].code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
-  const hasAnyOption = Object.values(data.options).some((v) => v);
+  if (files.length === 0) {
+    return (
+      <Alert severity="info">
+        No code files to display
+      </Alert>
+    );
+  }
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Choose What to Generate
-      </Typography>
-
-      {!hasAnyOption && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Please select at least one generation option
-        </Alert>
-      )}
-
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={data.options.entities}
-              onChange={() => handleOptionChange('entities')}
-            />
-          }
-          label="Entity Classes (Domain Models)"
-        />
+      <Box 
+        sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider', 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Tabs 
+          value={activeTab} 
+          onChange={(_, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {files.map((file, index) => (
+            <Tab key={index} label={file.name} />
+          ))}
+        </Tabs>
         
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={data.options.repositories}
-              onChange={() => handleOptionChange('repositories')}
-            />
-          }
-          label="Repositories (Data Access)"
-        />
-        
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={data.options.handlers}
-              onChange={() => handleOptionChange('handlers')}
-            />
-          }
-          label="CQRS Handlers (Commands & Queries)"
-        />
-        
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={data.options.api}
-              onChange={() => handleOptionChange('api')}
-            />
-          }
-          label="API Controllers (REST Endpoints)"
-        />
-      </FormGroup>
+        <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'}>
+          <IconButton onClick={handleCopy} color={copied ? 'success' : 'default'}>
+            {copied ? <CheckIcon /> : <ContentCopyIcon />}
+          </IconButton>
+        </Tooltip>
+      </Box>
 
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
-        {Object.values(data.options).filter(Boolean).length} option(s) selected
-      </Typography>
+      <Box sx={{ mt: 2 }}>
+        <CodePreview
+          code={files[activeTab].code}
+          language={files[activeTab].language}
+          title={`${files[activeTab].name}`}
+          height="500px"
+        />
+      </Box>
     </Box>
   );
 };
 
-export default GenerationOptions;
+export default CodeViewer;
 ```
 
 ---
 
-## 🧪 Testing Strategy
+### Part 4: Mock Generated Code (30 minutes)
 
-### Total Tests Target: 15-20 new tests
+#### 4.1 Create mockCode.ts
 
-#### GenerationWizard Tests (7-8 tests)
 ```typescript
-// GenerationWizard.test.tsx
-- Renders all steps in stepper
-- Starts at step 0
-- Next button advances step
-- Back button goes to previous step
-- Back button disabled on first step
-- Finish button appears on last step
-- Validates current step before advancing
-- Updates wizard data correctly
+// src/utils/mockCode.ts
+
+export const generateMockCode = (tableName: string) => ({
+  entity: `namespace TargCC.Domain.Entities
+{
+    /// <summary>
+    /// ${tableName} entity
+    /// Generated by TargCC Core V2
+    /// </summary>
+    public class ${tableName}
+    {
+        /// <summary>
+        /// Primary key
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// ${tableName} name
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Creation timestamp
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Last update timestamp
+        /// </summary>
+        public DateTime? UpdatedAt { get; set; }
+    }
+}`,
+
+  repository: `namespace TargCC.Infrastructure.Repositories
+{
+    /// <summary>
+    /// Repository interface for ${tableName}
+    /// </summary>
+    public interface I${tableName}Repository
+    {
+        /// <summary>
+        /// Get ${tableName} by ID
+        /// </summary>
+        Task<${tableName}?> GetByIdAsync(int id);
+
+        /// <summary>
+        /// Get all ${tableName}s
+        /// </summary>
+        Task<IEnumerable<${tableName}>> GetAllAsync();
+
+        /// <summary>
+        /// Add new ${tableName}
+        /// </summary>
+        Task<int> AddAsync(${tableName} entity);
+
+        /// <summary>
+        /// Update existing ${tableName}
+        /// </summary>
+        Task UpdateAsync(${tableName} entity);
+
+        /// <summary>
+        /// Delete ${tableName} by ID
+        /// </summary>
+        Task DeleteAsync(int id);
+    }
+}`,
+
+  handler: `namespace TargCC.Application.${tableName}s.Queries
+{
+    /// <summary>
+    /// Query to get ${tableName} by ID
+    /// </summary>
+    public record Get${tableName}Query(int Id) : IRequest<${tableName}>;
+
+    /// <summary>
+    /// Handler for Get${tableName}Query
+    /// </summary>
+    public class Get${tableName}QueryHandler 
+        : IRequestHandler<Get${tableName}Query, ${tableName}>
+    {
+        private readonly I${tableName}Repository _repository;
+
+        public Get${tableName}QueryHandler(I${tableName}Repository repository)
+        {
+            _repository = repository;
+        }
+
+        public async Task<${tableName}> Handle(
+            Get${tableName}Query request, 
+            CancellationToken cancellationToken)
+        {
+            return await _repository.GetByIdAsync(request.Id);
+        }
+    }
+}`,
+
+  controller: `namespace TargCC.API.Controllers
+{
+    /// <summary>
+    /// ${tableName} API controller
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ${tableName}Controller : ControllerBase
+    {
+        private readonly IMediator _mediator;
+
+        public ${tableName}Controller(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        /// <summary>
+        /// Get ${tableName} by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<${tableName}>> Get(int id)
+        {
+            var query = new Get${tableName}Query(id);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get all ${tableName}s
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<${tableName}>>> GetAll()
+        {
+            var query = new GetAll${tableName}sQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+    }
+}`
+});
+
+export const mockCodeFiles = (tableName: string) => {
+  const code = generateMockCode(tableName);
+  
+  return [
+    { name: `${tableName}.cs`, code: code.entity, language: 'csharp' },
+    { name: `I${tableName}Repository.cs`, code: code.repository, language: 'csharp' },
+    { name: `Get${tableName}QueryHandler.cs`, code: code.handler, language: 'csharp' },
+    { name: `${tableName}Controller.cs`, code: code.controller, language: 'csharp' }
+  ];
+};
 ```
 
-#### TableSelection Tests (5-6 tests)
+---
+
+### Part 5: Testing CodePreview (30 minutes)
+
+#### 5.1 Create CodePreview.test.tsx
+
 ```typescript
-// TableSelection.test.tsx
-- Renders table list
-- Search filters tables
-- Toggle selection works
-- Select all selects filtered tables
-- Select none clears selection
-- Shows selected count
+// src/__tests__/code/CodePreview.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import CodePreview from '../../components/code/CodePreview';
+
+describe('CodePreview', () => {
+  const sampleCode = 'public class Customer { }';
+
+  it('renders with title', () => {
+    render(<CodePreview code={sampleCode} title="Test Code" />);
+    expect(screen.getByText('Test Code')).toBeInTheDocument();
+  });
+
+  it('shows loading spinner initially', () => {
+    render(<CodePreview code={sampleCode} />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('uses csharp language by default', () => {
+    render(<CodePreview code={sampleCode} />);
+    // Monaco editor should be configured for csharp
+  });
+
+  it('applies custom height', () => {
+    render(<CodePreview code={sampleCode} height="600px" />);
+    // Editor should use 600px height
+  });
+});
 ```
 
-#### GenerationOptions Tests (5-6 tests)
+---
+
+### Part 6: Testing CodeViewer (30 minutes)
+
+#### 6.1 Create CodeViewer.test.tsx
+
 ```typescript
-// GenerationOptions.test.tsx
-- Renders all option checkboxes
-- Toggle option works
-- Shows warning when no options selected
-- Shows selected count
-- Updates wizard data on change
+// src/__tests__/code/CodeViewer.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import CodeViewer from '../../components/code/CodeViewer';
+
+describe('CodeViewer', () => {
+  const mockFiles = [
+    { name: 'Entity.cs', code: 'public class Entity {}', language: 'csharp' },
+    { name: 'Repository.cs', code: 'public class Repo {}', language: 'csharp' }
+  ];
+
+  it('renders file tabs', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByText('Entity.cs')).toBeInTheDocument();
+    expect(screen.getByText('Repository.cs')).toBeInTheDocument();
+  });
+
+  it('shows first file by default', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByText('Entity.cs')).toBeInTheDocument();
+  });
+
+  it('switches between files when tab clicked', () => {
+    render(<CodeViewer files={mockFiles} />);
+    const repoTab = screen.getByText('Repository.cs');
+    fireEvent.click(repoTab);
+    // Should now show Repository.cs content
+  });
+
+  it('shows copy button', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByLabelText(/copy to clipboard/i)).toBeInTheDocument();
+  });
+
+  it('shows info alert when no files', () => {
+    render(<CodeViewer files={[]} />);
+    expect(screen.getByText('No code files to display')).toBeInTheDocument();
+  });
+});
 ```
 
 ---
@@ -384,26 +478,22 @@ export default GenerationOptions;
 
 ### New Component Files
 ```
-src/components/wizard/
-├── GenerationWizard.tsx        (180 lines)
-├── TableSelection.tsx          (120 lines)
-├── GenerationOptions.tsx       (100 lines)
-├── ReviewStep.tsx              (80 lines) - Day 27
-└── GenerationProgress.tsx      (100 lines) - Day 27
+src/components/code/
+├── CodePreview.tsx          (80 lines)
+└── CodeViewer.tsx           (100 lines)
+```
+
+### New Utility Files
+```
+src/utils/
+└── mockCode.ts              (150 lines)
 ```
 
 ### New Test Files
 ```
-src/__tests__/wizard/
-├── GenerationWizard.test.tsx   (120 lines)
-├── TableSelection.test.tsx     (100 lines)
-└── GenerationOptions.test.tsx  (90 lines)
-```
-
-### Modified Files
-```
-src/App.tsx                     (Add route for /wizard)
-src/pages/Dashboard.tsx         (Add "New Generation" button)
+src/__tests__/code/
+├── CodePreview.test.tsx     (60 lines)
+└── CodeViewer.test.tsx      (80 lines)
 ```
 
 ---
@@ -411,84 +501,101 @@ src/pages/Dashboard.tsx         (Add "New Generation" button)
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Wizard renders with all 4 steps
-- [ ] Step navigation works (Next/Back)
-- [ ] Table selection works correctly
-- [ ] Generation options work correctly
-- [ ] Validation prevents advancement with invalid data
-- [ ] Wizard data updates properly
+- [ ] Monaco Editor package installed
+- [ ] CodePreview component renders
+- [ ] Loading spinner shows during Monaco init
+- [ ] C# syntax highlighting works
+- [ ] Dark theme applied
+- [ ] CodeViewer tabs work
+- [ ] File switching functional
+- [ ] Copy to clipboard works
 
 ### Testing
-- [ ] 15-20 new tests written
+- [ ] 8-10 new tests written
 - [ ] All tests have correct logic
-- [ ] Tests cover happy paths and validation
-- [ ] Tests cover edge cases
+- [ ] Monaco loading tested
+- [ ] File switching tested
 
 ### Code Quality
 - [ ] TypeScript strict mode compliant
 - [ ] No build errors or warnings
-- [ ] Components under 200 lines each
+- [ ] Components under 150 lines each
 - [ ] Proper prop types and interfaces
 - [ ] Clean, readable code
 
 ### Documentation
 - [ ] Updated Phase3_Checklist.md
 - [ ] Updated STATUS.md
-- [ ] Updated HANDOFF.md for Day 27
+- [ ] Updated HANDOFF.md for Day 29
 - [ ] Code comments where needed
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Environment Setup (2 min)
+### 1. Environment Setup (5 min)
 ```bash
 cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 
 # Verify app runs
 npm run dev
-# Open http://localhost:5173
+# Open http://localhost:5174
 ```
 
-### 2. Create Directory Structure (2 min)
+### 2. Install Packages (5 min)
 ```bash
-# Create wizard directory
-mkdir src\components\wizard
-mkdir src\__tests__\wizard
+npm install @monaco-editor/react
+npm install @types/monaco-editor --save-dev
+
+# Verify installation
+npm list @monaco-editor/react
+```
+
+### 3. Create Directory Structure (2 min)
+```bash
+# Create code directory
+mkdir src\components\code
+mkdir src\__tests__\code
+mkdir src\utils
 
 # Verify structure
 dir src\components
 dir src\__tests__
 ```
 
-### 3. Implementation Order
-1. Start with GenerationWizard (basic structure)
-2. Then TableSelection step
-3. Then GenerationOptions step
-4. Write tests after each component
-5. Test navigation flow end-to-end
+### 4. Implementation Order
+1. Install Monaco packages
+2. Create CodePreview component
+3. Test CodePreview in browser
+4. Create mockCode utility
+5. Create CodeViewer component
+6. Test CodeViewer in browser
+7. Write tests
+8. Update documentation
 
 ---
 
 ## 💡 Tips for Success
 
-### Development Workflow
-1. **Component First:** Build UI component
-2. **Test Immediately:** Write tests right after
-3. **Visual Check:** Always verify in browser
-4. **Iterate Fast:** Small changes, frequent checks
+### Monaco Editor Best Practices
+1. **Loading State:** Always show loading spinner
+2. **Performance:** Monaco takes 1-2 seconds to load
+3. **Theme:** Use 'vs-dark' for consistency
+4. **Options:** Disable minimap for cleaner look
+5. **Height:** Use fixed height (not 100%)
 
 ### Common Pitfalls to Avoid
-- Don't skip validation - essential for UX
-- Test navigation thoroughly
-- Keep wizard data immutable
-- Use MUI Stepper for consistency
+- Don't forget loading state
+- Test Monaco initialization
+- Handle empty code gracefully
+- Use appropriate language names
+- Test copy functionality
 
-### Performance Considerations
-- Use React.memo for step components
-- Debounce search input if needed
-- Keep wizard state simple
-- Validate only when needed
+### Testing Considerations
+- Monaco may need mocking in tests
+- Test component structure, not Monaco internals
+- Focus on user interactions
+- Test error states
 
 ---
 
@@ -500,19 +607,18 @@ npm run dev              # Start dev server
 npm test                 # Run tests
 npm run build            # Build for production
 
-# Troubleshooting
-Remove-Item -Recurse -Force node_modules\.vite
-npm run dev              # Clear cache and restart
+# Check Monaco
+npm list @monaco-editor/react
 ```
 
 ---
 
 **Ready to Start:** ✅  
-**Estimated Duration:** 3 hours  
-**Expected Output:** Wizard foundation with 2 complete steps and 15-20 tests  
-**Next Day:** Day 27 - Wizard Completion (Review + Progress steps)
+**Estimated Duration:** 3-4 hours  
+**Expected Output:** Working code preview with Monaco Editor  
+**Next Day:** Day 29 - Monaco Editor Advanced Features
 
 ---
 
-**Created:** 29/11/2025  
-**Status:** Ready for Day 26! 🚀
+**Created:** 30/11/2025  
+**Status:** Ready for Day 28! 🚀
