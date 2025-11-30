@@ -1,0 +1,41 @@
+/**
+ * API Configuration
+ * Central configuration for API endpoints and settings
+ */
+
+export const API_CONFIG = {
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+};
+
+export const API_ENDPOINTS = {
+  // Schema endpoints
+  schemas: '/api/schema',
+  schemaDetail: (name: string) => `/api/schema/${encodeURIComponent(name)}`,
+  schemaRefresh: (name: string) => `/api/schema/${encodeURIComponent(name)}/refresh`,
+  
+  // Generation endpoints
+  generate: '/api/generate',
+  generationStatus: (id: string) => `/api/generate/${encodeURIComponent(id)}`,
+  generationHistory: '/api/generate/history',
+  
+  // Health endpoint
+  health: '/api/health',
+};
+
+/**
+ * Create fetch options with timeout
+ */
+export function createFetchOptions(options: RequestInit = {}): RequestInit {
+  return {
+    ...options,
+    headers: {
+      ...API_CONFIG.headers,
+      ...options.headers,
+    },
+    signal: AbortSignal.timeout(API_CONFIG.timeout),
+  };
+}

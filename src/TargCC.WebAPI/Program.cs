@@ -11,6 +11,7 @@ using TargCC.CLI.Services.Generation;
 using TargCC.WebAPI.Extensions;
 using TargCC.WebAPI.Models.Requests;
 using TargCC.WebAPI.Models.Responses;
+using TargCC.WebAPI.Services;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -33,7 +34,15 @@ try
     {
         options.AddPolicy("AllowReactApp", policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins(
+                      "http://localhost:5173",
+                      "http://localhost:5174",
+                      "http://localhost:5175",
+                      "http://localhost:5176",
+                      "http://localhost:5177",
+                      "http://localhost:5178",
+                      "http://localhost:5179",
+                      "http://localhost:5180")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -41,6 +50,9 @@ try
 
     // Add TargCC services
     builder.Services.AddTargCCServices(builder.Configuration);
+    
+    // Add Schema Service
+    builder.Services.AddScoped<ISchemaService, SchemaService>();
 }
 catch (Exception ex)
 {
@@ -71,6 +83,115 @@ try
         Version = "2.0.0-beta.1",
     }))
     .WithName("HealthCheck")
+    .WithOpenApi();
+
+    // Schema endpoints - Get list of schemas
+    app.MapGet("/api/schema", async (
+        [FromServices] ISchemaService schemaService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            // For now, use a default connection string from config or hardcode
+            // TODO: Allow user to provide connection string
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+            
+            var schemas = await schemaService.GetSchemasAsync(connectionString);
+            
+            var schemaList = schemas.Select(s => new
+            {
+                Name = s,
+                DisplayName = s,
+                TableCount = 0 // TODO: Get actual table count
+            }).ToList();
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Data = schemaList
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching schemas");
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message
+            });
+        }
+    })
+    .WithName("GetSchemas")
+    .WithOpenApi();
+
+    // Schema endpoints - Get schema details
+    app.MapGet("/api/schema/{schemaName}", async (
+        string schemaName,
+        [FromServices] ISchemaService schemaService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            // For now, use a default connection string from config or hardcode
+            // TODO: Allow user to provide connection string
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+            
+            var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Data = schema
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching schema details for {SchemaName}", schemaName);
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message
+            });
+        }
+    })
+    .WithName("GetSchemaDetails")
+    .WithOpenApi();
+
+    // Schema endpoints - Refresh schema
+    app.MapPost("/api/schema/{schemaName}/refresh", async (
+        string schemaName,
+        [FromServices] ISchemaService schemaService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            // For now, use a default connection string from config or hardcode
+            // TODO: Allow user to provide connection string
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+            
+            var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Data = schema,
+                Message = "Schema refreshed successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error refreshing schema for {SchemaName}", schemaName);
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message
+            });
+        }
+    })
+    .WithName("RefreshSchema")
     .WithOpenApi();
 
     // Generate endpoint

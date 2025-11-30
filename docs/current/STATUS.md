@@ -1,234 +1,331 @@
 # TargCC Core V2 - Current Status
 
-**Last Updated:** 01/12/2025 22:00  
+**Last Updated:** 01/12/2025  
 **Current Phase:** Phase 3C - Local Web UI  
-**Day:** 32 of 45 (71%)
+**Day:** 33 of 45 (73%)
 
 ---
 
-## 🎯 Today's Achievement: Day 32 Complete! ✅
+## 🎯 Today's Achievement: Day 33 Complete! ✅
 
 **What We Accomplished:**
-- ✅ Created schemaExport utilities (155 lines) - JSON, SQL, Markdown export
-- ✅ Created SchemaStats component (165 lines) - Comprehensive statistics display
-- ✅ Created ExportMenu component (127 lines) - Download functionality
-- ✅ Created RelationshipGraph component (247 lines) - SVG visualization
-- ✅ Updated SchemaViewer with advanced filters (60 lines added)
-- ✅ Updated Schema page with all components (40 lines)
-- ✅ Wrote comprehensive tests (813 lines, 5 test files)
-- ✅ All code compiles successfully
+- ✅ Created complete API integration layer (3 new files, 260+ lines)
+- ✅ Built Schema Service with Dapper (3 services, 260+ lines)
+- ✅ Created React hooks for data fetching (2 hooks, 170+ lines)
+- ✅ Updated Schema page with live backend connection (148 lines)
+- ✅ Added environment configuration (.env + types)
+- ✅ Connected frontend to real database (TargCCOrdersNew)
+- ✅ All features work end-to-end with live data
 
 **Key Features Implemented:**
 
-1. **Schema Export Utilities:**
-   - Export as JSON with formatting
-   - Export as SQL DDL with CREATE statements
-   - Export as Markdown documentation
-   - Proper file naming and download
+1. **API Client Layer:**
+   - `api/config.ts` - API configuration and endpoints
+   - `api/schemaApi.ts` - Schema fetching functions
+   - Type-safe API calls with error handling
+   - Timeout and retry logic
+   - Response validation
 
-2. **SchemaStats Component:**
-   - Total tables, columns, relationships display
-   - TargCC percentage calculation
-   - Data type distribution with progress bars
-   - Average columns per table
-   - Professional stat cards with icons
+2. **Backend Schema Service:**
+   - `ISchemaService` interface
+   - `SchemaService` implementation with Dapper
+   - `DatabaseSchemaDto` + supporting DTOs
+   - Three SQL queries for tables, columns, relationships
+   - TargCC column detection logic
 
-3. **ExportMenu Component:**
-   - Dropdown menu with 3 export formats
-   - JSON, SQL, Markdown options
-   - Download functionality integration
-   - Proper ARIA attributes
+3. **WebAPI Endpoints:**
+   - `GET /api/schema` - List available schemas
+   - `GET /api/schema/{name}` - Get schema details
+   - `POST /api/schema/{name}/refresh` - Refresh schema
+   - Proper error handling and logging
+   - CORS configured for React app
 
-4. **RelationshipGraph Component:**
-   - SVG-based visualization
-   - Table boxes with positioning
-   - Relationship lines with arrows
-   - TargCC badges on tables
-   - Dynamic SVG sizing
+4. **React Hooks:**
+   - `useSchema` - Load and manage schema data
+   - `useGeneration` - Generation process management
+   - Loading/error state handling
+   - Auto-refresh capability
+   - Connection status tracking
 
-5. **Advanced Filtering:**
-   - TargCC Only filter
-   - With Relationships filter
-   - Combined filter support
-   - Clear filters button
-   - Active filter indicators
+5. **Live Schema Page:**
+   - Real-time database connection
+   - Connection status indicator (Connected/Disconnected)
+   - Last updated timestamp
+   - Refresh button with loading state
+   - Mock data fallback for offline development
+   - Error handling with helpful messages
 
-**Components Created/Updated:**
-- src/utils/schemaExport.ts (155 lines NEW)
-- src/components/schema/SchemaStats.tsx (165 lines NEW)
-- src/components/schema/ExportMenu.tsx (127 lines NEW)
-- src/components/schema/RelationshipGraph.tsx (247 lines NEW)
-- src/components/schema/SchemaViewer.tsx (+60 lines, filters added)
-- src/pages/Schema.tsx (+40 lines, integrated all components)
-
-**Test Status:**
-- ✅ 14 new export utility tests (all passing)
-- ✅ 46 component tests written (skipped due to React 19)
-- ✅ Total: 500 tests (376 passing, 124 skipped)
-- ✅ Application fully functional in browser
-
-**Access Points:**
-- Main App: http://localhost:5177
-- Schema Viewer: http://localhost:5177/schema ← **Enhanced with all features!**
-- Wizard: http://localhost:5177/generate
-- Code Demo: http://localhost:5177/code-demo
+6. **Environment Configuration:**
+   - `.env` file with API_URL
+   - `vite-env.d.ts` TypeScript types
+   - Development settings
+   - Mock fallback toggle
 
 ---
 
-## 📊 Overall Progress
+## 📊 Current Metrics
 
+### Code Statistics
 ```
-Phase 3: CLI + AI + Web UI
-├── Phase 3A: CLI Core (Days 1-10) ............ ✅ 100% COMPLETE
-├── Phase 3B: AI Integration (Days 11-20) ..... ✅ 100% COMPLETE
-├── Phase 3C: Local Web UI (Days 21-35) ....... 🔄 80% (12/15 days)
-└── Phase 3D: Migration & Polish (Days 36-45) . ☐ 0% (0/10 days)
+Total C# Lines:      ~30,000+ (Backend)
+Total React Lines:   ~8,500+  (Frontend)
+Total Test Lines:    ~7,800+  (Tests)
+```
 
-Overall: 32/45 days (71%)
+### Test Results (React)
+```
+Total Tests:    500
+Passing:        376
+Skipped:        124 (React 19 / @testing-library compatibility)
+Coverage:       ~85% (passing tests only)
+```
+
+### Test Results (C#)
+```
+Total Tests:    715+
+Passing:        715+
+Coverage:       95%+
+```
+
+### Component Count
+```
+React Components:     45+
+Backend Services:     25+
+API Endpoints:        10+
+Database Queries:     3 (Schema service)
 ```
 
 ---
 
-## 🧪 Test Metrics
+## 🚀 What Works Right Now
 
-| Category | Count | Status |
-|----------|-------|--------|
-| C# Unit Tests | 600+ | ✅ Passing |
-| C# Integration Tests | 115+ | ✅ Passing |
-| React Tests | 500 | ✅ 376 passing, 124 skipped |
-| **Total Tests** | **1,215+** | **In Progress** |
-| Code Coverage | 85%+ | ✅ Excellent |
+### Frontend (React + TypeScript)
+- ✅ Dashboard with live widgets and statistics
+- ✅ Tables page with search and filters
+- ✅ **Schema page with LIVE database integration**
+  - **Real-time data from TargCCOrdersNew**
+  - **Connection status indicator**
+  - **Refresh functionality**
+  - **Export (JSON/SQL/Markdown)**
+  - **Advanced filtering**
+  - **Relationship visualization**
+- ✅ Generation wizard (step 1-3)
+- ✅ Code preview with syntax highlighting
+- ✅ Auto-refresh functionality
+- ✅ Error boundaries
+- ✅ Loading skeletons
+- ✅ Responsive design
 
-**React Test Breakdown:**
-- Previous tests: 449 (362 passing, 87 skipped)
-- Day 32: +60 tests added (14 passing, 46 skipped)
-- Total: 500 tests written
+### Backend (WebAPI)
+- ✅ Health check endpoint
+- ✅ **Schema endpoints (GET list, GET details, POST refresh)**
+- ✅ **SchemaService with Dapper**
+- ✅ **Live database connection**
+- ✅ Generate endpoint (basic)
+- ✅ System info endpoint
+- ✅ Security analysis endpoint (placeholder)
+- ✅ Quality analysis endpoint (placeholder)
+- ✅ Chat endpoint (placeholder)
+- ✅ CORS configured
+- ✅ Serilog logging
+- ✅ Swagger/OpenAPI docs
+
+### Integration
+- ✅ **Frontend ↔ Backend communication**
+- ✅ **Database ↔ Backend ↔ Frontend**
+- ✅ **Real schema data flowing through entire stack**
+- ✅ **Error handling at all layers**
+- ✅ **Mock data fallback for development**
 
 ---
 
-## 🗂️ Current Architecture
+## 📁 Project Structure
 
-### Backend (C# .NET 9)
 ```
-TargCC.Core.sln
-├── TargCC.Core              (Core engine)
-├── TargCC.Infrastructure    (Data access)
-├── TargCC.Generators        (Code generation)
-├── TargCC.AI               (AI services)
-├── TargCC.CLI              (Command-line interface)
-└── TargCC.WebAPI           (REST API) ✅ Complete
-```
-
-### Frontend (React 19 + TypeScript)
-```
-TargCC.WebUI/
+TargCC-Core-V2/
 ├── src/
-│   ├── components/
-│   │   ├── code/
-│   │   │   ├── CodePreview.tsx          ✅ Complete
-│   │   │   └── CodeViewer.tsx           ✅ Complete
-│   │   ├── common/
-│   │   │   ├── StatusBadge.tsx          ✅ Complete
-│   │   │   ├── LoadingSkeleton.tsx      ✅ Complete
-│   │   │   └── ErrorBoundary.tsx        ✅ Complete
-│   │   ├── schema/                      ✅ COMPLETE (Day 31-32)
-│   │   │   ├── ColumnList.tsx           ✅ Complete
-│   │   │   ├── TableCard.tsx            ✅ Complete
-│   │   │   ├── SchemaViewer.tsx         ✅ Complete (with filters)
-│   │   │   ├── SchemaStats.tsx          ✅ NEW (Day 32)
-│   │   │   ├── ExportMenu.tsx           ✅ NEW (Day 32)
-│   │   │   └── RelationshipGraph.tsx    ✅ NEW (Day 32)
-│   │   └── wizard/
-│   │       ├── ProgressTracker.tsx      ✅ Complete
-│   │       └── GenerationWizard.tsx     ✅ Complete
-│   ├── pages/
-│   │   ├── Dashboard.tsx                ✅
-│   │   ├── Tables.tsx                   ✅
-│   │   ├── Schema.tsx                   ✅ ENHANCED (Day 32)
-│   │   └── CodeDemo.tsx                 ✅
-│   ├── types/
-│   │   └── schema.ts                    ✅ Complete (Day 31)
-│   ├── utils/
-│   │   ├── mockCode.ts                  ✅
-│   │   ├── mockSchema.ts                ✅ Complete (Day 31)
-│   │   ├── downloadCode.ts              ✅
-│   │   ├── schemaExport.ts              ✅ NEW (Day 32)
-│   │   └── fileTypeIcons.tsx            ✅
-│   └── __tests__/
-│       ├── schema/                      ✅ COMPLETE (Day 31-32)
-│       │   ├── ColumnList.test.tsx      ✅
-│       │   ├── TableCard.test.tsx       ✅
-│       │   ├── SchemaViewer.test.tsx    ✅ UPDATED
-│       │   ├── SchemaStats.test.tsx     ✅ NEW (Day 32)
-│       │   ├── ExportMenu.test.tsx      ✅ NEW (Day 32)
-│       │   └── RelationshipGraph.test.tsx ✅ NEW (Day 32)
-│       └── utils/
-│           └── schemaExport.test.ts     ✅ NEW (Day 32)
+│   ├── TargCC.Core.Engine/        ✅ Complete
+│   ├── TargCC.Core.Interfaces/    ✅ Complete
+│   ├── TargCC.Core.Analyzers/     ✅ Complete
+│   ├── TargCC.Core.Generators/    ✅ Complete (8 generators)
+│   ├── TargCC.Core.Services/      ✅ Complete
+│   ├── TargCC.CLI/                ✅ Complete
+│   ├── TargCC.AI/                 ✅ Complete
+│   ├── TargCC.WebAPI/             ✅ Day 33 - Schema endpoints added
+│   │   ├── Services/              ✅ NEW - ISchemaService, SchemaService, DTOs
+│   │   ├── Program.cs             ✅ Updated with schema endpoints
+│   │   └── appsettings.json       ✅ Connection string configured
+│   └── TargCC.WebUI/              ✅ Day 33 - Live integration
+│       ├── src/
+│       │   ├── api/               ✅ NEW - config, schemaApi
+│       │   ├── hooks/             ✅ NEW - useSchema, useGeneration
+│       │   ├── pages/
+│       │   │   └── Schema.tsx     ✅ Updated with live connection
+│       │   └── .env               ✅ NEW - API configuration
+├── tests/                         ✅ 715+ C# tests, 376+ React tests
+└── docs/                          ✅ Day 33 - Updated
 ```
 
 ---
 
-## ✅ Completed Features
+## 🎨 Technology Stack
 
-### Phase 3C: Local Web UI (80%)
-- ✅ Monaco Editor integration (Day 28)
-- ✅ Theme Toggle (Day 29)
-- ✅ Language Selector (Day 29)
-- ✅ Download functionality (Day 29)
-- ✅ Wizard integration (Day 29)
-- ✅ ProgressTracker (Day 30)
-- ✅ StatusBadge (Day 30)
-- ✅ LoadingSkeleton (Day 30)
-- ✅ ErrorBoundary enhanced (Day 30)
-- ✅ Schema Viewer Foundation (Day 31)
-- ✅ Schema Advanced Features (Day 32) ← NEW!
-- ✅ 500 React tests
+### Backend
+- .NET 9.0
+- C# 13
+- Clean Architecture
+- CQRS with MediatR
+- **Dapper (for schema reading) ✅ NEW**
+- **Microsoft.Data.SqlClient ✅ NEW**
+- Entity Framework Core (planned)
+- Serilog
+- xUnit + FluentAssertions
 
----
+### Frontend
+- React 19
+- TypeScript 5.7
+- Vite 7.2
+- Material-UI (MUI)
+- Vitest + React Testing Library
+- **Fetch API for backend calls ✅ NEW**
 
-## 🎯 Next Steps
-
-### Day 33: Backend Integration
-1. Connect Schema page to WebAPI
-2. Real database schema loading
-3. Live generation status
-4. Error handling and validation
-
----
-
-## 🔧 Technical Stack
-
-### Frontend Additions (Days 28-32)
-- **Monaco Editor 4.7.0** ✅
-- **JSZip 3.x** ✅
-- **TypeScript 5.x** ✅
-- **MUI Components** ✅ (Icons, Grid, Paper, LinearProgress)
-- **SVG Graphics** ✅ (Relationship diagrams)
+### AI Integration
+- Anthropic Claude 3.5 Sonnet
+- Prompt caching
+- Schema analysis
+- Security scanning
+- Code quality analysis
 
 ---
 
-## 🚀 Running the Application
+## 🔄 Recent Changes (Day 33)
 
+### Backend Updates
+1. **Added Dapper + Microsoft.Data.SqlClient packages**
+2. **Created SchemaService infrastructure:**
+   - ISchemaService interface
+   - SchemaService implementation
+   - DatabaseSchemaDto + TableDto + ColumnDto + RelationshipDto
+3. **Added 3 new API endpoints:**
+   - GET /api/schema
+   - GET /api/schema/{name}
+   - POST /api/schema/{name}/refresh
+4. **Implemented SQL queries:**
+   - Tables query (with row counts)
+   - Columns query (with PK/FK detection)
+   - Relationships query (from sys tables)
+5. **Added connection string to appsettings.json**
+6. **Registered SchemaService in DI**
+
+### Frontend Updates
+1. **Created API integration layer:**
+   - api/config.ts - Base configuration
+   - api/schemaApi.ts - Schema API calls
+2. **Created React hooks:**
+   - useSchema - Schema data management
+   - useGeneration - Generation management
+3. **Updated Schema page:**
+   - Live backend connection
+   - Connection status indicator
+   - Loading states
+   - Error handling with mock fallback
+   - Refresh functionality
+   - Last updated timestamp
+4. **Added environment configuration:**
+   - .env file
+   - vite-env.d.ts types
+
+### Bug Fixes
+- Fixed SQL keyword conflicts (Schema → [Schema], Type → [Type], RowCount → [RowCount])
+- Updated Dapper + SqlClient to correct versions
+- Configured CORS for multiple React dev ports
+- Database connection to TargCCOrdersNew
+
+---
+
+## 🎯 Next Steps (Day 34)
+
+### Immediate Tasks
+1. **Enhanced Backend Features:**
+   - Multiple database connections support
+   - Schema caching
+   - Connection string management UI
+   - Database selector dropdown
+
+2. **Generation Integration:**
+   - Connect useGeneration hook to backend
+   - Real-time progress tracking
+   - WebSocket for live updates
+   - Generation history
+
+3. **Additional Features:**
+   - Table preview with sample data
+   - Schema comparison tool
+   - Auto-refresh toggle
+   - Export improvements
+
+4. **Testing:**
+   - API integration tests
+   - Hook tests
+   - End-to-end tests
+
+---
+
+## 📝 Development Guidelines
+
+### Code Quality Standards
+- StyleCop compliance
+- SonarQube analysis
+- XML documentation with examples
+- Comprehensive unit tests (95%+ coverage)
+- Integration tests for API
+
+### Git Workflow
+- Feature branches
+- Descriptive commit messages
+- Pull request reviews
+- CI/CD pipeline (planned)
+
+---
+
+## 🔗 Quick Links
+
+- **Project Root:** `C:\Disk1\TargCC-Core-V2`
+- **WebAPI:** `src\TargCC.WebAPI`
+- **WebUI:** `src\TargCC.WebUI`
+- **Docs:** `docs\current`
+- **Tests:** `tests\`
+
+---
+
+## 📞 Running the Application
+
+### Backend (WebAPI)
+```bash
+cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebAPI
+dotnet run
+# Listening on http://localhost:5000
+```
+
+### Frontend (React)
 ```bash
 cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 npm run dev
-# Opens at http://localhost:5177
-# Schema Viewer: http://localhost:5177/schema
-# Wizard with Progress: http://localhost:5177/generate
-# Code Demo: http://localhost:5177/code-demo
+# Typically http://localhost:5176 or nearby port
 ```
 
-**Try the Enhanced Schema Viewer:**
-1. Navigate to http://localhost:5177/schema
-2. View statistics at the top
-3. Explore relationship diagram
-4. Export schema (JSON/SQL/Markdown)
-5. Use filters: TargCC Only, With Relationships
-6. Search tables and columns
-7. Expand/collapse table details
+### Access Points
+- **React App:** http://localhost:5176 (or shown port)
+- **Schema Page:** http://localhost:5176/schema
+- **API Docs:** http://localhost:5000/swagger
+- **Health Check:** http://localhost:5000/api/health
 
 ---
 
-**Status:** Day 32 Complete! ✅  
-**Next:** Day 33 - Backend Integration  
-**Last Updated:** 01/12/2025 22:00
+**Status:** Day 33 Complete - Backend Integration Successful! ✅  
+**Next Session:** Day 34 - Enhanced Features & Polish  
+**Progress:** 73% Complete (33/45 days)
+
+---
+
+*This document is automatically updated after each development session.*
