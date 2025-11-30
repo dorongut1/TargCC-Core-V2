@@ -1,48 +1,47 @@
-# Next Session: Day 31 - Schema Designer Foundation
+# Next Session: Day 32 - Schema Designer Advanced Features
 
 **Date:** Next Session  
 **Phase:** 3C - Local Web UI  
-**Day:** 31 of 45  
-**Duration:** ~3-4 hours  
+**Day:** 32 of 45  
+**Duration:** ~4-5 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 31 Objectives
+## 🎯 Day 32 Objectives
 
 ### Primary Goal
-Create a visual schema designer that displays database structure with tables, columns, relationships, and interactive exploration features.
+Enhance the schema designer with relationship visualization, statistics display, and export capabilities for comprehensive schema exploration.
 
 ### Specific Deliverables
 
-1. **SchemaViewer Component** (90 min)
-   - Visual table display
-   - Column list with types
-   - Primary/Foreign key indicators
-   - Search and filter
-   - Responsive grid layout
+1. **RelationshipGraph Component** (90 min)
+   - Visual relationship diagram
+   - Table boxes with connections
+   - One-to-many indicators
+   - Interactive hover tooltips
 
-2. **TableCard Component** (45 min)
-   - Table name header
-   - Column details
-   - Relationship indicators
-   - Expandable sections
-   - Action buttons
+2. **SchemaStats Component** (60 min)
+   - Statistics dashboard
+   - Table and column counts
+   - Data type distribution
+   - Relationship metrics
+   - TargCC usage percentage
 
-3. **ColumnList Component** (30 min)
-   - Column names and types
-   - Nullable indicators
-   - Key icons
-   - Type badges
+3. **ExportMenu Component** (45 min)
+   - Export as JSON
+   - Export as SQL DDL
+   - Export as Markdown docs
+   - Download with proper filenames
 
-4. **Mock Schema Data** (30 min)
-   - Sample database structure
-   - Multiple tables with relationships
-   - Realistic column definitions
-   - Primary/Foreign keys
+4. **Advanced Filtering** (45 min)
+   - Filter by TargCC tables
+   - Filter by relationship presence
+   - Combine multiple filters
+   - Clear filters button
 
-5. **Testing & Polish** (45 min)
-   - 8-10 new tests
+5. **Testing & Polish** (60 min)
+   - 10-12 new tests
    - UI polish
    - Accessibility improvements
 
@@ -50,379 +49,396 @@ Create a visual schema designer that displays database structure with tables, co
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Mock Schema Data (30 minutes)
+### Part 1: SchemaStats Component (60 minutes)
 
-#### 1.1 Create Schema Types
-
-```typescript
-// src/types/schema.ts
-
-export interface Column {
-  name: string;
-  type: string;
-  nullable: boolean;
-  isPrimaryKey: boolean;
-  isForeignKey: boolean;
-  foreignKeyTable?: string;
-  foreignKeyColumn?: string;
-  maxLength?: number;
-  defaultValue?: string;
-}
-
-export interface Table {
-  name: string;
-  schema: string;
-  columns: Column[];
-  rowCount?: number;
-  hasTargCCColumns: boolean;
-}
-
-export interface DatabaseSchema {
-  tables: Table[];
-  relationships: Relationship[];
-}
-
-export interface Relationship {
-  fromTable: string;
-  fromColumn: string;
-  toTable: string;
-  toColumn: string;
-  type: 'one-to-one' | 'one-to-many' | 'many-to-many';
-}
-```
-
-#### 1.2 Create Mock Schema
+#### 1.1 Create Stats Component
 
 ```typescript
-// src/utils/mockSchema.ts
+// src/components/schema/SchemaStats.tsx
 
-import { DatabaseSchema } from '../types/schema';
-
-export const mockSchema: DatabaseSchema = {
-  tables: [
-    {
-      name: 'Customer',
-      schema: 'dbo',
-      rowCount: 1250,
-      hasTargCCColumns: true,
-      columns: [
-        { name: 'CustomerId', type: 'int', nullable: false, isPrimaryKey: true, isForeignKey: false },
-        { name: 'eno_FirstName', type: 'nvarchar', nullable: false, isPrimaryKey: false, isForeignKey: false, maxLength: 50 },
-        { name: 'eno_LastName', type: 'nvarchar', nullable: false, isPrimaryKey: false, isForeignKey: false, maxLength: 50 },
-        { name: 'eno_Email', type: 'nvarchar', nullable: true, isPrimaryKey: false, isForeignKey: false, maxLength: 100 },
-        { name: 'ent_CreatedDate', type: 'datetime2', nullable: false, isPrimaryKey: false, isForeignKey: false },
-      ]
-    },
-    {
-      name: 'Order',
-      schema: 'dbo',
-      rowCount: 5430,
-      hasTargCCColumns: true,
-      columns: [
-        { name: 'OrderId', type: 'int', nullable: false, isPrimaryKey: true, isForeignKey: false },
-        { name: 'CustomerId', type: 'int', nullable: false, isPrimaryKey: false, isForeignKey: true, foreignKeyTable: 'Customer', foreignKeyColumn: 'CustomerId' },
-        { name: 'OrderDate', type: 'datetime2', nullable: false, isPrimaryKey: false, isForeignKey: false },
-        { name: 'clc_TotalAmount', type: 'decimal', nullable: false, isPrimaryKey: false, isForeignKey: false },
-        { name: 'ent_ModifiedDate', type: 'datetime2', nullable: true, isPrimaryKey: false, isForeignKey: false },
-      ]
-    },
-    // Add more tables...
-  ],
-  relationships: [
-    {
-      fromTable: 'Order',
-      fromColumn: 'CustomerId',
-      toTable: 'Customer',
-      toColumn: 'CustomerId',
-      type: 'many-to-one'
-    },
-    // Add more relationships...
-  ]
-};
-```
-
----
-
-### Part 2: ColumnList Component (30 minutes)
-
-```typescript
-// src/components/schema/ColumnList.tsx
-
-import { Box, Typography, Chip } from '@mui/material';
-import KeyIcon from '@mui/icons-material/Key';
-import LinkIcon from '@mui/icons-material/Link';
-import { Column } from '../../types/schema';
-
-interface ColumnListProps {
-  columns: Column[];
-}
-
-const ColumnList = ({ columns }: ColumnListProps) => {
-  return (
-    <Box>
-      {columns.map((column) => (
-        <Box
-          key={column.name}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            p: 1,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            '&:hover': {
-              bgcolor: 'action.hover'
-            }
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-            {column.isPrimaryKey && <KeyIcon fontSize="small" color="primary" />}
-            {column.isForeignKey && <LinkIcon fontSize="small" color="secondary" />}
-            
-            <Typography variant="body2" fontWeight={column.isPrimaryKey ? 'bold' : 'normal'}>
-              {column.name}
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Chip 
-              label={column.type} 
-              size="small" 
-              variant="outlined"
-            />
-            {!column.nullable && (
-              <Chip 
-                label="NOT NULL" 
-                size="small" 
-                color="error"
-                variant="outlined"
-              />
-            )}
-          </Box>
-        </Box>
-      ))}
-    </Box>
-  );
-};
-
-export default ColumnList;
-```
-
----
-
-### Part 3: TableCard Component (45 minutes)
-
-```typescript
-// src/components/schema/TableCard.tsx
-
-import { useState } from 'react';
-import { 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  IconButton, 
-  Collapse,
-  Typography,
-  Chip,
-  Box
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import { Table } from '../../types/schema';
-import ColumnList from './ColumnList';
-
-interface TableCardProps {
-  table: Table;
-}
-
-const TableCard = ({ table }: TableCardProps) => {
-  const [expanded, setExpanded] = useState(true);
-
-  return (
-    <Card elevation={2}>
-      <CardHeader
-        avatar={<TableChartIcon />}
-        action={
-          <IconButton
-            onClick={() => setExpanded(!expanded)}
-            sx={{
-              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s'
-            }}
-          >
-            <ExpandMoreIcon />
-          </IconButton>
-        }
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">{table.name}</Typography>
-            {table.hasTargCCColumns && (
-              <Chip label="TargCC" size="small" color="primary" />
-            )}
-          </Box>
-        }
-        subheader={
-          <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-            <Chip 
-              label={`${table.columns.length} columns`} 
-              size="small" 
-              variant="outlined"
-            />
-            {table.rowCount && (
-              <Chip 
-                label={`${table.rowCount.toLocaleString()} rows`} 
-                size="small" 
-                variant="outlined"
-              />
-            )}
-          </Box>
-        }
-      />
-      
-      <Collapse in={expanded}>
-        <CardContent sx={{ pt: 0 }}>
-          <ColumnList columns={table.columns} />
-        </CardContent>
-      </Collapse>
-    </Card>
-  );
-};
-
-export default TableCard;
-```
-
----
-
-### Part 4: SchemaViewer Component (90 minutes)
-
-```typescript
-// src/components/schema/SchemaViewer.tsx
-
-import { useState } from 'react';
-import { 
-  Box, 
-  TextField, 
-  Typography,
-  InputAdornment,
-  Chip
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Paper, Grid, Typography, Box, LinearProgress } from '@mui/material';
 import { DatabaseSchema } from '../../types/schema';
-import TableCard from './TableCard';
 
-interface SchemaViewerProps {
+interface SchemaStatsProps {
   schema: DatabaseSchema;
 }
 
-const SchemaViewer = ({ schema }: SchemaViewerProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const SchemaStats = ({ schema }: SchemaStatsProps) => {
+  // Calculate statistics
+  const totalTables = schema.tables.length;
+  const totalColumns = schema.tables.reduce((sum, t) => sum + t.columns.length, 0);
+  const totalRelationships = schema.relationships.length;
+  const targccTables = schema.tables.filter(t => t.hasTargCCColumns).length;
+  const avgColumnsPerTable = (totalColumns / totalTables).toFixed(1);
 
-  const filteredTables = schema.tables.filter(table =>
-    table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    table.columns.some(col => 
-      col.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  // Data type distribution
+  const dataTypes = schema.tables.flatMap(t => 
+    t.columns.map(c => c.type)
   );
+  const typeCount = dataTypes.reduce((acc, type) => {
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
-    <Box>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5">
-          Database Schema
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        Schema Statistics
+      </Typography>
+      
+      <Grid container spacing={2}>
+        <Grid item xs={6} md={3}>
+          <StatCard label="Tables" value={totalTables} />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <StatCard label="Columns" value={totalColumns} />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <StatCard label="Relationships" value={totalRelationships} />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <StatCard 
+            label="TargCC Tables" 
+            value={targccTables}
+            subtitle={`${((targccTables/totalTables)*100).toFixed(0)}%`}
+          />
+        </Grid>
+      </Grid>
+
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Data Type Distribution
         </Typography>
-        <Chip 
-          label={`${schema.tables.length} tables`}
-          color="primary"
-        />
+        {Object.entries(typeCount)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([type, count]) => (
+            <Box key={type} sx={{ mb: 1 }}>
+              <Typography variant="body2">
+                {type}: {count} ({((count/totalColumns)*100).toFixed(1)}%)
+              </Typography>
+              <LinearProgress 
+                variant="determinate" 
+                value={(count/totalColumns)*100}
+                sx={{ height: 6, borderRadius: 1 }}
+              />
+            </Box>
+          ))
+        }
       </Box>
-
-      <TextField
-        fullWidth
-        placeholder="Search tables and columns..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          )
-        }}
-        sx={{ mb: 3 }}
-      />
-
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', 
-        gap: 2 
-      }}>
-        {filteredTables.map((table) => (
-          <TableCard key={table.name} table={table} />
-        ))}
-      </Box>
-
-      {filteredTables.length === 0 && (
-        <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-          No tables found matching "{searchTerm}"
-        </Typography>
-      )}
-    </Box>
+    </Paper>
   );
 };
-
-export default SchemaViewer;
 ```
 
 ---
 
-### Part 5: Testing (45 minutes)
+### Part 2: RelationshipGraph Component (90 minutes)
+
+#### 2.1 Simple SVG-Based Graph
 
 ```typescript
-// src/__tests__/schema/SchemaViewer.test.tsx
+// src/components/schema/RelationshipGraph.tsx
 
-describe('SchemaViewer', () => {
-  it('renders all tables', () => {
-    // Test rendering
+import { Paper, Typography, Box } from '@mui/material';
+import { DatabaseSchema, Relationship } from '../../types/schema';
+
+interface RelationshipGraphProps {
+  schema: DatabaseSchema;
+}
+
+const RelationshipGraph = ({ schema }: RelationshipGraphProps) => {
+  const tablePositions = calculateTablePositions(schema.tables);
+  
+  return (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        Relationship Diagram
+      </Typography>
+      
+      <Box sx={{ overflow: 'auto' }}>
+        <svg width="800" height="600" style={{ border: '1px solid #e0e0e0' }}>
+          {/* Draw relationships first (lines) */}
+          {schema.relationships.map((rel, idx) => (
+            <RelationshipLine
+              key={idx}
+              relationship={rel}
+              positions={tablePositions}
+            />
+          ))}
+          
+          {/* Draw tables on top */}
+          {schema.tables.map((table, idx) => (
+            <TableBox
+              key={table.name}
+              table={table}
+              position={tablePositions[table.name]}
+            />
+          ))}
+        </svg>
+      </Box>
+    </Paper>
+  );
+};
+
+function calculateTablePositions(tables: Table[]) {
+  // Simple grid layout
+  const cols = Math.ceil(Math.sqrt(tables.length));
+  const spacing = { x: 180, y: 150 };
+  
+  return tables.reduce((acc, table, idx) => {
+    acc[table.name] = {
+      x: (idx % cols) * spacing.x + 50,
+      y: Math.floor(idx / cols) * spacing.y + 50
+    };
+    return acc;
+  }, {} as Record<string, {x: number, y: number}>);
+}
+```
+
+---
+
+### Part 3: ExportMenu Component (45 minutes)
+
+#### 3.1 Export Utilities
+
+```typescript
+// src/utils/schemaExport.ts
+
+import { DatabaseSchema } from '../types/schema';
+
+export function exportAsJSON(schema: DatabaseSchema): string {
+  return JSON.stringify(schema, null, 2);
+}
+
+export function exportAsSQL(schema: DatabaseSchema): string {
+  let sql = '-- Database Schema DDL\\n\\n';
+  
+  schema.tables.forEach(table => {
+    sql += `CREATE TABLE ${table.schema}.${table.name} (\\n`;
+    
+    const columns = table.columns.map(col => {
+      let def = `  ${col.name} ${col.type}`;
+      if (col.maxLength) def += `(${col.maxLength})`;
+      if (!col.nullable) def += ' NOT NULL';
+      if (col.defaultValue) def += ` DEFAULT ${col.defaultValue}`;
+      if (col.isPrimaryKey) def += ' PRIMARY KEY';
+      return def;
+    });
+    
+    sql += columns.join(',\\n') + '\\n);\\n\\n';
+  });
+  
+  return sql;
+}
+
+export function exportAsMarkdown(schema: DatabaseSchema): string {
+  let md = '# Database Schema\\n\\n';
+  
+  schema.tables.forEach(table => {
+    md += `## ${table.name}\\n\\n`;
+    md += `**Schema:** ${table.schema}\\n`;
+    if (table.rowCount) md += `**Rows:** ${table.rowCount.toLocaleString()}\\n`;
+    md += `\\n### Columns\\n\\n`;
+    md += '| Column | Type | Nullable | Keys |\\n';
+    md += '|--------|------|----------|------|\\n';
+    
+    table.columns.forEach(col => {
+      const keys = [];
+      if (col.isPrimaryKey) keys.push('PK');
+      if (col.isForeignKey) keys.push('FK');
+      
+      md += `| ${col.name} | ${col.type} | ${col.nullable ? 'Yes' : 'No'} | ${keys.join(', ')} |\\n`;
+    });
+    
+    md += '\\n';
+  });
+  
+  return md;
+}
+```
+
+#### 3.2 Export Menu Component
+
+```typescript
+// src/components/schema/ExportMenu.tsx
+
+import { useState } from 'react';
+import { 
+  IconButton, 
+  Menu, 
+  MenuItem, 
+  ListItemIcon, 
+  ListItemText 
+} from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
+import CodeIcon from '@mui/icons-material/Code';
+import DescriptionIcon from '@mui/icons-material/Description';
+import { DatabaseSchema } from '../../types/schema';
+import { exportAsJSON, exportAsSQL, exportAsMarkdown } from '../../utils/schemaExport';
+import { downloadFile } from '../../utils/downloadCode';
+
+interface ExportMenuProps {
+  schema: DatabaseSchema;
+}
+
+const ExportMenu = ({ schema }: ExportMenuProps) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  
+  const handleExport = (format: 'json' | 'sql' | 'md') => {
+    let content: string;
+    let filename: string;
+    
+    switch (format) {
+      case 'json':
+        content = exportAsJSON(schema);
+        filename = 'schema.json';
+        break;
+      case 'sql':
+        content = exportAsSQL(schema);
+        filename = 'schema.sql';
+        break;
+      case 'md':
+        content = exportAsMarkdown(schema);
+        filename = 'schema.md';
+        break;
+    }
+    
+    downloadFile(content, filename);
+    setAnchorEl(null);
+  };
+  
+  return (
+    <>
+      <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+        <DownloadIcon />
+      </IconButton>
+      
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        <MenuItem onClick={() => handleExport('json')}>
+          <ListItemIcon><CodeIcon /></ListItemIcon>
+          <ListItemText>Export as JSON</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('sql')}>
+          <ListItemIcon><CodeIcon /></ListItemIcon>
+          <ListItemText>Export as SQL</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('md')}>
+          <ListItemIcon><DescriptionIcon /></ListItemIcon>
+          <ListItemText>Export as Markdown</ListItemText>
+        </MenuItem>
+      </Menu>
+    </>
+  );
+};
+```
+
+---
+
+### Part 4: Advanced Filtering (45 minutes)
+
+#### 4.1 Update SchemaViewer with Filters
+
+```typescript
+// Add to SchemaViewer.tsx
+
+const [filters, setFilters] = useState({
+  targccOnly: false,
+  withRelationships: false
+});
+
+const filteredTables = schema.tables.filter(table => {
+  // Search filter
+  const matchesSearch = 
+    table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    table.columns.some(col => 
+      col.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  
+  // TargCC filter
+  const matchesTargCC = !filters.targccOnly || table.hasTargCCColumns;
+  
+  // Relationships filter
+  const hasRelationship = schema.relationships.some(
+    rel => rel.fromTable === table.name || rel.toTable === table.name
+  );
+  const matchesRelationships = !filters.withRelationships || hasRelationship;
+  
+  return matchesSearch && matchesTargCC && matchesRelationships;
+});
+
+// Add filter chips UI
+<Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+  <Chip
+    label="TargCC Only"
+    onClick={() => setFilters(prev => ({ ...prev, targccOnly: !prev.targccOnly }))}
+    color={filters.targccOnly ? 'primary' : 'default'}
+  />
+  <Chip
+    label="With Relationships"
+    onClick={() => setFilters(prev => ({ ...prev, withRelationships: !prev.withRelationships }))}
+    color={filters.withRelationships ? 'primary' : 'default'}
+  />
+  {(filters.targccOnly || filters.withRelationships) && (
+    <Chip
+      label="Clear Filters"
+      onDelete={() => setFilters({ targccOnly: false, withRelationships: false })}
+      variant="outlined"
+    />
+  )}
+</Box>
+```
+
+---
+
+### Part 5: Testing (60 minutes)
+
+```typescript
+// src/__tests__/schema/SchemaStats.test.tsx
+
+describe('SchemaStats', () => {
+  it('displays total table count', () => {
+    // Test stats calculation
   });
 
-  it('filters tables by search term', () => {
-    // Test search
+  it('shows TargCC percentage', () => {
+    // Test TargCC metrics
   });
 
-  it('shows table count', () => {
-    // Test count display
+  it('displays data type distribution', () => {
+    // Test type distribution
   });
 });
 
-// src/__tests__/schema/TableCard.test.tsx
+// src/__tests__/schema/ExportMenu.test.tsx
 
-describe('TableCard', () => {
-  it('renders table name', () => {
-    // Test name
+describe('ExportMenu', () => {
+  it('exports as JSON', () => {
+    // Test JSON export
   });
 
-  it('expands and collapses', () => {
-    // Test expand/collapse
+  it('exports as SQL', () => {
+    // Test SQL export
   });
 
-  it('shows TargCC badge when applicable', () => {
-    // Test badge
+  it('exports as Markdown', () => {
+    // Test MD export
   });
 });
 
-// src/__tests__/schema/ColumnList.test.tsx
+// src/__tests__/schema/RelationshipGraph.test.tsx
 
-describe('ColumnList', () => {
-  it('renders all columns', () => {
-    // Test columns
+describe('RelationshipGraph', () => {
+  it('renders table boxes', () => {
+    // Test table rendering
   });
 
-  it('shows primary key icons', () => {
-    // Test PK icons
-  });
-
-  it('shows foreign key icons', () => {
-    // Test FK icons
+  it('draws relationship lines', () => {
+    // Test relationship lines
   });
 });
 ```
@@ -433,30 +449,24 @@ describe('ColumnList', () => {
 
 ### New Files
 ```
-src/types/
-└── schema.ts (100 lines)
+src/components/schema/
+├── SchemaStats.tsx           (120 lines)
+├── RelationshipGraph.tsx     (150 lines)
+└── ExportMenu.tsx            (100 lines)
 
 src/utils/
-└── mockSchema.ts (200 lines)
-
-src/components/schema/
-├── SchemaViewer.tsx (120 lines)
-├── TableCard.tsx (100 lines)
-└── ColumnList.tsx (80 lines)
-
-src/pages/
-└── Schema.tsx (40 lines)
+└── schemaExport.ts           (150 lines)
 
 src/__tests__/schema/
-├── SchemaViewer.test.tsx (60 lines)
-├── TableCard.test.tsx (50 lines)
-└── ColumnList.test.tsx (40 lines)
+├── SchemaStats.test.tsx       (70 lines)
+├── RelationshipGraph.test.tsx (60 lines)
+└── ExportMenu.test.tsx        (60 lines)
 ```
 
 ### Modified Files
 ```
-src/App.tsx
-└── (+1 route for /schema)
+src/components/schema/SchemaViewer.tsx  (+60 lines)
+src/pages/Schema.tsx                    (+40 lines)
 ```
 
 ---
@@ -464,30 +474,28 @@ src/App.tsx
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Schema viewer displays all tables
-- [ ] Search filters tables/columns
-- [ ] Cards expand/collapse smoothly
-- [ ] Primary/Foreign keys clearly marked
-- [ ] TargCC columns highlighted
-- [ ] Row counts displayed
+- [ ] Schema statistics displayed correctly
+- [ ] Relationship graph shows all connections
+- [ ] Export generates valid files
+- [ ] Filters work independently and combined
+- [ ] Download functionality works
 
 ### Testing
-- [ ] 8-10 new tests written
-- [ ] Schema viewer tested
-- [ ] Table card tested
-- [ ] Column list tested
+- [ ] 10-12 new tests written
+- [ ] All components tested
+- [ ] Export functions tested
 - [ ] Build successful (dev)
 
 ### Code Quality
 - [ ] TypeScript compliant
-- [ ] Components under 150 lines
+- [ ] Components under 200 lines
 - [ ] Proper type definitions
 - [ ] Clean, readable code
 - [ ] No console warnings
 
 ### Documentation
 - [ ] STATUS.md updated
-- [ ] HANDOFF.md for Day 32
+- [ ] HANDOFF.md for Day 33
 - [ ] Phase3_Checklist.md updated
 
 ---
@@ -495,12 +503,12 @@ src/App.tsx
 ## 🚀 Getting Started
 
 ### 1. Development Order
-1. Create schema types
-2. Create mock schema data
-3. Create ColumnList component
-4. Create TableCard component
-5. Create SchemaViewer component
-6. Add route to App
+1. Create schemaExport utilities
+2. Create SchemaStats component
+3. Create ExportMenu component
+4. Create RelationshipGraph component
+5. Add filters to SchemaViewer
+6. Update Schema page layout
 7. Write tests
 8. Polish UI
 9. Update docs
@@ -509,29 +517,29 @@ src/App.tsx
 
 ## 💡 Tips for Success
 
-### Schema Display
-- Use cards for clean separation
-- Make search instant (no debounce needed for small datasets)
-- Expand first table by default
-- Use consistent icons
+### Statistics Display
+- Keep metrics prominent
+- Use color coding
+- Show percentages alongside counts
+- Consider pie/bar charts for distribution
 
-### Type Definitions
-- Keep types in separate file
-- Make them reusable
-- Add comments for complex types
-- Export from index if needed
+### Relationship Graph
+- Start with simple boxes and lines
+- Position tables in grid
+- Use arrows to show direction
+- Add tooltips for details
 
-### Mock Data
-- Keep it realistic
-- Include various column types
-- Add relationships
-- Use TargCC prefixes
+### Export Functionality
+- Generate clean, readable output
+- Include comments in SQL
+- Format JSON with indentation
+- Test with different schemas
 
-### UI/UX
-- Grid layout for responsiveness
-- Smooth expand/collapse animations
-- Clear visual hierarchy
-- Good use of whitespace
+### Filtering
+- Make filters discoverable
+- Show active filter count
+- Allow easy clearing
+- Combine filters logically
 
 ---
 
@@ -542,23 +550,23 @@ src/App.tsx
 npm run dev
 
 # Run tests
-npm test
+npm test -- --run src/__tests__/schema
 
 # Type check
 npx tsc --noEmit
 
 # Schema page URL
-http://localhost:5174/schema
+http://localhost:5177/schema
 ```
 
 ---
 
 **Ready to Start:** ✅  
-**Estimated Duration:** 3-4 hours  
-**Expected Output:** Visual schema designer with interactive exploration  
-**Next Day:** Day 32 - Schema Designer Advanced Features
+**Estimated Duration:** 4-5 hours  
+**Expected Output:** Advanced schema features with stats, graph, and export  
+**Next Day:** Day 33 - Continue Web UI Features
 
 ---
 
-**Created:** 01/12/2025  
-**Status:** Ready for Day 31! 🚀
+**Created:** 01/12/2025 21:30  
+**Status:** Ready for Day 32! 🚀

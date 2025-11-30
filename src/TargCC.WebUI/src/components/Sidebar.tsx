@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SecurityIcon from '@mui/icons-material/Security';
 import CodeIcon from '@mui/icons-material/Code';
@@ -30,6 +31,7 @@ interface SidebarProps {
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Tables', icon: <TableChartIcon />, path: '/tables' },
+  { text: 'Schema', icon: <AccountTreeIcon />, path: '/schema' },
   { text: 'Generate', icon: <CodeIcon />, path: '/generate' },
   { text: 'AI Suggestions', icon: <AutoAwesomeIcon />, path: '/suggestions' },
   { text: 'Security', icon: <SecurityIcon />, path: '/security' },

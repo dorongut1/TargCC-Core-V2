@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Tables } from './pages/Tables';
 import GenerationWizard from './components/wizard/GenerationWizard';
 import CodeDemo from './pages/CodeDemo';
+import Schema from './pages/Schema';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Create a Material-UI theme
@@ -47,6 +48,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/tables" element={<Tables />} />
+                <Route path="/schema" element={<Schema />} />
                 <Route path="/generate" element={<GenerationWizard />} />
                 <Route path="/code-demo" element={<CodeDemo />} />
                 <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
