@@ -1,295 +1,499 @@
-# Next Session: Day 27 - Generation Wizard Completion
+# Next Session: Day 28 - Monaco Editor Integration (Part 1)
 
 **Date:** Next Session  
 **Phase:** 3C - Local Web UI  
-**Day:** 27 of 45  
-**Duration:** ~2-3 hours  
+**Day:** 28 of 45  
+**Duration:** ~3-4 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 27 Objectives
+## 🎯 Day 28 Objectives
 
 ### Primary Goal
-Complete the Generation Wizard by implementing the Review and Progress steps, creating a fully functional 4-step wizard flow.
+Integrate Monaco Editor (the VS Code editor) into the React app for code preview functionality. This will allow users to see generated code with syntax highlighting, line numbers, and a professional editor experience.
 
 ### Specific Deliverables
 
-1. **Review Step Enhancement**
-   - Polished summary display
-   - Selected tables with chips
-   - Selected options with checkmarks
-   - Edit navigation buttons
-   - Clean, professional layout
+1. **Monaco Editor Setup**
+   - Install @monaco-editor/react package
+   - Install TypeScript types
+   - Verify installation works
 
-2. **Generation Progress Component**
-   - Mock progress indicator
-   - Status messages
-   - Generation log display
-   - Success/error states
-   - Completion UI
+2. **CodePreview Component**
+   - Create reusable editor component
+   - Configure for C# syntax highlighting
+   - Add loading state
+   - Apply dark theme
+   - Make read-only
 
-3. **Testing**
-   - 10-12 new tests
-   - Review step tests (6-8)
-   - Progress step tests (4-6)
+3. **CodeViewer Component**
+   - Multi-file tabs
+   - File switching
+   - Copy to clipboard button
+   - Mock generated code display
+
+4. **Testing**
+   - 8-10 new tests
+   - Monaco loading tests
+   - Code display tests
+   - File tab switching tests
 
 ---
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Review Step Enhancement (45 min)
+### Part 1: Package Installation (15 minutes)
 
-#### 1.1 Update ReviewStep in GenerationWizard.tsx
-```typescript
-const ReviewStep = ({ data }: WizardStepProps) => (
-  <Box>
-    <Typography variant="h6" gutterBottom>
-      Review Your Selections
-    </Typography>
-    
-    <Typography variant="body2" color="text.secondary" paragraph>
-      Review your choices before starting code generation
-    </Typography>
+#### 1.1 Install Packages
+```bash
+cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 
-    {/* Selected Tables Section */}
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="subtitle1" fontWeight="bold">
-          Selected Tables ({data.selectedTables.length})
-        </Typography>
-        <Button size="small" onClick={() => setActiveStep(0)}>
-          Edit
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        {data.selectedTables.map((table) => (
-          <Chip 
-            key={table} 
-            label={table} 
-            color="primary" 
-            variant="outlined"
-          />
-        ))}
-      </Box>
-    </Paper>
+npm install @monaco-editor/react
+npm install @types/monaco-editor --save-dev
+```
 
-    {/* Generation Options Section */}
-    <Paper sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="subtitle1" fontWeight="bold">
-          Generation Options
-        </Typography>
-        <Button size="small" onClick={() => setActiveStep(1)}>
-          Edit
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {Object.entries(data.options)
-          .filter(([, value]) => value)
-          .map(([key]) => (
-            <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckCircleIcon color="success" fontSize="small" />
-              <Typography variant="body2">
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </Typography>
-            </Box>
-          ))}
-      </Box>
-    </Paper>
-
-    {/* Summary Stats */}
-    <Alert severity="info" sx={{ mt: 3 }}>
-      Ready to generate {Object.values(data.options).filter(Boolean).length} component 
-      types for {data.selectedTables.length} table(s)
-    </Alert>
-  </Box>
-);
+#### 1.2 Verify Installation
+```bash
+npm list @monaco-editor/react
+# Should show version ~4.6.0 or higher
 ```
 
 ---
 
-### Part 2: Generation Progress Component (60 min)
+### Part 2: CodePreview Component (60 minutes)
 
-#### 2.1 Update GenerationProgress in GenerationWizard.tsx
+#### 2.1 Create CodePreview.tsx
+
 ```typescript
-const GenerationProgress = ({ data }: WizardStepProps) => {
-  const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState('Initializing...');
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isComplete, setIsComplete] = useState(false);
+// src/components/code/CodePreview.tsx
+import { useState } from 'react';
+import Editor from '@monaco-editor/react';
+import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 
-  useEffect(() => {
-    // Simulate generation process
-    const steps = [
-      { progress: 10, message: 'Analyzing schema...', log: 'Reading table definitions' },
-      { progress: 25, message: 'Generating entities...', log: 'Created entity classes' },
-      { progress: 50, message: 'Generating repositories...', log: 'Created repository interfaces' },
-      { progress: 75, message: 'Generating CQRS handlers...', log: 'Created command/query handlers' },
-      { progress: 90, message: 'Generating API controllers...', log: 'Created REST endpoints' },
-      { progress: 100, message: 'Generation complete!', log: 'All files generated successfully' }
-    ];
+interface CodePreviewProps {
+  code: string;
+  language?: string;
+  height?: string;
+  readOnly?: boolean;
+  title?: string;
+}
 
-    let currentIndex = 0;
-    const timer = setInterval(() => {
-      if (currentIndex < steps.length) {
-        const step = steps[currentIndex];
-        setProgress(step.progress);
-        setCurrentStep(step.message);
-        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${step.log}`]);
-        
-        if (step.progress === 100) {
-          setIsComplete(true);
-          clearInterval(timer);
-        }
-        
-        currentIndex++;
-      }
-    }, 800);
+const CodePreview = ({ 
+  code, 
+  language = 'csharp', 
+  height = '400px',
+  readOnly = true,
+  title = 'Code Preview'
+}: CodePreviewProps) => {
+  const [isLoading, setIsLoading] = useState(true);
 
-    return () => clearInterval(timer);
-  }, []);
+  return (
+    <Paper sx={{ p: 2 }} elevation={2}>
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
+      
+      {isLoading && (
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            height,
+            bgcolor: 'grey.900'
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+      
+      <Box sx={{ display: isLoading ? 'none' : 'block' }}>
+        <Editor
+          height={height}
+          language={language}
+          value={code}
+          theme="vs-dark"
+          options={{
+            readOnly,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 14,
+            lineNumbers: 'on',
+            folding: true,
+            automaticLayout: true,
+            wordWrap: 'on'
+          }}
+          onMount={() => setIsLoading(false)}
+        />
+      </Box>
+    </Paper>
+  );
+};
+
+export default CodePreview;
+```
+
+---
+
+### Part 3: CodeViewer with Tabs (60 minutes)
+
+#### 3.1 Create CodeViewer.tsx
+
+```typescript
+// src/components/code/CodeViewer.tsx
+import { useState } from 'react';
+import {
+  Box,
+  Tabs,
+  Tab,
+  IconButton,
+  Tooltip,
+  Alert
+} from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import CodePreview from './CodePreview';
+
+export interface CodeFile {
+  name: string;
+  code: string;
+  language: string;
+}
+
+interface CodeViewerProps {
+  files: CodeFile[];
+}
+
+const CodeViewer = ({ files }: CodeViewerProps) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(files[activeTab].code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  if (files.length === 0) {
+    return (
+      <Alert severity="info">
+        No code files to display
+      </Alert>
+    );
+  }
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        {isComplete ? '✓ Generation Complete!' : 'Generating Code...'}
-      </Typography>
-
-      <Typography variant="body2" color="text.secondary" paragraph>
-        {isComplete 
-          ? `Successfully generated code for ${data.selectedTables.length} table(s)`
-          : currentStep
-        }
-      </Typography>
-
-      {/* Progress Bar */}
-      <Box sx={{ mb: 3 }}>
-        <LinearProgress 
-          variant="determinate" 
-          value={progress} 
-          sx={{ height: 8, borderRadius: 4 }}
-        />
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          {progress}% Complete
-        </Typography>
+      <Box 
+        sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider', 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Tabs 
+          value={activeTab} 
+          onChange={(_, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {files.map((file, index) => (
+            <Tab key={index} label={file.name} />
+          ))}
+        </Tabs>
+        
+        <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'}>
+          <IconButton onClick={handleCopy} color={copied ? 'success' : 'default'}>
+            {copied ? <CheckIcon /> : <ContentCopyIcon />}
+          </IconButton>
+        </Tooltip>
       </Box>
 
-      {/* Generation Log */}
-      <Paper sx={{ p: 2, maxHeight: 300, overflow: 'auto', bgcolor: 'grey.50' }}>
-        <Typography variant="caption" fontWeight="bold" gutterBottom display="block">
-          Generation Log:
-        </Typography>
-        {logs.map((log, index) => (
-          <Typography 
-            key={index} 
-            variant="caption" 
-            component="div" 
-            sx={{ fontFamily: 'monospace', color: 'text.secondary' }}
-          >
-            {log}
-          </Typography>
-        ))}
-      </Paper>
-
-      {/* Success State */}
-      {isComplete && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          Code generation completed successfully! Files are ready for review.
-        </Alert>
-      )}
+      <Box sx={{ mt: 2 }}>
+        <CodePreview
+          code={files[activeTab].code}
+          language={files[activeTab].language}
+          title={`${files[activeTab].name}`}
+          height="500px"
+        />
+      </Box>
     </Box>
   );
+};
+
+export default CodeViewer;
+```
+
+---
+
+### Part 4: Mock Generated Code (30 minutes)
+
+#### 4.1 Create mockCode.ts
+
+```typescript
+// src/utils/mockCode.ts
+
+export const generateMockCode = (tableName: string) => ({
+  entity: `namespace TargCC.Domain.Entities
+{
+    /// <summary>
+    /// ${tableName} entity
+    /// Generated by TargCC Core V2
+    /// </summary>
+    public class ${tableName}
+    {
+        /// <summary>
+        /// Primary key
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// ${tableName} name
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Creation timestamp
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Last update timestamp
+        /// </summary>
+        public DateTime? UpdatedAt { get; set; }
+    }
+}`,
+
+  repository: `namespace TargCC.Infrastructure.Repositories
+{
+    /// <summary>
+    /// Repository interface for ${tableName}
+    /// </summary>
+    public interface I${tableName}Repository
+    {
+        /// <summary>
+        /// Get ${tableName} by ID
+        /// </summary>
+        Task<${tableName}?> GetByIdAsync(int id);
+
+        /// <summary>
+        /// Get all ${tableName}s
+        /// </summary>
+        Task<IEnumerable<${tableName}>> GetAllAsync();
+
+        /// <summary>
+        /// Add new ${tableName}
+        /// </summary>
+        Task<int> AddAsync(${tableName} entity);
+
+        /// <summary>
+        /// Update existing ${tableName}
+        /// </summary>
+        Task UpdateAsync(${tableName} entity);
+
+        /// <summary>
+        /// Delete ${tableName} by ID
+        /// </summary>
+        Task DeleteAsync(int id);
+    }
+}`,
+
+  handler: `namespace TargCC.Application.${tableName}s.Queries
+{
+    /// <summary>
+    /// Query to get ${tableName} by ID
+    /// </summary>
+    public record Get${tableName}Query(int Id) : IRequest<${tableName}>;
+
+    /// <summary>
+    /// Handler for Get${tableName}Query
+    /// </summary>
+    public class Get${tableName}QueryHandler 
+        : IRequestHandler<Get${tableName}Query, ${tableName}>
+    {
+        private readonly I${tableName}Repository _repository;
+
+        public Get${tableName}QueryHandler(I${tableName}Repository repository)
+        {
+            _repository = repository;
+        }
+
+        public async Task<${tableName}> Handle(
+            Get${tableName}Query request, 
+            CancellationToken cancellationToken)
+        {
+            return await _repository.GetByIdAsync(request.Id);
+        }
+    }
+}`,
+
+  controller: `namespace TargCC.API.Controllers
+{
+    /// <summary>
+    /// ${tableName} API controller
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ${tableName}Controller : ControllerBase
+    {
+        private readonly IMediator _mediator;
+
+        public ${tableName}Controller(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        /// <summary>
+        /// Get ${tableName} by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<${tableName}>> Get(int id)
+        {
+            var query = new Get${tableName}Query(id);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get all ${tableName}s
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<${tableName}>>> GetAll()
+        {
+            var query = new GetAll${tableName}sQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+    }
+}`
+});
+
+export const mockCodeFiles = (tableName: string) => {
+  const code = generateMockCode(tableName);
+  
+  return [
+    { name: `${tableName}.cs`, code: code.entity, language: 'csharp' },
+    { name: `I${tableName}Repository.cs`, code: code.repository, language: 'csharp' },
+    { name: `Get${tableName}QueryHandler.cs`, code: code.handler, language: 'csharp' },
+    { name: `${tableName}Controller.cs`, code: code.controller, language: 'csharp' }
+  ];
 };
 ```
 
 ---
 
-### Part 3: Testing (45 min)
+### Part 5: Testing CodePreview (30 minutes)
 
-#### 3.1 ReviewStep Tests
+#### 5.1 Create CodePreview.test.tsx
+
 ```typescript
-// src/__tests__/wizard/ReviewStep.test.tsx (integrated in GenerationWizard.test.tsx)
+// src/__tests__/code/CodePreview.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import CodePreview from '../../components/code/CodePreview';
 
-describe('GenerationWizard - Review Step', () => {
-  it('displays selected tables count', () => {
-    // Navigate to review step and check count
+describe('CodePreview', () => {
+  const sampleCode = 'public class Customer { }';
+
+  it('renders with title', () => {
+    render(<CodePreview code={sampleCode} title="Test Code" />);
+    expect(screen.getByText('Test Code')).toBeInTheDocument();
   });
 
-  it('shows selected tables as chips', () => {
-    // Verify chips are rendered
+  it('shows loading spinner initially', () => {
+    render(<CodePreview code={sampleCode} />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('displays selected options with checkmarks', () => {
-    // Verify options display correctly
+  it('uses csharp language by default', () => {
+    render(<CodePreview code={sampleCode} />);
+    // Monaco editor should be configured for csharp
   });
 
-  it('Edit button navigates back to table selection', () => {
-    // Test Edit button for tables
-  });
-
-  it('Edit button navigates back to options', () => {
-    // Test Edit button for options
-  });
-
-  it('shows summary alert with counts', () => {
-    // Verify summary information
-  });
-});
-```
-
-#### 3.2 Progress Step Tests
-```typescript
-describe('GenerationWizard - Progress Step', () => {
-  it('shows progress bar', () => {
-    // Verify progress bar exists
-  });
-
-  it('displays current status message', () => {
-    // Check status text updates
-  });
-
-  it('shows generation log', () => {
-    // Verify log entries appear
-  });
-
-  it('shows completion state when done', () => {
-    // Wait for completion, check success state
+  it('applies custom height', () => {
+    render(<CodePreview code={sampleCode} height="600px" />);
+    // Editor should use 600px height
   });
 });
 ```
 
 ---
 
-## 🧪 Testing Strategy
+### Part 6: Testing CodeViewer (30 minutes)
 
-### Total Tests Target: 10-12 new tests
+#### 6.1 Create CodeViewer.test.tsx
 
-All tests will be integrated into the existing test files:
-- GenerationWizard.test.tsx (6-8 new tests for Review + Progress)
-- Or create separate ReviewStep.test.tsx and Progress.test.tsx if needed
+```typescript
+// src/__tests__/code/CodeViewer.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import CodeViewer from '../../components/code/CodeViewer';
+
+describe('CodeViewer', () => {
+  const mockFiles = [
+    { name: 'Entity.cs', code: 'public class Entity {}', language: 'csharp' },
+    { name: 'Repository.cs', code: 'public class Repo {}', language: 'csharp' }
+  ];
+
+  it('renders file tabs', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByText('Entity.cs')).toBeInTheDocument();
+    expect(screen.getByText('Repository.cs')).toBeInTheDocument();
+  });
+
+  it('shows first file by default', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByText('Entity.cs')).toBeInTheDocument();
+  });
+
+  it('switches between files when tab clicked', () => {
+    render(<CodeViewer files={mockFiles} />);
+    const repoTab = screen.getByText('Repository.cs');
+    fireEvent.click(repoTab);
+    // Should now show Repository.cs content
+  });
+
+  it('shows copy button', () => {
+    render(<CodeViewer files={mockFiles} />);
+    expect(screen.getByLabelText(/copy to clipboard/i)).toBeInTheDocument();
+  });
+
+  it('shows info alert when no files', () => {
+    render(<CodeViewer files={[]} />);
+    expect(screen.getByText('No code files to display')).toBeInTheDocument();
+  });
+});
+```
 
 ---
 
-## 📁 Files to Modify
+## 📁 Files to Create
 
-### Update Existing
+### New Component Files
 ```
-src/components/wizard/
-└── GenerationWizard.tsx  (Enhance ReviewStep and GenerationProgress inline components)
-```
-
-### Update Tests
-```
-src/__tests__/wizard/
-└── GenerationWizard.test.tsx  (Add 10-12 new tests)
+src/components/code/
+├── CodePreview.tsx          (80 lines)
+└── CodeViewer.tsx           (100 lines)
 ```
 
-Or create new test files:
+### New Utility Files
 ```
-src/__tests__/wizard/
-├── ReviewStep.test.tsx         (6-8 tests)
-└── GenerationProgress.test.tsx (4-6 tests)
+src/utils/
+└── mockCode.ts              (150 lines)
+```
+
+### New Test Files
+```
+src/__tests__/code/
+├── CodePreview.test.tsx     (60 lines)
+└── CodeViewer.test.tsx      (80 lines)
 ```
 
 ---
@@ -297,76 +501,101 @@ src/__tests__/wizard/
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Review step shows tables and options clearly
-- [ ] Edit buttons navigate to correct steps
-- [ ] Progress step animates smoothly
-- [ ] Log shows generation steps
-- [ ] Completion state displays
-- [ ] Full wizard flow works end-to-end
+- [ ] Monaco Editor package installed
+- [ ] CodePreview component renders
+- [ ] Loading spinner shows during Monaco init
+- [ ] C# syntax highlighting works
+- [ ] Dark theme applied
+- [ ] CodeViewer tabs work
+- [ ] File switching functional
+- [ ] Copy to clipboard works
 
 ### Testing
-- [ ] 10-12 new tests written
+- [ ] 8-10 new tests written
 - [ ] All tests have correct logic
-- [ ] Tests cover Review and Progress
-- [ ] Edge cases tested
+- [ ] Monaco loading tested
+- [ ] File switching tested
 
 ### Code Quality
 - [ ] TypeScript strict mode compliant
 - [ ] No build errors or warnings
+- [ ] Components under 150 lines each
+- [ ] Proper prop types and interfaces
 - [ ] Clean, readable code
-- [ ] Proper prop types
 
 ### Documentation
 - [ ] Updated Phase3_Checklist.md
 - [ ] Updated STATUS.md
-- [ ] Updated HANDOFF.md for Day 28
+- [ ] Updated HANDOFF.md for Day 29
+- [ ] Code comments where needed
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Verify Environment (2 min)
+### 1. Environment Setup (5 min)
 ```bash
 cd C:\Disk1\TargCC-Core-V2\src\TargCC.WebUI
 
-# Check if dev server is running
-# If not, start it:
+# Verify app runs
 npm run dev
-
-# Open browser
-# http://localhost:5174/generate
+# Open http://localhost:5174
 ```
 
-### 2. Implementation Order
-1. Enhance ReviewStep component (inline in GenerationWizard.tsx)
-2. Enhance GenerationProgress component (inline in GenerationWizard.tsx)
-3. Add imports (CheckCircleIcon, LinearProgress, Alert)
-4. Test in browser - complete full wizard flow
-5. Write tests for Review step
-6. Write tests for Progress step
-7. Run all tests
+### 2. Install Packages (5 min)
+```bash
+npm install @monaco-editor/react
+npm install @types/monaco-editor --save-dev
+
+# Verify installation
+npm list @monaco-editor/react
+```
+
+### 3. Create Directory Structure (2 min)
+```bash
+# Create code directory
+mkdir src\components\code
+mkdir src\__tests__\code
+mkdir src\utils
+
+# Verify structure
+dir src\components
+dir src\__tests__
+```
+
+### 4. Implementation Order
+1. Install Monaco packages
+2. Create CodePreview component
+3. Test CodePreview in browser
+4. Create mockCode utility
+5. Create CodeViewer component
+6. Test CodeViewer in browser
+7. Write tests
 8. Update documentation
 
 ---
 
 ## 💡 Tips for Success
 
-### Development Workflow
-1. **Component First:** Update ReviewStep and GenerationProgress
-2. **Visual Check:** Test full wizard flow in browser
-3. **Test After:** Write tests once UI is working
-4. **Iterate:** Small changes, frequent checks
+### Monaco Editor Best Practices
+1. **Loading State:** Always show loading spinner
+2. **Performance:** Monaco takes 1-2 seconds to load
+3. **Theme:** Use 'vs-dark' for consistency
+4. **Options:** Disable minimap for cleaner look
+5. **Height:** Use fixed height (not 100%)
 
 ### Common Pitfalls to Avoid
-- Don't make components too complex
-- Keep mock data simple
-- Test the full flow, not just individual steps
-- Remember: This is UI only, no real code generation yet
+- Don't forget loading state
+- Test Monaco initialization
+- Handle empty code gracefully
+- Use appropriate language names
+- Test copy functionality
 
-### Performance Considerations
-- Use React.memo if needed
-- Mock timers should be realistic (not too fast/slow)
-- Keep log entries limited (max 10-15)
+### Testing Considerations
+- Monaco may need mocking in tests
+- Test component structure, not Monaco internals
+- Focus on user interactions
+- Test error states
 
 ---
 
@@ -374,23 +603,22 @@ npm run dev
 
 ```bash
 # Development
-npm run dev              # Start dev server (if not running)
+npm run dev              # Start dev server
 npm test                 # Run tests
-npm test -- wizard       # Run wizard tests only
+npm run build            # Build for production
 
-# Navigate to wizard
-# Browser: http://localhost:5174/generate
-# Or click "Generate All" from Dashboard
+# Check Monaco
+npm list @monaco-editor/react
 ```
 
 ---
 
 **Ready to Start:** ✅  
-**Estimated Duration:** 2-3 hours  
-**Expected Output:** Complete 4-step wizard with 10-12 tests  
-**Next Day:** Day 28 - Monaco Editor Integration
+**Estimated Duration:** 3-4 hours  
+**Expected Output:** Working code preview with Monaco Editor  
+**Next Day:** Day 29 - Monaco Editor Advanced Features
 
 ---
 
 **Created:** 30/11/2025  
-**Status:** Ready for Day 27! 🚀
+**Status:** Ready for Day 28! 🚀
