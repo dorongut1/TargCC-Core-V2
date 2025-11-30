@@ -9,6 +9,7 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Tables } from './pages/Tables';
+import GenerationWizard from './components/wizard/GenerationWizard';
 
 // Create a Material-UI theme
 const theme = createTheme({
@@ -43,7 +44,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/tables" element={<Tables />} />
-              <Route path="/generate" element={<div>Generate Page - Coming Soon</div>} />
+              <Route path="/generate" element={<GenerationWizard />} />
               <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
               <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
               <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />

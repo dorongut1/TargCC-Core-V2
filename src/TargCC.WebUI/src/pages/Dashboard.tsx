@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -28,6 +29,7 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh';
  * Main Dashboard component
  */
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +144,7 @@ export const Dashboard: React.FC = () => {
               Quick Actions
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <Button variant="contained" color="primary">
+              <Button variant="contained" color="primary" onClick={() => navigate('/generate')}>
                 Generate All
               </Button>
               <Button variant="outlined" color="primary">
