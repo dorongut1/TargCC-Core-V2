@@ -64,16 +64,16 @@ export class TargccApiService {
   /**
    * Get all tables from the database schema
    */
-  async getTables(): Promise<Table[]> {
-    const response = await this.client.get<Table[]>('/tables');
+  async getTables(schemaName: string = 'dbo'): Promise<Table[]> {
+    const response = await this.client.get<Table[]>(`/schema/${schemaName}/tables`);
     return response.data;
   }
 
   /**
    * Get a specific table by name
    */
-  async getTable(tableName: string): Promise<Table> {
-    const response = await this.client.get<Table>(`/tables/${tableName}`);
+  async getTable(schemaName: string, tableName: string): Promise<Table> {
+    const response = await this.client.get<Table>(`/schema/${schemaName}/tables/${tableName}`);
     return response.data;
   }
 

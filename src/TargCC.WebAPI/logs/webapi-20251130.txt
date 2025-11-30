@@ -531,3 +531,231 @@ Error Number:156,State:1,Class:15
 2025-11-30 15:31:58.233 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
 2025-11-30 15:31:58.235 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 299.2457 ms
 2025-11-30 15:31:58.237 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 308.1202ms
+2025-11-30 18:43:18.036 +02:00 [INF] Starting TargCC Web API...
+2025-11-30 18:43:18.114 +02:00 [INF] Now listening on: https://localhost:5001
+2025-11-30 18:43:18.115 +02:00 [INF] Now listening on: http://localhost:5000
+2025-11-30 18:43:18.115 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 18:43:18.116 +02:00 [INF] Hosting environment: Development
+2025-11-30 18:43:18.116 +02:00 [INF] Content root path: C:\Disk1\TargCC-Core-V2\src\TargCC.WebAPI
+2025-11-30 18:43:37.051 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 18:43:37.167 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:37.170 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.2674 ms
+2025-11-30 18:43:37.176 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 126.6849ms
+2025-11-30 18:43:37.181 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 18:43:37.183 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 18:43:37.186 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:37.186 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0200 ms
+2025-11-30 18:43:37.187 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 3.9615ms
+2025-11-30 18:43:37.189 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 18:43:38.405 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 18:43:38.405 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 18:43:38.408 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:38.408 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:38.409 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 4.4444ms
+2025-11-30 18:43:38.409 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 4.4842ms
+2025-11-30 18:43:38.416 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 18:43:38.420 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:38.422 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:43:39.315 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 18:43:39.325 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 18:43:39.335 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 18:43:39.336 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:43:39.336 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:43:39.337 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 916.9273 ms
+2025-11-30 18:43:39.338 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:43:39.339 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 922.481ms
+2025-11-30 18:43:39.637 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 18:43:39.638 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 18:43:39.640 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:43:39.642 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 303.9612 ms
+2025-11-30 18:43:39.643 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 307.6483ms
+2025-11-30 18:59:36.934 +02:00 [INF] Application is shutting down...
+2025-11-30 18:59:39.509 +02:00 [INF] Starting TargCC Web API...
+2025-11-30 18:59:39.587 +02:00 [INF] Now listening on: https://localhost:5001
+2025-11-30 18:59:39.588 +02:00 [INF] Now listening on: http://localhost:5000
+2025-11-30 18:59:39.589 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 18:59:39.589 +02:00 [INF] Hosting environment: Development
+2025-11-30 18:59:39.590 +02:00 [INF] Content root path: C:\Disk1\TargCC-Core-V2\src\TargCC.WebAPI
+2025-11-30 18:59:55.003 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 18:59:55.003 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 18:59:55.127 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:55.127 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:55.131 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 129.1943ms
+2025-11-30 18:59:55.131 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 129.4256ms
+2025-11-30 18:59:55.144 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 18:59:55.149 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:55.153 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:59:55.835 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 18:59:55.847 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 18:59:55.864 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 18:59:55.874 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:59:55.874 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:55.877 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:59:55.878 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 725.7531 ms
+2025-11-30 18:59:55.880 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 736.0606ms
+2025-11-30 18:59:56.148 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 18:59:56.149 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 18:59:56.157 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 18:59:56.158 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 281.3931 ms
+2025-11-30 18:59:56.160 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 296.3026ms
+2025-11-30 18:59:57.495 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 18:59:57.499 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:57.500 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.1538 ms
+2025-11-30 18:59:57.503 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 8.1101ms
+2025-11-30 18:59:57.507 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 18:59:57.509 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 18:59:57.512 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:57.513 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0682 ms
+2025-11-30 18:59:57.514 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 4.8821ms
+2025-11-30 18:59:57.518 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 18:59:58.594 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 18:59:58.600 +02:00 [INF] CORS policy execution successful.
+2025-11-30 18:59:58.601 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0220 ms
+2025-11-30 18:59:58.603 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 9.4012ms
+2025-11-30 18:59:58.607 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 19:01:18.215 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 19:01:18.221 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:01:18.222 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0329 ms
+2025-11-30 19:01:18.225 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 10.4065ms
+2025-11-30 19:01:18.229 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 19:01:18.233 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 19:01:18.238 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:01:18.240 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0438 ms
+2025-11-30 19:01:18.242 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 8.7713ms
+2025-11-30 19:01:18.245 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 19:03:33.198 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 19:03:33.201 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:03:33.201 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0170 ms
+2025-11-30 19:03:33.204 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 5.9858ms
+2025-11-30 19:03:33.208 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 19:03:33.210 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/tables - null null
+2025-11-30 19:03:33.213 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:03:33.214 +02:00 [INF] HTTP GET /api/tables responded 404 in 0.0187 ms
+2025-11-30 19:03:33.216 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/tables - 404 0 null 5.9302ms
+2025-11-30 19:03:33.221 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/tables, Response status code: 404
+2025-11-30 19:09:40.839 +02:00 [INF] Application is shutting down...
+2025-11-30 19:09:43.523 +02:00 [INF] Starting TargCC Web API...
+2025-11-30 19:09:43.600 +02:00 [INF] Now listening on: https://localhost:5001
+2025-11-30 19:09:43.602 +02:00 [INF] Now listening on: http://localhost:5000
+2025-11-30 19:09:43.602 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 19:09:43.603 +02:00 [INF] Hosting environment: Development
+2025-11-30 19:09:43.603 +02:00 [INF] Content root path: C:\Disk1\TargCC-Core-V2\src\TargCC.WebAPI
+2025-11-30 19:09:55.131 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - null null
+2025-11-30 19:09:55.263 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:55.267 +02:00 [INF] HTTP GET /api/schema/dbo/tables responded 404 in 0.3562 ms
+2025-11-30 19:09:55.282 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - 404 0 null 151.6564ms
+2025-11-30 19:09:55.290 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/schema/dbo/tables, Response status code: 404
+2025-11-30 19:09:55.292 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - null null
+2025-11-30 19:09:55.295 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:55.296 +02:00 [INF] HTTP GET /api/schema/dbo/tables responded 404 in 0.0280 ms
+2025-11-30 19:09:55.298 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - 404 0 null 5.8906ms
+2025-11-30 19:09:55.300 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/schema/dbo/tables, Response status code: 404
+2025-11-30 19:09:57.391 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:09:57.391 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:09:57.395 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:57.397 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:57.398 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 6.6756ms
+2025-11-30 19:09:57.398 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 6.6211ms
+2025-11-30 19:09:57.404 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:09:57.406 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:57.407 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:09:57.414 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:09:57.419 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:09:57.426 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:09:57.426 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:09:57.427 +02:00 [INF] HTTP GET /api/connections responded 200 in 20.6032 ms
+2025-11-30 19:09:57.429 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:09:57.431 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 27.1374ms
+2025-11-30 19:09:57.431 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:09:57.435 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:09:57.435 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:09:57.436 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:09:57.437 +02:00 [INF] HTTP GET /api/connections responded 200 in 5.7170 ms
+2025-11-30 19:09:57.439 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 12.5302ms
+2025-11-30 19:10:02.819 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - null null
+2025-11-30 19:10:02.821 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:02.822 +02:00 [INF] HTTP GET /api/schema/dbo/tables responded 404 in 0.0127 ms
+2025-11-30 19:10:02.823 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - 404 0 null 4.7567ms
+2025-11-30 19:10:02.825 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/schema/dbo/tables, Response status code: 404
+2025-11-30 19:10:02.830 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - null null
+2025-11-30 19:10:02.832 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:02.832 +02:00 [INF] HTTP GET /api/schema/dbo/tables responded 404 in 0.0104 ms
+2025-11-30 19:10:02.833 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo/tables - 404 0 null 3.793ms
+2025-11-30 19:10:02.835 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5000/api/schema/dbo/tables, Response status code: 404
+2025-11-30 19:10:04.355 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 19:10:04.357 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - null null
+2025-11-30 19:10:04.359 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:04.357 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:04.359 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 2.4877ms
+2025-11-30 19:10:04.361 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/schema/dbo - 204 null null 5.6892ms
+2025-11-30 19:10:04.365 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 19:10:04.372 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:04.373 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 19:10:05.167 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:10:05.174 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:10:05.180 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 19:10:05.180 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/schema/dbo - application/json null
+2025-11-30 19:10:05.182 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 808.5926 ms
+2025-11-30 19:10:05.183 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:05.184 +02:00 [INF] Executing endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 19:10:05.184 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 819.4411ms
+2025-11-30 19:10:05.469 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:10:05.470 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:10:05.473 +02:00 [INF] Executed endpoint 'HTTP: GET /api/schema/{schemaName}'
+2025-11-30 19:10:05.474 +02:00 [INF] HTTP GET /api/schema/dbo responded 200 in 289.5185 ms
+2025-11-30 19:10:05.476 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/schema/dbo - 200 null application/json; charset=utf-8 295.4982ms
+2025-11-30 19:10:21.443 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:10:21.443 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:10:21.446 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:21.449 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:21.450 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 7.7935ms
+2025-11-30 19:10:21.451 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 8.8878ms
+2025-11-30 19:10:21.455 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:10:21.461 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:21.461 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:10:21.462 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:10:21.463 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:10:21.464 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:10:21.465 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:10:21.466 +02:00 [INF] HTTP GET /api/connections responded 200 in 4.5102 ms
+2025-11-30 19:10:21.468 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:10:21.469 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 14.1526ms
+2025-11-30 19:10:21.470 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:10:21.476 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:10:21.477 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:10:21.478 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:10:21.479 +02:00 [INF] HTTP GET /api/connections responded 200 in 8.6139 ms
+2025-11-30 19:10:21.481 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 15.1959ms
+2025-11-30 19:13:49.219 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:13:49.222 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:13:49.223 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:13:49.225 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:13:49.227 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 7.3851ms
+2025-11-30 19:13:49.229 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 7.1141ms
+2025-11-30 19:13:49.233 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:13:49.239 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:13:49.240 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:13:49.242 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:13:49.242 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:13:49.243 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:13:49.244 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:13:49.245 +02:00 [INF] HTTP GET /api/connections responded 200 in 4.6380 ms
+2025-11-30 19:13:49.248 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:13:49.249 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 16.082ms
+2025-11-30 19:13:49.250 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:13:49.254 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:13:49.255 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:13:49.257 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:13:49.259 +02:00 [INF] HTTP GET /api/connections responded 200 in 8.1499 ms
+2025-11-30 19:13:49.261 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 16.7079ms
+2025-11-30 19:15:32.206 +02:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/connections - null null
+2025-11-30 19:15:32.209 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:15:32.210 +02:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/connections - 204 null null 3.4377ms
+2025-11-30 19:15:32.213 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/connections - application/json null
+2025-11-30 19:15:32.215 +02:00 [INF] CORS policy execution successful.
+2025-11-30 19:15:32.215 +02:00 [INF] Executing endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:15:32.216 +02:00 [INF] Setting HTTP status code 200.
+2025-11-30 19:15:32.217 +02:00 [INF] Writing value of type '<>f__AnonymousType2`2' as Json.
+2025-11-30 19:15:32.218 +02:00 [INF] Executed endpoint 'HTTP: GET /api/connections'
+2025-11-30 19:15:32.219 +02:00 [INF] HTTP GET /api/connections responded 200 in 3.6859 ms
+2025-11-30 19:15:32.221 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/connections - 200 null application/json; charset=utf-8 8.0021ms

@@ -7,6 +7,147 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - Day 34 - 2025-11-30
+
+### 🗄️ Connection Management System
+
+**Phase:** 3C - Local Web UI (Day 26-31) - Connection Manager Implementation
+
+### Added
+
+#### Backend Services
+- **ConnectionService** - Full CRUD for database connections with JSON file persistence
+  - `GetConnectionsAsync()` - Retrieve all connections ordered by LastUsed
+  - `GetConnectionAsync(id)` - Get single connection by ID
+  - `AddConnectionAsync(connection)` - Create new connection with auto-generated ID
+  - `UpdateConnectionAsync(connection)` - Modify existing connection
+  - `DeleteConnectionAsync(id)` - Remove connection
+  - `TestConnectionAsync(connectionString)` - Validate connection string
+  - `UpdateLastUsedAsync(id)` - Update LastUsed timestamp
+  - Thread-safe operations using SemaphoreSlim
+  - Storage location: `%AppData%\TargCC\connections.json`
+
+- **SchemaService.GetTablePreviewAsync()** - Preview table data
+  - Fetches TOP N rows with column information
+  - Returns total row count
+  - Used for table exploration in UI
+
+#### Backend Models
+- **DatabaseConnectionInfo** - Connection metadata (renamed from ConnectionInfo to avoid ASP.NET conflict)
+  - Properties: Id, Name, Server, Database, ConnectionString, LastUsed, Created, UseIntegratedSecurity, Username
+- **TablePreviewDto** - Table preview response
+  - Properties: TableName, Columns, Data, TotalRowCount
+- **TestConnectionRequest** - Connection test request model
+
+#### Backend API Endpoints (8 new endpoints)
+- `GET /api/connections` - Get all connections
+- `GET /api/connections/{id}` - Get connection by ID
+- `POST /api/connections` - Create new connection
+- `PUT /api/connections/{id}` - Update connection
+- `DELETE /api/connections/{id}` - Delete connection
+- `POST /api/connections/test` - Test connection string
+- `GET /api/schema/{schema}/{table}/preview` - Preview table data (10 rows default)
+- `GET /api/schema/{schemaName}/tables` - Get tables in schema (fixed 404 error)
+
+#### Frontend Hooks
+- **useConnections** - Connection management hook
+  - State: connections, loading, error, selectedConnection
+  - Methods: loadConnections, addConnection, updateConnection, deleteConnection, testConnection, selectConnection
+  - Auto-selects most recently used connection
+  - LocalStorage integration for client-side persistence
+
+- **useSchemaCache** - Client-side schema caching
+  - 5-minute TTL (300,000ms)
+  - Singleton pattern for cross-component sharing
+  - Methods: set, get, invalidate, clear, has
+  - Reduces redundant API calls
+
+#### Frontend Components
+- **Connections Page** (`pages/Connections.tsx`) - Full-page connection manager
+  - Connection list with visual cards
+  - Test connection button (validates connection string)
+  - Edit button (placeholder for future implementation)
+  - Delete button with confirmation
+  - Add connection button (placeholder)
+  - Last used timestamp display
+  - Empty state with helpful message
+
+#### Frontend API Client
+- **connectionApi.ts** - API client for connection operations
+  - fetchConnections, addConnection, updateConnection, deleteConnection, testConnection
+  - Proper error handling and TypeScript types
+
+#### UI Integration
+- Added "Connections" to sidebar navigation (with StorageIcon)
+- Added `/connections` route to App.tsx
+- Fixed API endpoint mismatches in `services/api.ts`:
+  - `getTables()` now calls `/api/schema/{schemaName}/tables`
+  - `getTable()` now calls `/api/schema/{schemaName}/tables/{tableName}`
+
+### Fixed
+- **Compilation Errors**
+  - Renamed `ConnectionInfo` → `DatabaseConnectionInfo` (14 errors from ASP.NET Core conflict)
+  - Created missing `TablePreviewDto` and `TestConnectionRequest` models
+  - Fixed parameter order in Program.cs endpoint registration
+
+- **Runtime Errors**
+  - Fixed Tables page 404 error - added missing `/api/schema/{schemaName}/tables` endpoint
+  - Fixed ConnectionManager not displaying - created dedicated Connections page component
+  - Fixed API endpoint paths in frontend to match backend routes
+
+### Tests
+
+#### Backend Tests - 9/9 Passing ✅
+**ConnectionServiceTests.cs** (195 lines)
+- `GetConnectionsAsync_WhenNoConnections_ReturnsEmptyList`
+- `AddConnectionAsync_AddsConnectionSuccessfully`
+- `GetConnectionsAsync_ReturnsConnectionsOrderedByLastUsed`
+- `GetConnectionAsync_WithValidId_ReturnsConnection`
+- `GetConnectionAsync_WithInvalidId_ReturnsNull`
+- `UpdateConnectionAsync_UpdatesExistingConnection`
+- `DeleteConnectionAsync_RemovesConnection`
+- `UpdateLastUsedAsync_UpdatesTimestamp`
+- `TestConnectionAsync_WithInvalidConnectionString_ReturnsFalse`
+
+**SchemaServiceTests.cs** (80 lines) - 3 tests skipped (require SQL Server)
+- `GetTablePreviewAsync_WithValidTable_ReturnsPreviewData` (skipped)
+- `GetTablePreviewAsync_WithInvalidTable_ThrowsException` (skipped)
+- `GetTablePreviewAsync_RespectsRowCountLimit` (skipped)
+
+#### Frontend Tests - 6/6 Passing ✅
+**useSchemaCache.test.ts** (77 lines)
+- Cache data set/get functionality
+- Null return for non-existent keys
+- Data expiration after TTL (5 minutes)
+- Data persistence before TTL
+- Clear all cache
+- Invalidate specific key
+
+**useConnections.test.ts** (138 lines) - 0/6 Blocked by React 19 ⏸️
+- All tests blocked by `@testing-library/react` React 19 incompatibility
+- Tests ready to run when library is updated
+
+### Technical Notes
+- Connection storage uses JSON file at `%AppData%\TargCC\connections.json`
+- Thread-safe operations using SemaphoreSlim for concurrent access
+- Client-side caching reduces API load (5-minute TTL)
+- Backend running on http://localhost:5000
+- Frontend running on http://localhost:5174
+
+### Known Issues
+- Edit Connection form not implemented (placeholder UI only)
+- Tables page Actions (Generate, View, Edit) are placeholders
+  - Generation Status column not functional (no metadata tracking yet)
+  - Last Generated column not functional (no history tracking yet)
+  - These features planned for Phase 4 (Days 35-39)
+- Dashboard TypeScript errors with MUI Grid v6 (pre-existing, unrelated to Day 34)
+
+### Documentation
+- Day 34 transcript: `/mnt/transcripts/2025-11-30-17-19-17-day34-connection-manager-implementation.txt`
+- Updated project status: Day 34/45 completed
+
+---
+
 ## [2.0.0-beta.1] - 2025-11-27
 
 ### 🎉 Phase 3A Complete - CLI Core (100%)

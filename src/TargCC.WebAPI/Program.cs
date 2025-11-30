@@ -9,6 +9,7 @@ using TargCC.AI.Services;
 using TargCC.AI.Models;
 using TargCC.CLI.Services.Generation;
 using TargCC.WebAPI.Extensions;
+using TargCC.WebAPI.Models;
 using TargCC.WebAPI.Models.Requests;
 using TargCC.WebAPI.Models.Responses;
 using TargCC.WebAPI.Services;
@@ -53,6 +54,9 @@ try
     
     // Add Schema Service
     builder.Services.AddScoped<ISchemaService, SchemaService>();
+    
+    // Add Connection Service
+    builder.Services.AddSingleton<IConnectionService, ConnectionService>();
 }
 catch (Exception ex)
 {
@@ -192,6 +196,181 @@ try
         }
     })
     .WithName("RefreshSchema")
+    .WithOpenApi();
+
+    // Schema endpoints - Get tables in schema
+    app.MapGet("/api/schema/{schemaName}/tables", async (
+        string schemaName,
+        [FromServices] ISchemaService schemaService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+            
+            var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
+            
+            return Results.Ok(schema.Tables);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching tables for schema {SchemaName}", schemaName);
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message
+            });
+        }
+    })
+    .WithName("GetSchemaTablesV2")
+    .WithOpenApi();
+
+    // Connection endpoints - Get all connections
+    app.MapGet("/api/connections", async ([FromServices] IConnectionService connectionService) =>
+    {
+        try
+        {
+            var connections = await connectionService.GetConnectionsAsync();
+            return Results.Ok(new { Success = true, Data = connections });
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("GetConnections")
+    .WithOpenApi();
+
+    // Connection endpoints - Get single connection
+    app.MapGet("/api/connections/{id}", async (
+        string id,
+        [FromServices] IConnectionService connectionService) =>
+    {
+        try
+        {
+            var connection = await connectionService.GetConnectionAsync(id);
+            if (connection == null)
+            {
+                return Results.NotFound(new { Success = false, Error = "Connection not found" });
+            }
+            return Results.Ok(new { Success = true, Data = connection });
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("GetConnection")
+    .WithOpenApi();
+
+    // Connection endpoints - Add connection
+    app.MapPost("/api/connections", async (
+        [FromBody] DatabaseConnectionInfo connection,
+        [FromServices] IConnectionService connectionService) =>
+    {
+        try
+        {
+            var added = await connectionService.AddConnectionAsync(connection);
+            return Results.Ok(new { Success = true, Data = added });
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("AddConnection")
+    .WithOpenApi();
+
+    // Connection endpoints - Update connection
+    app.MapPut("/api/connections/{id}", async (
+        string id,
+        [FromBody] DatabaseConnectionInfo connection,
+        [FromServices] IConnectionService connectionService) =>
+    {
+        try
+        {
+            connection.Id = id;
+            await connectionService.UpdateConnectionAsync(connection);
+            return Results.Ok(new { Success = true, Message = "Connection updated" });
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("UpdateConnection")
+    .WithOpenApi();
+
+    // Connection endpoints - Delete connection
+    app.MapDelete("/api/connections/{id}", async (
+        string id,
+        [FromServices] IConnectionService connectionService) =>
+    {
+        try
+        {
+            await connectionService.DeleteConnectionAsync(id);
+            return Results.Ok(new { Success = true, Message = "Connection deleted" });
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("DeleteConnection")
+    .WithOpenApi();
+
+    // Connection endpoints - Test connection
+    app.MapPost("/api/connections/test", async (
+        [FromBody] TestConnectionRequest request,
+        [FromServices] IConnectionService connectionService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            var isValid = await connectionService.TestConnectionAsync(request.ConnectionString);
+            return Results.Ok(new { 
+                Success = true, 
+                IsValid = isValid,
+                Message = isValid ? "Connection successful" : "Connection failed"
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error testing connection");
+            return Results.Ok(new { 
+                Success = false, 
+                IsValid = false,
+                Error = ex.Message 
+            });
+        }
+    })
+    .WithName("TestConnection")
+    .WithOpenApi();
+
+    // Table preview endpoint
+    app.MapGet("/api/schema/{schemaName}/{tableName}/preview", async (
+        string schemaName,
+        string tableName,
+        [FromServices] ISchemaService schemaService,
+        ILogger<Program> logger,
+        [FromQuery] int rowCount = 10) =>
+    {
+        try
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+            
+            var preview = await schemaService.GetTablePreviewAsync(connectionString, schemaName, tableName, rowCount);
+            return Results.Ok(new { Success = true, Data = preview });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting table preview for {SchemaName}.{TableName}", schemaName, tableName);
+            return Results.Ok(new { Success = false, Error = ex.Message });
+        }
+    })
+    .WithName("GetTablePreview")
     .WithOpenApi();
 
     // Generate endpoint

@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchSchemaDetails, refreshSchema } from '../api/schemaApi';
+import { schemaCache } from './useSchemaCache';
 import type { DatabaseSchema } from '../types/schema';
 
 /**
@@ -38,11 +39,27 @@ export function useSchema(
    * Load schema from API
    */
   const loadSchema = useCallback(async (name: string) => {
+    // Check cache first
+    const cacheKey = `schema:${name}`;
+    const cached = schemaCache.get<DatabaseSchema>(cacheKey);
+    
+    if (cached) {
+      console.log(`Loading schema '${name}' from cache`);
+      setSchema(cached);
+      setLastUpdated(new Date());
+      setIsConnected(true);
+      setLoading(false);
+      return;
+    }
+
+    // Load from API if not cached
+    console.log(`Loading schema '${name}' from API`);
     setLoading(true);
     setError(null);
 
     try {
       const data = await fetchSchemaDetails(name);
+      schemaCache.set(cacheKey, data); // Cache the result
       setSchema(data);
       setLastUpdated(new Date());
       setIsConnected(true);
@@ -65,11 +82,17 @@ export function useSchema(
       return;
     }
 
+    // Invalidate cache on refresh
+    const cacheKey = `schema:${schemaName}`;
+    schemaCache.invalidate(cacheKey);
+    
+    console.log(`Refreshing schema '${schemaName}' (bypassing cache)`);
     setLoading(true);
     setError(null);
 
     try {
       const data = await refreshSchema(schemaName);
+      schemaCache.set(cacheKey, data); // Update cache with fresh data
       setSchema(data);
       setLastUpdated(new Date());
       setIsConnected(true);

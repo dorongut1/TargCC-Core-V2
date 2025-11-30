@@ -17,6 +17,16 @@ export interface SchemaListItem {
 }
 
 /**
+ * Table preview data from API
+ */
+export interface TablePreview {
+  tableName: string;
+  columns: string[];
+  data: Array<Record<string, any>>;
+  totalRowCount: number;
+}
+
+/**
  * Generic API response wrapper
  */
 export interface ApiResponse<T> {
@@ -100,6 +110,29 @@ export async function refreshSchema(schemaName: string): Promise<DatabaseSchema>
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to refresh schema '${schemaName}': ${error.message}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Get table preview with sample data
+ */
+export async function fetchTablePreview(
+  schemaName: string,
+  tableName: string,
+  rowCount: number = 10
+): Promise<TablePreview> {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/api/schema/${encodeURIComponent(schemaName)}/${encodeURIComponent(tableName)}/preview?rowCount=${rowCount}`,
+      createFetchOptions({ method: 'GET' })
+    );
+
+    return await handleResponse<TablePreview>(response);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to fetch table preview for '${tableName}': ${error.message}`);
     }
     throw error;
   }

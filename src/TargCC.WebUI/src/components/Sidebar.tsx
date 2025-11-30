@@ -21,6 +21,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SecurityIcon from '@mui/icons-material/Security';
 import CodeIcon from '@mui/icons-material/Code';
 import ChatIcon from '@mui/icons-material/Chat';
+import StorageIcon from '@mui/icons-material/Storage';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -32,6 +33,7 @@ const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Tables', icon: <TableChartIcon />, path: '/tables' },
   { text: 'Schema', icon: <AccountTreeIcon />, path: '/schema' },
+  { text: 'Connections', icon: <StorageIcon />, path: '/connections' },
   { text: 'Generate', icon: <CodeIcon />, path: '/generate' },
   { text: 'AI Suggestions', icon: <AutoAwesomeIcon />, path: '/suggestions' },
   { text: 'Security', icon: <SecurityIcon />, path: '/security' },

@@ -5,6 +5,7 @@
 using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using TargCC.WebAPI.Models;
 
 namespace TargCC.WebAPI.Services;
 
@@ -156,5 +157,49 @@ public class SchemaService : ISchemaService
         // Check for TargCC special column prefixes
         var targccPrefixes = new[] { "eno_", "ent_", "clc_", "lkp_", "rel_" };
         return columns.Any(c => targccPrefixes.Any(prefix => c.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <inheritdoc/>
+    public async Task<TablePreviewDto> GetTablePreviewAsync(string connectionString, string schemaName, string tableName, int rowCount = 10)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        // Get column names
+        var columnsSql = @"
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = @SchemaName AND TABLE_NAME = @TableName
+            ORDER BY ORDINAL_POSITION";
+
+        var columns = (await connection.QueryAsync<string>(columnsSql, new { SchemaName = schemaName, TableName = tableName })).ToList();
+
+        // Get preview data
+        var dataSql = $@"
+            SELECT TOP {rowCount} *
+            FROM [{schemaName}].[{tableName}]";
+
+        var data = (await connection.QueryAsync(dataSql)).Select(row =>
+        {
+            var dict = new Dictionary<string, object?>();
+            var rowDict = (IDictionary<string, object?>)row;
+            foreach (var kvp in rowDict)
+            {
+                dict[kvp.Key] = kvp.Value;
+            }
+            return dict;
+        }).ToList();
+
+        // Get total row count
+        var countSql = $"SELECT COUNT(*) FROM [{schemaName}].[{tableName}]";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+
+        return new TablePreviewDto
+        {
+            TableName = tableName,
+            Columns = columns,
+            Data = data,
+            TotalRowCount = totalCount
+        };
     }
 }
