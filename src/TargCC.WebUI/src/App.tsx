@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Tables } from './pages/Tables';
 import GenerationWizard from './components/wizard/GenerationWizard';
 import CodeDemo from './pages/CodeDemo';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Create a Material-UI theme
 const theme = createTheme({
@@ -37,24 +38,26 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/tables" element={<Tables />} />
-              <Route path="/generate" element={<GenerationWizard />} />
-              <Route path="/code-demo" element={<CodeDemo />} />
-              <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
-              <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
-              <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
-            </Routes>
-          </Layout>
-        </Router>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/tables" element={<Tables />} />
+                <Route path="/generate" element={<GenerationWizard />} />
+                <Route path="/code-demo" element={<CodeDemo />} />
+                <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
+                <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
+                <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
+              </Routes>
+            </Layout>
+          </Router>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

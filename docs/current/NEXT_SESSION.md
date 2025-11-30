@@ -1,44 +1,45 @@
-# Next Session: Day 30 - Progress Display & Polish
+# Next Session: Day 31 - Schema Designer Foundation
 
 **Date:** Next Session  
 **Phase:** 3C - Local Web UI  
-**Day:** 30 of 45  
+**Day:** 31 of 45  
 **Duration:** ~3-4 hours  
 **Status:** Ready to Start
 
 ---
 
-## 🎯 Day 30 Objectives
+## 🎯 Day 31 Objectives
 
 ### Primary Goal
-Add real-time progress tracking, status indicators, error handling, and polish the UI for a professional generation experience.
+Create a visual schema designer that displays database structure with tables, columns, relationships, and interactive exploration features.
 
 ### Specific Deliverables
 
-1. **Progress Tracker Component** (60 min)
-   - Real-time status updates
-   - Current file indicator
-   - Percentage display
-   - Time estimates
-   - Visual progress bars
+1. **SchemaViewer Component** (90 min)
+   - Visual table display
+   - Column list with types
+   - Primary/Foreign key indicators
+   - Search and filter
+   - Responsive grid layout
 
-2. **Status Indicators** (45 min)
-   - File type icons
-   - Generation status badges
-   - Color-coded states
-   - Success/Error indicators
+2. **TableCard Component** (45 min)
+   - Table name header
+   - Column details
+   - Relationship indicators
+   - Expandable sections
+   - Action buttons
 
-3. **Error Handling** (45 min)
-   - Improved error boundaries
-   - Retry functionality
-   - Clear error messages
-   - Validation feedback
+3. **ColumnList Component** (30 min)
+   - Column names and types
+   - Nullable indicators
+   - Key icons
+   - Type badges
 
-4. **Loading States** (45 min)
-   - Skeleton loaders
-   - Smooth transitions
-   - Better loading indicators
-   - Professional animations
+4. **Mock Schema Data** (30 min)
+   - Sample database structure
+   - Multiple tables with relationships
+   - Realistic column definitions
+   - Primary/Foreign keys
 
 5. **Testing & Polish** (45 min)
    - 8-10 new tests
@@ -49,313 +50,379 @@ Add real-time progress tracking, status indicators, error handling, and polish t
 
 ## 📋 Detailed Implementation Plan
 
-### Part 1: Progress Tracker Component (60 minutes)
+### Part 1: Mock Schema Data (30 minutes)
 
-#### 1.1 Create ProgressTracker Component
+#### 1.1 Create Schema Types
 
 ```typescript
-// src/components/wizard/ProgressTracker.tsx
+// src/types/schema.ts
 
-import { Box, Paper, LinearProgress, Typography, Chip } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import ErrorIcon from '@mui/icons-material/Error';
-
-interface ProgressItem {
-  id: string;
+export interface Column {
   name: string;
-  status: 'pending' | 'processing' | 'complete' | 'error';
-  message?: string;
+  type: string;
+  nullable: boolean;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+  foreignKeyTable?: string;
+  foreignKeyColumn?: string;
+  maxLength?: number;
+  defaultValue?: string;
 }
 
-interface ProgressTrackerProps {
-  items: ProgressItem[];
-  currentProgress: number;
+export interface Table {
+  name: string;
+  schema: string;
+  columns: Column[];
+  rowCount?: number;
+  hasTargCCColumns: boolean;
 }
 
-const ProgressTracker = ({ items, currentProgress }: ProgressTrackerProps) => {
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'complete': return <CheckCircleIcon color="success" />;
-      case 'error': return <ErrorIcon color="error" />;
-      case 'processing': return <PendingIcon color="primary" />;
-      default: return <PendingIcon color="disabled" />;
-    }
-  };
+export interface DatabaseSchema {
+  tables: Table[];
+  relationships: Relationship[];
+}
 
+export interface Relationship {
+  fromTable: string;
+  fromColumn: string;
+  toTable: string;
+  toColumn: string;
+  type: 'one-to-one' | 'one-to-many' | 'many-to-many';
+}
+```
+
+#### 1.2 Create Mock Schema
+
+```typescript
+// src/utils/mockSchema.ts
+
+import { DatabaseSchema } from '../types/schema';
+
+export const mockSchema: DatabaseSchema = {
+  tables: [
+    {
+      name: 'Customer',
+      schema: 'dbo',
+      rowCount: 1250,
+      hasTargCCColumns: true,
+      columns: [
+        { name: 'CustomerId', type: 'int', nullable: false, isPrimaryKey: true, isForeignKey: false },
+        { name: 'eno_FirstName', type: 'nvarchar', nullable: false, isPrimaryKey: false, isForeignKey: false, maxLength: 50 },
+        { name: 'eno_LastName', type: 'nvarchar', nullable: false, isPrimaryKey: false, isForeignKey: false, maxLength: 50 },
+        { name: 'eno_Email', type: 'nvarchar', nullable: true, isPrimaryKey: false, isForeignKey: false, maxLength: 100 },
+        { name: 'ent_CreatedDate', type: 'datetime2', nullable: false, isPrimaryKey: false, isForeignKey: false },
+      ]
+    },
+    {
+      name: 'Order',
+      schema: 'dbo',
+      rowCount: 5430,
+      hasTargCCColumns: true,
+      columns: [
+        { name: 'OrderId', type: 'int', nullable: false, isPrimaryKey: true, isForeignKey: false },
+        { name: 'CustomerId', type: 'int', nullable: false, isPrimaryKey: false, isForeignKey: true, foreignKeyTable: 'Customer', foreignKeyColumn: 'CustomerId' },
+        { name: 'OrderDate', type: 'datetime2', nullable: false, isPrimaryKey: false, isForeignKey: false },
+        { name: 'clc_TotalAmount', type: 'decimal', nullable: false, isPrimaryKey: false, isForeignKey: false },
+        { name: 'ent_ModifiedDate', type: 'datetime2', nullable: true, isPrimaryKey: false, isForeignKey: false },
+      ]
+    },
+    // Add more tables...
+  ],
+  relationships: [
+    {
+      fromTable: 'Order',
+      fromColumn: 'CustomerId',
+      toTable: 'Customer',
+      toColumn: 'CustomerId',
+      type: 'many-to-one'
+    },
+    // Add more relationships...
+  ]
+};
+```
+
+---
+
+### Part 2: ColumnList Component (30 minutes)
+
+```typescript
+// src/components/schema/ColumnList.tsx
+
+import { Box, Typography, Chip } from '@mui/material';
+import KeyIcon from '@mui/icons-material/Key';
+import LinkIcon from '@mui/icons-material/Link';
+import { Column } from '../../types/schema';
+
+interface ColumnListProps {
+  columns: Column[];
+}
+
+const ColumnList = ({ columns }: ColumnListProps) => {
   return (
-    <Paper sx={{ p: 3 }} elevation={2}>
-      <Typography variant="h6" gutterBottom>
-        Generation Progress
-      </Typography>
-
-      <LinearProgress 
-        variant="determinate" 
-        value={currentProgress} 
-        sx={{ mb: 2, height: 8, borderRadius: 4 }}
-      />
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {items.map((item) => (
-          <Box 
-            key={item.id}
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              gap: 2,
-              p: 1,
-              borderRadius: 1,
-              bgcolor: item.status === 'processing' ? 'action.hover' : 'transparent'
-            }}
-          >
-            {getStatusIcon(item.status)}
-            <Typography variant="body2" sx={{ flex: 1 }}>
-              {item.name}
+    <Box>
+      {columns.map((column) => (
+        <Box
+          key={column.name}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 1,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            '&:hover': {
+              bgcolor: 'action.hover'
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+            {column.isPrimaryKey && <KeyIcon fontSize="small" color="primary" />}
+            {column.isForeignKey && <LinkIcon fontSize="small" color="secondary" />}
+            
+            <Typography variant="body2" fontWeight={column.isPrimaryKey ? 'bold' : 'normal'}>
+              {column.name}
             </Typography>
-            {item.message && (
-              <Typography variant="caption" color="text.secondary">
-                {item.message}
-              </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Chip 
+              label={column.type} 
+              size="small" 
+              variant="outlined"
+            />
+            {!column.nullable && (
+              <Chip 
+                label="NOT NULL" 
+                size="small" 
+                color="error"
+                variant="outlined"
+              />
             )}
           </Box>
-        ))}
-      </Box>
-    </Paper>
-  );
-};
-
-export default ProgressTracker;
-```
-
----
-
-### Part 2: Status Indicators (45 minutes)
-
-#### 2.1 Create StatusBadge Component
-
-```typescript
-// src/components/common/StatusBadge.tsx
-
-import { Chip } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import PendingIcon from '@mui/icons-material/Pending';
-
-type Status = 'success' | 'error' | 'pending' | 'processing';
-
-interface StatusBadgeProps {
-  status: Status;
-  label?: string;
-}
-
-const StatusBadge = ({ status, label }: StatusBadgeProps) => {
-  const config = {
-    success: { color: 'success' as const, icon: <CheckCircleIcon fontSize="small" />, defaultLabel: 'Complete' },
-    error: { color: 'error' as const, icon: <ErrorIcon fontSize="small" />, defaultLabel: 'Error' },
-    pending: { color: 'default' as const, icon: <PendingIcon fontSize="small" />, defaultLabel: 'Pending' },
-    processing: { color: 'primary' as const, icon: <PendingIcon fontSize="small" />, defaultLabel: 'Processing' },
-  };
-
-  const { color, icon, defaultLabel } = config[status];
-
-  return (
-    <Chip
-      icon={icon}
-      label={label || defaultLabel}
-      color={color}
-      size="small"
-      variant="outlined"
-    />
-  );
-};
-
-export default StatusBadge;
-```
-
-#### 2.2 Add File Type Icons
-
-```typescript
-// src/utils/fileTypeIcons.tsx
-
-import DescriptionIcon from '@mui/icons-material/Description'; // Entity
-import StorageIcon from '@mui/icons-material/Storage'; // Repository
-import HandlerIcon from '@mui/icons-material/Autorenew'; // Handler
-import ApiIcon from '@mui/icons-material/Api'; // API
-
-export const getFileTypeIcon = (type: string) => {
-  switch (type.toLowerCase()) {
-    case 'entity': return <DescriptionIcon />;
-    case 'repository': return <StorageIcon />;
-    case 'handler': return <HandlerIcon />;
-    case 'api': return <ApiIcon />;
-    default: return <DescriptionIcon />;
-  }
-};
-```
-
----
-
-### Part 3: Error Handling (45 minutes)
-
-#### 3.1 Enhanced Error Boundary
-
-```typescript
-// src/components/common/ErrorBoundary.tsx
-
-import { Component, ReactNode } from 'react';
-import { Box, Paper, Typography, Button, Alert } from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
-import RefreshIcon from '@mui/icons-material/Refresh';
-
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error?: Error;
-}
-
-class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  handleReset = () => {
-    this.setState({ hasError: false, error: undefined });
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <Paper sx={{ p: 4, textAlign: 'center', maxWidth: 600, mx: 'auto', mt: 4 }}>
-          <ErrorIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-          <Typography variant="h5" gutterBottom>
-            Something went wrong
-          </Typography>
-          <Alert severity="error" sx={{ my: 2, textAlign: 'left' }}>
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </Alert>
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={this.handleReset}
-          >
-            Try Again
-          </Button>
-        </Paper>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;
-```
-
----
-
-### Part 4: Loading States (45 minutes)
-
-#### 4.1 Skeleton Loader
-
-```typescript
-// src/components/common/LoadingSkeleton.tsx
-
-import { Box, Skeleton, Paper } from '@mui/material';
-
-interface LoadingSkeletonProps {
-  type?: 'table' | 'card' | 'list';
-  count?: number;
-}
-
-const LoadingSkeleton = ({ type = 'card', count = 3 }: LoadingSkeletonProps) => {
-  if (type === 'table') {
-    return (
-      <Paper sx={{ p: 2 }}>
-        <Skeleton variant="rectangular" height={40} sx={{ mb: 2 }} />
-        {Array.from({ length: count }).map((_, i) => (
-          <Skeleton key={i} variant="rectangular" height={60} sx={{ mb: 1 }} />
-        ))}
-      </Paper>
-    );
-  }
-
-  if (type === 'list') {
-    return (
-      <Box>
-        {Array.from({ length: count }).map((_, i) => (
-          <Box key={i} sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <Skeleton variant="circular" width={40} height={40} />
-            <Box sx={{ flex: 1 }}>
-              <Skeleton variant="text" width="60%" />
-              <Skeleton variant="text" width="40%" />
-            </Box>
-          </Box>
-        ))}
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <Paper key={i} sx={{ p: 2 }}>
-          <Skeleton variant="rectangular" height={140} sx={{ mb: 2 }} />
-          <Skeleton variant="text" />
-          <Skeleton variant="text" width="60%" />
-        </Paper>
+        </Box>
       ))}
     </Box>
   );
 };
 
-export default LoadingSkeleton;
+export default ColumnList;
+```
+
+---
+
+### Part 3: TableCard Component (45 minutes)
+
+```typescript
+// src/components/schema/TableCard.tsx
+
+import { useState } from 'react';
+import { 
+  Card, 
+  CardHeader, 
+  CardContent, 
+  IconButton, 
+  Collapse,
+  Typography,
+  Chip,
+  Box
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import { Table } from '../../types/schema';
+import ColumnList from './ColumnList';
+
+interface TableCardProps {
+  table: Table;
+}
+
+const TableCard = ({ table }: TableCardProps) => {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <Card elevation={2}>
+      <CardHeader
+        avatar={<TableChartIcon />}
+        action={
+          <IconButton
+            onClick={() => setExpanded(!expanded)}
+            sx={{
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s'
+            }}
+          >
+            <ExpandMoreIcon />
+          </IconButton>
+        }
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6">{table.name}</Typography>
+            {table.hasTargCCColumns && (
+              <Chip label="TargCC" size="small" color="primary" />
+            )}
+          </Box>
+        }
+        subheader={
+          <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+            <Chip 
+              label={`${table.columns.length} columns`} 
+              size="small" 
+              variant="outlined"
+            />
+            {table.rowCount && (
+              <Chip 
+                label={`${table.rowCount.toLocaleString()} rows`} 
+                size="small" 
+                variant="outlined"
+              />
+            )}
+          </Box>
+        }
+      />
+      
+      <Collapse in={expanded}>
+        <CardContent sx={{ pt: 0 }}>
+          <ColumnList columns={table.columns} />
+        </CardContent>
+      </Collapse>
+    </Card>
+  );
+};
+
+export default TableCard;
+```
+
+---
+
+### Part 4: SchemaViewer Component (90 minutes)
+
+```typescript
+// src/components/schema/SchemaViewer.tsx
+
+import { useState } from 'react';
+import { 
+  Box, 
+  TextField, 
+  Typography,
+  InputAdornment,
+  Chip
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { DatabaseSchema } from '../../types/schema';
+import TableCard from './TableCard';
+
+interface SchemaViewerProps {
+  schema: DatabaseSchema;
+}
+
+const SchemaViewer = ({ schema }: SchemaViewerProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredTables = schema.tables.filter(table =>
+    table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    table.columns.some(col => 
+      col.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  return (
+    <Box>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h5">
+          Database Schema
+        </Typography>
+        <Chip 
+          label={`${schema.tables.length} tables`}
+          color="primary"
+        />
+      </Box>
+
+      <TextField
+        fullWidth
+        placeholder="Search tables and columns..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          )
+        }}
+        sx={{ mb: 3 }}
+      />
+
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', 
+        gap: 2 
+      }}>
+        {filteredTables.map((table) => (
+          <TableCard key={table.name} table={table} />
+        ))}
+      </Box>
+
+      {filteredTables.length === 0 && (
+        <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
+          No tables found matching "{searchTerm}"
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+export default SchemaViewer;
 ```
 
 ---
 
 ### Part 5: Testing (45 minutes)
 
-#### 5.1 ProgressTracker Tests
-
 ```typescript
-// src/__tests__/wizard/ProgressTracker.test.tsx
+// src/__tests__/schema/SchemaViewer.test.tsx
 
-describe('ProgressTracker', () => {
-  it('renders progress items', () => {
-    // ...
+describe('SchemaViewer', () => {
+  it('renders all tables', () => {
+    // Test rendering
   });
 
-  it('shows correct status icons', () => {
-    // ...
+  it('filters tables by search term', () => {
+    // Test search
   });
 
-  it('updates progress bar', () => {
-    // ...
+  it('shows table count', () => {
+    // Test count display
   });
 });
-```
 
-#### 5.2 StatusBadge Tests
+// src/__tests__/schema/TableCard.test.tsx
 
-```typescript
-// src/__tests__/common/StatusBadge.test.tsx
-
-describe('StatusBadge', () => {
-  it('renders success badge', () => {
-    // ...
+describe('TableCard', () => {
+  it('renders table name', () => {
+    // Test name
   });
 
-  it('renders error badge', () => {
-    // ...
+  it('expands and collapses', () => {
+    // Test expand/collapse
+  });
+
+  it('shows TargCC badge when applicable', () => {
+    // Test badge
+  });
+});
+
+// src/__tests__/schema/ColumnList.test.tsx
+
+describe('ColumnList', () => {
+  it('renders all columns', () => {
+    // Test columns
+  });
+
+  it('shows primary key icons', () => {
+    // Test PK icons
+  });
+
+  it('shows foreign key icons', () => {
+    // Test FK icons
   });
 });
 ```
@@ -366,36 +433,30 @@ describe('StatusBadge', () => {
 
 ### New Files
 ```
-src/components/wizard/
-└── ProgressTracker.tsx (120 lines)
-
-src/components/common/
-├── StatusBadge.tsx (40 lines)
-├── LoadingSkeleton.tsx (60 lines)
-└── ErrorBoundary.tsx (80 lines)
+src/types/
+└── schema.ts (100 lines)
 
 src/utils/
-└── fileTypeIcons.tsx (25 lines)
+└── mockSchema.ts (200 lines)
+
+src/components/schema/
+├── SchemaViewer.tsx (120 lines)
+├── TableCard.tsx (100 lines)
+└── ColumnList.tsx (80 lines)
+
+src/pages/
+└── Schema.tsx (40 lines)
+
+src/__tests__/schema/
+├── SchemaViewer.test.tsx (60 lines)
+├── TableCard.test.tsx (50 lines)
+└── ColumnList.test.tsx (40 lines)
 ```
 
 ### Modified Files
 ```
-src/components/wizard/
-└── GenerationWizard.tsx (+30 lines, add ProgressTracker)
-
 src/App.tsx
-└── (+ErrorBoundary wrapper)
-```
-
-### New Test Files
-```
-src/__tests__/wizard/
-└── ProgressTracker.test.tsx (50 lines)
-
-src/__tests__/common/
-├── StatusBadge.test.tsx (40 lines)
-├── LoadingSkeleton.test.tsx (30 lines)
-└── ErrorBoundary.test.tsx (50 lines)
+└── (+1 route for /schema)
 ```
 
 ---
@@ -403,30 +464,30 @@ src/__tests__/common/
 ## ✅ Success Criteria
 
 ### Functionality
-- [ ] Progress tracker shows real-time updates
-- [ ] Status badges display correctly
-- [ ] Error boundary catches errors
-- [ ] Retry functionality works
-- [ ] Loading skeletons smooth
-- [ ] All transitions polished
+- [ ] Schema viewer displays all tables
+- [ ] Search filters tables/columns
+- [ ] Cards expand/collapse smoothly
+- [ ] Primary/Foreign keys clearly marked
+- [ ] TargCC columns highlighted
+- [ ] Row counts displayed
 
 ### Testing
 - [ ] 8-10 new tests written
-- [ ] Progress tracker tested
-- [ ] Error handling tested
-- [ ] Loading states tested
+- [ ] Schema viewer tested
+- [ ] Table card tested
+- [ ] Column list tested
 - [ ] Build successful (dev)
 
 ### Code Quality
 - [ ] TypeScript compliant
-- [ ] Components under 200 lines
-- [ ] Proper error handling
+- [ ] Components under 150 lines
+- [ ] Proper type definitions
 - [ ] Clean, readable code
 - [ ] No console warnings
 
 ### Documentation
 - [ ] STATUS.md updated
-- [ ] HANDOFF.md for Day 31
+- [ ] HANDOFF.md for Day 32
 - [ ] Phase3_Checklist.md updated
 
 ---
@@ -434,12 +495,12 @@ src/__tests__/common/
 ## 🚀 Getting Started
 
 ### 1. Development Order
-1. Create ProgressTracker component
-2. Create StatusBadge component
-3. Create LoadingSkeleton component
-4. Enhance ErrorBoundary
-5. Add file type icons
-6. Integrate with wizard
+1. Create schema types
+2. Create mock schema data
+3. Create ColumnList component
+4. Create TableCard component
+5. Create SchemaViewer component
+6. Add route to App
 7. Write tests
 8. Polish UI
 9. Update docs
@@ -448,29 +509,29 @@ src/__tests__/common/
 
 ## 💡 Tips for Success
 
-### Progress Tracking
-- Use state management for real-time updates
-- Update progress incrementally
-- Show current file being processed
-- Provide time estimates
+### Schema Display
+- Use cards for clean separation
+- Make search instant (no debounce needed for small datasets)
+- Expand first table by default
+- Use consistent icons
 
-### Status Indicators
-- Use consistent color scheme
-- Add appropriate icons
-- Keep labels clear and short
-- Support multiple states
+### Type Definitions
+- Keep types in separate file
+- Make them reusable
+- Add comments for complex types
+- Export from index if needed
 
-### Error Handling
-- Provide clear error messages
-- Offer retry functionality
-- Log errors appropriately
-- Show fallback UI
+### Mock Data
+- Keep it realistic
+- Include various column types
+- Add relationships
+- Use TargCC prefixes
 
-### Loading States
-- Use skeleton loaders for better UX
-- Animate transitions smoothly
-- Show loading indicators
-- Provide visual feedback
+### UI/UX
+- Grid layout for responsiveness
+- Smooth expand/collapse animations
+- Clear visual hierarchy
+- Good use of whitespace
 
 ---
 
@@ -486,18 +547,18 @@ npm test
 # Type check
 npx tsc --noEmit
 
-# Demo URL
-http://localhost:5174/generate
+# Schema page URL
+http://localhost:5174/schema
 ```
 
 ---
 
 **Ready to Start:** ✅  
 **Estimated Duration:** 3-4 hours  
-**Expected Output:** Professional progress display & polished UI  
-**Next Day:** Day 31 - Schema Designer Foundation
+**Expected Output:** Visual schema designer with interactive exploration  
+**Next Day:** Day 32 - Schema Designer Advanced Features
 
 ---
 
 **Created:** 01/12/2025  
-**Status:** Ready for Day 30! 🚀
+**Status:** Ready for Day 31! 🚀

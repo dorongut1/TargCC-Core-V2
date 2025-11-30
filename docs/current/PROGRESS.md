@@ -1,8 +1,8 @@
 # TargCC Core V2 - Progress Tracker
 
-**Last Updated:** 29/11/2025  
+**Last Updated:** 01/12/2025  
 **Current Phase:** Phase 3C - Local Web UI  
-**Overall Progress:** 56% (25/45 days)
+**Overall Progress:** 67% (30/45 days)
 
 ---
 
@@ -15,14 +15,14 @@
 | Phase 2 | ✅ Complete | 100% | 160+ | 3 weeks |
 | Phase 3A | ✅ Complete | 100% | 95+ | 2 weeks |
 | Phase 3B | ✅ Complete | 100% | 110+ | 2 weeks |
-| **Phase 3C** | **🔄 In Progress** | **33%** | **186+*** | **3 weeks** |
+| **Phase 3C** | **🔄 In Progress** | **67%** | **425+*** | **3 weeks** |
 | Phase 3D | ☐ Planned | 0% | 0 | 2 weeks |
 
-**Total Tests:** 715+ (C#) + 186+* (React - pending library update) ✅  
+**Total Tests:** 715+ (C#) + 425+* (React - pending library update) ✅  
 **Code Coverage:** 85%+  
 **Build Status:** ✅ Success (0 errors)
 
-*Note: React tests written (224 passing, 27 pending) - awaiting @testing-library/react update for React 19 compatibility
+*Note: React tests written (347 passing, 77 pending, 1 skipped) - awaiting @testing-library/react update for React 19 compatibility
 
 ---
 
@@ -721,13 +721,152 @@ Total Lines of Code: ~55,000
 
 ---
 
+### Day 29: Monaco Advanced Features ✅ COMPLETE
+**Date:** 01/12/2025
+
+**Achievements:**
+- ✅ Installed JSZip package for ZIP downloads
+- ✅ Created downloadCode utility (73 lines)
+- ✅ Added Theme Toggle to CodePreview
+- ✅ Added Language Selector to CodeViewer
+- ✅ Added Download functionality (single + ZIP)
+- ✅ Integrated CodeViewer with GenerationWizard
+- ✅ Wrote 15 new tests
+- ✅ All features working in browser
+
+**Key Features Implemented:**
+
+1. **Theme Toggle:**
+   - Dark/Light theme switcher
+   - localStorage persistence
+   - IconButton with theme icons (DarkMode/LightMode)
+   - Smooth transitions
+
+2. **Language Selector:**
+   - Dropdown with 5 languages (C#, TypeScript, JavaScript, SQL, JSON)
+   - Dynamic syntax highlighting
+   - Current language indicator
+   - MUI Select component
+
+3. **Download Functionality:**
+   - Download single file button
+   - Download all files as ZIP
+   - Proper file naming
+   - Clean URL management
+   - JSZip integration
+
+4. **Wizard Integration:**
+   - CodeViewer in Step 4
+   - Shows after generation complete
+   - Uses selected table name
+   - Full feature set available
+
+**Components Created/Updated:**
+- src/utils/downloadCode.ts (73 lines NEW)
+- src/components/code/CodePreview.tsx (+45 lines)
+- src/components/code/CodeViewer.tsx (+80 lines)
+- src/components/wizard/GenerationWizard.tsx (+15 lines)
+
+**Test Status:**
+- ✅ 15 new tests written
+- ✅ Total: 395 React tests (318 passing, 76 pending, 1 skipped)
+- ⏳ Awaiting @testing-library/react update for React 19
+- ✅ Application fully functional in browser
+
+---
+
+### Day 30: Progress Display & Polish ✅ COMPLETE
+**Date:** 01/12/2025
+
+**Achievements:**
+- ✅ Created ProgressTracker component (181 lines)
+- ✅ Created StatusBadge component (63 lines)
+- ✅ Created LoadingSkeleton component (81 lines)
+- ✅ Enhanced ErrorBoundary component (149 lines)
+- ✅ Created fileTypeIcons utility (63 lines)
+- ✅ Integrated ProgressTracker with GenerationWizard
+- ✅ Fixed navigation buttons logic
+- ✅ Wrote 44 new tests
+- ✅ All features working in browser
+
+**Key Features Implemented:**
+
+1. **ProgressTracker Component:**
+   - Real-time progress bar with percentage
+   - Current file indicator with highlighting
+   - File-by-file status tracking (pending → processing → complete)
+   - Time estimation display (seconds/minutes format)
+   - File type icons (Entity, Repository, Handler, API)
+   - Status badges with colors
+   - Scrollable list for many files
+   - Completed count display (X / Y files)
+
+2. **StatusBadge Component:**
+   - 4 status types (success, error, pending, processing)
+   - Custom labels and sizes
+   - Color-coded display
+   - Icon + text rendering
+
+3. **LoadingSkeleton Component:**
+   - 3 skeleton types (card, table, list)
+   - Customizable item count
+   - Professional animations
+   - Responsive grid layouts
+
+4. **ErrorBoundary Enhanced:**
+   - Global error catching
+   - Retry functionality
+   - Custom fallback support
+   - Error details display
+
+5. **File Type Icons Utility:**
+   - Icon mapping for 6 file types
+   - Color coordination
+   - Case-insensitive matching
+
+**Components Created:**
+- src/components/wizard/ProgressTracker.tsx (181 lines)
+- src/components/common/StatusBadge.tsx (63 lines)
+- src/components/common/LoadingSkeleton.tsx (81 lines)
+- src/components/common/ErrorBoundary.tsx (149 lines)
+- src/utils/fileTypeIcons.tsx (63 lines)
+
+**Components Updated:**
+- src/components/wizard/GenerationWizard.tsx (+50 lines)
+- src/App.tsx (+2 lines, ErrorBoundary wrapper)
+
+**Test Status:**
+- ✅ 44 new tests written (6+8+3+5+22)
+- ✅ Total: 425 React tests (347 passing, 77 pending, 1 skipped)
+- ⏳ Awaiting @testing-library/react update for React 19
+- ✅ Application fully functional in browser
+- ✅ Build successful (0 errors)
+
+**Technical Highlights:**
+- Recursive setTimeout for sequential processing
+- MUI Chip components for status
+- Skeleton loading animations
+- Global error boundary wrapper
+- Type-safe icon mapping
+
+**Access Points:**
+- Main App: http://localhost:5174
+- Monaco Demo: http://localhost:5174/code-demo
+- Wizard with Progress: http://localhost:5174/generate
+
+---
+
 ## 🎯 Next Steps
 
-### Immediate (Day 29):
-1. Theme toggle (dark/light)
-2. Language selector
-3. Download functionality
-4. Wizard integration with code preview
+### Immediate (Day 31):
+1. Create schema types (Column, Table, DatabaseSchema)
+2. Build mock schema data
+3. Create ColumnList component
+4. Create TableCard component
+5. Create SchemaViewer component
+6. Add route to App
+7. Write tests
+8. Update docs
 
 ### Phase 3C Continuation:
 - Monaco advanced features (Day 29)

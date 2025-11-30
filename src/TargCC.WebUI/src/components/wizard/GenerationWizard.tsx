@@ -8,13 +8,14 @@ import {
   Paper,
   Typography,
   Alert,
-  Chip,
-  LinearProgress
+  Chip
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TableSelection from './TableSelection';
 import GenerationOptions from './GenerationOptions';
 import CodeViewer from '../code/CodeViewer';
+import ProgressTracker from './ProgressTracker';
+import type { ProgressItem } from './ProgressTracker';
 import { mockCodeFiles } from '../../utils/mockCode';
 
 export interface WizardData {
@@ -115,40 +116,103 @@ const ReviewStep = ({ data, setActiveStep }: WizardStepProps) => (
 
 const GenerationProgress = ({ data }: WizardStepProps) => {
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState('Initializing...');
-  const [logs, setLogs] = useState<string[]>([]);
+  const [currentFile, setCurrentFile] = useState<string>('');
+  const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
+  const [estimatedTime, setEstimatedTime] = useState(30);
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    // Simulate generation process
-    const steps = [
-      { progress: 10, message: 'Analyzing schema...', log: 'Reading table definitions' },
-      { progress: 25, message: 'Generating entities...', log: `Created ${data.selectedTables.length} entity classes` },
-      { progress: 50, message: 'Generating repositories...', log: 'Created repository interfaces and implementations' },
-      { progress: 75, message: 'Generating CQRS handlers...', log: 'Created command and query handlers' },
-      { progress: 90, message: 'Generating API controllers...', log: 'Created REST API endpoints' },
-      { progress: 100, message: 'Generation complete!', log: 'All files generated successfully' }
-    ];
-
-    let currentIndex = 0;
-    const timer = setInterval(() => {
-      if (currentIndex < steps.length) {
-        const step = steps[currentIndex];
-        setProgress(step.progress);
-        setCurrentStep(step.message);
-        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${step.log}`]);
-        
-        if (step.progress === 100) {
-          setIsComplete(true);
-          clearInterval(timer);
-        }
-        
-        currentIndex++;
+    // Build initial progress items based on selected options
+    const initialItems: ProgressItem[] = [];
+    
+    data.selectedTables.forEach((table) => {
+      if (data.options.entities) {
+        initialItems.push({
+          id: `entity-${table}`,
+          name: `${table}Entity.cs`,
+          type: 'entity',
+          status: 'pending'
+        });
       }
-    }, 800);
+      if (data.options.repositories) {
+        initialItems.push({
+          id: `repo-${table}`,
+          name: `${table}Repository.cs`,
+          type: 'repository',
+          status: 'pending'
+        });
+      }
+      if (data.options.handlers) {
+        initialItems.push({
+          id: `handler-create-${table}`,
+          name: `Create${table}Handler.cs`,
+          type: 'handler',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `handler-query-${table}`,
+          name: `Get${table}Handler.cs`,
+          type: 'handler',
+          status: 'pending'
+        });
+      }
+      if (data.options.api) {
+        initialItems.push({
+          id: `api-${table}`,
+          name: `${table}Controller.cs`,
+          type: 'api',
+          status: 'pending'
+        });
+      }
+    });
 
-    return () => clearInterval(timer);
-  }, [data.selectedTables.length]);
+    setProgressItems(initialItems);
+
+    // Simulate generation process - sequential processing
+    const processNextItem = (index: number) => {
+      if (index >= initialItems.length) {
+        setIsComplete(true);
+        setCurrentFile('');
+        return;
+      }
+
+      const item = initialItems[index];
+      
+      // Set current file and status to processing
+      setCurrentFile(item.name);
+      setProgressItems(prev => prev.map((p, idx) => 
+        idx === index 
+          ? { ...p, status: 'processing' as const, message: 'Generating...' }
+          : p
+      ));
+
+      // After 600ms, mark as complete and move to next
+      setTimeout(() => {
+        setProgressItems(prev => prev.map((p, idx) => 
+          idx === index 
+            ? { ...p, status: 'complete' as const, message: 'Generated' }
+            : p
+        ));
+        
+        const newProgress = Math.round(((index + 1) / initialItems.length) * 100);
+        setProgress(newProgress);
+        
+        // Update estimated time
+        const remaining = initialItems.length - (index + 1);
+        setEstimatedTime(Math.round(remaining * 0.8));
+        
+        // Process next item after a small delay
+        setTimeout(() => processNextItem(index + 1), 200);
+      }, 600);
+    };
+
+    // Start processing after a small delay
+    const startTimer = setTimeout(() => processNextItem(0), 500);
+
+    return () => {
+      clearTimeout(startTimer);
+    };
+  }, [data.selectedTables, data.options]);
 
   return (
     <Box>
@@ -158,45 +222,20 @@ const GenerationProgress = ({ data }: WizardStepProps) => {
 
       <Typography variant="body2" color="text.secondary" paragraph>
         {isComplete 
-          ? `Successfully generated code for ${data.selectedTables.length} table${data.selectedTables.length !== 1 ? 's' : ''}`
-          : currentStep
+          ? `Successfully generated ${progressItems.length} files for ${data.selectedTables.length} table${data.selectedTables.length !== 1 ? 's' : ''}`
+          : `Generating ${progressItems.length} files...`
         }
       </Typography>
 
-      {/* Progress Bar */}
+      {/* Progress Tracker */}
       <Box sx={{ mb: 3 }}>
-        <LinearProgress 
-          variant="determinate" 
-          value={progress} 
-          sx={{ height: 8, borderRadius: 4 }}
+        <ProgressTracker
+          items={progressItems}
+          currentProgress={progress}
+          estimatedTimeRemaining={isComplete ? 0 : Math.round(estimatedTime)}
+          currentFile={currentFile}
         />
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          {progress}% Complete
-        </Typography>
       </Box>
-
-      {/* Generation Log */}
-      <Paper sx={{ p: 2, maxHeight: 300, overflow: 'auto', bgcolor: 'grey.50' }} elevation={1}>
-        <Typography variant="caption" fontWeight="bold" gutterBottom display="block" color="text.secondary">
-          Generation Log:
-        </Typography>
-        {logs.length === 0 ? (
-          <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            Waiting for generation to start...
-          </Typography>
-        ) : (
-          logs.map((log, index) => (
-            <Typography 
-              key={index} 
-              variant="caption" 
-              component="div" 
-              sx={{ fontFamily: 'monospace', color: 'text.secondary', py: 0.25 }}
-            >
-              {log}
-            </Typography>
-          ))
-        )}
-      </Paper>
 
       {/* Success State */}
       {isComplete && (
@@ -206,7 +245,7 @@ const GenerationProgress = ({ data }: WizardStepProps) => {
               Code generation completed successfully!
             </Typography>
             <Typography variant="caption">
-              Files are ready for review and can be found in your output directory.
+              All {progressItems.length} files have been generated and are ready for review.
             </Typography>
           </Alert>
 
@@ -324,16 +363,25 @@ const GenerationWizard = () => {
         />
       </Paper>
 
+      {/* Navigation buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-        <Button disabled={activeStep === 0} onClick={handleBack}>
+        {/* Back button - always show except on first step */}
+        <Button 
+          disabled={activeStep === 0} 
+          onClick={handleBack}
+        >
           Back
         </Button>
-        <Button
-          variant="contained"
-          onClick={activeStep === steps.length - 1 ? handleFinish : handleNext}
-        >
-          {activeStep === steps.length - 1 ? 'Generate' : 'Next'}
-        </Button>
+
+        {/* Next button - hide on generation step (last step) */}
+        {activeStep < steps.length - 1 && (
+          <Button
+            variant="contained"
+            onClick={handleNext}
+          >
+            Next
+          </Button>
+        )}
       </Box>
     </Box>
   );
