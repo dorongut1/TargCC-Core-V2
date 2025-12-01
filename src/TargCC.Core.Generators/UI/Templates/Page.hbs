@@ -1,0 +1,173 @@
+{{~ ##
+  Template: React Page Component Generator
+  Purpose: Generates complete page component with routing and state management
+  Input Model: { EntityName, Features }
+~}}
+// Generated Page Component for {{ entity_name }}
+// Auto-generated - do not modify
+
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { {{ entity_name }}Grid } from './CollectionGrid';
+import { {{ entity_name }}Form } from './EntityForm';
+import { use{{ entity_name }}, useCreate{{ entity_name }}, useUpdate{{ entity_name }} } from './hooks';
+import { {{ entity_name }}, Create{{ entity_name }}Dto, Update{{ entity_name }}Dto } from './types';
+
+type ViewMode = 'list' | 'create' | 'edit' | 'view';
+
+/**
+ * Main page component for {{ entity_name }} management
+ */
+export const {{ entity_name }}Page: React.FC = () => {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<ViewMode>('list');
+  const [selectedId, setSelectedId] = useState<{{ primary_key_typescript_type }} | undefined>();
+
+  const { data: selectedItem } = use{{ entity_name }}(selectedId);
+  const createMutation = useCreate{{ entity_name }}();
+  const updateMutation = useUpdate{{ entity_name }}();
+
+  const handleCreate = () => {
+    setMode('create');
+    setSelectedId(undefined);
+  };
+
+  const handleEdit = (item: {{ entity_name }}) => {
+    setMode('edit');
+    setSelectedId(item.{{ primary_key_property }});
+  };
+
+  const handleView = (item: {{ entity_name }}) => {
+    setMode('view');
+    setSelectedId(item.{{ primary_key_property }});
+  };
+
+  const handleCancel = () => {
+    setMode('list');
+    setSelectedId(undefined);
+  };
+
+  const handleSubmitCreate = async (data: Create{{ entity_name }}Dto) => {
+    await createMutation.mutateAsync(data);
+    setMode('list');
+  };
+
+  const handleSubmitUpdate = async (data: Update{{ entity_name }}Dto) => {
+    if (selectedId) {
+      await updateMutation.mutateAsync({ id: selectedId, data });
+      setMode('list');
+      setSelectedId(undefined);
+    }
+  };
+
+  return (
+    <div className="{{ entity_name | string.downcase }}-page">
+      <div className="page-header">
+        <h1>{{ entity_name }} Management</h1>
+        <nav className="breadcrumb">
+          <span>Home</span>
+          <span>/</span>
+          <span>{{ entity_name }}</span>
+          {mode !== 'list' && (
+            <>
+              <span>/</span>
+              <span>{mode === 'create' ? 'Create' : mode === 'edit' ? 'Edit' : 'View'}</span>
+            </>
+          )}
+        </nav>
+      </div>
+
+      <div className="page-content">
+        {mode === 'list' && (
+          <{{ entity_name }}Grid
+            onEdit={handleEdit}
+            onView={handleView}
+            onCreate={handleCreate}
+{{~ if has_foreign_keys ~}}
+            includeRelations={true}
+{{~ end ~}}
+          />
+        )}
+
+        {mode === 'create' && (
+          <div className="form-container">
+            <div className="form-header">
+              <h2>Create New {{ entity_name }}</h2>
+              <button onClick={handleCancel} className="btn btn-link">
+                ← Back to List
+              </button>
+            </div>
+            <{{ entity_name }}Form
+              onSubmit={handleSubmitCreate}
+              onCancel={handleCancel}
+              isLoading={createMutation.isPending}
+            />
+            {createMutation.error && (
+              <div className="error-message">
+                Error creating {{ entity_name | string.downcase }}: {createMutation.error.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {mode === 'edit' && selectedItem && (
+          <div className="form-container">
+            <div className="form-header">
+              <h2>Edit {{ entity_name }}</h2>
+              <button onClick={handleCancel} className="btn btn-link">
+                ← Back to List
+              </button>
+            </div>
+            <{{ entity_name }}Form
+              initialData={selectedItem}
+              onSubmit={handleSubmitUpdate}
+              onCancel={handleCancel}
+              isLoading={updateMutation.isPending}
+            />
+            {updateMutation.error && (
+              <div className="error-message">
+                Error updating {{ entity_name | string.downcase }}: {updateMutation.error.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {mode === 'view' && selectedItem && (
+          <div className="view-container">
+            <div className="view-header">
+              <h2>View {{ entity_name }}</h2>
+              <div className="view-actions">
+                <button onClick={() => handleEdit(selectedItem)} className="btn btn-primary">
+                  Edit
+                </button>
+                <button onClick={handleCancel} className="btn btn-link">
+                  ← Back to List
+                </button>
+              </div>
+            </div>
+            <div className="view-content">
+{{~ for prop in properties ~}}
+              <div className="view-field">
+                <label>{{ prop.display_name }}:</label>
+                <div className="value">
+                  {{~ if prop.format_type == "date" ~}}
+                  {selectedItem.{{ prop.name }} ? new Date(selectedItem.{{ prop.name }}).toLocaleDateString() : '-'}
+                  {{~ else if prop.format_type == "datetime" ~}}
+                  {selectedItem.{{ prop.name }} ? new Date(selectedItem.{{ prop.name }}).toLocaleString() : '-'}
+                  {{~ else if prop.format_type == "boolean" ~}}
+                  {selectedItem.{{ prop.name }} ? 'Yes' : 'No'}
+                  {{~ else if prop.format_type == "currency" ~}}
+                  ${selectedItem.{{ prop.name }}?.toFixed(2) || '0.00'}
+                  {{~ else ~}}
+                  {selectedItem.{{ prop.name }} ?? '-'}
+                  {{~ end ~}}
+                </div>
+              </div>
+{{~ end ~}}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
