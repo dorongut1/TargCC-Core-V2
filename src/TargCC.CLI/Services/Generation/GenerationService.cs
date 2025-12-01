@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using TargCC.Core.Analyzers.Database;
-using TargCC.Core.Generators.Api;
+using TargCC.Core.Generators.API;
+using TargCC.Core.Generators.Common;
 using TargCC.Core.Generators.CQRS;
 using TargCC.Core.Generators.Entities;
 using TargCC.Core.Generators.Repositories;
@@ -392,21 +393,34 @@ public class GenerationService : IGenerationService
             // Generate API Controller
             _output.Info("Generating REST API controller...");
             var generator = new ApiControllerGenerator(_loggerFactory.CreateLogger<ApiControllerGenerator>());
-            var apiResult = await generator.GenerateAsync(table);
+
+            // Create config with defaults
+            var config = new ApiGeneratorConfig
+            {
+                Namespace = @namespace ?? "GeneratedApi",
+                GenerateXmlDocumentation = true,
+                GenerateSwaggerAttributes = true
+            };
+
+            var controllerCode = await generator.GenerateAsync(table, schema, config);
+
+            // Extract controller name from table name
+            var className = BaseApiGenerator.GetClassName(table.Name);
+            var controllerName = $"{CodeGenerationHelpers.MakePlural(className)}Controller";
 
             // Save to file
-            var controllerFileName = $"{apiResult.ControllerName}Controller.cs";
+            var controllerFileName = $"{controllerName}.cs";
             var controllerPath = Path.Combine(outputDirectory, "Api", "Controllers", controllerFileName);
 
             Directory.CreateDirectory(Path.GetDirectoryName(controllerPath)!);
-            await File.WriteAllTextAsync(controllerPath, apiResult.ControllerCode);
+            await File.WriteAllTextAsync(controllerPath, controllerCode);
 
             result.GeneratedFiles.Add(new GeneratedFile
             {
                 FilePath = controllerPath,
                 FileType = "ApiController",
-                SizeBytes = apiResult.ControllerCode.Length,
-                LineCount = apiResult.ControllerCode.Split('\n').Length
+                SizeBytes = controllerCode.Length,
+                LineCount = controllerCode.Split('\n').Length
             });
 
             result.Success = true;
