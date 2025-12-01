@@ -19,10 +19,9 @@ namespace TargCC.Core.Generators.UI
     /// </summary>
     public abstract class BaseUIGenerator : IUIGenerator
     {
-        /// <summary>
-        /// Logger instance.
-        /// </summary>
-        protected readonly ILogger Logger;
+        private static readonly string[] LineSeparators = new[] { "\r\n", "\r", "\n" };
+        private static readonly string[] AuditFieldNames = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseUIGenerator"/> class.
@@ -30,8 +29,13 @@ namespace TargCC.Core.Generators.UI
         /// <param name="logger">Logger instance.</param>
         protected BaseUIGenerator(ILogger logger)
         {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
+        /// <summary>
+        /// Gets the logger instance.
+        /// </summary>
+        protected ILogger Logger => _logger;
 
         /// <inheritdoc/>
         public abstract UIGeneratorType GeneratorType { get; }
@@ -243,7 +247,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             var indent = new string(' ', spaces);
-            var lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var lines = code.Split(LineSeparators, StringSplitOptions.None);
             return string.Join(Environment.NewLine, lines.Select(line => string.IsNullOrWhiteSpace(line) ? line : indent + line));
         }
 
@@ -262,7 +266,7 @@ namespace TargCC.Core.Generators.UI
         /// </summary>
         /// <param name="table">Table.</param>
         /// <returns>Filtered columns.</returns>
-        protected static List<Column> GetDataColumns(Table table)
+        protected static IReadOnlyList<Column> GetDataColumns(Table table)
         {
             return table.Columns
                 .Where(c => !IsAuditField(c.Name))
@@ -276,8 +280,7 @@ namespace TargCC.Core.Generators.UI
         /// <returns>True if audit field.</returns>
         protected static bool IsAuditField(string columnName)
         {
-            var auditFields = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
-            return auditFields.Contains(columnName, StringComparer.OrdinalIgnoreCase);
+            return AuditFieldNames.Contains(columnName, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

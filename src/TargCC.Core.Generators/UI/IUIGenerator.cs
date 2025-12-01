@@ -9,35 +9,6 @@ namespace TargCC.Core.Generators.UI
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
-    /// Base interface for all UI generators.
-    /// Generates TypeScript/React code from database schema.
-    /// </summary>
-    public interface IUIGenerator
-    {
-        /// <summary>
-        /// Generates UI code for a single table.
-        /// </summary>
-        /// <param name="table">The table to generate code for.</param>
-        /// <param name="schema">The complete database schema for context.</param>
-        /// <param name="config">Generator configuration.</param>
-        /// <returns>Generated code as string.</returns>
-        Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config);
-
-        /// <summary>
-        /// Generates UI code for all tables in the schema.
-        /// </summary>
-        /// <param name="schema">The database schema.</param>
-        /// <param name="config">Generator configuration.</param>
-        /// <returns>Dictionary of table name to generated code.</returns>
-        Task<Dictionary<string, string>> GenerateAllAsync(DatabaseSchema schema, UIGeneratorConfig config);
-
-        /// <summary>
-        /// Gets the type of output this generator produces.
-        /// </summary>
-        UIGeneratorType GeneratorType { get; }
-    }
-
-    /// <summary>
     /// Types of UI generators.
     /// </summary>
     public enum UIGeneratorType
@@ -71,5 +42,34 @@ namespace TargCC.Core.Generators.UI
         /// React page component.
         /// </summary>
         ReactPage,
+    }
+
+    /// <summary>
+    /// Base interface for all UI generators.
+    /// Generates TypeScript/React code from database schema.
+    /// </summary>
+    public interface IUIGenerator
+    {
+        /// <summary>
+        /// Gets the type of output this generator produces.
+        /// </summary>
+        UIGeneratorType GeneratorType { get; }
+
+        /// <summary>
+        /// Generates UI code for a single table.
+        /// </summary>
+        /// <param name="table">The table to generate code for.</param>
+        /// <param name="schema">The complete database schema for context.</param>
+        /// <param name="config">Generator configuration.</param>
+        /// <returns>Generated code as string.</returns>
+        Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config);
+
+        /// <summary>
+        /// Generates UI code for all tables in the schema.
+        /// </summary>
+        /// <param name="schema">The database schema.</param>
+        /// <param name="config">Generator configuration.</param>
+        /// <returns>Dictionary of table name to generated code.</returns>
+        Task<Dictionary<string, string>> GenerateAllAsync(DatabaseSchema schema, UIGeneratorConfig config);
     }
 }
