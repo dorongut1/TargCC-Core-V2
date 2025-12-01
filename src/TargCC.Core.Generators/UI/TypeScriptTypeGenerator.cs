@@ -42,7 +42,7 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private string Generate(Table table, DatabaseSchema schema, UIGeneratorConfig _)
+        private string Generate(Table table, DatabaseSchema schema, UIGeneratorConfig unusedConfig)
         {
             var sb = new StringBuilder();
 
@@ -75,7 +75,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateMainInterface(Table table, DatabaseSchema _)
+        private string GenerateMainInterface(Table table, DatabaseSchema unusedSchema)
         {
             var className = GetClassName(table.Name);
             var sb = new StringBuilder();
@@ -208,7 +208,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static List<string> GeneratePropertyForColumn(Column column, DatabaseSchema? _, bool isCreate)
+        private static List<string> GeneratePropertyForColumn(Column column, DatabaseSchema? unusedSchema, bool isCreate)
         {
             var result = new List<string>();
             var (prefix, baseName) = SplitPrefix(column.Name);
@@ -309,7 +309,7 @@ namespace TargCC.Core.Generators.UI
 
             foreach (var column in enumColumns)
             {
-                var (_, baseName) = SplitPrefix(column.Name);
+                var (unusedPrefix, baseName) = SplitPrefix(column.Name);
                 var enumName = GetClassName(baseName);
 
                 sb.AppendLine("/**");

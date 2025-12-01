@@ -41,7 +41,7 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig _1)
+        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig unusedConfig)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -138,7 +138,7 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine("  return useMutation({");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    mutationFn: ({{ id, data }}: {{ id: number; data: Update{className}Request }}) =>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      {camelName}Api.update(id, data),");
-            sb.AppendLine("    onSuccess: (_, variables) => {");
+            sb.AppendLine("    onSuccess: (unusedPrefix, variables) => {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}', variables.id] }});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
             sb.AppendLine("    },");

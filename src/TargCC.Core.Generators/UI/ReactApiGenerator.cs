@@ -172,7 +172,7 @@ namespace TargCC.Core.Generators.UI
         private static string GenerateGetByIndex(string className, string _, string apiPath, Column column, bool isUnique)
         {
             var sb = new StringBuilder();
-            var (_1, baseName) = SplitPrefix(column.Name);
+            var (unusedPrefix, baseName) = SplitPrefix(column.Name);
             var propertyName = GetPropertyName(column.Name);
             var paramName = ToCamelCase(propertyName);
             var methodName = $"getBy{propertyName}";
