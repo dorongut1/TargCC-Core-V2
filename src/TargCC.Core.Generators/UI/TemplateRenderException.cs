@@ -1,5 +1,5 @@
-// <copyright file="TemplateRenderException.cs" company="Doron Gut">
-// Copyright (c) Doron Gut. All rights reserved.
+// <copyright file="TemplateRenderException.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace TargCC.Core.Generators.UI;
