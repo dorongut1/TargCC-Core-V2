@@ -84,8 +84,8 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
         }
 
         [Theory]
-        [InlineData("eno_password", "eno", "password")]
-        [InlineData("lkp_status", "lkp", "status")]
+        [InlineData("eno_password", "ENO", "password")]
+        [InlineData("lkp_status", "LKP", "status")]
         [InlineData("customer_id", "", "customer_id")]
         public void SplitPrefix_Various_ReturnsTuple(string input, string expectedPrefix, string expectedBase)
         {

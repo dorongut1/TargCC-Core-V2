@@ -136,18 +136,18 @@ namespace TargCC.Core.Generators.UI
             // Add suffix based on prefix
             return prefix switch
             {
-                "eno" => propertyName + "Hashed",
-                "lkp" => propertyName, // Will generate 2 properties: Code and Text
-                "loc" => propertyName, // Will generate 2 properties: Value and Localized
-                "clc" => propertyName,
-                "blg" => propertyName,
-                "agg" => propertyName + "Aggregate",
-                "spt" => propertyName,
-                "scb" => propertyName + "ChangedBy",
-                "spl" => propertyName,
-                "upl" => propertyName,
-                "ent" => propertyName,
-                "enm" => propertyName,
+                "ENO" => propertyName + "Hashed",
+                "LKP" => propertyName, // Will generate 2 properties: Code and Text
+                "LOC" => propertyName, // Will generate 2 properties: Value and Localized
+                "CLC" => propertyName,
+                "BLG" => propertyName,
+                "AGG" => propertyName + "Aggregate",
+                "SPT" => propertyName,
+                "SCB" => propertyName + "ChangedBy",
+                "SPL" => propertyName,
+                "UPL" => propertyName,
+                "ENT" => propertyName,
+                "ENM" => propertyName,
                 _ => propertyName,
             };
         }
@@ -164,7 +164,7 @@ namespace TargCC.Core.Generators.UI
 
             if (match.Success)
             {
-                return (match.Groups[1].Value.ToLowerInvariant(), match.Groups[2].Value);
+                return (match.Groups[1].Value.ToUpperInvariant(), match.Groups[2].Value);
             }
 
             return (string.Empty, columnName);
@@ -194,7 +194,7 @@ namespace TargCC.Core.Generators.UI
                     result.Append(char.ToUpperInvariant(word[0]));
                     if (word.Length > 1)
                     {
-                        result.Append(word.Substring(1).ToLowerInvariant());
+                        result.Append(word.Substring(1).ToLower(CultureInfo.InvariantCulture));
                     }
                 }
             }
