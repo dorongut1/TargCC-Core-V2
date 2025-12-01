@@ -164,7 +164,7 @@ namespace TargCC.Core.Generators.UI
 
             if (match.Success)
             {
-                return (match.Groups[1].Value.ToUpperInvariant(), match.Groups[2].Value);
+                return (match.Groups[1].Value.ToLowerInvariant(), match.Groups[2].Value);
             }
 
             return (string.Empty, columnName);
@@ -194,7 +194,7 @@ namespace TargCC.Core.Generators.UI
                     result.Append(char.ToUpperInvariant(word[0]));
                     if (word.Length > 1)
                     {
-                        result.Append(word.Substring(1).ToUpperInvariant());
+                        result.Append(word.Substring(1).ToLowerInvariant());
                     }
                 }
             }
