@@ -206,11 +206,11 @@ namespace TargCC.Core.Generators.UI
 
             switch (prefix)
             {
-                case "eno": // Hashed password
+                case "ENO": // Hashed password
                     GenerateHashedPasswordProperty(result, baseName, basePropertyName, optional, isCreate);
                     break;
 
-                case "lkp": // Lookup - generates 2 properties
+                case "LKP": // Lookup - generates 2 properties
                     result.Add($"{ToCamelCase(baseName)}Code: string{optional};");
                     if (!isCreate)
                     {
@@ -219,12 +219,12 @@ namespace TargCC.Core.Generators.UI
 
                     break;
 
-                case "enm": // Enum
+                case "ENM": // Enum
                     var enumName = GetClassName(baseName);
                     result.Add($"{basePropertyName}: {enumName}{optional};");
                     break;
 
-                case "loc": // Localized - generates 2 properties
+                case "LOC": // Localized - generates 2 properties
                     result.Add($"{basePropertyName}: string{optional};");
                     if (!isCreate)
                     {
@@ -233,8 +233,8 @@ namespace TargCC.Core.Generators.UI
 
                     break;
 
-                case "clc": // Calculated - readonly
-                case "blg": // Business logic - readonly
+                case "CLC": // Calculated - readonly
+                case "BLG": // Business logic - readonly
                     if (!isCreate)
                     {
                         result.Add($"readonly {basePropertyName}{optional}: {tsType}{optional};");
@@ -242,7 +242,7 @@ namespace TargCC.Core.Generators.UI
 
                     break;
 
-                case "agg": // Aggregate - readonly
+                case "AGG": // Aggregate - readonly
                     if (!isCreate)
                     {
                         result.Add($"readonly {basePropertyName}{optional}: {tsType}{optional};");
@@ -254,7 +254,7 @@ namespace TargCC.Core.Generators.UI
                     result.Add($"{basePropertyName}: {tsType}{optional};");
                     break;
 
-                case "scb": // Separate changed by
+                case "SCB": // Separate changed by
                     if (!isCreate)
                     {
                         result.Add($"readonly {basePropertyName}{optional}: string{optional};");
@@ -262,11 +262,11 @@ namespace TargCC.Core.Generators.UI
 
                     break;
 
-                case "spl": // Split list
+                case "SPL": // Split list
                     result.Add($"{basePropertyName}: string[]{optional};");
                     break;
 
-                case "upl": // Upload
+                case "UPL": // Upload
                     result.Add($"{basePropertyName}: string{optional}; // File path");
                     break;
 

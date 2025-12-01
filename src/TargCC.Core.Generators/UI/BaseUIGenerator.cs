@@ -186,6 +186,20 @@ namespace TargCC.Core.Generators.UI
             // Split by underscore, space, or dash
             var words = Regex.Split(input, @"[_\s-]+");
 
+            // If only one word (no separators), preserve internal casing (for PascalCase/camelCase input)
+            if (words.Length == 1)
+            {
+                var word = words[0];
+                if (word.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                // Just ensure first char is uppercase, preserve rest
+                return char.ToUpperInvariant(word[0]) + word.Substring(1);
+            }
+
+            // Multiple words - convert each word
             var result = new StringBuilder();
             foreach (var word in words)
             {
