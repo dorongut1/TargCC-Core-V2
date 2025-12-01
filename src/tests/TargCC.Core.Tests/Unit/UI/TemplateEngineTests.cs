@@ -6,6 +6,7 @@ namespace TargCC.Core.Tests.Unit.UI;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -17,7 +18,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for TemplateEngine class.
 /// </summary>
-public class TemplateEngineTests : IDisposable
+public sealed class TemplateEngineTests : IDisposable
 {
     private readonly string tempTemplatePath;
     private readonly Mock<ILogger<TemplateEngine>> mockLogger;
@@ -29,7 +30,7 @@ public class TemplateEngineTests : IDisposable
     /// </summary>
     public TemplateEngineTests()
     {
-        this.tempTemplatePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        this.tempTemplatePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(this.tempTemplatePath);
 
         this.mockLogger = new Mock<ILogger<TemplateEngine>>();
@@ -337,24 +338,11 @@ public class TemplateEngineTests : IDisposable
     /// </summary>
     public void Dispose()
     {
-        this.Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Disposes resources used by the test class.
-    /// </summary>
-    /// <param name="disposing">Whether to dispose managed resources.</param>
-    protected virtual void Dispose(bool disposing)
-    {
         if (!this.disposed)
         {
-            if (disposing)
+            if (Directory.Exists(this.tempTemplatePath))
             {
-                if (Directory.Exists(this.tempTemplatePath))
-                {
-                    Directory.Delete(this.tempTemplatePath, true);
-                }
+                Directory.Delete(this.tempTemplatePath, true);
             }
 
             this.disposed = true;
@@ -363,7 +351,9 @@ public class TemplateEngineTests : IDisposable
 
     private string CreateTestTemplate(string name, string content)
     {
-        var fileName = name.EndsWith(".hbs", StringComparison.OrdinalIgnoreCase) ? name : $"{name}.hbs";
+        var fileName = name.EndsWith(".hbs", StringComparison.OrdinalIgnoreCase)
+            ? name
+            : string.Format(CultureInfo.InvariantCulture, "{0}.hbs", name);
         var path = Path.Combine(this.tempTemplatePath, fileName);
         File.WriteAllText(path, content);
         return path;
