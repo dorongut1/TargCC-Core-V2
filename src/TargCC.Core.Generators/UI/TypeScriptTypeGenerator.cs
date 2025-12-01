@@ -97,8 +97,9 @@ namespace TargCC.Core.Generators.UI
                 }
             }
 
-            // Add audit fields if exposed
-            if (table.HasAuditFields)
+            // Add audit fields if they exist
+            var hasAddedBy = table.Columns.Any(c => c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase));
+            if (hasAddedBy)
             {
                 sb.AppendLine("  // Audit fields");
                 sb.AppendLine("  readonly addedBy?: number;");
@@ -215,8 +216,8 @@ namespace TargCC.Core.Generators.UI
             var basePropertyName = ToCamelCase(GetPropertyName(column.Name));
             var tsType = GetTypeScriptType(column.DataType);
             var nullable = IsNullable(column);
-            var optional = nullable || !column.IsRequired ? "?" : string.Empty;
-            var readonly = isCreate ? string.Empty : "readonly ";
+            var optional = nullable || column.IsNullable ? "?" : string.Empty;
+            var readonlyModifier = isCreate ? string.Empty : "readonly ";
 
             switch (prefix)
             {
@@ -333,34 +334,34 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString().TrimEnd();
         }
 
-        private string GetTypeScriptType(string sqlType)
+        private static string GetTypeScriptType(string sqlType)
         {
-            var type = sqlType.ToLowerInvariant();
+            var type = sqlType.ToUpperInvariant();
 
             return type switch
             {
-                _ when type.Contains("int") => "number",
-                _ when type.Contains("decimal") => "number",
-                _ when type.Contains("numeric") => "number",
-                _ when type.Contains("float") => "number",
-                _ when type.Contains("real") => "number",
-                _ when type.Contains("money") => "number",
-                _ when type.Contains("bit") => "boolean",
-                _ when type.Contains("date") => "Date",
-                _ when type.Contains("time") => "Date",
-                _ when type.Contains("char") => "string",
-                _ when type.Contains("text") => "string",
-                _ when type.Contains("binary") => "Uint8Array",
-                _ when type.Contains("image") => "Uint8Array",
+                _ when type.Contains("INT", StringComparison.Ordinal) => "number",
+                _ when type.Contains("DECIMAL", StringComparison.Ordinal) => "number",
+                _ when type.Contains("NUMERIC", StringComparison.Ordinal) => "number",
+                _ when type.Contains("FLOAT", StringComparison.Ordinal) => "number",
+                _ when type.Contains("REAL", StringComparison.Ordinal) => "number",
+                _ when type.Contains("MONEY", StringComparison.Ordinal) => "number",
+                _ when type.Contains("BIT", StringComparison.Ordinal) => "boolean",
+                _ when type.Contains("DATE", StringComparison.Ordinal) => "Date",
+                _ when type.Contains("TIME", StringComparison.Ordinal) => "Date",
+                _ when type.Contains("CHAR", StringComparison.Ordinal) => "string",
+                _ when type.Contains("TEXT", StringComparison.Ordinal) => "string",
+                _ when type.Contains("BINARY", StringComparison.Ordinal) => "Uint8Array",
+                _ when type.Contains("IMAGE", StringComparison.Ordinal) => "Uint8Array",
                 _ => "string", // Default to string
             };
         }
 
-        private bool IsSearchableType(string sqlType)
+        private static bool IsSearchableType(string sqlType)
         {
-            var type = sqlType.ToLowerInvariant();
-            return type.Contains("char") || type.Contains("text") ||
-                   type.Contains("int") || type.Contains("decimal");
+            var type = sqlType.ToUpperInvariant();
+            return type.Contains("CHAR", StringComparison.Ordinal) || type.Contains("TEXT", StringComparison.Ordinal) ||
+                   type.Contains("INT", StringComparison.Ordinal) || type.Contains("DECIMAL", StringComparison.Ordinal);
         }
     }
 }
