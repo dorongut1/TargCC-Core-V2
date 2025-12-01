@@ -80,11 +80,11 @@ namespace TargCC.Core.Generators.UI
             var className = GetClassName(table.Name);
             var sb = new StringBuilder();
 
-            sb.AppendLine($"/**");
-            sb.AppendLine($" * {className} entity interface.");
-            sb.AppendLine($" * Generated from table: {table.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"/**");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * {className} entity interface.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Generated from table: {table.Name}");
             sb.AppendLine($" */");
-            sb.AppendLine($"export interface {className} {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export interface {className} {{");
 
             var dataColumns = GetDataColumns(table);
 
@@ -93,7 +93,7 @@ namespace TargCC.Core.Generators.UI
                 var properties = GeneratePropertyForColumn(column, schema, isCreate: false);
                 foreach (var prop in properties)
                 {
-                    sb.AppendLine($"  {prop}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"  {prop}");
                 }
             }
 
@@ -118,9 +118,9 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
 
             sb.AppendLine($"/**");
-            sb.AppendLine($" * Create {className} request interface.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Create {className} request interface.");
             sb.AppendLine($" */");
-            sb.AppendLine($"export interface Create{className}Request {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export interface Create{className}Request {{");
 
             var dataColumns = GetDataColumns(table)
                 .Where(c => !c.IsPrimaryKey && !c.IsIdentity);
@@ -130,7 +130,7 @@ namespace TargCC.Core.Generators.UI
                 var properties = GeneratePropertyForColumn(column, null, isCreate: true);
                 foreach (var prop in properties)
                 {
-                    sb.AppendLine($"  {prop}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"  {prop}");
                 }
             }
 
@@ -145,9 +145,9 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
 
             sb.AppendLine($"/**");
-            sb.AppendLine($" * Update {className} request interface.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Update {className} request interface.");
             sb.AppendLine($" */");
-            sb.AppendLine($"export interface Update{className}Request extends Create{className}Request {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export interface Update{className}Request extends Create{className}Request {{");
 
             // Add primary key
             var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
@@ -155,7 +155,7 @@ namespace TargCC.Core.Generators.UI
             {
                 var pkName = ToCamelCase(pkColumn.Name);
                 var pkType = GetTypeScriptType(pkColumn.DataType);
-                sb.AppendLine($"  {pkName}: {pkType};");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  {pkName}: {pkType};");
             }
 
             sb.AppendLine("}");
@@ -169,9 +169,9 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
 
             sb.AppendLine($"/**");
-            sb.AppendLine($" * {className} filters for querying.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * {className} filters for querying.");
             sb.AppendLine($" */");
-            sb.AppendLine($"export interface {className}Filters {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export interface {className}Filters {{");
 
             // Add common filters
             var searchableColumns = GetDataColumns(table)
@@ -182,7 +182,7 @@ namespace TargCC.Core.Generators.UI
             {
                 var propName = ToCamelCase(GetPropertyName(column.Name));
                 var propType = GetTypeScriptType(column.DataType);
-                sb.AppendLine($"  {propName}?: {propType};");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  {propName}?: {propType};");
             }
 
             // Add date range filters if date columns exist
@@ -193,8 +193,8 @@ namespace TargCC.Core.Generators.UI
             foreach (var column in dateColumns)
             {
                 var baseName = ToCamelCase(GetPropertyName(column.Name));
-                sb.AppendLine($"  {baseName}From?: Date;");
-                sb.AppendLine($"  {baseName}To?: Date;");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  {baseName}From?: Date;");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  {baseName}To?: Date;");
             }
 
             // Pagination
@@ -316,9 +316,9 @@ namespace TargCC.Core.Generators.UI
                 var enumName = GetClassName(baseName);
 
                 sb.AppendLine($"/**");
-                sb.AppendLine($" * {enumName} enum.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $" * {enumName} enum.");
                 sb.AppendLine($" */");
-                sb.AppendLine($"export enum {enumName} {{");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"export enum {enumName} {{");
 
                 // TODO: Get actual enum values from c_Enumeration table
                 // For now, generate placeholders
