@@ -42,6 +42,11 @@ namespace TargCC.Core.Generators.UI
         /// <inheritdoc/>
         public abstract UIGeneratorType GeneratorType { get; }
 
+        /// <summary>
+        /// Gets the logger instance.
+        /// </summary>
+        protected ILogger Logger => _logger;
+
         /// <inheritdoc/>
         public abstract Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config);
 
@@ -69,11 +74,6 @@ namespace TargCC.Core.Generators.UI
 
             return result;
         }
-
-        /// <summary>
-        /// Gets the logger instance.
-        /// </summary>
-        protected ILogger Logger => _logger;
 
         /// <summary>
         /// Gets the class name from table name (PascalCase).
