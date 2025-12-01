@@ -55,19 +55,19 @@ namespace TargCC.Core.Generators.UI
             // Imports
             sb.AppendLine("import { api } from '../config';");
             sb.AppendLine($"import type {{");
-            sb.AppendLine($"  {className},");
-            sb.AppendLine($"  Create{className}Request,");
-            sb.AppendLine($"  Update{className}Request,");
-            sb.AppendLine($"  {className}Filters,");
-            sb.AppendLine($"}} from '../types/{className}.types';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, "  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, "  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, "  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, "}} from '../types/{className}.types';");
             sb.AppendLine();
 
             // API object
             sb.AppendLine($"/**");
-            sb.AppendLine($" * API client for {className} operations.");
-            sb.AppendLine($" * Base URL: {apiPath}");
-            sb.AppendLine($" */");
-            sb.AppendLine($"export const {camelName}Api = {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, " * API client for {className} operations.");
+            sb.AppendLine(CultureInfo.InvariantCulture, " * Base URL: {apiPath}");
+            sb.AppendLine(CultureInfo.InvariantCulture, " */");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
 
             // CRUD methods
             sb.AppendLine(GenerateGetById(className, camelName, apiPath));
@@ -102,10 +102,10 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Get {className} by ID.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {className} by ID.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  getById: async (id: number): Promise<{className}> => {{");
-            sb.AppendLine($"    const response = await api.get<{className}>(`{apiPath}/${{id}}`);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  getById: async (id: number): Promise<{className}> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{className}>(`{apiPath}/${{id}}`);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
@@ -116,10 +116,10 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Get all {className}s with optional filters.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get all {className}s with optional filters.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  getAll: async (filters?: {className}Filters): Promise<{className}[]> => {{");
-            sb.AppendLine($"    const response = await api.get<{className}[]>('{apiPath}', {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  getAll: async (filters?: {className}Filters): Promise<{className}[]> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{className}[]>('{apiPath}', {{");
             sb.AppendLine("      params: filters,");
             sb.AppendLine("    });");
             sb.AppendLine("    return response.data;");
@@ -132,10 +132,10 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Create new {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Create new {className}.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  create: async (data: Create{className}Request): Promise<{className}> => {{");
-            sb.AppendLine($"    const response = await api.post<{className}>('{apiPath}', data);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  create: async (data: Create{className}Request): Promise<{className}> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.post<{className}>('{apiPath}', data);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
@@ -146,10 +146,10 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Update existing {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Update existing {className}.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  update: async (id: number, data: Update{className}Request): Promise<{className}> => {{");
-            sb.AppendLine($"    const response = await api.put<{className}>(`{apiPath}/${{id}}`, data);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  update: async (id: number, data: Update{className}Request): Promise<{className}> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.put<{className}>(`{apiPath}/${{id}}`, data);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
@@ -160,10 +160,10 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Delete {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Delete {className}.");
             sb.AppendLine("   */");
             sb.AppendLine("  delete: async (id: number): Promise<void> => {");
-            sb.AppendLine($"    await api.delete(`{apiPath}/${{id}}`);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    await api.delete(`{apiPath}/${{id}}`);");
             sb.AppendLine("  },");
             sb.AppendLine();
             return sb.ToString();
@@ -180,10 +180,10 @@ namespace TargCC.Core.Generators.UI
             var paramType = GetTypeScriptTypeForColumn(column);
 
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Get {className} by {propertyName}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {className} by {propertyName}.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  {methodName}: async ({paramName}: {paramType}): Promise<{returnType}> => {{");
-            sb.AppendLine($"    const response = await api.get<{returnType}>(`{apiPath}/by-{ToCamelCase(baseName)}/${{encodeURIComponent(String({paramName}))}}`);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {methodName}: async ({paramName}: {paramType}): Promise<{returnType}> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{returnType}>(`{apiPath}/by-{ToCamelCase(baseName)}/${{encodeURIComponent(String({paramName}))}}`);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
@@ -198,10 +198,10 @@ namespace TargCC.Core.Generators.UI
 
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine($"   * Get {childClassName}s for this {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {childClassName}s for this {className}.");
             sb.AppendLine("   */");
-            sb.AppendLine($"  get{childClassName}s: async (id: number): Promise<{childClassName}[]> => {{");
-            sb.AppendLine($"    const response = await api.get<{childClassName}[]>(`{apiPath}/${{id}}/{childCamelName}s`);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  get{childClassName}s: async (id: number): Promise<{childClassName}[]> => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{childClassName}[]>(`{apiPath}/${{id}}/{childCamelName}s`);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();

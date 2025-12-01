@@ -5,6 +5,7 @@
 namespace TargCC.Core.Generators.UI
 {
     using System;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -51,13 +52,13 @@ namespace TargCC.Core.Generators.UI
 
             // Imports
             sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
-            sb.AppendLine($"import {{ {camelName}Api }} from '../api/{camelName}Api';");
-            sb.AppendLine($"import type {{");
-            sb.AppendLine($"  {className},");
-            sb.AppendLine($"  Create{className}Request,");
-            sb.AppendLine($"  Update{className}Request,");
-            sb.AppendLine($"  {className}Filters,");
-            sb.AppendLine($"}} from '../types/{className}.types';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
             sb.AppendLine();
 
             // Query hooks
@@ -76,12 +77,12 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine($" * Hook to fetch single {className} by ID.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch single {className} by ID.");
             sb.AppendLine(" */");
-            sb.AppendLine($"export const use{className} = (id: number | null) => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{className} = (id: number | null) => {{");
             sb.AppendLine("  return useQuery({");
-            sb.AppendLine($"    queryKey: ['{camelName}', id],");
-            sb.AppendLine($"    queryFn: () => {camelName}Api.getById(id!),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{camelName}', id],");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {camelName}Api.getById(id!),");
             sb.AppendLine("    enabled: id !== null,");
             sb.AppendLine("  });");
             sb.AppendLine("};");
@@ -93,12 +94,12 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine($" * Hook to fetch all {className}s with optional filters.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch all {className}s with optional filters.");
             sb.AppendLine(" */");
-            sb.AppendLine($"export const use{className}s = (filters?: {className}Filters) => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{className}s = (filters?: {className}Filters) => {{");
             sb.AppendLine("  return useQuery({");
-            sb.AppendLine($"    queryKey: ['{camelName}s', filters],");
-            sb.AppendLine($"    queryFn: () => {camelName}Api.getAll(filters),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{camelName}s', filters],");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {camelName}Api.getAll(filters),");
             sb.AppendLine("  });");
             sb.AppendLine("};");
             sb.AppendLine();
@@ -109,15 +110,15 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine($" * Hook to create {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to create {className}.");
             sb.AppendLine(" */");
-            sb.AppendLine($"export const useCreate{className} = () => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const useCreate{className} = () => {{");
             sb.AppendLine("  const queryClient = useQueryClient();");
             sb.AppendLine();
             sb.AppendLine("  return useMutation({");
-            sb.AppendLine($"    mutationFn: (data: Create{className}Request) => {camelName}Api.create(data),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    mutationFn: (data: Create{className}Request) => {camelName}Api.create(data),");
             sb.AppendLine("    onSuccess: () => {");
-            sb.AppendLine($"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
             sb.AppendLine("    },");
             sb.AppendLine("  });");
             sb.AppendLine("};");
@@ -129,17 +130,17 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine($" * Hook to update {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to update {className}.");
             sb.AppendLine(" */");
-            sb.AppendLine($"export const useUpdate{className} = () => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const useUpdate{className} = () => {{");
             sb.AppendLine("  const queryClient = useQueryClient();");
             sb.AppendLine();
             sb.AppendLine("  return useMutation({");
-            sb.AppendLine($"    mutationFn: ({{ id, data }}: {{ id: number; data: Update{className}Request }}) =>");
-            sb.AppendLine($"      {camelName}Api.update(id, data),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    mutationFn: ({{ id, data }}: {{ id: number; data: Update{className}Request }}) =>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      {camelName}Api.update(id, data),");
             sb.AppendLine("    onSuccess: (_, variables) => {");
-            sb.AppendLine($"      queryClient.invalidateQueries({{ queryKey: ['{camelName}', variables.id] }});");
-            sb.AppendLine($"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}', variables.id] }});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
             sb.AppendLine("    },");
             sb.AppendLine("  });");
             sb.AppendLine("};");
@@ -151,15 +152,15 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine($" * Hook to delete {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to delete {className}.");
             sb.AppendLine(" */");
-            sb.AppendLine($"export const useDelete{className} = () => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const useDelete{className} = () => {{");
             sb.AppendLine("  const queryClient = useQueryClient();");
             sb.AppendLine();
             sb.AppendLine("  return useMutation({");
-            sb.AppendLine($"    mutationFn: (id: number) => {camelName}Api.delete(id),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    mutationFn: (id: number) => {camelName}Api.delete(id),");
             sb.AppendLine("    onSuccess: () => {");
-            sb.AppendLine($"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
             sb.AppendLine("    },");
             sb.AppendLine("  });");
             sb.AppendLine("};");
