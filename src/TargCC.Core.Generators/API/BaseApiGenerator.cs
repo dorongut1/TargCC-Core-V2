@@ -97,7 +97,7 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         /// <param name="tableName">Table name.</param>
         /// <returns>Class name in PascalCase.</returns>
-        protected static string GetClassName(string tableName)
+        public static string GetClassName(string tableName)
         {
             if (string.IsNullOrWhiteSpace(tableName))
             {
