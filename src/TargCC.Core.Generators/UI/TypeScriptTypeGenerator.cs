@@ -75,7 +75,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateMainInterface(Table table, DatabaseSchema unusedSchema)
+        private static string GenerateMainInterface(Table table, DatabaseSchema unusedSchema)
         {
             var className = GetClassName(table.Name);
             var sb = new StringBuilder();
