@@ -1,0 +1,136 @@
+{{~ ##
+  Template: React Entity Form Component Generator
+  Purpose: Generates React form component with validation
+  Input Model: { EntityName, Properties, ValidationRules }
+~}}
+// Generated Form Component for {{ entity_name }}
+// Auto-generated - do not modify
+
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  {{ entity_name }},
+  Create{{ entity_name }}Dto,
+  Update{{ entity_name }}Dto,
+} from './types';
+
+// Zod validation schema
+const {{ entity_name | string.downcase }}Schema = z.object({
+{{~ for prop in properties ~}}
+  {{~ if !prop.is_primary_key && !prop.is_computed ~}}
+  {{ prop.name }}: {{~ if prop.is_required ~}}z.{{ prop.zod_type }}(){{~ else ~}}z.{{ prop.zod_type }}().optional(){{~ end ~}}{{~ if prop.validation ~}}{{ prop.validation }}{{~ end ~}},
+  {{~ end ~}}
+{{~ end ~}}
+});
+
+type {{ entity_name }}FormData = z.infer<typeof {{ entity_name | string.downcase }}Schema>;
+
+interface {{ entity_name }}FormProps {
+  initialData?: {{ entity_name }};
+  onSubmit: (data: {{ entity_name }}FormData) => void | Promise<void>;
+  onCancel?: () => void;
+  isLoading?: boolean;
+}
+
+/**
+ * Form component for creating/editing {{ entity_name }}
+ */
+export const {{ entity_name }}Form: React.FC<{{ entity_name }}FormProps> = ({
+  initialData,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}) => {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = useForm<{{ entity_name }}FormData>({
+    resolver: zodResolver({{ entity_name | string.downcase }}Schema),
+    defaultValues: initialData || {},
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="{{ entity_name | string.downcase }}-form">
+{{~ for prop in properties ~}}
+  {{~ if !prop.is_primary_key && !prop.is_computed ~}}
+      <div className="form-field">
+        <label htmlFor="{{ prop.name }}">
+          {{ prop.display_name }}{{~ if prop.is_required ~}} *{{~ end ~}}
+        </label>
+        <Controller
+          name="{{ prop.name }}"
+          control={control}
+          render={({ field }) => (
+            {{~ if prop.form_control_type == "textarea" ~}}
+            <textarea
+              {...field}
+              id="{{ prop.name }}"
+              className={errors.{{ prop.name }} ? 'error' : ''}
+              disabled={isLoading}
+              {{~ if prop.placeholder ~}}placeholder="{{ prop.placeholder }}"{{~ end ~}}
+            />
+            {{~ else if prop.form_control_type == "select" ~}}
+            <select
+              {...field}
+              id="{{ prop.name }}"
+              className={errors.{{ prop.name }} ? 'error' : ''}
+              disabled={isLoading}
+            >
+              <option value="">Select {{ prop.display_name }}</option>
+              {{~ for option in prop.options ~}}
+              <option value="{{ option.value }}">{{ option.label }}</option>
+              {{~ end ~}}
+            </select>
+            {{~ else if prop.form_control_type == "checkbox" ~}}
+            <input
+              {...field}
+              type="checkbox"
+              id="{{ prop.name }}"
+              checked={field.value}
+              className={errors.{{ prop.name }} ? 'error' : ''}
+              disabled={isLoading}
+            />
+            {{~ else ~}}
+            <input
+              {...field}
+              type="{{ prop.input_type | default: "text" }}"
+              id="{{ prop.name }}"
+              className={errors.{{ prop.name }} ? 'error' : ''}
+              disabled={isLoading}
+              {{~ if prop.placeholder ~}}placeholder="{{ prop.placeholder }}"{{~ end ~}}
+            />
+            {{~ end ~}}
+          )}
+        />
+        {errors.{{ prop.name }} && (
+          <span className="error-message">{errors.{{ prop.name }}.message}</span>
+        )}
+      </div>
+  {{~ end ~}}
+{{~ end ~}}
+
+      <div className="form-actions">
+        <button
+          type="submit"
+          disabled={isLoading || !isDirty}
+          className="btn btn-primary"
+        >
+          {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isLoading}
+            className="btn btn-secondary"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};

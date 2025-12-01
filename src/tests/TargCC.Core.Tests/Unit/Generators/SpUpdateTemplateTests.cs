@@ -48,7 +48,7 @@ namespace TargCC.Core.Tests.Unit.Generators
 
             // Assert
             result.Should().NotBeNullOrWhiteSpace();
-            result.Should().Contain("CREATE PROCEDURE [dbo].[SP_UpdateCustomer]");
+            result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_UpdateCustomer]");
             result.Should().Contain("@ID int");
             result.Should().Contain("@Name nvarchar(100)");
             result.Should().Contain("@Email nvarchar(100) = NULL");
@@ -152,7 +152,7 @@ namespace TargCC.Core.Tests.Unit.Generators
             var result = await _template.GenerateAsync(table);
 
             // Assert
-            result.Should().Contain("CREATE PROCEDURE [dbo].[SP_UpdateReadOnlyTable]");
+            result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_UpdateReadOnlyTable]");
             result.Should().Contain("@ID int");
             result.Should().Contain("-- No updateable columns in this table");
             result.Should().Contain("-- This procedure exists for API consistency");

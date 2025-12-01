@@ -1,0 +1,197 @@
+{{~ ##
+  Template: React Collection Grid Component Generator
+  Purpose: Generates data grid component with sorting, filtering, and pagination
+  Input Model: { EntityName, Columns, Features }
+~}}
+// Generated Grid Component for {{ entity_name }}
+// Auto-generated - do not modify
+
+import React, { useState } from 'react';
+import { {{ entity_name }} } from './types';
+import { use{{ entity_name }}List, useDelete{{ entity_name }} } from './hooks';
+
+interface {{ entity_name }}GridProps {
+  onEdit?: (item: {{ entity_name }}) => void;
+  onView?: (item: {{ entity_name }}) => void;
+  onCreate?: () => void;
+{{~ if has_foreign_keys ~}}
+  includeRelations?: boolean;
+{{~ end ~}}
+}
+
+/**
+ * Grid component for displaying {{ entity_name | string.downcase }} records
+ */
+export const {{ entity_name }}Grid: React.FC<{{ entity_name }}GridProps> = ({
+  onEdit,
+  onView,
+  onCreate,
+{{~ if has_foreign_keys ~}}
+  includeRelations = false,
+{{~ end ~}}
+}) => {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<string>('{{ default_sort_column }}');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const { data: items, isLoading, error } = use{{ entity_name }}List({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+{{~ if has_foreign_keys ~}}
+    includeRelations,
+{{~ end ~}}
+  });
+
+  const deleteMutation = useDelete{{ entity_name }}();
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleDelete = async (id: {{ primary_key_typescript_type }}) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      await deleteMutation.mutateAsync(id);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="loading">Loading {{ entity_name | string.downcase }} records...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Error loading {{ entity_name | string.downcase }}: {error.message}</div>;
+  }
+
+  return (
+    <div className="{{ entity_name | string.downcase }}-grid">
+      <div className="grid-header">
+        <h2>{{ entity_name }} Records</h2>
+        {onCreate && (
+          <button onClick={onCreate} className="btn btn-primary">
+            Create New
+          </button>
+        )}
+      </div>
+
+      <div className="grid-controls">
+        <div className="page-size-selector">
+          <label>Items per page:</label>
+          <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <table className="data-grid">
+        <thead>
+          <tr>
+{{~ for col in columns ~}}
+            <th
+              {{~ if col.sortable ~}}
+              onClick={() => handleSort('{{ col.name }}')}
+              className={`sortable ${sortBy === '{{ col.name }}' ? 'sorted-' + sortOrder : ''}`}
+              {{~ end ~}}
+            >
+              {{ col.display_name }}
+              {{~ if col.sortable && sortBy == col.name ~}}
+              <span className="sort-icon">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+              {{~ end ~}}
+            </th>
+{{~ end ~}}
+            <th className="actions-column">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items && items.length > 0 ? (
+            items.map((item) => (
+              <tr key={item.{{ primary_key_property }}}>
+{{~ for col in columns ~}}
+                <td>
+                  {{~ if col.is_foreign_key && has_foreign_keys ~}}
+                  {item.{{ col.navigation_property }}?.{{ col.display_property }} || item.{{ col.name }}}
+                  {{~ else if col.format_type == "date" ~}}
+                  {item.{{ col.name }} ? new Date(item.{{ col.name }}).toLocaleDateString() : '-'}
+                  {{~ else if col.format_type == "datetime" ~}}
+                  {item.{{ col.name }} ? new Date(item.{{ col.name }}).toLocaleString() : '-'}
+                  {{~ else if col.format_type == "boolean" ~}}
+                  {item.{{ col.name }} ? '✓' : '✗'}
+                  {{~ else if col.format_type == "currency" ~}}
+                  ${item.{{ col.name }}?.toFixed(2) || '0.00'}
+                  {{~ else ~}}
+                  {item.{{ col.name }} ?? '-'}
+                  {{~ end ~}}
+                </td>
+{{~ end ~}}
+                <td className="actions-cell">
+                  {onView && (
+                    <button
+                      onClick={() => onView(item)}
+                      className="btn btn-sm btn-secondary"
+                      title="View"
+                    >
+                      View
+                    </button>
+                  )}
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(item)}
+                      className="btn btn-sm btn-primary"
+                      title="Edit"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(item.{{ primary_key_property }})}
+                    className="btn btn-sm btn-danger"
+                    disabled={deleteMutation.isPending}
+                    title="Delete"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={{ columns.size + 1 }} className="no-data">
+                No {{ entity_name | string.downcase }} records found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      <div className="grid-footer">
+        <div className="pagination">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="btn btn-sm"
+          >
+            Previous
+          </button>
+          <span className="page-info">Page {page}</span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={!items || items.length < pageSize}
+            className="btn btn-sm"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -45,7 +45,7 @@ public class SpDeleteTemplateTests
 
         // Assert
         result.Should().NotBeNullOrWhiteSpace();
-        result.Should().Contain("CREATE PROCEDURE");
+        result.Should().Contain("CREATE OR ALTER PROCEDURE");
         result.Should().Contain("SP_DeleteCustomer");
         result.Should().Contain("DELETE FROM");
         result.Should().Contain("[Customer]");
