@@ -5,6 +5,7 @@
 namespace TargCC.Core.Tests.Unit.Generators.API
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
@@ -51,7 +52,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -72,7 +73,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -95,7 +96,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -116,7 +117,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -139,7 +140,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -168,7 +169,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, configNoSwagger);
@@ -186,7 +187,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
             var table2 = new TableBuilder().WithName("Category").WithIdColumn().Build();
             var table3 = new TableBuilder().WithName("Box").WithIdColumn().Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table1 } };
+            var schema = new DatabaseSchema { Tables = new[] { table1 }.ToList() };
 
             // Act
             var result1 = await _generator.GenerateAsync(table1, schema, _config);
@@ -209,7 +210,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -230,7 +231,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);
@@ -250,7 +251,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act
             var result = await _generator.GenerateAsync(table, schema, _config);

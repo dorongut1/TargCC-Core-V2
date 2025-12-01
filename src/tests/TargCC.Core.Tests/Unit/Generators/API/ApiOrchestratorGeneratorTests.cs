@@ -103,7 +103,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             _dtoGeneratorMock
                 .Setup(x => x.GenerateAsync(It.IsAny<Table>(), It.IsAny<DatabaseSchema>(), It.IsAny<ApiGeneratorConfig>()))
@@ -135,7 +135,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
             var table1 = new TableBuilder().WithName("Customer").WithIdColumn().Build();
             var table2 = new TableBuilder().WithName("Order").WithIdColumn().Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table1, table2 } };
+            var schema = new DatabaseSchema { Tables = new[] { table1, table2 }.ToList() };
 
             _dtoGeneratorMock
                 .Setup(x => x.GenerateAsync(It.IsAny<Table>(), It.IsAny<DatabaseSchema>(), It.IsAny<ApiGeneratorConfig>()))
@@ -168,7 +168,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             _dtoGeneratorMock
                 .Setup(x => x.GenerateAsync(It.IsAny<Table>(), It.IsAny<DatabaseSchema>(), It.IsAny<ApiGeneratorConfig>()))
@@ -202,7 +202,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
             // Arrange
             var invalidConfig = new ApiGeneratorConfig { Namespace = string.Empty };
             var table = new TableBuilder().WithName("Customer").WithIdColumn().Build();
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
@@ -219,7 +219,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
                 .WithNameColumn()
                 .Build();
 
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             _dtoGeneratorMock
                 .Setup(x => x.GenerateAsync(table, schema, _config))
@@ -259,7 +259,7 @@ namespace TargCC.Core.Tests.Unit.Generators.API
             };
 
             var table = new TableBuilder().WithName("Customer").WithIdColumn().Build();
-            var schema = new DatabaseSchema { Tables = new[] { table } };
+            var schema = new DatabaseSchema { Tables = new[] { table }.ToList() };
 
             _dtoGeneratorMock
                 .Setup(x => x.GenerateAsync(It.IsAny<Table>(), It.IsAny<DatabaseSchema>(), It.IsAny<ApiGeneratorConfig>()))
