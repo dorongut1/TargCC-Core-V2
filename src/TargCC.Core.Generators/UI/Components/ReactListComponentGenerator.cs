@@ -1,0 +1,273 @@
+// <copyright file="ReactListComponentGenerator.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace TargCC.Core.Generators.UI.Components
+{
+    using System;
+    using System.Globalization;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using TargCC.Core.Interfaces.Models;
+
+    /// <summary>
+    /// Generates React List components with table view, sorting, pagination, and filtering.
+    /// </summary>
+    public class ReactListComponentGenerator : BaseComponentGenerator
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReactListComponentGenerator"/> class.
+        /// </summary>
+        /// <param name="logger">Logger instance.</param>
+        public ReactListComponentGenerator(ILogger<ReactListComponentGenerator> logger)
+            : base(logger)
+        {
+        }
+
+        /// <inheritdoc/>
+        public override ComponentType ComponentType => ComponentType.List;
+
+        /// <inheritdoc/>
+        public override async Task<string> GenerateAsync(Table table, DatabaseSchema schema, ComponentGeneratorConfig config)
+        {
+            ArgumentNullException.ThrowIfNull(table);
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(config);
+
+            LogComponentGeneration(table.Name);
+
+            return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
+        }
+
+        private static string GenerateImports(string className, string camelName, UIFramework framework)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("import React from 'react';");
+            sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+
+            if (framework == UIFramework.MaterialUI)
+            {
+                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';");
+                sb.AppendLine("import { Button, Box, CircularProgress, Alert } from '@mui/material';");
+                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
+
+            return sb.ToString();
+        }
+
+        private static string GenerateColumns(Table table, UIFramework framework)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var dataColumns = GetDataColumns(table).Take(10).ToList(); // Limit to 10 columns for UI
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const columns: GridColDef<{className}>[] = [");
+
+            foreach (var column in dataColumns)
+            {
+                var propertyName = ToCamelCase(GetPropertyName(column.Name));
+                var displayName = GetPropertyName(column.Name);
+                var width = GetColumnWidth(column);
+
+                sb.Append(CultureInfo.InvariantCulture, $"    {{ field: '{propertyName}', headerName: '{displayName}', width: {width}");
+
+                // Add valueGetter for special types
+                var (prefix, _) = SplitPrefix(column.Name);
+                if (prefix == "LKP")
+                {
+                    var baseName = ToCamelCase(SplitPrefix(column.Name).baseName);
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (params) => params.row.{baseName}Text || params.row.{baseName}Code");
+                }
+                else if (prefix == "LOC")
+                {
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (params) => params.row.{propertyName}Localized || params.row.{propertyName}");
+                }
+                else if (column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal))
+                {
+                    sb.Append(CultureInfo.InvariantCulture, $", valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString() : ''");
+                }
+
+                sb.AppendLine(" },");
+            }
+
+            // Actions column
+            sb.AppendLine("    {");
+            sb.AppendLine("      field: 'actions',");
+            sb.AppendLine("      type: 'actions',");
+            sb.AppendLine("      headerName: 'Actions',");
+            sb.AppendLine("      width: 100,");
+            sb.AppendLine("      getActions: (params) => [");
+            sb.AppendLine("        <GridActionsCellItem");
+            sb.AppendLine("          icon={<EditIcon />}");
+            sb.AppendLine("          label=\"Edit\"");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{ToCamelCase(GetClassName(table.Name))}s/${{params.id}}`)}}");
+            sb.AppendLine("        />,");
+            sb.AppendLine("        <GridActionsCellItem");
+            sb.AppendLine("          icon={<DeleteIcon />}");
+            sb.AppendLine("          label=\"Delete\"");
+            sb.AppendLine("          onClick={() => {");
+            sb.AppendLine("            if (confirm('Are you sure?')) {");
+            sb.AppendLine("              deleteEntity(params.id as number);");
+            sb.AppendLine("            }");
+            sb.AppendLine("          }}");
+            sb.AppendLine("        />,");
+            sb.AppendLine("      ],");
+            sb.AppendLine("    },");
+            sb.AppendLine("  ];");
+
+            return sb.ToString();
+        }
+
+        private static string GenerateComponentBody(Table table, string className, string camelName, UIFramework framework)
+        {
+            var sb = new StringBuilder();
+            var pluralName = camelName + "s";
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
+            sb.AppendLine("  const navigate = useNavigate();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+            sb.AppendLine();
+
+            // Columns definition
+            sb.AppendLine(GenerateColumns(table, framework));
+            sb.AppendLine();
+
+            // Loading state
+            sb.AppendLine("  if (isLoading) {");
+            if (framework == UIFramework.MaterialUI)
+            {
+                sb.AppendLine("    return <CircularProgress />;");
+            }
+            else
+            {
+                sb.AppendLine("    return <div>Loading...</div>;");
+            }
+
+            sb.AppendLine("  }");
+            sb.AppendLine();
+
+            // Error state
+            sb.AppendLine("  if (error) {");
+            if (framework == UIFramework.MaterialUI)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    return <Alert severity=\"error\">Failed to load {pluralName}</Alert>;");
+            }
+            else
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    return <div className=\"text-red-500\">Failed to load {pluralName}</div>;");
+            }
+
+            sb.AppendLine("  }");
+            sb.AppendLine();
+
+            // Main render
+            sb.AppendLine("  return (");
+            if (framework == UIFramework.MaterialUI)
+            {
+                sb.AppendLine("    <Box sx={{ height: 600, width: '100%' }}>");
+                sb.AppendLine("      <Box sx={{ mb: 2 }}>");
+                sb.AppendLine("        <Button");
+                sb.AppendLine("          variant=\"contained\"");
+                sb.AppendLine("          startIcon={<AddIcon />}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
+                sb.AppendLine("        >");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+                sb.AppendLine("        </Button>");
+                sb.AppendLine("      </Box>");
+                sb.AppendLine("      <DataGrid");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        rows={{{pluralName} || []}}");
+                sb.AppendLine("        columns={columns}");
+                sb.AppendLine("        pageSizeOptions={[5, 10, 25]}");
+                sb.AppendLine("        checkboxSelection");
+                sb.AppendLine("        disableRowSelectionOnClick");
+                sb.AppendLine("      />");
+                sb.AppendLine("    </Box>");
+            }
+            else
+            {
+                sb.AppendLine("    <div className=\"p-4\">");
+                sb.AppendLine("      <div className=\"mb-4\">");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        <button onClick={{() => navigate('/{pluralName}/new')}} className=\"bg-blue-500 text-white px-4 py-2 rounded\">");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+                sb.AppendLine("        </button>");
+                sb.AppendLine("      </div>");
+                sb.AppendLine("      {/* Table implementation */}");
+                sb.AppendLine("    </div>");
+            }
+
+            sb.AppendLine("  );");
+            sb.AppendLine("};");
+
+            return sb.ToString();
+        }
+
+        private static int GetColumnWidth(Column column)
+        {
+            var (prefix, _) = SplitPrefix(column.Name);
+
+            if (column.IsPrimaryKey)
+            {
+                return 90;
+            }
+
+            if (prefix == "ENO")
+            {
+                return 150;
+            }
+
+            if (column.DataType.ToUpperInvariant().Contains("BIT", StringComparison.Ordinal))
+            {
+                return 100;
+            }
+
+            if (column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal))
+            {
+                return 150;
+            }
+
+            if (column.MaxLength.HasValue)
+            {
+                if (column.MaxLength.Value <= 50)
+                {
+                    return 150;
+                }
+
+                if (column.MaxLength.Value <= 100)
+                {
+                    return 200;
+                }
+
+                return 250;
+            }
+
+            return 200;
+        }
+
+        private string Generate(Table table, ComponentGeneratorConfig config)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // Header
+            sb.Append(GenerateComponentHeader(table.Name));
+
+            // Imports
+            sb.AppendLine(GenerateImports(className, camelName, config.Framework));
+            sb.AppendLine();
+
+            // Component
+            sb.AppendLine(GenerateComponentBody(table, className, camelName, config.Framework));
+
+            return sb.ToString();
+        }
+    }
+}
