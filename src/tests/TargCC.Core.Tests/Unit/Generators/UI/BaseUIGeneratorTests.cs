@@ -172,6 +172,77 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
             Assert.Equal(expected, result);
         }
 
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void ToPascalCase_InvalidInput_ReturnsEmptyString(string input)
+        {
+            // Act
+            var result = TestableGenerator.PublicToPascalCase(input);
+
+            // Assert
+            Assert.Equal(string.Empty, result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void ToCamelCase_InvalidInput_ReturnsEmptyString(string input)
+        {
+            // Act
+            var result = TestableGenerator.PublicToCamelCase(input);
+
+            // Assert
+            Assert.Equal(string.Empty, result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void GetClassName_InvalidInput_ThrowsArgumentException(string input)
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => TestableGenerator.PublicGetClassName(input));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void GetPropertyName_InvalidInput_ThrowsArgumentException(string input)
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => TestableGenerator.PublicGetPropertyName(input));
+        }
+
+        [Theory]
+        [InlineData(null, 2, null)]
+        [InlineData("", 2, "")]
+        [InlineData("test", 0, "test")]
+        public void Indent_EdgeCases_HandlesCorrectly(string input, int spaces, string expected)
+        {
+            // Act
+            var result = TestableGenerator.PublicIndent(input, spaces);
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("Customer", "customer")]
+        [InlineData("OrderItem", "orderItem")]
+        [InlineData("c_product", "product")]
+        public void GetCamelCaseName_ValidInput_ReturnsExpected(string input, string expected)
+        {
+            // Act
+            var result = TestableGenerator.PublicGetCamelCaseName(input);
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
         // Testable wrapper class to expose protected methods
         private class TestableGenerator : BaseUIGenerator
         {
@@ -203,6 +274,8 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
             public static string PublicIndent(string code, int spaces) => Indent(code, spaces);
 
             public static bool PublicIsAuditField(string columnName) => IsAuditField(columnName);
+
+            public static string PublicGetCamelCaseName(string tableName) => GetCamelCaseName(tableName);
         }
     }
 }
