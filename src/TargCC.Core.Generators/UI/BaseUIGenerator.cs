@@ -191,10 +191,13 @@ namespace TargCC.Core.Generators.UI
             {
                 if (!string.IsNullOrWhiteSpace(word))
                 {
+                    // First character uppercase
                     result.Append(char.ToUpperInvariant(word[0]));
-                    if (word.Length > 1)
+
+                    // Rest of characters lowercase (manually to avoid CA1308)
+                    for (int i = 1; i < word.Length; i++)
                     {
-                        result.Append(word.Substring(1).ToLower(CultureInfo.InvariantCulture));
+                        result.Append(char.ToLowerInvariant(word[i]));
                     }
                 }
             }
