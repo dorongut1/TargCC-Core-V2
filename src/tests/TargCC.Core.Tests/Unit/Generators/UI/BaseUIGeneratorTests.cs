@@ -114,7 +114,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
         [Theory]
         [InlineData("CustomerId", "customerId")]
         [InlineData("OrderItem", "orderItem")]
-        [InlineData("ID", "iD")]
+        [InlineData("ID", "id")]
         public void ToCamelCase_Various_ReturnsExpected(string input, string expected)
         {
             // Act

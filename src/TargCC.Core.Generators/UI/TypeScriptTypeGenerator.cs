@@ -211,24 +211,24 @@ namespace TargCC.Core.Generators.UI
                     break;
 
                 case "LKP": // Lookup - generates 2 properties
-                    result.Add($"{ToCamelCase(baseName)}Code: string{optional};");
+                    result.Add($"{ToCamelCase(baseName)}Code{optional}: string;");
                     if (!isCreate)
                     {
-                        result.Add($"readonly {ToCamelCase(baseName)}Text{optional}: string;");
+                        result.Add($"readonly {ToCamelCase(baseName)}Text?: string;");
                     }
 
                     break;
 
                 case "ENM": // Enum
                     var enumName = GetClassName(baseName);
-                    result.Add($"{basePropertyName}: {enumName}{optional};");
+                    result.Add($"{basePropertyName}{optional}: {enumName};");
                     break;
 
                 case "LOC": // Localized - generates 2 properties
-                    result.Add($"{basePropertyName}: string{optional};");
+                    result.Add($"{basePropertyName}{optional}: string;");
                     if (!isCreate)
                     {
-                        result.Add($"readonly {basePropertyName}Localized{optional}: string;");
+                        result.Add($"readonly {basePropertyName}Localized?: string;");
                     }
 
                     break;
@@ -251,7 +251,7 @@ namespace TargCC.Core.Generators.UI
                     break;
 
                 case "SPT": // Separate update
-                    result.Add($"{basePropertyName}: {tsType}{optional};");
+                    result.Add($"{basePropertyName}{optional}: {tsType};");
                     break;
 
                 case "SCB": // Separate changed by
@@ -263,11 +263,11 @@ namespace TargCC.Core.Generators.UI
                     break;
 
                 case "SPL": // Split list
-                    result.Add($"{basePropertyName}: string[]{optional};");
+                    result.Add($"{basePropertyName}{optional}: string[];");
                     break;
 
                 case "UPL": // Upload
-                    result.Add($"{basePropertyName}: string{optional}; // File path");
+                    result.Add($"{basePropertyName}{optional}: string; // File path");
                     break;
 
                 default:

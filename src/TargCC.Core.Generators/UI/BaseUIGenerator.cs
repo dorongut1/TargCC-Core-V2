@@ -186,7 +186,7 @@ namespace TargCC.Core.Generators.UI
             // Split by underscore, space, or dash
             var words = Regex.Split(input, @"[_\s-]+");
 
-            // If only one word (no separators), preserve internal casing (for PascalCase/camelCase input)
+            // If only one word (no separators), check if it needs normalization
             if (words.Length == 1)
             {
                 var word = words[0];
@@ -195,7 +195,31 @@ namespace TargCC.Core.Generators.UI
                     return string.Empty;
                 }
 
-                // Just ensure first char is uppercase, preserve rest
+                if (word.Length == 1)
+                {
+                    return char.ToUpperInvariant(word[0]).ToString();
+                }
+
+                // Check if word is all-caps or all-lowercase (needs normalization)
+                // vs mixed-case (preserve it, e.g., "EmailAddress")
+                var tail = word.Substring(1);
+                bool isAllUpper = tail.All(c => !char.IsLetter(c) || char.IsUpper(c));
+                bool isAllLower = tail.All(c => !char.IsLetter(c) || char.IsLower(c));
+
+                if (isAllUpper || isAllLower)
+                {
+                    // Normalize: capitalize first, lowercase rest (e.g., "ID" -> "Id", "id" -> "Id")
+                    var result = new StringBuilder();
+                    result.Append(char.ToUpperInvariant(word[0]));
+                    for (int i = 1; i < word.Length; i++)
+                    {
+                        result.Append(char.ToLowerInvariant(word[i]));
+                    }
+
+                    return result.ToString();
+                }
+
+                // Preserve mixed case (e.g., "EmailAddress" stays "EmailAddress")
                 return char.ToUpperInvariant(word[0]) + word.Substring(1);
             }
 
