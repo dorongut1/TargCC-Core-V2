@@ -35,7 +35,7 @@ namespace TargCC.Core.Tests.Unit.Generators
             // Assert
             result.Should().NotBeNullOrWhiteSpace();
             result.Should().Contain("SP_GetCustomerByEmail");
-            result.Should().Contain("CREATE PROCEDURE [dbo].[SP_GetCustomerByEmail]");
+            result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_GetCustomerByEmail]");
             result.Should().Contain("@Email nvarchar(100)");
             result.Should().Contain("-- Index Type: Unique");
             result.Should().Contain("SELECT");
@@ -63,7 +63,7 @@ namespace TargCC.Core.Tests.Unit.Generators
 
             // Assert
             result.Should().Contain("SP_FillOrderByCustomer");
-            result.Should().Contain("CREATE PROCEDURE [dbo].[SP_FillOrderByCustomer]");
+            result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_FillOrderByCustomer]");
             result.Should().Contain("@CustomerID int");
             result.Should().Contain("-- Index Type: Non-Unique");
             result.Should().Contain("WHERE [CustomerID] = @CustomerID");

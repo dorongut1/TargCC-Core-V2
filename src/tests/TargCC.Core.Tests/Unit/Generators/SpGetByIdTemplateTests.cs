@@ -47,7 +47,7 @@ namespace TargCC.Core.Tests.Unit.Generators
 
             // Assert
             result.Should().NotBeNullOrWhiteSpace();
-            result.Should().Contain("CREATE PROCEDURE [dbo].[SP_GetCustomerByID]");
+            result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_GetCustomerByID]");
             result.Should().Contain("@ID int");
             result.Should().Contain("SELECT");
             result.Should().Contain("[ID]");
