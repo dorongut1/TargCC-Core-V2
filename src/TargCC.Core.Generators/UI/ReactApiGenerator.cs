@@ -18,6 +18,12 @@ namespace TargCC.Core.Generators.UI
     /// </summary>
     public class ReactApiGenerator : BaseUIGenerator
     {
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingApiClient =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(1, nameof(LogGeneratingApiClient)),
+                "Generating React API client for table {TableName}");
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReactApiGenerator"/> class.
         /// </summary>
@@ -37,68 +43,12 @@ namespace TargCC.Core.Generators.UI
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(config);
 
-            Logger.LogInformation("Generating React API client for table {TableName}", table.Name);
+            LogGeneratingApiClient(Logger, table.Name, null);
 
             return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig config)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-            var apiPath = $"/api/{camelName}s";
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            sb.AppendLine("import { api } from '../config';");
-            sb.AppendLine("import type {");
-            sb.AppendLine($"  {className},");
-            sb.AppendLine($"  Create{className}Request,");
-            sb.AppendLine($"  Update{className}Request,");
-            sb.AppendLine($"  {className}Filters,");
-            sb.AppendLine($"}} from '../types/{className}.types';");
-            sb.AppendLine();
-
-            // API object
-            sb.AppendLine("/**");
-            sb.AppendLine($" * API client for {className} operations.");
-            sb.AppendLine($" * Base URL: {apiPath}");
-            sb.AppendLine(" */");
-            sb.AppendLine($"export const {camelName}Api = {{");
-
-            // CRUD methods
-            sb.AppendLine(GenerateGetById(className, camelName, apiPath));
-            sb.AppendLine(GenerateGetAll(className, camelName, apiPath));
-            sb.AppendLine(GenerateCreate(className, camelName, apiPath));
-            sb.AppendLine(GenerateUpdate(className, camelName, apiPath));
-            sb.AppendLine(GenerateDelete(className, camelName, apiPath));
-
-            // GetByXXX from indexes
-            foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
-            {
-                var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
-                if (column != null)
-                {
-                    sb.AppendLine(GenerateGetByIndex(className, camelName, apiPath, column, index.IsUnique));
-                }
-            }
-
-            // Relationship methods (one-to-many)
-            var relationships = table.Relationships.Where(r => r.ChildTable == table.Name).Take(3);
-            foreach (var rel in relationships)
-            {
-                sb.AppendLine(GenerateGetChildren(className, camelName, apiPath, rel));
-            }
-
-            sb.AppendLine("};");
-
-            return sb.ToString();
-        }
-
-        private static string GenerateGetById(string className, string _, string apiPath)
+        private static string GenerateGetById(string className, string unusedCamelName, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -112,7 +62,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateGetAll(string className, string _, string apiPath)
+        private static string GenerateGetAll(string className, string unusedCamelName, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -128,7 +78,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateCreate(string className, string _, string apiPath)
+        private static string GenerateCreate(string className, string unusedCamelName, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -142,7 +92,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateUpdate(string className, string _, string apiPath)
+        private static string GenerateUpdate(string className, string unusedCamelName, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -156,7 +106,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateDelete(string className, string _, string apiPath)
+        private static string GenerateDelete(string className, string unusedCamelName, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -169,10 +119,10 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateGetByIndex(string className, string _, string apiPath, Column column, bool isUnique)
+        private static string GenerateGetByIndex(string className, string unusedCamelName, string apiPath, Column column, bool isUnique)
         {
             var sb = new StringBuilder();
-            var (unusedPrefix, baseName) = SplitPrefix(column.Name);
+            var (_, baseName) = SplitPrefix(column.Name);
             var propertyName = GetPropertyName(column.Name);
             var paramName = ToCamelCase(propertyName);
             var methodName = $"getBy{propertyName}";
@@ -191,7 +141,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateGetChildren(string className, string _, string apiPath, Relationship relationship)
+        private static string GenerateGetChildren(string className, string unusedCamelName, string apiPath, Relationship relationship)
         {
             var childClassName = GetClassName(relationship.ChildTable);
             var childCamelName = GetCamelCaseName(relationship.ChildTable);
@@ -223,6 +173,62 @@ namespace TargCC.Core.Generators.UI
                 _ when sqlType.Contains("DATE", StringComparison.Ordinal) => "Date",
                 _ => "string",
             };
+        }
+
+        private string Generate(Table table, DatabaseSchema unusedSchema, UIGeneratorConfig unusedConfig)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+            var apiPath = $"/api/{camelName}s";
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            sb.AppendLine("import { api } from '../config';");
+            sb.AppendLine("import type {");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+            sb.AppendLine();
+
+            // API object
+            sb.AppendLine("/**");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * API client for {className} operations.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Base URL: {apiPath}");
+            sb.AppendLine(" */");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
+
+            // CRUD methods
+            sb.AppendLine(GenerateGetById(className, camelName, apiPath));
+            sb.AppendLine(GenerateGetAll(className, camelName, apiPath));
+            sb.AppendLine(GenerateCreate(className, camelName, apiPath));
+            sb.AppendLine(GenerateUpdate(className, camelName, apiPath));
+            sb.AppendLine(GenerateDelete(className, camelName, apiPath));
+
+            // GetByXXX from indexes
+            foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
+            {
+                var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
+                if (column != null)
+                {
+                    sb.AppendLine(GenerateGetByIndex(className, camelName, apiPath, column, index.IsUnique));
+                }
+            }
+
+            // Relationship methods (one-to-many)
+            var relationships = table.Relationships.Where(r => r.ChildTable == table.Name).Take(3);
+            foreach (var rel in relationships)
+            {
+                sb.AppendLine(GenerateGetChildren(className, camelName, apiPath, rel));
+            }
+
+            sb.AppendLine("};");
+
+            return sb.ToString();
         }
     }
 }
