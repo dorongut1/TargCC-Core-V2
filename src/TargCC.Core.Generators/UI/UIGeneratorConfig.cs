@@ -86,17 +86,17 @@ namespace TargCC.Core.Generators.UI
         {
             if (string.IsNullOrWhiteSpace(OutputDirectory))
             {
-                throw new ArgumentException("OutputDirectory cannot be null or empty.", nameof(OutputDirectory));
+                throw new ArgumentException("OutputDirectory cannot be null or empty.");
             }
 
             if (string.IsNullOrWhiteSpace(TypeScriptNamespace))
             {
-                throw new ArgumentException("TypeScriptNamespace cannot be null or empty.", nameof(TypeScriptNamespace));
+                throw new ArgumentException("TypeScriptNamespace cannot be null or empty.");
             }
 
             if (IndentSize < 0 || IndentSize > 8)
             {
-                throw new ArgumentException("IndentSize must be between 0 and 8.", nameof(IndentSize));
+                throw new ArgumentException("IndentSize must be between 0 and 8.");
             }
         }
     }

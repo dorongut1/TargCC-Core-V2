@@ -17,6 +17,12 @@ namespace TargCC.Core.Generators.UI
     /// </summary>
     public class ReactHookGenerator : BaseUIGenerator
     {
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(1, nameof(LogGeneratingHooks)),
+                "Generating React hooks for table {TableName}");
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
         /// </summary>
@@ -36,41 +42,9 @@ namespace TargCC.Core.Generators.UI
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(config);
 
-            Logger.LogInformation("Generating React hooks for table {TableName}", table.Name);
+            LogGeneratingHooks(Logger, table.Name, null);
 
-            return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
-        }
-
-        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig unusedConfig)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-            sb.AppendLine();
-
-            // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
-
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
-
-            return sb.ToString();
+            return await Task.Run(() => Generate(table)).ConfigureAwait(false);
         }
 
         private static string GenerateUseEntityHook(string className, string camelName)
@@ -138,7 +112,7 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine("  return useMutation({");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    mutationFn: ({{ id, data }}: {{ id: number; data: Update{className}Request }}) =>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      {camelName}Api.update(id, data),");
-            sb.AppendLine("    onSuccess: (unusedPrefix, variables) => {");
+            sb.AppendLine("    onSuccess: (_, variables) => {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}', variables.id] }});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"      queryClient.invalidateQueries({{ queryKey: ['{camelName}s'] }});");
             sb.AppendLine("    },");
@@ -165,6 +139,38 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine("  });");
             sb.AppendLine("};");
             sb.AppendLine();
+            return sb.ToString();
+        }
+
+        private string Generate(Table table)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+            sb.AppendLine();
+
+            // Query hooks
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+
+            // Mutation hooks
+            sb.AppendLine(GenerateUseCreateHook(className, camelName));
+            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+
             return sb.ToString();
         }
     }

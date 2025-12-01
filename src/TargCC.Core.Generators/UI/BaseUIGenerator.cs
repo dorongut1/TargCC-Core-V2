@@ -21,6 +21,13 @@ namespace TargCC.Core.Generators.UI
     {
         private static readonly string[] LineSeparators = new[] { "\r\n", "\r", "\n" };
         private static readonly string[] AuditFieldNames = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
+
+        private static readonly Action<ILogger, UIGeneratorType, string, Exception> LogGenerationFailed =
+            LoggerMessage.Define<UIGeneratorType, string>(
+                LogLevel.Error,
+                new EventId(1, nameof(LogGenerationFailed)),
+                "Failed to generate {GeneratorType} for table {TableName}");
+
         private readonly ILogger _logger;
 
         /// <summary>
@@ -31,11 +38,6 @@ namespace TargCC.Core.Generators.UI
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        /// <summary>
-        /// Gets the logger instance.
-        /// </summary>
-        protected ILogger Logger => _logger;
 
         /// <inheritdoc/>
         public abstract UIGeneratorType GeneratorType { get; }
@@ -60,13 +62,18 @@ namespace TargCC.Core.Generators.UI
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Failed to generate {GeneratorType} for table {TableName}", GeneratorType, table.Name);
+                    LogGenerationFailed(Logger, GeneratorType, table.Name, ex);
                     throw;
                 }
             }
 
             return result;
         }
+
+        /// <summary>
+        /// Gets the logger instance.
+        /// </summary>
+        protected ILogger Logger => _logger;
 
         /// <summary>
         /// Gets the class name from table name (PascalCase).
