@@ -126,11 +126,11 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "Email", DataType = "nvarchar(255)", IsRequired = true },
+                    new Column { Name = "Email", DataType = "nvarchar(255)", IsNullable = false },
                 },
                 Indexes = new List<Index>
                 {
-                    new Index { Name = "IX_Customer_Email", Columns = new List<string> { "Email" }, IsUnique = true },
+                    new Index { Name = "IX_Customer_Email", ColumnNames = new List<string> { "Email" }, IsUnique = true },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -152,11 +152,11 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "lkp_Status", DataType = "varchar(10)", IsRequired = true },
+                    new Column { Name = "lkp_Status", DataType = "varchar(10)", IsNullable = false },
                 },
                 Indexes = new List<Index>
                 {
-                    new Index { Name = "IX_Customer_Status", Columns = new List<string> { "lkp_Status" }, IsUnique = false },
+                    new Index { Name = "IX_Customer_Status", ColumnNames = new List<string> { "lkp_Status" }, IsUnique = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -221,8 +221,8 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "Name", DataType = "nvarchar(100)", IsRequired = true },
-                    new Column { Name = "Email", DataType = "nvarchar(255)", IsRequired = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "Email", DataType = "nvarchar(255)", IsNullable = false },
                 },
                 Indexes = new List<Index>(),
             };

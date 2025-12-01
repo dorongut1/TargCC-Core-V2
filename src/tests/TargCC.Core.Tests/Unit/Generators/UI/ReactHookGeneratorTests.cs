@@ -179,7 +179,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "OrderID", DataType = "int", IsRequired = true },
+                    new Column { Name = "OrderID", DataType = "int", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -203,7 +203,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "OrderID", DataType = "int", IsRequired = true },
+                    new Column { Name = "OrderID", DataType = "int", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -361,8 +361,8 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "Name", DataType = "nvarchar(100)", IsRequired = true },
-                    new Column { Name = "Email", DataType = "nvarchar(255)", IsRequired = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "Email", DataType = "nvarchar(255)", IsNullable = false },
                 },
                 Indexes = new List<Index>(),
             };

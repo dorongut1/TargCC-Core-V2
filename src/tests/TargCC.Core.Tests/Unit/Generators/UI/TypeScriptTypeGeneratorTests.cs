@@ -54,9 +54,9 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Name = "Customer",
                 Columns = new List<Column>
                 {
-                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true, IsRequired = true },
-                    new Column { Name = "Name", DataType = "nvarchar(100)", IsRequired = true, IsNullable = false },
-                    new Column { Name = "Email", DataType = "nvarchar(255)", IsRequired = false, IsNullable = true },
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true, IsNullable = false },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "Email", DataType = "nvarchar(255)", IsNullable = true },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -79,7 +79,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "eno_Password", DataType = "varchar(64)", IsRequired = true },
+                    new Column { Name = "eno_Password", DataType = "varchar(64)", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -102,7 +102,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "lkp_Status", DataType = "varchar(10)", IsRequired = true },
+                    new Column { Name = "lkp_Status", DataType = "varchar(10)", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -125,7 +125,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "enm_Type", DataType = "varchar(20)", IsRequired = true },
+                    new Column { Name = "enm_Type", DataType = "varchar(20)", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -148,7 +148,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "loc_Description", DataType = "nvarchar(500)", IsRequired = true },
+                    new Column { Name = "loc_Description", DataType = "nvarchar(500)", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -171,7 +171,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "clc_Total", DataType = "decimal(18,2)", IsRequired = true },
+                    new Column { Name = "clc_Total", DataType = "decimal(18,2)", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -194,7 +194,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "agg_OrderCount", DataType = "int", IsRequired = true },
+                    new Column { Name = "agg_OrderCount", DataType = "int", IsNullable = false },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -216,7 +216,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "spl_Tags", DataType = "nvarchar(max)", IsRequired = false },
+                    new Column { Name = "spl_Tags", DataType = "nvarchar(max)", IsNullable = true },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -238,7 +238,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "upl_Photo", DataType = "varchar(69)", IsRequired = false },
+                    new Column { Name = "upl_Photo", DataType = "varchar(69)", IsNullable = true },
                 },
             };
             var schema = new DatabaseSchema { Tables = new List<Table> { table } };
@@ -321,7 +321,7 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Columns = new List<Column>
                 {
                     new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
-                    new Column { Name = "TestField", DataType = sqlType, IsRequired = true },
+                    new Column { Name = "TestField", DataType = sqlType, IsNullable = false },
                 },
             };
 
@@ -365,9 +365,9 @@ namespace TargCC.Core.Tests.Unit.Generators.UI
                 Name = "Customer",
                 Columns = new List<Column>
                 {
-                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true, IsRequired = true, IsIdentity = true },
-                    new Column { Name = "Name", DataType = "nvarchar(100)", IsRequired = true, IsNullable = false },
-                    new Column { Name = "Email", DataType = "nvarchar(255)", IsRequired = true, IsNullable = false },
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true, IsNullable = false, IsIdentity = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "Email", DataType = "nvarchar(255)", IsNullable = false },
                 },
             };
         }
