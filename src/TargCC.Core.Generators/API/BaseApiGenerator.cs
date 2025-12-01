@@ -83,15 +83,6 @@ namespace TargCC.Core.Generators.API
         }
 
         /// <summary>
-        /// Generates code synchronously (implemented by derived classes).
-        /// </summary>
-        /// <param name="table">The table to generate code for.</param>
-        /// <param name="schema">The database schema.</param>
-        /// <param name="config">Generator configuration.</param>
-        /// <returns>Generated code.</returns>
-        protected abstract string Generate(Table table, DatabaseSchema schema, ApiGeneratorConfig config);
-
-        /// <summary>
         /// Gets the class name from table name (PascalCase).
         /// Example: "customer" -> "Customer", "order_item" -> "OrderItem".
         /// </summary>
@@ -113,6 +104,15 @@ namespace TargCC.Core.Generators.API
             // Convert to PascalCase
             return ToPascalCase(tableName);
         }
+
+        /// <summary>
+        /// Generates code synchronously (implemented by derived classes).
+        /// </summary>
+        /// <param name="table">The table to generate code for.</param>
+        /// <param name="schema">The database schema.</param>
+        /// <param name="config">Generator configuration.</param>
+        /// <returns>Generated code.</returns>
+        protected abstract string Generate(Table table, DatabaseSchema schema, ApiGeneratorConfig config);
 
         /// <summary>
         /// Gets the property name from column name (PascalCase, with prefix handling).
