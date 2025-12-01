@@ -1,0 +1,334 @@
+// <copyright file="ApiControllerGenerator.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace TargCC.Core.Generators.API
+{
+    using System;
+    using System.Globalization;
+    using System.Linq;
+    using System.Text;
+    using Microsoft.Extensions.Logging;
+    using TargCC.Core.Interfaces.Models;
+
+    /// <summary>
+    /// Generates ASP.NET Core API Controllers with CRUD endpoints.
+    /// </summary>
+    public class ApiControllerGenerator : BaseApiGenerator
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApiControllerGenerator"/> class.
+        /// </summary>
+        /// <param name="logger">Logger instance.</param>
+        public ApiControllerGenerator(ILogger<ApiControllerGenerator> logger)
+            : base(logger)
+        {
+        }
+
+        /// <inheritdoc/>
+        protected override string GeneratorTypeName => "API Controller";
+
+        /// <inheritdoc/>
+        protected override string Generate(Table table, DatabaseSchema schema, ApiGeneratorConfig config)
+        {
+            var className = GetClassName(table.Name);
+            var entityName = className;
+            var controllerName = MakePlural(className);
+
+            var sb = new StringBuilder();
+
+            sb.Append(GenerateFileHeader(table.Name, "API Controller Generator"));
+
+            AppendUsings(sb);
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
+            sb.AppendLine("{");
+
+            GenerateControllerClass(sb, table, entityName, controllerName, config);
+
+            sb.AppendLine("}");
+
+            return sb.ToString();
+        }
+
+        private static void AppendUsings(StringBuilder sb)
+        {
+            sb.AppendLine("using System;");
+            sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using System.Threading.Tasks;");
+            sb.AppendLine("using AutoMapper;");
+            sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+            sb.AppendLine("using Microsoft.Extensions.Logging;");
+            sb.AppendLine();
+        }
+
+        private static void GenerateControllerClass(StringBuilder sb, Table table, string entityName, string controllerName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("    /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    /// API controller for {entityName} entities.");
+                sb.AppendLine("    /// </summary>");
+            }
+
+            sb.AppendLine("    [ApiController]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    [Route(\"api/[controller]\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine("    [Produces(\"application/json\")]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public class {controllerName}Controller : ControllerBase");
+            sb.AppendLine("    {");
+
+            GenerateFields(sb, entityName);
+            sb.AppendLine();
+
+            GenerateConstructor(sb, entityName, controllerName, config);
+            sb.AppendLine();
+
+            GenerateGetByIdMethod(sb, entityName, config);
+            sb.AppendLine();
+
+            GenerateGetAllMethod(sb, entityName, config);
+            sb.AppendLine();
+
+            GenerateCreateMethod(sb, entityName, config);
+            sb.AppendLine();
+
+            GenerateUpdateMethod(sb, entityName, config);
+            sb.AppendLine();
+
+            GenerateDeleteMethod(sb, entityName, config);
+
+            sb.AppendLine("    }");
+        }
+
+        private static void GenerateFields(StringBuilder sb, string entityName)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly IRepository<{entityName}> _repository;");
+            sb.AppendLine("        private readonly IMapper _mapper;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{MakePlural(entityName)}Controller> _logger;");
+        }
+
+        private static void GenerateConstructor(StringBuilder sb, string entityName, string controllerName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Initializes a new instance of the <see cref=\"{controllerName}Controller\"/> class.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"repository\">Repository for {entityName}.</param>");
+                sb.AppendLine("        /// <param name=\"mapper\">AutoMapper instance.</param>");
+                sb.AppendLine("        /// <param name=\"logger\">Logger instance.</param>");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public {controllerName}Controller(");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            IRepository<{entityName}> repository,");
+            sb.AppendLine("            IMapper mapper,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            ILogger<{controllerName}Controller> logger)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            _repository = repository ?? throw new ArgumentNullException(nameof(repository));");
+            sb.AppendLine("            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));");
+            sb.AppendLine("            _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateGetByIdMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets a {entityName} by ID.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The {entityName} DTO.</returns>");
+            }
+
+            sb.AppendLine("        [HttpGet(\"{id}\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 200)]");
+                sb.AppendLine("        [ProducesResponseType(404)]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> GetById(int id)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
+            sb.AppendLine("            if (entity == null)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return NotFound();");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok(_mapper.Map<{entityName}Dto>(entity));");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateGetAllMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityName)} with optional filters.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"filters\">Optional filters.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityName} DTOs.</returns>");
+            }
+
+            sb.AppendLine("        [HttpGet]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}Dto>), 200)]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}Dto>>> GetAll([FromQuery] {entityName}Filters? filters)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var entities = await _repository.GetAllAsync().ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dtos = _mapper.Map<IEnumerable<{entityName}Dto>>(entities);");
+            sb.AppendLine("            return Ok(dtos);");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateCreateMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Creates a new {entityName}.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"request\">The create request.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The created {entityName} DTO.</returns>");
+            }
+
+            sb.AppendLine("        [HttpPost]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 201)]");
+                sb.AppendLine("        [ProducesResponseType(400)]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> Create([FromBody] Create{entityName}Request request)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (!ModelState.IsValid)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return BadRequest(ModelState);");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = _mapper.Map<{entityName}>(request);");
+            sb.AppendLine("            var created = await _repository.AddAsync(entity).ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dto = _mapper.Map<{entityName}Dto>(created);");
+            sb.AppendLine();
+            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateUpdateMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Updates an existing {entityName}.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
+                sb.AppendLine("        /// <param name=\"request\">The update request.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The updated {entityName} DTO.</returns>");
+            }
+
+            sb.AppendLine("        [HttpPut(\"{id}\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 200)]");
+                sb.AppendLine("        [ProducesResponseType(404)]");
+                sb.AppendLine("        [ProducesResponseType(400)]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> Update(int id, [FromBody] Update{entityName}Request request)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (!ModelState.IsValid)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return BadRequest(ModelState);");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            var existing = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
+            sb.AppendLine("            if (existing == null)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return NotFound();");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            _mapper.Map(request, existing);");
+            sb.AppendLine("            var updated = await _repository.UpdateAsync(existing).ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dto = _mapper.Map<{entityName}Dto>(updated);");
+            sb.AppendLine();
+            sb.AppendLine("            return Ok(dto);");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateDeleteMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        {
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Deletes a {entityName}.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
+                sb.AppendLine("        /// <returns>No content.</returns>");
+            }
+
+            sb.AppendLine("        [HttpDelete(\"{id}\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine("        [ProducesResponseType(204)]");
+                sb.AppendLine("        [ProducesResponseType(404)]");
+            }
+
+            sb.AppendLine("        public async Task<IActionResult> Delete(int id)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var existing = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
+            sb.AppendLine("            if (existing == null)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return NotFound();");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            await _repository.DeleteAsync(id).ConfigureAwait(false);");
+            sb.AppendLine("            return NoContent();");
+            sb.AppendLine("        }");
+        }
+
+        private static string MakePlural(string word)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                return word;
+            }
+
+            // Simple pluralization rules
+            if (word.EndsWith("y", StringComparison.OrdinalIgnoreCase) && word.Length > 1 &&
+                !IsVowel(word[word.Length - 2]))
+            {
+                return word.Substring(0, word.Length - 1) + "ies";
+            }
+
+            if (word.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+            {
+                return word + "es";
+            }
+
+            return word + "s";
+        }
+
+        private static bool IsVowel(char c)
+        {
+            return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
+        }
+    }
+}
