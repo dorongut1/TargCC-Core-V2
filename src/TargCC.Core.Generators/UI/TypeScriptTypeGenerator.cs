@@ -214,7 +214,7 @@ namespace TargCC.Core.Generators.UI
                     result.Add($"{ToCamelCase(baseName)}Code: string{optional};");
                     if (!isCreate)
                     {
-                        result.Add($"readonly {ToCamelCase(baseName)}Text{optional}: string{optional};");
+                        result.Add($"readonly {ToCamelCase(baseName)}Text{optional}: string;");
                     }
 
                     break;
@@ -228,7 +228,7 @@ namespace TargCC.Core.Generators.UI
                     result.Add($"{basePropertyName}: string{optional};");
                     if (!isCreate)
                     {
-                        result.Add($"readonly {basePropertyName}Localized{optional}: string{optional};");
+                        result.Add($"readonly {basePropertyName}Localized{optional}: string;");
                     }
 
                     break;
@@ -237,7 +237,7 @@ namespace TargCC.Core.Generators.UI
                 case "BLG": // Business logic - readonly
                     if (!isCreate)
                     {
-                        result.Add($"readonly {basePropertyName}{optional}: {tsType}{optional};");
+                        result.Add($"readonly {basePropertyName}{optional}: {tsType};");
                     }
 
                     break;
@@ -245,19 +245,19 @@ namespace TargCC.Core.Generators.UI
                 case "AGG": // Aggregate - readonly
                     if (!isCreate)
                     {
-                        result.Add($"readonly {basePropertyName}{optional}: {tsType}{optional};");
+                        result.Add($"readonly {basePropertyName}{optional}: {tsType};");
                     }
 
                     break;
 
-                case "spt": // Separate update
+                case "SPT": // Separate update
                     result.Add($"{basePropertyName}: {tsType}{optional};");
                     break;
 
                 case "SCB": // Separate changed by
                     if (!isCreate)
                     {
-                        result.Add($"readonly {basePropertyName}{optional}: string{optional};");
+                        result.Add($"readonly {basePropertyName}{optional}: string;");
                     }
 
                     break;
@@ -272,7 +272,7 @@ namespace TargCC.Core.Generators.UI
 
                 default:
                     // Regular property (including ent_ encrypted fields)
-                    result.Add($"{basePropertyName}{optional}: {tsType}{optional};");
+                    result.Add($"{basePropertyName}{optional}: {tsType};");
                     break;
             }
 
