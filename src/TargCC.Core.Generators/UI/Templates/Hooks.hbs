@@ -1,0 +1,155 @@
+{{~ ##
+  Template: React Hooks Generator
+  Purpose: Generates React Query hooks for data fetching and mutations
+  Input Model: { EntityName, PrimaryKeyType, ApiClient }
+~}}
+// Generated React Hooks for {{ entity_name }}
+// Auto-generated - do not modify
+
+import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import {
+  {{ entity_name }},
+  Create{{ entity_name }}Dto,
+  Update{{ entity_name }}Dto,
+} from './types';
+import { {{ entity_name | string.downcase }}Api } from './api';
+
+// Query keys for {{ entity_name }}
+export const {{ entity_name | string.downcase }}Keys = {
+  all: ['{{ entity_name | string.downcase }}'] as const,
+  lists: () => [...{{ entity_name | string.downcase }}Keys.all, 'list'] as const,
+  list: (params?: Record<string, unknown>) => [...{{ entity_name | string.downcase }}Keys.lists(), params] as const,
+  details: () => [...{{ entity_name | string.downcase }}Keys.all, 'detail'] as const,
+  detail: (id: {{ primary_key_typescript_type }}) => [...{{ entity_name | string.downcase }}Keys.details(), id] as const,
+};
+
+/**
+ * Hook to fetch all {{ entity_name | string.downcase }} records
+ */
+export function use{{ entity_name }}List(
+  params?: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+{{~ if has_foreign_keys ~}}
+    includeRelations?: boolean;
+{{~ end ~}}
+  },
+  options?: UseQueryOptions<{{ entity_name }}[], AxiosError>
+) {
+  return useQuery<{{ entity_name }}[], AxiosError>({
+    queryKey: {{ entity_name | string.downcase }}Keys.list(params),
+    queryFn: async () => {
+      const response = await {{ entity_name | string.downcase }}Api.getAll(params);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
+/**
+ * Hook to fetch single {{ entity_name }} by ID
+ */
+export function use{{ entity_name }}(
+  id: {{ primary_key_typescript_type }} | undefined,
+{{~ if has_foreign_keys ~}}
+  includeRelations: boolean = false,
+{{~ end ~}}
+  options?: UseQueryOptions<{{ entity_name }}, AxiosError>
+) {
+  return useQuery<{{ entity_name }}, AxiosError>({
+    queryKey: {{ entity_name | string.downcase }}Keys.detail(id!),
+    queryFn: async () => {
+      const response = await {{ entity_name | string.downcase }}Api.getById(id!{{~ if has_foreign_keys ~}}, includeRelations{{~ end ~}});
+      return response.data;
+    },
+    enabled: id !== undefined,
+    ...options,
+  });
+}
+
+/**
+ * Hook to create new {{ entity_name }}
+ */
+export function useCreate{{ entity_name }}(
+  options?: UseMutationOptions<{{ entity_name }}, AxiosError, Create{{ entity_name }}Dto>
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{{ entity_name }}, AxiosError, Create{{ entity_name }}Dto>({
+    mutationFn: async (data) => {
+      const response = await {{ entity_name | string.downcase }}Api.create(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: {{ entity_name | string.downcase }}Keys.lists() });
+    },
+    ...options,
+  });
+}
+
+/**
+ * Hook to update existing {{ entity_name }}
+ */
+export function useUpdate{{ entity_name }}(
+  options?: UseMutationOptions<{{ entity_name }}, AxiosError, { id: {{ primary_key_typescript_type }}; data: Update{{ entity_name }}Dto }>
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{{ entity_name }}, AxiosError, { id: {{ primary_key_typescript_type }}; data: Update{{ entity_name }}Dto }>({
+    mutationFn: async ({ id, data }) => {
+      const response = await {{ entity_name | string.downcase }}Api.update(id, data);
+      return response.data;
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: {{ entity_name | string.downcase }}Keys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: {{ entity_name | string.downcase }}Keys.lists() });
+    },
+    ...options,
+  });
+}
+
+/**
+ * Hook to delete {{ entity_name }}
+ */
+export function useDelete{{ entity_name }}(
+  options?: UseMutationOptions<void, AxiosError, {{ primary_key_typescript_type }}>
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError, {{ primary_key_typescript_type }}>({
+    mutationFn: async (id) => {
+      await {{ entity_name | string.downcase }}Api.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: {{ entity_name | string.downcase }}Keys.lists() });
+    },
+    ...options,
+  });
+}
+
+{{~ if search_enabled ~}}
+/**
+ * Hook to search {{ entity_name | string.downcase }} records
+ */
+export function useSearch{{ entity_name }}(
+  query: string,
+  params?: {
+    page?: number;
+    pageSize?: number;
+  },
+  options?: UseQueryOptions<{{ entity_name }}[], AxiosError>
+) {
+  return useQuery<{{ entity_name }}[], AxiosError>({
+    queryKey: [...{{ entity_name | string.downcase }}Keys.all, 'search', query, params],
+    queryFn: async () => {
+      const response = await {{ entity_name | string.downcase }}Api.search(query, params);
+      return response.data;
+    },
+    enabled: query.length > 0,
+    ...options,
+  });
+}
+{{~ end ~}}

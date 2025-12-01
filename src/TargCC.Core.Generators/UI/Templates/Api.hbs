@@ -1,0 +1,105 @@
+{{~ ##
+  Template: TypeScript API Client Generator
+  Purpose: Generates API client methods for CRUD operations
+  Input Model: { EntityName, PrimaryKeyType, BaseUrl, Endpoints }
+~}}
+// Generated API Client for {{ entity_name }}
+// Auto-generated - do not modify
+
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import {
+  {{ entity_name }},
+  Create{{ entity_name }}Dto,
+  Update{{ entity_name }}Dto,
+{{~ if has_foreign_keys ~}}
+  {{ entity_name }}WithRelations,
+{{~ end ~}}
+} from './types';
+
+/**
+ * API Client for {{ entity_name }} operations
+ */
+export class {{ entity_name }}ApiClient {
+  private readonly baseUrl: string;
+  private readonly axios: AxiosInstance;
+
+  constructor(baseUrl: string = '{{ base_url | default: "/api" }}', axiosInstance?: AxiosInstance) {
+    this.baseUrl = baseUrl;
+    this.axios = axiosInstance || axios.create();
+  }
+
+  /**
+   * Get all {{ entity_name | string.downcase }} records
+   */
+  async getAll(params?: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+{{~ if has_foreign_keys ~}}
+    includeRelations?: boolean;
+{{~ end ~}}
+  }): Promise<AxiosResponse<{{ entity_name }}[]>> {
+    return this.axios.get<{{ entity_name }}[]>(
+      `${this.baseUrl}/{{ endpoint_base }}`,
+      { params }
+    );
+  }
+
+  /**
+   * Get {{ entity_name }} by ID
+   */
+  async getById(id: {{ primary_key_typescript_type }}{{~ if has_foreign_keys ~}}, includeRelations: boolean = false{{~ end ~}}): Promise<AxiosResponse<{{ entity_name }}>> {
+    return this.axios.get<{{ entity_name }}>(
+      `${this.baseUrl}/{{ endpoint_base }}/${id}`{{~ if has_foreign_keys ~}},
+      { params: { includeRelations } }{{~ end ~}}
+    );
+  }
+
+  /**
+   * Create new {{ entity_name }}
+   */
+  async create(data: Create{{ entity_name }}Dto): Promise<AxiosResponse<{{ entity_name }}>> {
+    return this.axios.post<{{ entity_name }}>(
+      `${this.baseUrl}/{{ endpoint_base }}`,
+      data
+    );
+  }
+
+  /**
+   * Update existing {{ entity_name }}
+   */
+  async update(id: {{ primary_key_typescript_type }}, data: Update{{ entity_name }}Dto): Promise<AxiosResponse<{{ entity_name }}>> {
+    return this.axios.put<{{ entity_name }}>(
+      `${this.baseUrl}/{{ endpoint_base }}/${id}`,
+      data
+    );
+  }
+
+  /**
+   * Delete {{ entity_name }}
+   */
+  async delete(id: {{ primary_key_typescript_type }}): Promise<AxiosResponse<void>> {
+    return this.axios.delete<void>(
+      `${this.baseUrl}/{{ endpoint_base }}/${id}`
+    );
+  }
+
+{{~ if search_enabled ~}}
+  /**
+   * Search {{ entity_name | string.downcase }} records
+   */
+  async search(query: string, params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<AxiosResponse<{{ entity_name }}[]>> {
+    return this.axios.get<{{ entity_name }}[]>(
+      `${this.baseUrl}/{{ endpoint_base }}/search`,
+      { params: { q: query, ...params } }
+    );
+  }
+{{~ end ~}}
+}
+
+// Export singleton instance
+export const {{ entity_name | string.downcase }}Api = new {{ entity_name }}ApiClient();

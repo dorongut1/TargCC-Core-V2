@@ -1,0 +1,58 @@
+{{~ ##
+  Template: TypeScript Types Generator
+  Purpose: Generates TypeScript interfaces and types for entity models
+  Input Model: { EntityName, Properties: [{ Name, Type, IsNullable, IsRequired }] }
+~}}
+// Generated TypeScript Types for {{ entity_name }}
+// Auto-generated - do not modify
+
+{{~ if description ~}}
+/**
+ * {{ description }}
+ */
+{{~ end ~}}
+export interface {{ entity_name }} {
+{{~ for prop in properties ~}}
+  {{~ if prop.description ~}}
+  /** {{ prop.description }} */
+  {{~ end ~}}
+  {{ prop.name }}{{ if prop.is_nullable || !prop.is_required }}?{{ end }}: {{ prop.typescript_type }};
+{{~ end ~}}
+}
+
+{{~ if generate_create_dto ~}}
+/**
+ * DTO for creating {{ entity_name }}
+ */
+export interface Create{{ entity_name }}Dto {
+{{~ for prop in properties ~}}
+  {{~ if !prop.is_primary_key && !prop.is_computed ~}}
+  {{ prop.name }}{{ if !prop.is_required }}?{{ end }}: {{ prop.typescript_type }};
+  {{~ end ~}}
+{{~ end ~}}
+}
+{{~ end ~}}
+
+{{~ if generate_update_dto ~}}
+/**
+ * DTO for updating {{ entity_name }}
+ */
+export interface Update{{ entity_name }}Dto {
+{{~ for prop in properties ~}}
+  {{~ if !prop.is_primary_key && !prop.is_computed ~}}
+  {{ prop.name }}?: {{ prop.typescript_type }};
+  {{~ end ~}}
+{{~ end ~}}
+}
+{{~ end ~}}
+
+{{~ if has_foreign_keys ~}}
+/**
+ * {{ entity_name }} with related entities loaded
+ */
+export interface {{ entity_name }}WithRelations extends {{ entity_name }} {
+{{~ for fk in foreign_keys ~}}
+  {{ fk.navigation_property }}?: {{ fk.related_type }};
+{{~ end ~}}
+}
+{{~ end ~}}
