@@ -41,7 +41,7 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private string Generate(Table table, DatabaseSchema schema, UIGeneratorConfig config)
+        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig _1)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -73,7 +73,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUseEntityHook(string className, string camelName)
+        private static string GenerateUseEntityHook(string className, string camelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
@@ -90,7 +90,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUseEntitiesHook(string className, string camelName)
+        private static string GenerateUseEntitiesHook(string className, string camelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
@@ -106,7 +106,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUseCreateHook(string className, string camelName)
+        private static string GenerateUseCreateHook(string className, string camelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
@@ -126,7 +126,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUseUpdateHook(string className, string camelName)
+        private static string GenerateUseUpdateHook(string className, string camelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
@@ -148,7 +148,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUseDeleteHook(string className, string camelName)
+        private static string GenerateUseDeleteHook(string className, string camelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");

@@ -42,7 +42,7 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private string Generate(Table table, DatabaseSchema schema, UIGeneratorConfig config)
+        private string Generate(Table table, DatabaseSchema _, UIGeneratorConfig config)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -54,20 +54,20 @@ namespace TargCC.Core.Generators.UI
 
             // Imports
             sb.AppendLine("import { api } from '../config';");
-            sb.AppendLine($"import type {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, "  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, "  Update{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, "  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, "}} from '../types/{className}.types';");
+            sb.AppendLine("import type {");
+            sb.AppendLine($"  {className},");
+            sb.AppendLine($"  Create{className}Request,");
+            sb.AppendLine($"  Update{className}Request,");
+            sb.AppendLine($"  {className}Filters,");
+            sb.AppendLine($"}} from '../types/{className}.types';");
             sb.AppendLine();
 
             // API object
-            sb.AppendLine($"/**");
-            sb.AppendLine(CultureInfo.InvariantCulture, " * API client for {className} operations.");
-            sb.AppendLine(CultureInfo.InvariantCulture, " * Base URL: {apiPath}");
-            sb.AppendLine(CultureInfo.InvariantCulture, " */");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
+            sb.AppendLine("/**");
+            sb.AppendLine($" * API client for {className} operations.");
+            sb.AppendLine($" * Base URL: {apiPath}");
+            sb.AppendLine(" */");
+            sb.AppendLine($"export const {camelName}Api = {{");
 
             // CRUD methods
             sb.AppendLine(GenerateGetById(className, camelName, apiPath));
@@ -77,9 +77,9 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(GenerateDelete(className, camelName, apiPath));
 
             // GetByXXX from indexes
-            foreach (var index in table.Indexes.Where(i => i.Columns.Count == 1))
+            foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
             {
-                var column = table.Columns.FirstOrDefault(c => c.Name == index.Columns[0]);
+                var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
                 if (column != null)
                 {
                     sb.AppendLine(GenerateGetByIndex(className, camelName, apiPath, column, index.IsUnique));
@@ -87,8 +87,8 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Relationship methods (one-to-many)
-            var relationships = schema.GetChildRelationships(table.Name);
-            foreach (var rel in relationships.Take(3)) // Limit to first 3
+            var relationships = table.Relationships.Where(r => r.ChildTable == table.Name).Take(3);
+            foreach (var rel in relationships)
             {
                 sb.AppendLine(GenerateGetChildren(className, camelName, apiPath, rel));
             }
@@ -98,7 +98,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateGetById(string className, string camelName, string apiPath)
+        private static string GenerateGetById(string className, string _, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -112,7 +112,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateGetAll(string className, string camelName, string apiPath)
+        private static string GenerateGetAll(string className, string _, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -128,7 +128,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateCreate(string className, string camelName, string apiPath)
+        private static string GenerateCreate(string className, string _, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -142,7 +142,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateUpdate(string className, string camelName, string apiPath)
+        private static string GenerateUpdate(string className, string _, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -156,7 +156,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateDelete(string className, string camelName, string apiPath)
+        private static string GenerateDelete(string className, string _, string apiPath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
@@ -169,10 +169,10 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateGetByIndex(string className, string camelName, string apiPath, Column column, bool isUnique)
+        private static string GenerateGetByIndex(string className, string _, string apiPath, Column column, bool isUnique)
         {
             var sb = new StringBuilder();
-            var (prefix, baseName) = SplitPrefix(column.Name);
+            var (_1, baseName) = SplitPrefix(column.Name);
             var propertyName = GetPropertyName(column.Name);
             var paramName = ToCamelCase(propertyName);
             var methodName = $"getBy{propertyName}";
@@ -191,7 +191,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GenerateGetChildren(string className, string camelName, string apiPath, Relationship relationship)
+        private static string GenerateGetChildren(string className, string _, string apiPath, Relationship relationship)
         {
             var childClassName = GetClassName(relationship.ChildTable);
             var childCamelName = GetCamelCaseName(relationship.ChildTable);
@@ -209,18 +209,18 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string GetTypeScriptTypeForColumn(Column column)
+        private static string GetTypeScriptTypeForColumn(Column column)
         {
-            var sqlType = column.DataType.ToLowerInvariant();
+            var sqlType = column.DataType.ToUpperInvariant();
 
             return sqlType switch
             {
-                _ when sqlType.Contains("int") => "number",
-                _ when sqlType.Contains("decimal") => "number",
-                _ when sqlType.Contains("numeric") => "number",
-                _ when sqlType.Contains("float") => "number",
-                _ when sqlType.Contains("bit") => "boolean",
-                _ when sqlType.Contains("date") => "Date",
+                _ when sqlType.Contains("INT", StringComparison.Ordinal) => "number",
+                _ when sqlType.Contains("DECIMAL", StringComparison.Ordinal) => "number",
+                _ when sqlType.Contains("NUMERIC", StringComparison.Ordinal) => "number",
+                _ when sqlType.Contains("FLOAT", StringComparison.Ordinal) => "number",
+                _ when sqlType.Contains("BIT", StringComparison.Ordinal) => "boolean",
+                _ when sqlType.Contains("DATE", StringComparison.Ordinal) => "Date",
                 _ => "string",
             };
         }
