@@ -14,7 +14,7 @@ namespace MyApp
 {
     /// <summary>
     /// Entity class for Customer table.
-    /// Generated: 2025-12-01 14:55:03
+    /// Generated: 2025-12-01 16:10:23
     /// </summary>
     [Table("Customer")]
     public partial class Customer

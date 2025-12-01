@@ -22,6 +22,7 @@ export interface GenerationOptions {
   generateService: boolean;
   generateController: boolean;
   generateTests: boolean;
+  generateStoredProcedures?: boolean;
   overwriteExisting: boolean;
 }
 
@@ -130,4 +131,60 @@ export async function fetchMultipleGenerationStatuses(
 
   await Promise.all(promises);
   return results;
+}
+
+/**
+ * Request interface for code generation
+ */
+export interface GenerateRequest {
+  tableNames: string[];
+  options: GenerationOptions;
+  projectPath?: string;
+  connectionString?: string;
+}
+
+/**
+ * Response interface for code generation
+ */
+export interface GenerateResponse {
+  success: boolean;
+  message?: string;
+  generatedFiles?: string[];
+  errors?: string[];
+  executionTimeMs?: number;
+}
+
+/**
+ * Triggers code generation for the specified tables with given options
+ */
+export async function generate(request: GenerateRequest): Promise<GenerateResponse> {
+  const url = `${API_CONFIG.BASE_URL}/api/generate`;
+
+  // Map UI options to backend request format - now with full granular control
+  const backendRequest = {
+    tableNames: request.tableNames,
+    projectPath: request.projectPath,
+    connectionString: request.connectionString,
+    force: request.options.overwriteExisting,
+    generateEntity: request.options.generateEntity,
+    generateRepository: request.options.generateRepository,
+    generateService: request.options.generateService,
+    generateController: request.options.generateController,
+    generateTests: request.options.generateTests,
+    includeStoredProcedures: request.options.generateStoredProcedures ?? true,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: API_CONFIG.DEFAULT_HEADERS,
+    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+    body: JSON.stringify(backendRequest),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Generation failed: ${response.statusText}. ${errorText}`);
+  }
+
+  return await response.json();
 }

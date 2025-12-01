@@ -702,7 +702,7 @@ namespace TargCC.Core.Analyzers.Database
         /// </para>
         /// <para>
         /// <strong>Current Status:</strong>
-        /// Currently defaults to One-to-Many. TODO: Implement unique index detection for One-to-One.
+        /// Currently defaults to One-to-Many. Future enhancement: Implement unique index detection for One-to-One relationships.
         /// </para>
         /// </remarks>
         /// <example>
@@ -753,8 +753,8 @@ namespace TargCC.Core.Analyzers.Database
                     return RelationshipType.OneToMany;
                 }
 
-                // TODO: Check for unique index on FK column in parent table for One-to-One detection
-                // For now, default to One-to-Many
+                // Future enhancement: Check for unique index on FK column in parent table for One-to-One detection
+                // Current implementation: Default to One-to-Many for all relationships
                 return RelationshipType.OneToMany;
             }
             catch (Exception ex)

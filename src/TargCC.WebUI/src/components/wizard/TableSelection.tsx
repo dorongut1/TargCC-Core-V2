@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   List,
@@ -9,10 +9,14 @@ import {
   Checkbox,
   TextField,
   Typography,
-  Button
+  Button,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { TableChart as TableIcon } from '@mui/icons-material';
 import type { WizardData } from './GenerationWizard';
+import { useConnection } from '../../hooks/useConnection';
+import { apiService } from '../../services/api';
 
 interface TableSelectionProps {
   data: WizardData;
@@ -21,18 +25,37 @@ interface TableSelectionProps {
 
 const TableSelection = ({ data, onChange }: TableSelectionProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [allTables, setAllTables] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { selectedConnection } = useConnection();
 
-  // Mock table data - in real app, this would come from API
-  const allTables = [
-    'Customer',
-    'Order',
-    'Product',
-    'Employee',
-    'Invoice',
-    'Category',
-    'Supplier',
-    'Inventory'
-  ];
+  // Fetch tables from API
+  useEffect(() => {
+    const fetchTables = async () => {
+      if (!selectedConnection) {
+        setError('No active connection. Please connect to a database first.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const tables = await apiService.getTables(); // Uses default 'dbo' schema
+        setAllTables(tables.map(t => t.name));
+      } catch (err) {
+        console.error('Error fetching tables:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch tables');
+        // Fallback to empty array
+        setAllTables([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTables();
+  }, [selectedConnection]);
 
   const filteredTables = allTables.filter((table) =>
     table.toLowerCase().includes(searchTerm.toLowerCase())
@@ -54,6 +77,41 @@ const TableSelection = ({ data, onChange }: TableSelectionProps) => {
     onChange({ ...data, selectedTables: [] });
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <CircularProgress />
+        <Typography variant="body2" sx={{ ml: 2 }}>Loading tables...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Typography variant="body2" color="text.secondary">
+          Please ensure you have an active database connection before using the Generation Wizard.
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (allTables.length === 0) {
+    return (
+      <Box>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          No tables found in the database.
+        </Alert>
+        <Typography variant="body2" color="text.secondary">
+          The connected database appears to be empty or you don't have permissions to view tables.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -61,7 +119,7 @@ const TableSelection = ({ data, onChange }: TableSelectionProps) => {
       </Typography>
 
       <Typography variant="body2" color="text.secondary" paragraph>
-        Choose one or more tables for code generation
+        Choose one or more tables for code generation ({allTables.length} tables available)
       </Typography>
 
       <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>

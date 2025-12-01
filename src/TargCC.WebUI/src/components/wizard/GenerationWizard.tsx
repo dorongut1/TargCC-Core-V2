@@ -17,6 +17,7 @@ import CodeViewer from '../code/CodeViewer';
 import ProgressTracker from './ProgressTracker';
 import type { ProgressItem } from './ProgressTracker';
 import { mockCodeFiles } from '../../utils/mockCode';
+import { generate } from '../../api/generationApi';
 
 export interface WizardData {
   selectedTables: string[];
@@ -329,8 +330,41 @@ const GenerationWizard = () => {
   };
 
   const handleFinish = async () => {
-    // TODO: Implement actual code generation
-    console.log('Generating code with:', wizardData);
+    try {
+      setGenerating(true);
+      setProgress([]);
+
+      // Call the actual generation API
+      const result = await generate({
+        tableNames: wizardData.selectedTables,
+        options: {
+          generateEntity: wizardData.options.entities,
+          generateRepository: wizardData.options.repositories,
+          generateStoredProcedures: true, // Always generate SPs
+          generateController: wizardData.options.api,
+        }
+      });
+
+      if (result.success) {
+        setProgress([
+          { label: 'Entity Generation', status: 'completed' },
+          { label: 'Repository Generation', status: 'completed' },
+          { label: 'API Generation', status: 'completed' },
+          { label: 'SQL Procedures', status: 'completed' },
+        ]);
+        setActiveStep((prev) => prev + 1); // Move to completion step
+      } else {
+        setProgress([
+          { label: 'Generation Failed', status: 'error' },
+        ]);
+        setValidationError(result.message || 'Generation failed');
+      }
+    } catch (error) {
+      console.error('Generation error:', error);
+      setValidationError(error instanceof Error ? error.message : 'Generation failed');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const CurrentStepComponent = steps[activeStep].component;

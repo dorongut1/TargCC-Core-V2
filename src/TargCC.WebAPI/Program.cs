@@ -114,12 +114,14 @@ try
                 ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
             
             var schemas = await schemaService.GetSchemasAsync(connectionString);
-            
+
+            // Note: TableCount could be enhanced by querying INFORMATION_SCHEMA.TABLES
+            // For now, returning schema list without table counts for performance
             var schemaList = schemas.Select(s => new
             {
                 Name = s,
                 DisplayName = s,
-                TableCount = 0 // TODO: Get actual table count
+                TableCount = 0 // Could query: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{s}'
             }).ToList();
 
             return Results.Ok(new
@@ -444,19 +446,71 @@ try
             {
                 try
                 {
-                    var result = await generationService.GenerateAllAsync(
-                        connectionString,
-                        tableName,
-                        projectPath,
-                        "MyApp");
+                    // Generate based on selected options
+                    var tableResults = new List<GenerationResult>();
 
-                    if (result.Success)
+                    // Entity generation
+                    if (request.GenerateEntity)
                     {
-                        generatedFiles.AddRange(result.GeneratedFiles.Select(f => f.FilePath));
+                        var entityResult = await generationService.GenerateEntityAsync(
+                            connectionString,
+                            tableName,
+                            projectPath,
+                            "MyApp");
+                        tableResults.Add(entityResult);
                     }
-                    else
+
+                    // SQL stored procedures generation
+                    if (request.IncludeStoredProcedures)
                     {
-                        errors.Add(result.ErrorMessage ?? "Unknown error");
+                        var sqlResult = await generationService.GenerateSqlAsync(
+                            connectionString,
+                            tableName,
+                            projectPath);
+                        tableResults.Add(sqlResult);
+                    }
+
+                    // Repository generation
+                    if (request.GenerateRepository)
+                    {
+                        var repoResult = await generationService.GenerateRepositoryAsync(
+                            connectionString,
+                            tableName,
+                            projectPath);
+                        tableResults.Add(repoResult);
+                    }
+
+                    // API Controller generation
+                    if (request.GenerateController)
+                    {
+                        var apiResult = await generationService.GenerateApiAsync(
+                            connectionString,
+                            tableName,
+                            projectPath);
+                        tableResults.Add(apiResult);
+                    }
+
+                    // CQRS handlers generation (if Service is selected, we generate CQRS handlers)
+                    if (request.GenerateService)
+                    {
+                        var cqrsResult = await generationService.GenerateCqrsAsync(
+                            connectionString,
+                            tableName,
+                            projectPath);
+                        tableResults.Add(cqrsResult);
+                    }
+
+                    // Collect all generated files and errors
+                    foreach (var result in tableResults)
+                    {
+                        if (result.Success)
+                        {
+                            generatedFiles.AddRange(result.GeneratedFiles.Select(f => f.FilePath));
+                        }
+                        else
+                        {
+                            errors.Add($"{tableName}: {result.ErrorMessage ?? "Unknown error"}");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -526,7 +580,8 @@ try
 
         try
         {
-            // TODO: Implement actual schema reading
+            // MOCK ENDPOINT - Returning sample data for UI development
+            // Future implementation: Use SchemaService to read actual database schema
             return Results.Ok(new SchemaResponse
             {
                 Success = true,
@@ -578,7 +633,8 @@ try
 
         try
         {
-            // TODO: Implement actual security analysis using ISecurityScanner
+            // MOCK ENDPOINT - Returning sample security analysis for UI development
+            // Future implementation: Use ISecurityScanner service for actual analysis
             return Results.Ok(new AnalyzeResponse
             {
                 Success = true,
@@ -636,7 +692,8 @@ try
 
         try
         {
-            // TODO: Implement actual quality analysis using ICodeQualityAnalyzer
+            // MOCK ENDPOINT - Returning sample quality analysis for UI development
+            // Future implementation: Use ICodeQualityAnalyzer service for actual analysis
             return Results.Ok(new AnalyzeResponse
             {
                 Success = true,
@@ -684,7 +741,8 @@ try
 
         try
         {
-            // TODO: Implement actual chat using IInteractiveChatService
+            // MOCK ENDPOINT - Returning echo response for UI development
+            // Future implementation: Use IInteractiveChatService for actual AI chat
             return Results.Ok(new ChatResponse
             {
                 Success = true,

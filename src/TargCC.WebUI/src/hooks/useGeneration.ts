@@ -1,9 +1,12 @@
 /**
  * useGeneration Hook
  * React hook for managing code generation process
+ * Note: Currently not used - GenerationWizard component handles generation directly
+ * Kept for potential future use with alternative UI flows
  */
 
 import { useState, useCallback } from 'react';
+import { generate } from '../api/generationApi';
 
 /**
  * Generation status
@@ -55,23 +58,35 @@ export function useGeneration(): UseGenerationResult {
     setError(null);
 
     try {
-      // TODO: Call generation API when available
-      // For now, simulate generation
       setStatus('generating');
-      setProgress(50);
-      
-      // Simulate progress
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setStatus('completed');
-      setProgress(100);
-      setResult({
-        id: `gen-${Date.now()}`,
-        status: 'completed',
-        progress: 100,
-        message: 'Generation completed successfully',
-        filesGenerated: tables.length * 5, // Simulate files
+      setProgress(25);
+
+      // Call the actual generation API
+      const result = await generate({
+        tableNames: tables,
+        options: {
+          generateEntity: true,
+          generateRepository: true,
+          generateStoredProcedures: true,
+          generateController: true,
+        }
       });
+
+      setProgress(75);
+
+      if (result.success) {
+        setStatus('completed');
+        setProgress(100);
+        setResult({
+          id: `gen-${Date.now()}`,
+          status: 'completed',
+          progress: 100,
+          message: result.message || 'Generation completed successfully',
+          filesGenerated: tables.length * 4, // Entity, Repository, Controller, SQL per table
+        });
+      } else {
+        throw new Error(result.message || 'Generation failed');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Generation failed';
       setError(errorMessage);

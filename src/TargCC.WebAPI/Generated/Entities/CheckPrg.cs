@@ -14,7 +14,7 @@ namespace MyApp
 {
     /// <summary>
     /// Entity class for CheckPrg table.
-    /// Generated: 2025-12-01 14:26:35
+    /// Generated: 2025-12-01 16:10:21
     /// </summary>
     [Table("CheckPrg")]
     public partial class CheckPrg

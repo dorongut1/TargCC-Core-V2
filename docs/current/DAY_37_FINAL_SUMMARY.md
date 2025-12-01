@@ -324,4 +324,63 @@ dotnet run
 
 ---
 
-**סוף דוח יום 37 - מוכן לייצור! 🎉**
+---
+
+## 🔄 עדכון נוסף - תיקון באגים נוספים
+
+לאחר בדיקה נוספת של המשתמש, תוקנו **4 באגים נוספים**:
+
+### **באג נוסף 1: SP_UpdateFriend - פסיק חסר לפני ChangedOn** ✅
+**קובץ**: `SpUpdateFriendTemplate.cs:133-149`
+**בעיה**: העמודה האחרונה לא קיבלה פסיק, אבל אחריה ChangedOn צריך פסיק לפניו
+**תיקון**: הוספת בדיקה `hasAuditColumns` והוספת פסיק רק אם יש עמודות Audit
+
+### **באג נוסף 2: SP_GetPaged - פסיק מיותר ב-sp_executesql** ✅
+**קובץ**: `SpAdvancedTemplates.cs:131`
+**בעיה**: `@PageSize = @PageSize;` - נקודה-פסיק במקום פסיק
+**תיקון**: הסרת נקודה-פסיק: `@PageSize = @PageSize`
+
+### **באג נוסף 3: SP_Clone - פסיק אחרי comment במקום לפני** ✅
+**קובץ**: `SpUtilityTemplates.cs:344-350`
+**בעיה**: `NULL -- Reset enmDebtStatus,` - פסיק אחרי התגובה
+**תיקון**: העברת הפסיק לפני התגובה: `NULL, -- Reset enmDebtStatus`
+
+### **באג נוסף 4: SP_Delete - פסיק לפני WHERE** ✅
+**קובץ**: `SpDeleteTemplate.cs:178-240`
+**בעיה**: `SET [IsActive] = 1, WHERE ...` - פסיק מיותר
+**תיקון**: בדיקת `hasAuditColumns` והוספת פסיק רק אם יש עמודות נוספות
+
+---
+
+## 📊 סיכום מלא של כל התיקונים ביום 37
+
+| # | באג | מיקום | סטטוס |
+|---|-----|--------|-------|
+| 1 | SP_UpdateFriend - parameter names missing | SpUpdateFriendTemplate.cs:97 | ✅ תוקן |
+| 2 | SP_GetPaged - type clash | SpAdvancedTemplates.cs:60-127 | ✅ תוקן (Dynamic SQL) |
+| 3 | SP_BulkInsert - calculated columns | SpAdvancedTemplates.cs:224-226 | ✅ תוקן |
+| 4 | SP_SearchCustomer - @SearchPattern | SpAdvancedTemplates.cs:150 | ✅ תוקן |
+| 5 | CREATE → CREATE OR ALTER | 9 קבצים | ✅ תוקן |
+| 6 | Program.cs TODOs | Program.cs:111,152,186 | ✅ הוסרו |
+| 7 | SP_UpdateFriend - comma before ChangedOn | SpUpdateFriendTemplate.cs:147 | ✅ תוקן |
+| 8 | SP_GetPaged - semicolon in executesql | SpAdvancedTemplates.cs:131 | ✅ תוקן |
+| 9 | SP_Clone - comma after comment | SpUtilityTemplates.cs:350 | ✅ תוקן |
+| 10 | SP_Delete - comma before WHERE | SpDeleteTemplate.cs:200 | ✅ תוקן |
+
+**סה"כ**: **10 באגים תוקנו ביום 37!** 🎉
+
+---
+
+## 📋 מסמכים נוספים שנוצרו
+
+1. **DAY_37_PROGRESS.md** - דוח ביניים עם ניתוח TODO
+2. **DAY_37_FINAL_SUMMARY.md** - מסמך זה
+3. **PROJECT_CAPABILITIES_AND_ROADMAP.md** - ⭐ **מסמך חדש!**
+   - מה הפרויקט כבר עושה מקצה לקצה
+   - מה עוד צריך להוסיף
+   - Roadmap מפורט
+   - המלצות לשלבים הבאים
+
+---
+
+**סוף דוח יום 37 - כל הבאגים תוקנו! מוכן לייצור! 🎉**

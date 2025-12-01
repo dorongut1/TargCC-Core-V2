@@ -59,6 +59,7 @@ export interface GenerationOptions {
   generateService: boolean;
   generateController: boolean;
   generateTests: boolean;
+  generateStoredProcedures?: boolean;
   overwriteExisting: boolean;
 }
 
