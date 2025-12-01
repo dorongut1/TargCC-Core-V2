@@ -64,7 +64,15 @@ namespace TargCC.Core.Generators.UI.Components
                 OutputDirectory = config.OutputDirectory,
             };
 
-            return await GenerateAllComponentsAsync(table, schema, componentConfig).ConfigureAwait(false);
+            var components = await GenerateAllComponentsAsync(table, schema, componentConfig).ConfigureAwait(false);
+
+            // Return a summary of generated files
+            var sb = new StringBuilder();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Generated {components.Count} component files for {table.Name}:");
+            var fileList = string.Join(Environment.NewLine, components.Keys.Select(file => $"  - {file}"));
+            sb.AppendLine(fileList);
+
+            return sb.ToString();
         }
 
         /// <summary>
