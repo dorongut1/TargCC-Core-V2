@@ -6,7 +6,8 @@ using TargCC.Core.Generators.Project.Models;
 using TargCC.Core.Generators.Entities;
 using TargCC.Core.Generators.Sql;
 using TargCC.Core.Generators.Repositories;
-using TargCC.Core.Generators.Api;
+using TargCC.Core.Generators.API;
+using TargCC.Core.Generators.Common;
 using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.CLI.Services.Generation;
@@ -227,9 +228,17 @@ public class ProjectGenerationService : IProjectGenerationService
 
         // 5. API Controller
         var apiGen = new ApiControllerGenerator(_loggerFactory.CreateLogger<ApiControllerGenerator>());
-        var apiResult = await apiGen.GenerateAsync(table);
-        var apiPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", $"{apiResult.ControllerName}.cs");
-        await SaveFileAsync(apiPath, apiResult.ControllerCode);
+        var apiConfig = new ApiGeneratorConfig
+        {
+            Namespace = $"{rootNamespace}.API",
+            GenerateXmlDocumentation = true,
+            GenerateSwaggerAttributes = true
+        };
+        var apiCode = await apiGen.GenerateAsync(table, schema, apiConfig);
+        var className = BaseApiGenerator.GetClassName(table.Name);
+        var controllerName = $"{CodeGenerationHelpers.MakePlural(className)}Controller";
+        var apiPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", $"{controllerName}.cs");
+        await SaveFileAsync(apiPath, apiCode);
         filesCount++;
 
         return filesCount;
