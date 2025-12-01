@@ -85,39 +85,6 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string Generate(Table table)
-        {
-            var sb = new StringBuilder();
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Generate enums first (if any)
-            var enums = GenerateEnums(table);
-            if (!string.IsNullOrEmpty(enums))
-            {
-                sb.AppendLine(enums);
-                sb.AppendLine();
-            }
-
-            // Main interface
-            sb.AppendLine(GenerateMainInterface(table));
-            sb.AppendLine();
-
-            // Create request interface
-            sb.AppendLine(GenerateCreateRequestInterface(table));
-            sb.AppendLine();
-
-            // Update request interface
-            sb.AppendLine(GenerateUpdateRequestInterface(table));
-            sb.AppendLine();
-
-            // Filters interface
-            sb.AppendLine(GenerateFiltersInterface(table));
-
-            return sb.ToString();
-        }
-
         private static string GenerateCreateRequestInterface(Table table)
         {
             var className = GetClassName(table.Name);
@@ -214,6 +181,20 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
+        private static void GenerateHashedPasswordProperty(List<string> result, string baseName, string basePropertyName, string optional, bool isCreate)
+        {
+            if (isCreate)
+            {
+                // In create, send plain password
+                result.Add($"plainPassword{ToPascalCase(baseName)}: string;");
+            }
+            else
+            {
+                // In entity, show hashed (readonly)
+                result.Add($"readonly {basePropertyName}: string{optional};");
+            }
+        }
+
         private static List<string> GeneratePropertyForColumn(Column column, bool isCreate)
         {
             var result = new List<string>();
@@ -226,17 +207,7 @@ namespace TargCC.Core.Generators.UI
             switch (prefix)
             {
                 case "eno": // Hashed password
-                    if (isCreate)
-                    {
-                        // In create, send plain password
-                        result.Add($"plainPassword{ToPascalCase(baseName)}: string;");
-                    }
-                    else
-                    {
-                        // In entity, show hashed (readonly)
-                        result.Add($"readonly {basePropertyName}: string{optional};");
-                    }
-
+                    GenerateHashedPasswordProperty(result, baseName, basePropertyName, optional, isCreate);
                     break;
 
                 case "lkp": // Lookup - generates 2 properties
@@ -364,6 +335,39 @@ namespace TargCC.Core.Generators.UI
             var type = sqlType.ToUpperInvariant();
             return type.Contains("CHAR", StringComparison.Ordinal) || type.Contains("TEXT", StringComparison.Ordinal) ||
                    type.Contains("INT", StringComparison.Ordinal) || type.Contains("DECIMAL", StringComparison.Ordinal);
+        }
+
+        private string Generate(Table table)
+        {
+            var sb = new StringBuilder();
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Generate enums first (if any)
+            var enums = GenerateEnums(table);
+            if (!string.IsNullOrEmpty(enums))
+            {
+                sb.AppendLine(enums);
+                sb.AppendLine();
+            }
+
+            // Main interface
+            sb.AppendLine(GenerateMainInterface(table));
+            sb.AppendLine();
+
+            // Create request interface
+            sb.AppendLine(GenerateCreateRequestInterface(table));
+            sb.AppendLine();
+
+            // Update request interface
+            sb.AppendLine(GenerateUpdateRequestInterface(table));
+            sb.AppendLine();
+
+            // Filters interface
+            sb.AppendLine(GenerateFiltersInterface(table));
+
+            return sb.ToString();
         }
     }
 }
