@@ -186,41 +186,10 @@ namespace TargCC.Core.Generators.UI
             // Split by underscore, space, or dash
             var words = Regex.Split(input, @"[_\s-]+");
 
-            // If only one word (no separators), check if it needs normalization
+            // If only one word (no separators), handle as single word
             if (words.Length == 1)
             {
-                var word = words[0];
-                if (word.Length == 0)
-                {
-                    return string.Empty;
-                }
-
-                if (word.Length == 1)
-                {
-                    return char.ToUpperInvariant(word[0]).ToString();
-                }
-
-                // Check if word is all-caps or all-lowercase (needs normalization)
-                // vs mixed-case (preserve it, e.g., "EmailAddress")
-                var tail = word.Substring(1);
-                bool isAllUpper = tail.All(c => !char.IsLetter(c) || char.IsUpper(c));
-                bool isAllLower = tail.All(c => !char.IsLetter(c) || char.IsLower(c));
-
-                if (isAllUpper || isAllLower)
-                {
-                    // Normalize: capitalize first, lowercase rest (e.g., "ID" -> "Id", "id" -> "Id")
-                    var result = new StringBuilder();
-                    result.Append(char.ToUpperInvariant(word[0]));
-                    for (int i = 1; i < word.Length; i++)
-                    {
-                        result.Append(char.ToLowerInvariant(word[i]));
-                    }
-
-                    return result.ToString();
-                }
-
-                // Preserve mixed case (e.g., "EmailAddress" stays "EmailAddress")
-                return char.ToUpperInvariant(word[0]) + word.Substring(1);
+                return NormalizeSingleWord(words[0]);
             }
 
             // Multiple words - convert each word
@@ -241,6 +210,48 @@ namespace TargCC.Core.Generators.UI
             }
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Normalizes a single word to PascalCase.
+        /// All-caps or all-lowercase words are normalized (e.g., "ID" -> "Id").
+        /// Mixed-case words are preserved (e.g., "EmailAddress" -> "EmailAddress").
+        /// </summary>
+        /// <param name="word">Single word to normalize.</param>
+        /// <returns>Normalized word.</returns>
+        private static string NormalizeSingleWord(string word)
+        {
+            if (word.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            if (word.Length == 1)
+            {
+                return char.ToUpperInvariant(word[0]).ToString();
+            }
+
+            // Check if word is all-caps or all-lowercase (needs normalization)
+            // vs mixed-case (preserve it, e.g., "EmailAddress")
+            var tail = word.Substring(1);
+            bool isAllUpper = tail.All(c => !char.IsLetter(c) || char.IsUpper(c));
+            bool isAllLower = tail.All(c => !char.IsLetter(c) || char.IsLower(c));
+
+            if (isAllUpper || isAllLower)
+            {
+                // Normalize: capitalize first, lowercase rest (e.g., "ID" -> "Id", "id" -> "Id")
+                var normalized = new StringBuilder();
+                normalized.Append(char.ToUpperInvariant(word[0]));
+                for (int i = 1; i < word.Length; i++)
+                {
+                    normalized.Append(char.ToLowerInvariant(word[i]));
+                }
+
+                return normalized.ToString();
+            }
+
+            // Preserve mixed case (e.g., "EmailAddress" stays "EmailAddress")
+            return char.ToUpperInvariant(word[0]) + word.Substring(1);
         }
 
         /// <summary>
