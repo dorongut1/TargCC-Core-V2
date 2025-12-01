@@ -42,6 +42,11 @@ namespace TargCC.Core.Generators.UI
         /// React page component.
         /// </summary>
         ReactPage,
+
+        /// <summary>
+        /// React components (List, Form, Detail).
+        /// </summary>
+        ReactComponents,
     }
 
     /// <summary>
