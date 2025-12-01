@@ -45,7 +45,8 @@ export interface ForeignKey {
  * Generation request options
  */
 export interface GenerationRequest {
-  tableName: string;
+  tableNames: string[];
+  connectionString: string;
   options: GenerationOptions;
 }
 

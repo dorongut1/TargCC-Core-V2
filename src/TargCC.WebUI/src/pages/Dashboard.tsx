@@ -12,7 +12,10 @@ import {
   Paper,
   Alert,
   Grid,
+  Card,
+  CardContent,
 } from '@mui/material';
+import StorageIcon from '@mui/icons-material/Storage';
 import type { DashboardStats } from '../types/models';
 import { SystemHealth } from '../components/SystemHealth';
 import RecentGenerations from '../components/RecentGenerations';
@@ -24,12 +27,14 @@ import DashboardSkeleton from '../components/DashboardSkeleton';
 import FadeIn from '../components/FadeIn';
 import AutoRefreshControl from '../components/AutoRefreshControl';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useConnection } from '../hooks/useConnection';
 
 /**
  * Main Dashboard component
  */
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { selectedConnection, isLoading: connectionLoading } = useConnection();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +98,44 @@ export const Dashboard: React.FC = () => {
     onRefresh: loadStats
   });
 
+  // Show loading while checking connection
+  if (connectionLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Show connection prompt if no connection is selected
+  if (!selectedConnection) {
+    return (
+      <ErrorBoundary>
+        <Box>
+          <Typography variant="h4" mb={3}>
+            Dashboard
+          </Typography>
+          <Card sx={{ maxWidth: 600, mx: 'auto', mt: 8, textAlign: 'center' }}>
+            <CardContent sx={{ p: 4 }}>
+              <StorageIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" gutterBottom>
+                No Database Connection Selected
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 3 }}>
+                To view your dashboard and work with your database, please add and select a connection first.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={() => navigate('/connections')}
+                startIcon={<StorageIcon />}
+              >
+                Go to Connections
+              </Button>
+            </CardContent>
+          </Card>
+        </Box>
+      </ErrorBoundary>
+    );
+  }
+
   if (loading && !stats) {
     return <DashboardSkeleton />;
   }
@@ -114,9 +157,14 @@ export const Dashboard: React.FC = () => {
       <Box>
         {/* Header with Auto-Refresh Control */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4">
-            Dashboard
-          </Typography>
+          <Box>
+            <Typography variant="h4">
+              Dashboard
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Connected to: {selectedConnection.name}
+            </Typography>
+          </Box>
           <AutoRefreshControl
             enabled={autoRefreshEnabled}
             onToggle={setAutoRefreshEnabled}

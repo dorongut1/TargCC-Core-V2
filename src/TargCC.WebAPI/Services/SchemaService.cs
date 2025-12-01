@@ -15,14 +15,17 @@ namespace TargCC.WebAPI.Services;
 public class SchemaService : ISchemaService
 {
     private readonly ILogger<SchemaService> logger;
+    private readonly IGenerationHistoryService? historyService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SchemaService"/> class.
     /// </summary>
     /// <param name="logger">Logger instance.</param>
-    public SchemaService(ILogger<SchemaService> logger)
+    /// <param name="historyService">Generation history service (optional).</param>
+    public SchemaService(ILogger<SchemaService> logger, IGenerationHistoryService? historyService = null)
     {
         this.logger = logger;
+        this.historyService = historyService;
     }
 
     /// <inheritdoc/>
@@ -78,8 +81,20 @@ public class SchemaService : ISchemaService
                 AND t.TABLE_SCHEMA = @SchemaName
             ORDER BY t.TABLE_NAME";
 
-        var tables = await connection.QueryAsync<TableDto>(sql, new { SchemaName = schemaName });
-        return tables.ToList();
+        var tables = (await connection.QueryAsync<TableDto>(sql, new { SchemaName = schemaName })).ToList();
+
+        // Add generation status if history service is available
+        if (historyService != null)
+        {
+            foreach (var table in tables)
+            {
+                table.GenerationStatus = await historyService.GetGenerationStatusAsync(table.Name);
+                var lastGen = await historyService.GetLastGenerationAsync(table.Name);
+                table.LastGenerated = lastGen?.GeneratedAt;
+            }
+        }
+
+        return tables;
     }
 
     private async Task<List<ColumnDto>> GetColumnsAsync(IDbConnection connection, string schemaName, string tableName)

@@ -64,7 +64,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export async function fetchSchemas(): Promise<SchemaListItem[]> {
   try {
     const response = await fetch(
-      `${API_CONFIG.baseUrl}${API_ENDPOINTS.schemas}`,
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.schemas}`,
       createFetchOptions({ method: 'GET' })
     );
 
@@ -83,7 +83,7 @@ export async function fetchSchemas(): Promise<SchemaListItem[]> {
 export async function fetchSchemaDetails(schemaName: string): Promise<DatabaseSchema> {
   try {
     const response = await fetch(
-      `${API_CONFIG.baseUrl}${API_ENDPOINTS.schemaDetail(schemaName)}`,
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.schemaDetail(schemaName)}`,
       createFetchOptions({ method: 'GET' })
     );
 
@@ -102,7 +102,7 @@ export async function fetchSchemaDetails(schemaName: string): Promise<DatabaseSc
 export async function refreshSchema(schemaName: string): Promise<DatabaseSchema> {
   try {
     const response = await fetch(
-      `${API_CONFIG.baseUrl}${API_ENDPOINTS.schemaRefresh(schemaName)}`,
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.schemaRefresh(schemaName)}`,
       createFetchOptions({ method: 'POST' })
     );
 
@@ -125,7 +125,7 @@ export async function fetchTablePreview(
 ): Promise<TablePreview> {
   try {
     const response = await fetch(
-      `${API_CONFIG.baseUrl}/api/schema/${encodeURIComponent(schemaName)}/${encodeURIComponent(tableName)}/preview?rowCount=${rowCount}`,
+      `${API_CONFIG.BASE_URL}/api/schema/${encodeURIComponent(schemaName)}/${encodeURIComponent(tableName)}/preview?rowCount=${rowCount}`,
       createFetchOptions({ method: 'GET' })
     );
 
@@ -144,7 +144,7 @@ export async function fetchTablePreview(
 export async function checkHealth(): Promise<{ status: string; timestamp: string }> {
   try {
     const response = await fetch(
-      `${API_CONFIG.baseUrl}${API_ENDPOINTS.health}`,
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.health}`,
       createFetchOptions({ method: 'GET' })
     );
 

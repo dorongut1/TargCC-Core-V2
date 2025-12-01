@@ -20,7 +20,11 @@ import {
   Menu,
   MenuItem,
   TableSortLabel,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import {
   Search as SearchIcon,
   PlayArrow as GenerateIcon,
@@ -38,6 +42,11 @@ import TableSkeleton from '../components/TableSkeleton';
 import FadeIn from '../components/FadeIn';
 import AutoRefreshControl from '../components/AutoRefreshControl';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useGenerationHistory } from '../hooks/useGenerationHistory';
+import type { GenerationStatus } from '../api/generationApi';
+import { useConnection } from '../hooks/useConnection';
+import GenerationOptionsDialog from '../components/generation/GenerationOptionsDialog';
+import type { GenerationOptions } from '../types/models';
 
 type SortField = 'name' | 'schema' | 'rowCount' | 'lastGenerated';
 type SortDirection = 'asc' | 'desc';
@@ -62,6 +71,23 @@ export const Tables: React.FC = () => {
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
   const [filters, setFilters] = useState<FilterCriteria[]>([]);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+  const [tableStatuses, setTableStatuses] = useState<Map<string, GenerationStatus>>(new Map());
+  const [optionsDialogOpen, setOptionsDialogOpen] = useState(false);
+  const [selectedTableForGeneration, setSelectedTableForGeneration] = useState<string[]>([]);
+  const [isBulkGeneration, setIsBulkGeneration] = useState(false);
+
+  // Use connection context
+  const { selectedConnection, connections, setSelectedConnection} = useConnection();
+
+  // Use generation history hook
+  const { getStatus } = useGenerationHistory();
+
+  // Handle connection selection
+  const handleConnectionChange = (event: SelectChangeEvent) => {
+    const connectionId = event.target.value;
+    const connection = connections.find(c => c.id === connectionId) || null;
+    setSelectedConnection(connection);
+  };
 
   // Available filter fields
   const filterFields = [
@@ -77,6 +103,22 @@ export const Tables: React.FC = () => {
       setError(null);
       const data = await apiService.getTables();
       setTables(data);
+
+      // Load generation status for all tables
+      const statusMap = new Map<string, GenerationStatus>();
+      await Promise.all(
+        data.map(async (table) => {
+          try {
+            const status = await getStatus(table.name);
+            if (status) {
+              statusMap.set(table.name, status);
+            }
+          } catch (err) {
+            console.error(`Failed to load status for ${table.name}:`, err);
+          }
+        })
+      );
+      setTableStatuses(statusMap);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tables');
     } finally {
@@ -192,29 +234,69 @@ export const Tables: React.FC = () => {
     }
   };
 
-  const handleGenerate = async (tableName: string) => {
+  const handleGenerateClick = (tableName: string) => {
+    if (!selectedConnection) {
+      setError('Please select a database connection first');
+      return;
+    }
+    setSelectedTableForGeneration([tableName]);
+    setIsBulkGeneration(false);
+    setOptionsDialogOpen(true);
+  };
+
+  const handleGenerate = async (options: GenerationOptions) => {
+    if (!selectedConnection) {
+      setError('Please select a database connection first');
+      return;
+    }
+
     try {
+      setError(null);
       await apiService.generateCode({
-        tableName,
-        options: {
-          generateEntity: true,
-          generateRepository: true,
-          generateService: true,
-          generateController: true,
-          generateTests: true,
-          overwriteExisting: false,
-        },
+        tableNames: selectedTableForGeneration,
+        connectionString: selectedConnection.connectionString,
+        options,
       });
       await loadTables();
     } catch (err) {
       console.error('Generate failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate code');
     }
   };
 
-  const handleBulkGenerate = async () => {
-    // Bulk generate for selected tables
+  const handleBulkGenerateClick = () => {
+    if (!selectedConnection) {
+      setError('Please select a database connection first');
+      return;
+    }
     setBulkMenuAnchor(null);
-    console.log('Generating for:', selectedRows);
+    setSelectedTableForGeneration(Array.from(selectedRows));
+    setIsBulkGeneration(true);
+    setOptionsDialogOpen(true);
+  };
+
+  const handleBulkGenerate = async (options: GenerationOptions) => {
+    if (!selectedConnection) {
+      setError('Please select a database connection first');
+      return;
+    }
+
+    try {
+      setError(null);
+      for (const tableKey of selectedTableForGeneration) {
+        const tableName = tableKey.split('.')[1];
+        await apiService.generateCode({
+          tableNames: [tableName],
+          connectionString: selectedConnection.connectionString,
+          options,
+        });
+      }
+      await loadTables();
+      setSelectedRows(new Set());
+    } catch (err) {
+      console.error('Bulk generate failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate code');
+    }
   };
 
   const getStatusColor = (status: string): 'success' | 'warning' | 'error' | 'default' => {
@@ -264,8 +346,37 @@ export const Tables: React.FC = () => {
           />
         </Box>
 
-        {/* Search and Filters */}
+        {/* Connection Selector */}
         <FadeIn delay={0}>
+          <Box mb={3}>
+            <FormControl fullWidth>
+              <InputLabel>Database Connection</InputLabel>
+              <Select
+                value={selectedConnection?.id || ''}
+                onChange={handleConnectionChange}
+                label="Database Connection"
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  <em>Select a connection</em>
+                </MenuItem>
+                {connections.map((conn) => (
+                  <MenuItem key={conn.id} value={conn.id}>
+                    {conn.name} ({conn.server} - {conn.database})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {!selectedConnection && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                Please select a database connection to enable code generation
+              </Alert>
+            )}
+          </Box>
+        </FadeIn>
+
+        {/* Search and Filters */}
+        <FadeIn delay={100}>
           <Box mb={3} display="flex" gap={2}>
             <TextField
               fullWidth
@@ -330,13 +441,18 @@ export const Tables: React.FC = () => {
         {selectedRows.size > 0 && (
           <FadeIn delay={250}>
             <Box mb={2}>
-              <Button
-                variant="contained"
-                startIcon={<GenerateIcon />}
-                onClick={handleBulkGenerate}
-              >
-                Generate Selected ({selectedRows.size})
-              </Button>
+              <Tooltip title={!selectedConnection ? "Please select a connection first" : ""}>
+                <span>
+                  <Button
+                    variant="contained"
+                    startIcon={<GenerateIcon />}
+                    onClick={handleBulkGenerateClick}
+                    disabled={!selectedConnection}
+                  >
+                    Generate Selected ({selectedRows.size})
+                  </Button>
+                </span>
+              </Tooltip>
             </Box>
           </FadeIn>
         )}
@@ -425,25 +541,30 @@ export const Tables: React.FC = () => {
                         <TableCell>{table.rowCount?.toLocaleString() ?? 'N/A'}</TableCell>
                         <TableCell>
                           <Chip
-                            label={table.generationStatus}
-                            color={getStatusColor(table.generationStatus)}
+                            label={tableStatuses.get(table.name)?.status ?? table.generationStatus}
+                            color={getStatusColor(tableStatuses.get(table.name)?.status ?? table.generationStatus)}
                             size="small"
                           />
                         </TableCell>
                         <TableCell>
-                          {table.lastGenerated
+                          {tableStatuses.get(table.name)?.lastGenerated
+                            ? new Date(tableStatuses.get(table.name)!.lastGenerated!).toLocaleDateString()
+                            : table.lastGenerated
                             ? new Date(table.lastGenerated).toLocaleDateString()
                             : 'Never'}
                         </TableCell>
                         <TableCell align="right">
-                          <Tooltip title="Generate Code">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleGenerate(table.name)}
-                              color="primary"
-                            >
-                              <GenerateIcon />
-                            </IconButton>
+                          <Tooltip title={!selectedConnection ? "Please select a connection first" : "Generate Code"}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleGenerateClick(table.name)}
+                                color="primary"
+                                disabled={!selectedConnection}
+                              >
+                                <GenerateIcon />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                           <Tooltip title="View Details">
                             <IconButton size="small" color="default">
@@ -484,7 +605,7 @@ export const Tables: React.FC = () => {
           open={Boolean(bulkMenuAnchor)}
           onClose={() => setBulkMenuAnchor(null)}
         >
-          <MenuItem onClick={handleBulkGenerate}>
+          <MenuItem onClick={handleBulkGenerateClick}>
             <GenerateIcon fontSize="small" sx={{ mr: 1 }} />
             Generate Selected
           </MenuItem>
@@ -492,6 +613,15 @@ export const Tables: React.FC = () => {
             Clear Selection
           </MenuItem>
         </Menu>
+
+        {/* Generation Options Dialog */}
+        <GenerationOptionsDialog
+          open={optionsDialogOpen}
+          onClose={() => setOptionsDialogOpen(false)}
+          onGenerate={isBulkGeneration ? handleBulkGenerate : handleGenerate}
+          tableNames={selectedTableForGeneration}
+          isBulk={isBulkGeneration}
+        />
       </Box>
     </ErrorBoundary>
   );

@@ -14,6 +14,7 @@ import CodeDemo from './pages/CodeDemo';
 import Schema from './pages/Schema';
 import Connections from './pages/Connections';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { ConnectionProvider } from './contexts/ConnectionContext';
 
 // Create a Material-UI theme
 const theme = createTheme({
@@ -42,24 +43,26 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/tables" element={<Tables />} />
-                <Route path="/schema" element={<Schema />} />
-                <Route path="/connections" element={<Connections />} />
-                <Route path="/generate" element={<GenerationWizard />} />
-                <Route path="/code-demo" element={<CodeDemo />} />
-                <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
-                <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
-                <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
-              </Routes>
-            </Layout>
-          </Router>
-        </ThemeProvider>
+        <ConnectionProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Router>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/tables" element={<Tables />} />
+                  <Route path="/schema" element={<Schema />} />
+                  <Route path="/connections" element={<Connections />} />
+                  <Route path="/generate" element={<GenerationWizard />} />
+                  <Route path="/code-demo" element={<CodeDemo />} />
+                  <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
+                  <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
+                  <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
+                </Routes>
+              </Layout>
+            </Router>
+          </ThemeProvider>
+        </ConnectionProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

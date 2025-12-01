@@ -9,6 +9,7 @@ using TargCC.AI.Services;
 using TargCC.AI.Models;
 using TargCC.CLI.Services.Generation;
 using TargCC.WebAPI.Extensions;
+using TargCC.WebAPI.Middleware;
 using TargCC.WebAPI.Models;
 using TargCC.WebAPI.Models.Requests;
 using TargCC.WebAPI.Models.Responses;
@@ -29,6 +30,12 @@ try
     builder.Host.UseSerilog();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+
+    // Configure JSON serialization to use camelCase
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
     // Add CORS
     builder.Services.AddCors(options =>
@@ -57,6 +64,9 @@ try
     
     // Add Connection Service
     builder.Services.AddSingleton<IConnectionService, ConnectionService>();
+    
+    // Add Generation History Service
+    builder.Services.AddSingleton<IGenerationHistoryService, GenerationHistoryService>();
 }
 catch (Exception ex)
 {
@@ -77,6 +87,7 @@ try
     }
 
     app.UseCors("AllowReactApp");
+    app.UseConnectionString();
     app.UseSerilogRequestLogging();
 
     // Health check endpoint
@@ -91,14 +102,15 @@ try
 
     // Schema endpoints - Get list of schemas
     app.MapGet("/api/schema", async (
+        HttpContext context,
         [FromServices] ISchemaService schemaService,
         ILogger<Program> logger) =>
     {
         try
         {
-            // For now, use a default connection string from config or hardcode
-            // TODO: Allow user to provide connection string
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+            // Get connection string from middleware (X-Connection-String header) or fall back to default
+            var connectionString = context.Items["ConnectionString"] as string
+                ?? builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
             
             var schemas = await schemaService.GetSchemasAsync(connectionString);
@@ -132,14 +144,15 @@ try
     // Schema endpoints - Get schema details
     app.MapGet("/api/schema/{schemaName}", async (
         string schemaName,
+        HttpContext context,
         [FromServices] ISchemaService schemaService,
         ILogger<Program> logger) =>
     {
         try
         {
-            // For now, use a default connection string from config or hardcode
-            // TODO: Allow user to provide connection string
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+            // Get connection string from middleware (X-Connection-String header) or fall back to default
+            var connectionString = context.Items["ConnectionString"] as string
+                ?? builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
             
             var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
@@ -166,14 +179,15 @@ try
     // Schema endpoints - Refresh schema
     app.MapPost("/api/schema/{schemaName}/refresh", async (
         string schemaName,
+        HttpContext context,
         [FromServices] ISchemaService schemaService,
         ILogger<Program> logger) =>
     {
         try
         {
-            // For now, use a default connection string from config or hardcode
-            // TODO: Allow user to provide connection string
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+            // Get connection string from middleware (X-Connection-String header) or fall back to default
+            var connectionString = context.Items["ConnectionString"] as string
+                ?? builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
             
             var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
@@ -201,16 +215,25 @@ try
     // Schema endpoints - Get tables in schema
     app.MapGet("/api/schema/{schemaName}/tables", async (
         string schemaName,
+        HttpContext context,
         [FromServices] ISchemaService schemaService,
         ILogger<Program> logger) =>
     {
         try
         {
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                ?? "Server=localhost;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
-            
+            var connectionString = context.Items["ConnectionString"]?.ToString();
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return Results.BadRequest(new
+                {
+                    Success = false,
+                    Error = "Connection string is required. Please select a database connection."
+                });
+            }
+
             var schema = await schemaService.GetSchemaDetailsAsync(connectionString, schemaName);
-            
+
             return Results.Ok(schema.Tables);
         }
         catch (Exception ex)
@@ -375,8 +398,10 @@ try
 
     // Generate endpoint
     app.MapPost("/api/generate", async (
+        HttpContext context,
         [FromBody] GenerateRequest request,
         [FromServices] IGenerationService generationService,
+        [FromServices] IConfiguration configuration,
         ILogger<Program> logger) =>
     {
         var sw = Stopwatch.StartNew();
@@ -391,7 +416,10 @@ try
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(request.ConnectionString))
+            // Get connection string from HttpContext.Items (set by middleware) or request body
+            var connectionString = context.Items["ConnectionString"] as string ?? request.ConnectionString;
+
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
                 return Results.BadRequest(new GenerateResponse
                 {
@@ -400,13 +428,13 @@ try
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(request.ProjectPath))
+            // Use ProjectPath from request, or default to configured output directory
+            var projectPath = request.ProjectPath;
+            if (string.IsNullOrWhiteSpace(projectPath))
             {
-                return Results.BadRequest(new GenerateResponse
-                {
-                    Success = false,
-                    Message = "Project path is required",
-                });
+                projectPath = configuration["Generation:OutputDirectory"] ?? Path.Combine(Directory.GetCurrentDirectory(), "Generated");
+                // Ensure directory exists
+                Directory.CreateDirectory(projectPath);
             }
 
             var generatedFiles = new List<string>();
@@ -417,9 +445,9 @@ try
                 try
                 {
                     var result = await generationService.GenerateAllAsync(
-                        request.ConnectionString,
+                        connectionString,
                         tableName,
-                        request.ProjectPath,
+                        projectPath,
                         "MyApp");
 
                     if (result.Success)
@@ -679,6 +707,91 @@ try
         }
     })
     .WithName("Chat")
+    .WithOpenApi();
+
+    // Generation History endpoints
+    app.MapGet("/api/generation/history", async (
+        [FromServices] IGenerationHistoryService historyService,
+        [FromQuery] string? tableName,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            var history = await historyService.GetHistoryAsync(tableName);
+            return Results.Ok(history);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting generation history");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("GetGenerationHistory")
+    .WithOpenApi();
+
+    app.MapGet("/api/generation/history/{tableName}", async (
+        string tableName,
+        [FromServices] IGenerationHistoryService historyService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            var history = await historyService.GetHistoryAsync(tableName);
+            return Results.Ok(history);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting history for table");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("GetTableHistory")
+    .WithOpenApi();
+
+    app.MapGet("/api/generation/status/{tableName}", async (
+        string tableName,
+        [FromServices] IGenerationHistoryService historyService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            var status = await historyService.GetGenerationStatusAsync(tableName);
+            var lastGeneration = await historyService.GetLastGenerationAsync(tableName);
+            
+            return Results.Ok(new
+            {
+                TableName = tableName,
+                Status = status,
+                LastGenerated = lastGeneration?.GeneratedAt,
+                Success = lastGeneration?.Success ?? false,
+                FilesGenerated = lastGeneration?.FilesGenerated.Length ?? 0,
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting generation status");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("GetGenerationStatus")
+    .WithOpenApi();
+
+    app.MapDelete("/api/generation/history", async (
+        [FromServices] IGenerationHistoryService historyService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            await historyService.ClearHistoryAsync();
+            return Results.Ok(new { Success = true, Message = "History cleared" });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error clearing history");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("ClearGenerationHistory")
     .WithOpenApi();
 
     var logger = app.Services.GetRequiredService<ILogger<Program>>();

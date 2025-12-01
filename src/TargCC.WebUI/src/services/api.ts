@@ -16,6 +16,7 @@ import type {
   ChatMessage,
   ApiError,
 } from '../types/models';
+import { connectionStore } from './connectionStore';
 
 /**
  * API service class for all backend communication
@@ -32,10 +33,17 @@ export class TargccApiService {
       },
     });
 
-    // Request interceptor for logging
+    // Request interceptor for logging and adding connection string header
     this.client.interceptors.request.use(
       (config) => {
         console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+
+        // Add connection string to headers if available (except for /connections endpoints)
+        const connectionString = connectionStore.getConnectionString();
+        if (connectionString && !config.url?.includes('/connections')) {
+          config.headers['X-Connection-String'] = connectionString;
+        }
+
         return config;
       },
       (error) => {

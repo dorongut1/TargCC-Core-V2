@@ -67,6 +67,12 @@ public class ConnectionService : IConnectionService
             connection.Created = DateTime.UtcNow;
             connection.LastUsed = DateTime.UtcNow;
 
+            // Build connection string if not provided
+            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+            {
+                connection.ConnectionString = BuildConnectionString(connection);
+            }
+
             var connections = await LoadConnectionsFromFileAsync();
             connections.Add(connection);
             await SaveConnectionsToFileAsync(connections);
@@ -91,6 +97,12 @@ public class ConnectionService : IConnectionService
 
             if (index >= 0)
             {
+                // Rebuild connection string if connection info changed
+                if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                {
+                    connection.ConnectionString = BuildConnectionString(connection);
+                }
+
                 connections[index] = connection;
                 await SaveConnectionsToFileAsync(connections);
                 _logger.LogInformation("Updated connection: {Name} ({Id})", connection.Name, connection.Id);
@@ -164,6 +176,35 @@ public class ConnectionService : IConnectionService
         {
             _fileLock.Release();
         }
+    }
+
+    /// <summary>
+    /// Builds a SQL Server connection string from connection info.
+    /// </summary>
+    /// <param name="connection">Connection information.</param>
+    /// <returns>Connection string.</returns>
+    private static string BuildConnectionString(DatabaseConnectionInfo connection)
+    {
+        var builder = new SqlConnectionStringBuilder
+        {
+            DataSource = connection.Server,
+            InitialCatalog = connection.Database,
+            TrustServerCertificate = true
+        };
+
+        if (connection.UseIntegratedSecurity)
+        {
+            builder.IntegratedSecurity = true;
+        }
+        else
+        {
+            builder.IntegratedSecurity = false;
+            builder.UserID = connection.Username;
+            // Note: Password should be handled separately in a real production app
+            // For now, we'll require it to be provided via the connection string
+        }
+
+        return builder.ConnectionString;
     }
 
     /// <summary>

@@ -4,9 +4,9 @@
  */
 
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-  timeout: 30000,
-  headers: {
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  TIMEOUT: 30000,
+  DEFAULT_HEADERS: {
     'Content-Type': 'application/json',
   },
 };
@@ -33,9 +33,9 @@ export function createFetchOptions(options: RequestInit = {}): RequestInit {
   return {
     ...options,
     headers: {
-      ...API_CONFIG.headers,
+      ...API_CONFIG.DEFAULT_HEADERS,
       ...options.headers,
     },
-    signal: AbortSignal.timeout(API_CONFIG.timeout),
+    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
   };
 }

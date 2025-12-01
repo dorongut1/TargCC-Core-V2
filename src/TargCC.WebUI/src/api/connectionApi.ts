@@ -28,8 +28,8 @@ export interface ApiResponse<T> {
  */
 export async function fetchConnections(): Promise<Connection[]> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections`, {
-      headers: API_CONFIG.headers,
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections`, {
+      headers: API_CONFIG.DEFAULT_HEADERS,
     });
 
     const result: ApiResponse<Connection[]> = await response.json();
@@ -48,9 +48,9 @@ export async function fetchConnections(): Promise<Connection[]> {
  */
 export async function addConnection(connection: Omit<Connection, 'id' | 'created' | 'lastUsed'>): Promise<Connection> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections`, {
       method: 'POST',
-      headers: API_CONFIG.headers,
+      headers: API_CONFIG.DEFAULT_HEADERS,
       body: JSON.stringify(connection),
     });
 
@@ -70,9 +70,9 @@ export async function addConnection(connection: Omit<Connection, 'id' | 'created
  */
 export async function updateConnection(connection: Connection): Promise<void> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections/${connection.id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections/${connection.id}`, {
       method: 'PUT',
-      headers: API_CONFIG.headers,
+      headers: API_CONFIG.DEFAULT_HEADERS,
       body: JSON.stringify(connection),
     });
 
@@ -91,9 +91,9 @@ export async function updateConnection(connection: Connection): Promise<void> {
  */
 export async function deleteConnection(id: string): Promise<void> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections/${id}`, {
       method: 'DELETE',
-      headers: API_CONFIG.headers,
+      headers: API_CONFIG.DEFAULT_HEADERS,
     });
 
     const result: ApiResponse<void> = await response.json();
@@ -111,14 +111,14 @@ export async function deleteConnection(id: string): Promise<void> {
  */
 export async function testConnection(connectionString: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections/test`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections/test`, {
       method: 'POST',
-      headers: API_CONFIG.headers,
+      headers: API_CONFIG.DEFAULT_HEADERS,
       body: JSON.stringify({ connectionString }),
     });
 
-    const result: ApiResponse<{ isValid: boolean }> = await response.json();
-    return result.data?.isValid ?? false;
+    const result: any = await response.json();
+    return result.IsValid ?? result.isValid ?? false;
   } catch (error) {
     console.error('Error testing connection:', error);
     return false;
@@ -130,8 +130,8 @@ export async function testConnection(connectionString: string): Promise<boolean>
  */
 export async function fetchConnection(id: string): Promise<Connection> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/connections/${id}`, {
-      headers: API_CONFIG.headers,
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/connections/${id}`, {
+      headers: API_CONFIG.DEFAULT_HEADERS,
     });
 
     const result: ApiResponse<Connection> = await response.json();
