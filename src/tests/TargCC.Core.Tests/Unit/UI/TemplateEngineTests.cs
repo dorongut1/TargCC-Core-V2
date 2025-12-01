@@ -136,10 +136,10 @@ public sealed class TemplateEngineTests : IDisposable
     }
 
     /// <summary>
-    /// Test 6: Should throw exception when template file does not exist.
+    /// Test 6: Should throw TemplateRenderException when template file does not exist.
     /// </summary>
     [Fact]
-    public void Render_WithNonExistentTemplate_ShouldThrowFileNotFoundException()
+    public void Render_WithNonExistentTemplate_ShouldThrowTemplateRenderException()
     {
         // Arrange
         var data = new { name = "Test" };
@@ -148,7 +148,8 @@ public sealed class TemplateEngineTests : IDisposable
         Action act = () => this.sut.Render("nonexistent", data);
 
         // Assert
-        act.Should().Throw<FileNotFoundException>();
+        act.Should().Throw<TemplateRenderException>()
+            .WithInnerException<FileNotFoundException>();
     }
 
     /// <summary>
@@ -190,7 +191,8 @@ public sealed class TemplateEngineTests : IDisposable
         // Assert - Should require file to exist again after cache clear
         File.Delete(Path.Combine(this.tempTemplatePath, "cleartest.hbs"));
         Action act = () => this.sut.Render("cleartest", data);
-        act.Should().Throw<FileNotFoundException>();
+        act.Should().Throw<TemplateRenderException>()
+            .WithInnerException<FileNotFoundException>();
     }
 
     /// <summary>
@@ -250,10 +252,10 @@ public sealed class TemplateEngineTests : IDisposable
     }
 
     /// <summary>
-    /// Test 12: Should throw TemplateParseException for invalid template syntax.
+    /// Test 12: Should throw TemplateRenderException with TemplateParseException for invalid template syntax.
     /// </summary>
     [Fact]
-    public void Render_WithInvalidTemplateSyntax_ShouldThrowTemplateParseException()
+    public void Render_WithInvalidTemplateSyntax_ShouldThrowTemplateRenderException()
     {
         // Arrange
         var templateContent = "{{ unclosed tag";
@@ -264,7 +266,8 @@ public sealed class TemplateEngineTests : IDisposable
         Action act = () => this.sut.Render("invalid", data);
 
         // Assert
-        act.Should().Throw<TemplateParseException>();
+        act.Should().Throw<TemplateRenderException>()
+            .WithInnerException<TemplateParseException>();
     }
 
     /// <summary>

@@ -455,7 +455,7 @@ public class ApiControllerGenerator : IApiControllerGenerator
             return pkColumn;
         }
 
-        // Default to first column if nothing found (shouldn't happen with validation)
-        return (Column)table.Columns.AsEnumerable();
+        // This should never happen due to validation in GenerateAsync, but provide a fallback
+        throw new InvalidOperationException($"Unable to determine primary key column for table '{table.Name}'");
     }
 }
