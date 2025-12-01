@@ -98,8 +98,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Add audit fields if they exist
-            var hasAddedBy = table.Columns.Any(c => c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase));
-            if (hasAddedBy)
+            if (table.Columns.Exists(c => c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase)))
             {
                 sb.AppendLine("  // Audit fields");
                 sb.AppendLine("  readonly addedBy?: number;");
@@ -151,7 +150,7 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"export interface Update{className}Request extends Create{className}Request {{");
 
             // Add primary key
-            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
             if (pkColumn != null)
             {
                 var pkName = ToCamelCase(pkColumn.Name);
@@ -209,7 +208,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private List<string> GeneratePropertyForColumn(Column column, DatabaseSchema? schema, bool isCreate)
+        private List<string> GeneratePropertyForColumn(Column column, DatabaseSchema? _, bool isCreate)
         {
             var result = new List<string>();
             var (prefix, baseName) = SplitPrefix(column.Name);
@@ -217,7 +216,6 @@ namespace TargCC.Core.Generators.UI
             var tsType = GetTypeScriptType(column.DataType);
             var nullable = IsNullable(column);
             var optional = nullable || column.IsNullable ? "?" : string.Empty;
-            var readonlyModifier = isCreate ? string.Empty : "readonly ";
 
             switch (prefix)
             {
@@ -295,11 +293,10 @@ namespace TargCC.Core.Generators.UI
                     result.Add($"{basePropertyName}: string{optional}; // File path");
                     break;
 
-                case "ent": // Encrypted
+                case "ent": // Encrypted - treat as regular property
                 default:
-                    // Regular property
-                    var readonlyModifier = (prefix == "clc" || prefix == "blg" || prefix == "agg") && !isCreate ? "readonly " : string.Empty;
-                    result.Add($"{readonlyModifier}{basePropertyName}{optional}: {tsType}{optional};");
+                    // Regular property (including encrypted fields)
+                    result.Add($"{basePropertyName}{optional}: {tsType}{optional};");
                     break;
             }
 
@@ -313,7 +310,7 @@ namespace TargCC.Core.Generators.UI
 
             foreach (var column in enumColumns)
             {
-                var (prefix, baseName) = SplitPrefix(column.Name);
+                var (_, baseName) = SplitPrefix(column.Name);
                 var enumName = GetClassName(baseName);
 
                 sb.AppendLine($"/**");
