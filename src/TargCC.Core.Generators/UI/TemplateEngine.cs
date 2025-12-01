@@ -80,7 +80,7 @@ public class TemplateEngine : ITemplateEngine
             "Failed to preload template {TemplateName}");
 
     private readonly ILogger<TemplateEngine>? logger;
-    private readonly Dictionary<string, Template> templateCache = new();
+    private readonly Dictionary<string, Template> templateCache = new ();
     private readonly string templateBasePath;
 
     /// <summary>
@@ -260,6 +260,20 @@ public class TemplateEngine : ITemplateEngine
         return scriptObject;
     }
 
+    private static Template ParseTemplate(string templateContent, string templateName)
+    {
+        var template = Template.Parse(templateContent);
+
+        if (template.HasErrors)
+        {
+            var errors = string.Join(Environment.NewLine, template.Messages);
+            throw new TemplateParseException(
+                string.Format(CultureInfo.InvariantCulture, "Template '{0}' has errors:{1}{2}", templateName, Environment.NewLine, errors));
+        }
+
+        return template;
+    }
+
     private Template GetOrLoadTemplate(string templateName)
     {
         if (this.templateCache.TryGetValue(templateName, out var cachedTemplate))
@@ -282,20 +296,6 @@ public class TemplateEngine : ITemplateEngine
         if (this.logger != null)
         {
             LogTemplateLoaded(this.logger, templateName, templatePath, null);
-        }
-
-        return template;
-    }
-
-    private static Template ParseTemplate(string templateContent, string templateName)
-    {
-        var template = Template.Parse(templateContent);
-
-        if (template.HasErrors)
-        {
-            var errors = string.Join(Environment.NewLine, template.Messages);
-            throw new TemplateParseException(
-                string.Format(CultureInfo.InvariantCulture, "Template '{0}' has errors:{1}{2}", templateName, Environment.NewLine, errors));
         }
 
         return template;
