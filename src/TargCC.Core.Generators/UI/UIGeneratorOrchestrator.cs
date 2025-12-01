@@ -14,7 +14,7 @@ namespace TargCC.Core.Generators.UI
     /// Orchestrates all UI generators in the correct order.
     /// This is the main entry point for UI generation.
     /// </summary>
-    public class UIGeneratorOrchestrator
+    public partial class UIGeneratorOrchestrator
     {
         private readonly ILogger<UIGeneratorOrchestrator> _logger;
 
@@ -35,6 +35,39 @@ namespace TargCC.Core.Generators.UI
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Generating UI for table {tableName}")]
+        private partial void LogGeneratingUI(string tableName);
+
+        [LoggerMessage(EventId = 2, Level = LogLevel.Debug, Message = "Generated TypeScript types for {tableName}")]
+        private partial void LogGeneratedTypes(string tableName);
+
+        [LoggerMessage(EventId = 3, Level = LogLevel.Debug, Message = "Generated API client for {tableName}")]
+        private partial void LogGeneratedApi(string tableName);
+
+        [LoggerMessage(EventId = 4, Level = LogLevel.Debug, Message = "Generated React hooks for {tableName}")]
+        private partial void LogGeneratedHooks(string tableName);
+
+        [LoggerMessage(EventId = 5, Level = LogLevel.Debug, Message = "Generated entity form for {tableName}")]
+        private partial void LogGeneratedForm(string tableName);
+
+        [LoggerMessage(EventId = 6, Level = LogLevel.Debug, Message = "Generated collection grid for {tableName}")]
+        private partial void LogGeneratedGrid(string tableName);
+
+        [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "Generated page component for {tableName}")]
+        private partial void LogGeneratedPage(string tableName);
+
+        [LoggerMessage(EventId = 8, Level = LogLevel.Information, Message = "Successfully generated UI for table {tableName} ({fileCount} files)")]
+        private partial void LogSuccessfulGeneration(string tableName, int fileCount);
+
+        [LoggerMessage(EventId = 9, Level = LogLevel.Error, Message = "Failed to generate UI for table {tableName}")]
+        private partial void LogFailedGeneration(Exception ex, string tableName);
+
+        [LoggerMessage(EventId = 10, Level = LogLevel.Information, Message = "Generating UI for all tables ({tableCount} tables)")]
+        private partial void LogGeneratingAllTables(int tableCount);
+
+        [LoggerMessage(EventId = 11, Level = LogLevel.Information, Message = "UI generation complete: {successCount}/{totalCount} tables successful")]
+        private partial void LogGenerationComplete(int successCount, int totalCount);
+
         /// <summary>
         /// Generates all UI code for a single table.
         /// </summary>
@@ -50,7 +83,7 @@ namespace TargCC.Core.Generators.UI
 
             config.Validate();
 
-            _logger.LogInformation("Generating UI for table {TableName}", table.Name);
+            LogGeneratingUI(table.Name);
 
             var result = new UIGenerationResult
             {
@@ -62,38 +95,35 @@ namespace TargCC.Core.Generators.UI
                 // Step 1: Generate TypeScript Types
                 // TODO: Uncomment when TypeScriptTypeGenerator is implemented
                 // result.TypesCode = await _typeGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated TypeScript types for {TableName}", table.Name);
+                LogGeneratedTypes(table.Name);
 
                 // Step 2: Generate API Client (depends on types)
                 // TODO: Uncomment when ReactApiGenerator is implemented
                 // result.ApiCode = await _apiGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated API client for {TableName}", table.Name);
+                LogGeneratedApi(table.Name);
 
                 // Step 3: Generate React Hooks (depends on types + API)
                 // TODO: Uncomment when ReactHookGenerator is implemented
                 // result.HooksCode = await _hookGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated React hooks for {TableName}", table.Name);
+                LogGeneratedHooks(table.Name);
 
                 // Step 4: Generate Entity Form (depends on types + hooks)
                 // TODO: Uncomment when ReactEntityFormGenerator is implemented
                 // result.FormCode = await _formGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated entity form for {TableName}", table.Name);
+                LogGeneratedForm(table.Name);
 
                 // Step 5: Generate Collection Grid (depends on types + hooks)
                 // TODO: Uncomment when ReactCollectionGridGenerator is implemented
                 // result.GridCode = await _gridGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated collection grid for {TableName}", table.Name);
+                LogGeneratedGrid(table.Name);
 
                 // Step 6: Generate Page (depends on form + grid)
                 // TODO: Uncomment when ReactPageGenerator is implemented
                 // result.PageCode = await _pageGenerator.GenerateAsync(table, schema, config);
-                _logger.LogDebug("Generated page component for {TableName}", table.Name);
+                LogGeneratedPage(table.Name);
 
                 result.Success = true;
-                _logger.LogInformation(
-                    "Successfully generated UI for table {TableName} ({FileCount} files)",
-                    table.Name,
-                    result.GetFileCount());
+                LogSuccessfulGeneration(table.Name, result.GetFileCount());
 
                 await Task.CompletedTask.ConfigureAwait(false); // TODO: Remove when generators are implemented
             }
@@ -101,7 +131,7 @@ namespace TargCC.Core.Generators.UI
             {
                 result.Success = false;
                 result.ErrorMessage = ex.Message;
-                _logger.LogError(ex, "Failed to generate UI for table {TableName}", table.Name);
+                LogFailedGeneration(ex, table.Name);
                 throw;
             }
 
@@ -119,7 +149,7 @@ namespace TargCC.Core.Generators.UI
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(config);
 
-            _logger.LogInformation("Generating UI for all tables ({TableCount} tables)", schema.Tables.Count);
+            LogGeneratingAllTables(schema.Tables.Count);
 
             var results = new List<UIGenerationResult>();
 
@@ -132,7 +162,7 @@ namespace TargCC.Core.Generators.UI
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to generate UI for table {TableName}", table.Name);
+                    LogFailedGeneration(ex, table.Name);
 
                     // Add failed result
                     results.Add(new UIGenerationResult
@@ -145,10 +175,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             var successCount = results.Count(r => r.Success);
-            _logger.LogInformation(
-                "UI generation complete: {SuccessCount}/{TotalCount} tables successful",
-                successCount,
-                results.Count);
+            LogGenerationComplete(successCount, results.Count);
 
             return results;
         }
