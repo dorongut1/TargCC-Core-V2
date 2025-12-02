@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Tables } from './pages/Tables';
 import GenerationWizard from './components/wizard/GenerationWizard';
 import CodeDemo from './pages/CodeDemo';
+import AICodeEditorDemo from './pages/AICodeEditorDemo';
 import Schema from './pages/Schema';
 import Connections from './pages/Connections';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -55,6 +56,7 @@ function App() {
                   <Route path="/connections" element={<Connections />} />
                   <Route path="/generate" element={<GenerationWizard />} />
                   <Route path="/code-demo" element={<CodeDemo />} />
+                  <Route path="/ai-code-editor" element={<AICodeEditorDemo />} />
                   <Route path="/suggestions" element={<div>AI Suggestions - Coming Soon</div>} />
                   <Route path="/security" element={<div>Security Page - Coming Soon</div>} />
                   <Route path="/chat" element={<div>AI Chat - Coming Soon</div>} />
