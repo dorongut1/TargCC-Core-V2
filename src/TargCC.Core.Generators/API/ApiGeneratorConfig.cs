@@ -45,7 +45,7 @@ namespace TargCC.Core.Generators.API
         /// Gets or sets a value indicating whether to generate authorization attributes.
         /// Default: false.
         /// </summary>
-        public bool GenerateAuthorizationAttributes { get; set; } = false;
+        public bool GenerateAuthorizationAttributes { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to generate data validation attributes.

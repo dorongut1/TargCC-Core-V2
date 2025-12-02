@@ -216,12 +216,16 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  return (");
             sb.AppendLine("    <Routes>");
 
-            foreach (var table in tables)
+            var routes = tables.Select(table =>
             {
                 var className = GetClassName(table.Name);
                 var camelName = GetCamelCaseName(table.Name);
                 var pluralName = camelName + "s";
-                sb.AppendLine(CultureInfo.InvariantCulture, $"      <Route path=\"/{pluralName}/*\" element={{<{className}Routes />}} />");
+                return string.Create(CultureInfo.InvariantCulture, $"      <Route path=\"/{pluralName}/*\" element={{<{className}Routes />}} />");
+            });
+            foreach (var route in routes)
+            {
+                sb.AppendLine(route);
             }
 
             sb.AppendLine("    </Routes>");

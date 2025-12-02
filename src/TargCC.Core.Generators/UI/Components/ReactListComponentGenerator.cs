@@ -41,7 +41,7 @@ namespace TargCC.Core.Generators.UI.Components
             return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
         }
 
-        private static string GenerateImports(string className, string camelName, UIFramework framework)
+        private static string GenerateImports(string className, UIFramework framework)
         {
             var sb = new StringBuilder();
 
@@ -61,7 +61,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateColumns(Table table, UIFramework framework)
+        private static string GenerateColumns(Table table)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -137,7 +137,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine();
 
             // Columns definition
-            sb.AppendLine(GenerateColumns(table, framework));
+            sb.AppendLine(GenerateColumns(table));
             sb.AppendLine();
 
             // Loading state
@@ -261,7 +261,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.Append(GenerateComponentHeader(table.Name));
 
             // Imports
-            sb.AppendLine(GenerateImports(className, camelName, config.Framework));
+            sb.AppendLine(GenerateImports(className, config.Framework));
             sb.AppendLine();
 
             // Component
