@@ -158,6 +158,15 @@ namespace TargCC.Core.Generators.UI.Components
             };
         }
 
+        /// <summary>
+        /// Logs component generation start.
+        /// </summary>
+        /// <param name="tableName">Table name.</param>
+        protected void LogComponentGeneration(string tableName)
+        {
+            LogGeneratingComponent(Logger, ComponentType, tableName, null);
+        }
+
         private static ComponentFieldType GetDefaultFieldType(string sqlType)
         {
             if (sqlType.Contains("BIT", StringComparison.Ordinal))
@@ -241,15 +250,6 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             return value;
-        }
-
-        /// <summary>
-        /// Logs component generation start.
-        /// </summary>
-        /// <param name="tableName">Table name.</param>
-        protected void LogComponentGeneration(string tableName)
-        {
-            LogGeneratingComponent(Logger, ComponentType, tableName, null);
         }
     }
 }
