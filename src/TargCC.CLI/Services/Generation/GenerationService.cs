@@ -440,6 +440,82 @@ public class GenerationService : IGenerationService
         return result;
     }
 
+    /// <inheritdoc/>
+    public async Task<GenerationResult> GenerateReactUIAsync(
+        string connectionString,
+        string tableName,
+        string outputDirectory)
+    {
+        var sw = Stopwatch.StartNew();
+        var result = new GenerationResult();
+
+        try
+        {
+            _output.Info($"Analyzing table: {tableName}");
+
+            // Analyze database
+            var (schema, table) = await AnalyzeDatabaseAsync(connectionString, tableName);
+
+            // Generate React UI components using UIGeneratorOrchestrator
+            _output.Info("Generating React UI components...");
+            var orchestrator = new TargCC.Core.Generators.UI.UIGeneratorOrchestrator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.UIGeneratorOrchestrator>());
+
+            var uiConfig = new TargCC.Core.Generators.UI.UIGeneratorConfig
+            {
+                OutputDirectory = outputDirectory,
+                GenerateForm = true,
+                GenerateList = true,
+                GenerateDetail = true,
+                GenerateOrchestrator = true,
+                GenerateApiClient = true,
+                GenerateHooks = true,
+                GenerateTypes = true
+            };
+
+            var uiResult = await orchestrator.GenerateAsync(table, schema, uiConfig);
+
+            if (uiResult.Success)
+            {
+                // Add all generated files to result
+                foreach (var file in uiResult.GeneratedFiles)
+                {
+                    result.GeneratedFiles.Add(new GeneratedFile
+                    {
+                        FilePath = file.FilePath,
+                        FileType = file.FileType,
+                        SizeBytes = file.Content?.Length ?? 0,
+                        LineCount = file.Content?.Split('\n').Length ?? 0
+                    });
+                    _output.Success($"Generated: {Path.GetFileName(file.FilePath)}");
+                }
+
+                result.Success = true;
+            }
+            else
+            {
+                result.Success = false;
+                result.ErrorMessage = "React UI generation failed";
+                foreach (var error in uiResult.Errors)
+                {
+                    _output.Error(error);
+                }
+            }
+
+            sw.Stop();
+            result.Duration = sw.Elapsed;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating React UI");
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            _output.Error($"Generation failed: {ex.Message}");
+        }
+
+        return result;
+    }
+
     private async Task<(DatabaseSchema Schema, Table Table)> AnalyzeDatabaseAsync(
         string connectionString,
         string tableName)

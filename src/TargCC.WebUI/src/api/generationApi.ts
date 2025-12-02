@@ -23,6 +23,7 @@ export interface GenerationOptions {
   generateController: boolean;
   generateTests: boolean;
   generateStoredProcedures?: boolean;
+  generateReactUI?: boolean;
   overwriteExisting: boolean;
 }
 

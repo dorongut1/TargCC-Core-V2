@@ -26,6 +26,7 @@ export interface WizardData {
     repositories: boolean;
     handlers: boolean;
     api: boolean;
+    reactUI: boolean;
   };
 }
 
@@ -274,7 +275,8 @@ const GenerationWizard = () => {
       entities: true,
       repositories: true,
       handlers: true,
-      api: true
+      api: true,
+      reactUI: false
     }
   });
   const [validationError, setValidationError] = useState<string>('');
@@ -342,16 +344,23 @@ const GenerationWizard = () => {
           generateRepository: wizardData.options.repositories,
           generateStoredProcedures: true, // Always generate SPs
           generateController: wizardData.options.api,
+          generateReactUI: wizardData.options.reactUI,
         }
       });
 
       if (result.success) {
-        setProgress([
+        const progressItems: ProgressItem[] = [
           { label: 'Entity Generation', status: 'completed' },
           { label: 'Repository Generation', status: 'completed' },
           { label: 'API Generation', status: 'completed' },
           { label: 'SQL Procedures', status: 'completed' },
-        ]);
+        ];
+
+        if (wizardData.options.reactUI) {
+          progressItems.push({ label: 'React UI Components', status: 'completed' });
+        }
+
+        setProgress(progressItems);
         setActiveStep((prev) => prev + 1); // Move to completion step
       } else {
         setProgress([

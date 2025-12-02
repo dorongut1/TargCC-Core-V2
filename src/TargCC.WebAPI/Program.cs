@@ -500,6 +500,19 @@ try
                         tableResults.Add(cqrsResult);
                     }
 
+                    // React UI generation
+                    if (request.GenerateReactUI)
+                    {
+                        var reactOutputDir = request.ReactOutputDirectory
+                            ?? Path.Combine(projectPath, "react-ui", "src", "components");
+
+                        var reactResult = await generationService.GenerateReactUIAsync(
+                            connectionString,
+                            tableName,
+                            reactOutputDir);
+                        tableResults.Add(reactResult);
+                    }
+
                     // Collect all generated files and errors
                     foreach (var result in tableResults)
                     {
