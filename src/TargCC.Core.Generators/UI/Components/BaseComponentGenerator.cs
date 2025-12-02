@@ -198,7 +198,6 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static string GetValidationPattern(Column column)
         {
-
             // Email pattern for email columns
             if (column.Name.Contains("email", StringComparison.OrdinalIgnoreCase))
             {
