@@ -397,7 +397,7 @@ public class GenerationService : IGenerationService
             // Create config with defaults
             var config = new ApiGeneratorConfig
             {
-                Namespace = @namespace ?? "GeneratedApi",
+                Namespace = "GeneratedApi",
                 GenerateXmlDocumentation = true,
                 GenerateSwaggerAttributes = true
             };
