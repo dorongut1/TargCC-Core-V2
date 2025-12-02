@@ -64,15 +64,6 @@ namespace TargCC.Core.Generators.UI.Components
         }
 
         /// <summary>
-        /// Logs component generation start.
-        /// </summary>
-        /// <param name="tableName">Table name.</param>
-        protected void LogComponentGeneration(string tableName)
-        {
-            LogGeneratingComponent(Logger, ComponentType, tableName, null);
-        }
-
-        /// <summary>
         /// Generates a component file header.
         /// </summary>
         /// <param name="tableName">Table name.</param>
@@ -97,6 +88,7 @@ namespace TargCC.Core.Generators.UI.Components
         protected static ComponentFieldType GetComponentFieldType(Column column)
         {
             var (prefix, _) = SplitPrefix(column.Name);
+            var sqlType = column.DataType.ToUpperInvariant();
 
             return prefix switch
             {
@@ -119,10 +111,9 @@ namespace TargCC.Core.Generators.UI.Components
         /// </summary>
         /// <param name="column">Column metadata.</param>
         /// <returns>Validation rules as object properties.</returns>
-        protected static List<string> GetValidationRules(Column column)
+        protected static IReadOnlyList<string> GetValidationRules(Column column)
         {
             var rules = new List<string>();
-            var (prefix, _) = SplitPrefix(column.Name);
 
             // Required rule
             if (!column.IsNullable && !column.IsPrimaryKey && !column.IsIdentity)
@@ -250,6 +241,15 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             return value;
+        }
+
+        /// <summary>
+        /// Logs component generation start.
+        /// </summary>
+        /// <param name="tableName">Table name.</param>
+        protected void LogComponentGeneration(string tableName)
+        {
+            LogGeneratingComponent(Logger, ComponentType, tableName, null);
         }
     }
 }
