@@ -16,12 +16,17 @@ export const API_ENDPOINTS = {
   schemas: '/api/schema',
   schemaDetail: (name: string) => `/api/schema/${encodeURIComponent(name)}`,
   schemaRefresh: (name: string) => `/api/schema/${encodeURIComponent(name)}/refresh`,
-  
+
   // Generation endpoints
   generate: '/api/generate',
   generationStatus: (id: string) => `/api/generate/${encodeURIComponent(id)}`,
   generationHistory: '/api/generate/history',
-  
+
+  // AI Code Editor endpoints
+  aiCodeModify: '/api/ai/code/modify',
+  aiCodeValidate: '/api/ai/code/validate',
+  aiCodeDiff: '/api/ai/code/diff',
+
   // Health endpoint
   health: '/api/health',
 };
