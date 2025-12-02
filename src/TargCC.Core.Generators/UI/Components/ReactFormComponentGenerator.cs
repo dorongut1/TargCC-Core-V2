@@ -81,14 +81,14 @@ namespace TargCC.Core.Generators.UI.Components
             return prefix switch
             {
                 "ENO" => GeneratePasswordField(fieldName, propertyName, column, framework),
-                "LKP" => GenerateLookupField(fieldName, propertyName, baseName, column, framework),
+                "LKP" => GenerateLookupField(propertyName, baseName, column, framework),
                 "LOC" => GenerateLocalizedField(fieldName, propertyName, column, framework),
                 "ENM" => GenerateEnumField(fieldName, propertyName, baseName, column, framework),
                 "SPL" => GenerateArrayField(fieldName, propertyName, column, framework),
-                "UPL" => GenerateFileUploadField(fieldName, propertyName, column, framework),
-                "CLC" => GenerateReadOnlyField(fieldName, propertyName, column, framework),
-                "BLG" => GenerateReadOnlyField(fieldName, propertyName, column, framework),
-                "AGG" => GenerateReadOnlyField(fieldName, propertyName, column, framework),
+                "UPL" => GenerateFileUploadField(fieldName, propertyName, framework),
+                "CLC" => GenerateReadOnlyField(fieldName, propertyName, framework),
+                "BLG" => GenerateReadOnlyField(fieldName, propertyName, framework),
+                "AGG" => GenerateReadOnlyField(fieldName, propertyName, framework),
                 "SCB" => string.Empty, // Hidden field, not rendered
                 "SPT" => GenerateTextField(fieldName, propertyName, column, framework),
                 "ENT" => GenerateTextField(fieldName, propertyName, column, framework),
@@ -99,7 +99,6 @@ namespace TargCC.Core.Generators.UI.Components
         private static string GeneratePasswordField(string fieldName, string propertyName, Column column, UIFramework framework)
         {
             var sb = new StringBuilder();
-            var required = !column.IsNullable;
             var validationRules = GetValidationRules(column);
 
             if (framework == UIFramework.MaterialUI)
@@ -122,7 +121,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateLookupField(string fieldName, string propertyName, string baseName, Column column, UIFramework framework)
+        private static string GenerateLookupField(string propertyName, string baseName, Column column, UIFramework framework)
         {
             var sb = new StringBuilder();
             var codeField = ToCamelCase(baseName) + "Code";
@@ -212,7 +211,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateFileUploadField(string fieldName, string propertyName, Column column, UIFramework framework)
+        private static string GenerateFileUploadField(string fieldName, string propertyName, UIFramework framework)
         {
             var sb = new StringBuilder();
 
@@ -229,7 +228,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateReadOnlyField(string fieldName, string propertyName, Column column, UIFramework framework)
+        private static string GenerateReadOnlyField(string fieldName, string propertyName, UIFramework framework)
         {
             var sb = new StringBuilder();
 
