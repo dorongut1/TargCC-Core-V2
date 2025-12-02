@@ -177,7 +177,7 @@ namespace TargCC.Core.Generators.API
                 .Where(c => !c.IsPrimaryKey && !IsAuditField(c.Name) && !IsReadOnlyPrefix(c.Name))
                 .ToList();
 
-            if (filterableColumns.Any())
+            if (filterableColumns.Count > 0)
             {
                 sb.AppendLine();
             }
