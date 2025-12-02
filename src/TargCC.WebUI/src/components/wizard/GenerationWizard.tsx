@@ -11,12 +11,11 @@ import {
   Chip
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DownloadIcon from '@mui/icons-material/Download';
 import TableSelection from './TableSelection';
 import GenerationOptions from './GenerationOptions';
-import CodeViewer from '../code/CodeViewer';
 import ProgressTracker from './ProgressTracker';
 import type { ProgressItem } from './ProgressTracker';
-import { mockCodeFiles } from '../../utils/mockCode';
 import { generate } from '../../api/generationApi';
 
 export interface WizardData {
@@ -123,6 +122,7 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedFilePaths, setGeneratedFilePaths] = useState<string[]>([]);
 
   useEffect(() => {
     // Start generation when component mounts
@@ -249,6 +249,9 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
 
           // Use actual generated files from API if available
           if (result.generatedFiles && result.generatedFiles.length > 0) {
+            // Save file paths for ZIP download
+            setGeneratedFilePaths(result.generatedFiles);
+
             const actualFiles: ProgressItem[] = result.generatedFiles.map((filePath: string, index: number) => {
               const fileName = filePath.split(/[\\/]/).pop() || filePath;
 
@@ -357,24 +360,46 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
       {isComplete && (
         <>
           <Alert severity="success" sx={{ mt: 3 }}>
-            <Typography variant="body2" fontWeight="bold">
-              Code generation completed successfully!
-            </Typography>
-            <Typography variant="caption">
-              All {progressItems.length} files have been generated and are ready for review.
-            </Typography>
-          </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Typography variant="body2" fontWeight="bold">
+                  Code generation completed successfully!
+                </Typography>
+                <Typography variant="caption">
+                  All {progressItems.length} files have been generated and are ready for review.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/generate/download', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ filePaths: generatedFilePaths }),
+                    });
 
-          {/* Code Preview */}
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Generated Code Preview
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Preview the generated code for {data.selectedTables[0] || 'your table'}
-            </Typography>
-            <CodeViewer files={mockCodeFiles(data.selectedTables[0] || 'Customer')} />
-          </Box>
+                    if (response.ok) {
+                      const blob = await response.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `generated-code-${new Date().toISOString().split('T')[0]}.zip`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }
+                  } catch (err) {
+                    console.error('Download error:', err);
+                  }
+                }}
+              >
+                Download ZIP
+              </Button>
+            </Box>
+          </Alert>
         </>
       )}
     </Box>

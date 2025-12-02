@@ -565,6 +565,68 @@ try
     .WithName("GenerateCode")
     .WithOpenApi();
 
+    // Download generated files as ZIP endpoint
+    app.MapPost("/api/generate/download", async (
+        [FromBody] DownloadRequest request,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            if (request.FilePaths == null || request.FilePaths.Count == 0)
+            {
+                return Results.BadRequest(new { Success = false, Message = "No files specified" });
+            }
+
+            var memoryStream = new MemoryStream();
+            using (var zip = new System.IO.Compression.ZipArchive(
+                memoryStream,
+                System.IO.Compression.ZipArchiveMode.Create,
+                true))
+            {
+                foreach (var filePath in request.FilePaths)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        var fileName = Path.GetFileName(filePath);
+                        var relativePath = filePath;
+
+                        // Try to make path relative if it's in Generated folder
+                        var generatedIndex = filePath.IndexOf("Generated", StringComparison.OrdinalIgnoreCase);
+                        if (generatedIndex >= 0)
+                        {
+                            relativePath = filePath.Substring(generatedIndex + "Generated".Length + 1);
+                        }
+
+                        var entry = zip.CreateEntry(relativePath, System.IO.Compression.CompressionLevel.Optimal);
+                        using (var entryStream = entry.Open())
+                        using (var fileStream = File.OpenRead(filePath))
+                        {
+                            await fileStream.CopyToAsync(entryStream);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("File not found: {FilePath}", filePath);
+                    }
+                }
+            }
+
+            var zipBytes = memoryStream.ToArray();
+
+            return Results.File(
+                zipBytes,
+                "application/zip",
+                $"generated-code-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating ZIP file");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("DownloadGeneratedFiles")
+    .WithOpenApi();
+
     // System info endpoint
     app.MapGet("/api/system/info", () => Results.Ok(new
     {

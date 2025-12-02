@@ -1,12 +1,9 @@
-import { useState } from 'react';
-import { Box, Paper, LinearProgress, Typography, Chip, IconButton, Tooltip } from '@mui/material';
+import { Box, Paper, LinearProgress, Typography, Chip } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import PendingIcon from '@mui/icons-material/Pending';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getFileTypeIcon, getFileTypeColor } from '../../utils/fileTypeIcons';
-import ReactComponentPreview from '../code/ReactComponentPreview';
 
 export interface ProgressItem {
   id: string;
@@ -30,12 +27,6 @@ const ProgressTracker = ({
   estimatedTimeRemaining,
   currentFile
 }: ProgressTrackerProps) => {
-  const [previewItem, setPreviewItem] = useState<ProgressItem | null>(null);
-
-  const isReactComponent = (item: ProgressItem) => {
-    return item.type === 'react' && item.name.endsWith('.tsx');
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'complete':
@@ -180,7 +171,8 @@ const ProgressTracker = ({
               variant="outlined"
             />
 
-            {isReactComponent(item) && item.status === 'complete' && (
+            {/* Preview disabled - React components need full environment to run */}
+            {/* {isReactComponent(item) && item.status === 'complete' && item.code && (
               <Tooltip title="Preview Component">
                 <IconButton
                   size="small"
@@ -190,20 +182,20 @@ const ProgressTracker = ({
                   <VisibilityIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-            )}
+            )} */}
           </Box>
         ))}
       </Box>
 
-      {/* Preview Dialog */}
-      {previewItem && (
+      {/* Preview Dialog - disabled for now */}
+      {/* {previewItem && (
         <ReactComponentPreview
           code={previewItem.code || `// Code not available for preview\n// Component: ${previewItem.name}`}
           componentName={previewItem.name.replace('.tsx', '')}
           open={previewItem !== null}
           onClose={() => setPreviewItem(null)}
         />
-      )}
+      )} */}
     </Paper>
   );
 };
