@@ -770,7 +770,7 @@ try
     // AI Code Editor endpoints
     app.MapPost("/api/ai/code/modify", async (
         [FromBody] CodeModificationRequest request,
-        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
         ILogger<Program> logger) =>
     {
         // Validate request
@@ -892,7 +892,7 @@ try
 
     app.MapPost("/api/ai/code/validate", async (
         [FromBody] CodeValidationRequest request,
-        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
         ILogger<Program> logger) =>
     {
         if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
@@ -948,7 +948,7 @@ try
 
     app.MapPost("/api/ai/code/diff", async (
         [FromBody] CodeDiffRequest request,
-        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
         ILogger<Program> logger) =>
     {
         if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
