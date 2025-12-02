@@ -59,4 +59,12 @@
     <Folder Include="Services\Analysis\" />
   </ItemGroup>
 
+  <!-- Exclude Generated output directory from compilation -->
+  <ItemGroup>
+    <Compile Remove="Generated\**" />
+    <Content Remove="Generated\**" />
+    <EmbeddedResource Remove="Generated\**" />
+    <None Remove="Generated\**" />
+  </ItemGroup>
+
 </Project>
