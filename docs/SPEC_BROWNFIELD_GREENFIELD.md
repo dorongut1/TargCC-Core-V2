@@ -288,6 +288,92 @@ CREATE TABLE [dbo].[c_Project] (
 GO
 ```
 
+### 2.7 c_Enumeration - Enumerations
+
+```sql
+CREATE TABLE [dbo].[c_Enumeration] (
+    [ID] INT IDENTITY(1,1) PRIMARY KEY,
+    [IsSystem] BIT NOT NULL DEFAULT 0,
+    [EnumType] VARCHAR(50) NOT NULL,               -- e.g., "CardOrderStatus"
+    [EnumValue] VARCHAR(50) NOT NULL,              -- e.g., "Arrived"
+    [locText] NVARCHAR(50) NULL,                   -- תרגום (אופציונלי)
+    [OrdinalPosition] INT NULL,                    -- סדר בEnum
+
+    [AddedBy] NVARCHAR(50) NULL,
+    [AddedOn] DATETIME2 NOT NULL DEFAULT GETDATE(),
+    [ChangedBy] NVARCHAR(50) NULL,
+    [ChangedOn] DATETIME2 NULL,
+    [DeletedBy] NVARCHAR(50) NULL,
+    [DeletedOn] DATETIME2 NULL,
+
+    CONSTRAINT [UQ_c_Enumeration] UNIQUE ([EnumType], [EnumValue])
+)
+GO
+
+CREATE INDEX [IX_c_Enumeration_Type] ON [c_Enumeration]([EnumType])
+GO
+```
+
+**Usage:**
+- עמודה עם prefix `enm_Status` → TargCC קורא מ-c_Enumeration WHERE EnumType='Status'
+- יוצר C# Enum:
+```csharp
+public enum Status
+{
+    Active = 0,
+    Inactive = 1,
+    Pending = 2
+}
+```
+
+### 2.8 c_Lookup - Dynamic Lookup Values
+
+```sql
+CREATE TABLE [dbo].[c_Lookup] (
+    [ID] BIGINT IDENTITY(1,1) PRIMARY KEY,
+    [enmParentLookupType] VARCHAR(50) NULL,        -- Hierarchical (parent type)
+    [ParentCode] VARCHAR(50) NULL,                 -- Parent code
+    [enmLookupType] VARCHAR(50) NOT NULL,          -- e.g., "Country"
+    [Code] VARCHAR(50) NOT NULL,                   -- e.g., "IL"
+    [locText] NVARCHAR(100) NULL,                  -- e.g., "ישראל"
+    [locDescription] NVARCHAR(500) NULL,
+    [OrdinalPosition] INT NULL,                    -- Sort order
+
+    [AddedBy] NVARCHAR(50) NULL,
+    [AddedOn] DATETIME2 NOT NULL DEFAULT GETDATE(),
+    [ChangedBy] NVARCHAR(50) NULL,
+    [ChangedOn] DATETIME2 NULL,
+    [DeletedBy] NVARCHAR(50) NULL,
+    [DeletedOn] DATETIME2 NULL,
+
+    CONSTRAINT [UQ_c_Lookup] UNIQUE ([enmLookupType], [Code])
+)
+GO
+
+CREATE INDEX [IX_c_Lookup_Type] ON [c_Lookup]([enmLookupType])
+GO
+```
+
+**Usage:**
+- עמודה עם prefix `lkp_Country` → TargCC יוצר:
+  - Repository method: `GetCountryLookupAsync()`
+  - React UI: ComboBox/Select שקורא מ-API
+  - API endpoint: `/api/lookup/Country`
+
+**Example Stored Procedure:**
+```sql
+CREATE PROCEDURE SP_GetLookup
+    @LookupType VARCHAR(50)
+AS
+BEGIN
+    SELECT Code, locText, locDescription
+    FROM c_Lookup
+    WHERE enmLookupType = @LookupType
+      AND DeletedOn IS NULL
+    ORDER BY OrdinalPosition, locText
+END
+```
+
 ---
 
 ## 🔄 3. Change Detection - מנגנון זיהוי שינויים
