@@ -10,6 +10,7 @@ using TargCC.CLI.Services.Analysis;
 using TargCC.CLI.Configuration;
 using TargCC.Core.Analyzers;
 using TargCC.Core.Services;
+using TargCC.Core.Services.AI;
 using TargCC.Core.Generators.Project;
 
 namespace TargCC.WebAPI.Extensions;
@@ -65,6 +66,18 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAIService, ClaudeAIService>();
         services.AddSingleton<ISecurityScannerService, SecurityScannerService>();
         services.AddSingleton<ICodeQualityAnalyzer, CodeQualityAnalyzerService>();
+
+        // AI Code Editor Service
+        services.AddScoped<IAICodeEditorService>(sp =>
+        {
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+            var logger = sp.GetRequiredService<ILogger<AICodeEditorService>>();
+            var apiKey = aiConfig.ApiKey ?? string.Empty;
+            var model = aiConfig.Model;
+            var maxTokens = aiConfig.MaxTokens;
+
+            return new AICodeEditorService(httpClient, logger, apiKey, model, maxTokens);
+        });
 
         return services;
     }

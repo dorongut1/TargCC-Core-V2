@@ -767,6 +767,230 @@ try
     .WithName("Chat")
     .WithOpenApi();
 
+    // AI Code Editor endpoints
+    app.MapPost("/api/ai/code/modify", async (
+        [FromBody] CodeModificationRequest request,
+        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        // Validate request
+        if (string.IsNullOrWhiteSpace(request.OriginalCode))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Original code is required",
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Instruction))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Instruction is required",
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TableName))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Table name is required",
+            });
+        }
+
+        try
+        {
+            logger.LogInformation(
+                "Modifying code for table {TableName} with instruction: {Instruction}",
+                request.TableName,
+                request.Instruction);
+
+            // Build context
+            var context = await codeEditorService.BuildCodeContextAsync(
+                request.TableName,
+                request.Schema,
+                request.RelatedTables,
+                CancellationToken.None);
+
+            // Apply user preferences if provided
+            if (request.UserPreferences != null)
+            {
+                foreach (var pref in request.UserPreferences)
+                {
+                    context.UserPreferences[pref.Key] = pref.Value;
+                }
+            }
+
+            // Modify code
+            var result = await codeEditorService.ModifyCodeAsync(
+                request.OriginalCode,
+                request.Instruction,
+                context,
+                request.ConversationId,
+                CancellationToken.None);
+
+            // Map to response DTO
+            var response = new CodeModificationResponse
+            {
+                Success = result.Success,
+                ModifiedCode = result.ModifiedCode,
+                OriginalCode = result.OriginalCode,
+                ErrorMessage = result.ErrorMessage,
+                ConversationId = result.ConversationId,
+                Explanation = result.Explanation,
+                Changes = result.Changes.Select(c => new CodeChangeDto
+                {
+                    LineNumber = c.LineNumber,
+                    Type = c.Type.ToString(),
+                    Description = c.Description,
+                    OldValue = c.OldValue,
+                    NewValue = c.NewValue,
+                }).ToList(),
+                Validation = new ValidationResultDto
+                {
+                    IsValid = result.Validation.IsValid,
+                    HasBreakingChanges = result.Validation.HasBreakingChanges,
+                    Errors = result.Validation.Errors.Select(e => new ValidationErrorDto
+                    {
+                        Message = e.Message,
+                        LineNumber = e.LineNumber,
+                        Severity = e.Severity.ToString(),
+                    }).ToList(),
+                    Warnings = result.Validation.Warnings.Select(w => new ValidationWarningDto
+                    {
+                        Message = w.Message,
+                        LineNumber = w.LineNumber,
+                    }).ToList(),
+                },
+            };
+
+            logger.LogInformation(
+                "Code modification completed for table {TableName}: Success={Success}, Changes={ChangeCount}",
+                request.TableName,
+                result.Success,
+                result.Changes.Count);
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error modifying code for table {TableName}", request.TableName);
+            return Results.Ok(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = $"Failed to modify code: {ex.Message}",
+                OriginalCode = request.OriginalCode,
+            });
+        }
+    })
+    .WithName("ModifyCode")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
+
+    app.MapPost("/api/ai/code/validate", async (
+        [FromBody] CodeValidationRequest request,
+        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
+        {
+            return Results.BadRequest(new
+            {
+                Success = false,
+                Error = "Both original and modified code are required",
+            });
+        }
+
+        try
+        {
+            var validation = await codeEditorService.ValidateModificationAsync(
+                request.OriginalCode,
+                request.ModifiedCode,
+                CancellationToken.None);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Validation = new ValidationResultDto
+                {
+                    IsValid = validation.IsValid,
+                    HasBreakingChanges = validation.HasBreakingChanges,
+                    Errors = validation.Errors.Select(e => new ValidationErrorDto
+                    {
+                        Message = e.Message,
+                        LineNumber = e.LineNumber,
+                        Severity = e.Severity.ToString(),
+                    }).ToList(),
+                    Warnings = validation.Warnings.Select(w => new ValidationWarningDto
+                    {
+                        Message = w.Message,
+                        LineNumber = w.LineNumber,
+                    }).ToList(),
+                },
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error validating code");
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message,
+            });
+        }
+    })
+    .WithName("ValidateCode")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
+
+    app.MapPost("/api/ai/code/diff", async (
+        [FromBody] CodeDiffRequest request,
+        [FromServices] Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
+        {
+            return Results.BadRequest(new
+            {
+                Success = false,
+                Error = "Both original and modified code are required",
+            });
+        }
+
+        try
+        {
+            var changes = codeEditorService.GenerateDiff(request.OriginalCode, request.ModifiedCode);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Changes = changes.Select(c => new CodeChangeDto
+                {
+                    LineNumber = c.LineNumber,
+                    Type = c.Type.ToString(),
+                    Description = c.Description,
+                    OldValue = c.OldValue,
+                    NewValue = c.NewValue,
+                }).ToList(),
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error generating diff");
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message,
+            });
+        }
+    })
+    .WithName("GenerateDiff")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
+
     // Generation History endpoints
     app.MapGet("/api/generation/history", async (
         [FromServices] IGenerationHistoryService historyService,
