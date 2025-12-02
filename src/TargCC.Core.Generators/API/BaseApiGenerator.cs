@@ -60,28 +60,6 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         protected abstract string GeneratorTypeName { get; }
 
-        /// <inheritdoc/>
-        public async Task<string> GenerateAsync(Table table, DatabaseSchema schema, ApiGeneratorConfig config)
-        {
-            ArgumentNullException.ThrowIfNull(table);
-            ArgumentNullException.ThrowIfNull(schema);
-            ArgumentNullException.ThrowIfNull(config);
-
-            LogGenerationStarted(Logger, GeneratorTypeName, table.Name, null);
-
-            try
-            {
-                var result = await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
-                LogGenerationCompleted(Logger, GeneratorTypeName, table.Name, null);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                LogGenerationFailed(Logger, GeneratorTypeName, table.Name, ex);
-                throw;
-            }
-        }
-
         /// <summary>
         /// Gets the class name from table name (PascalCase).
         /// Example: "customer" -> "Customer", "order_item" -> "OrderItem".
@@ -105,14 +83,27 @@ namespace TargCC.Core.Generators.API
             return ToPascalCase(tableName);
         }
 
-        /// <summary>
-        /// Generates code synchronously (implemented by derived classes).
-        /// </summary>
-        /// <param name="table">The table to generate code for.</param>
-        /// <param name="schema">The database schema.</param>
-        /// <param name="config">Generator configuration.</param>
-        /// <returns>Generated code.</returns>
-        protected abstract string Generate(Table table, DatabaseSchema schema, ApiGeneratorConfig config);
+        /// <inheritdoc/>
+        public async Task<string> GenerateAsync(Table table, DatabaseSchema schema, ApiGeneratorConfig config)
+        {
+            ArgumentNullException.ThrowIfNull(table);
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(config);
+
+            LogGenerationStarted(Logger, GeneratorTypeName, table.Name, null);
+
+            try
+            {
+                var result = await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
+                LogGenerationCompleted(Logger, GeneratorTypeName, table.Name, null);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LogGenerationFailed(Logger, GeneratorTypeName, table.Name, ex);
+                throw;
+            }
+        }
 
         /// <summary>
         /// Gets the property name from column name (PascalCase, with prefix handling).
@@ -333,6 +324,15 @@ namespace TargCC.Core.Generators.API
             var (prefix, _) = SplitPrefix(columnName);
             return prefix is "CLC" or "BLG" or "AGG" or "SCB";
         }
+
+        /// <summary>
+        /// Generates code synchronously (implemented by derived classes).
+        /// </summary>
+        /// <param name="table">The table to generate code for.</param>
+        /// <param name="schema">The database schema.</param>
+        /// <param name="config">Generator configuration.</param>
+        /// <returns>Generated code.</returns>
+        protected abstract string Generate(Table table, DatabaseSchema schema, ApiGeneratorConfig config);
 
         /// <summary>
         /// Normalizes a single word to PascalCase.
