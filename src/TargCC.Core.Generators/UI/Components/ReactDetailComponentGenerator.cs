@@ -237,7 +237,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private string Generate(Table table, ComponentGeneratorConfig config)
+        private static string Generate(Table table, ComponentGeneratorConfig config)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
