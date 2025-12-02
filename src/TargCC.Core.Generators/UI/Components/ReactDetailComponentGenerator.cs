@@ -92,8 +92,6 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static string GenerateValueExpression(Column column, string fieldName, string prefix, string baseName)
         {
-            var sqlType = column.DataType.ToUpperInvariant();
-
             return prefix switch
             {
                 "ENO" => "'********'", // Hide passwords

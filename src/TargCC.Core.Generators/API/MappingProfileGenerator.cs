@@ -205,11 +205,15 @@ namespace TargCC.Core.Generators.API
 
         private static void GenerateLkpCreateToEntityMapping(StringBuilder sb, string baseName)
         {
-            var propName = ToPascalCase(baseName);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"                .ForMember(dest => dest.{propName}, opt => opt.MapFrom(src => src.{propName}Code))");
+            GenerateLkpToEntityMapping(sb, baseName);
         }
 
         private static void GenerateLkpUpdateToEntityMapping(StringBuilder sb, string baseName)
+        {
+            GenerateLkpToEntityMapping(sb, baseName);
+        }
+
+        private static void GenerateLkpToEntityMapping(StringBuilder sb, string baseName)
         {
             var propName = ToPascalCase(baseName);
             sb.AppendLine(CultureInfo.InvariantCulture, $"                .ForMember(dest => dest.{propName}, opt => opt.MapFrom(src => src.{propName}Code))");
@@ -242,14 +246,15 @@ namespace TargCC.Core.Generators.API
 
         private static void GenerateSplitListCreateToEntityMapping(StringBuilder sb, string columnName, string prefix)
         {
-            var propName = GetPropertyName(columnName);
-            var separator = prefix == "SPL" ? "|" : ",";
-
-            sb.AppendLine(CultureInfo.InvariantCulture, $"                .ForMember(dest => dest.{propName}, opt => opt.MapFrom(src => ");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"                    src.{propName} != null ? string.Join(\"{separator}\", src.{propName}) : string.Empty))");
+            GenerateSplitListToEntityMapping(sb, columnName, prefix);
         }
 
         private static void GenerateSplitListUpdateToEntityMapping(StringBuilder sb, string columnName, string prefix)
+        {
+            GenerateSplitListToEntityMapping(sb, columnName, prefix);
+        }
+
+        private static void GenerateSplitListToEntityMapping(StringBuilder sb, string columnName, string prefix)
         {
             var propName = GetPropertyName(columnName);
             var separator = prefix == "SPL" ? "|" : ",";
@@ -260,11 +265,15 @@ namespace TargCC.Core.Generators.API
 
         private static void GenerateEnoCreateToEntityMapping(StringBuilder sb, string baseName)
         {
-            var propName = ToPascalCase(baseName);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"                .ForMember(dest => dest.{propName}Hashed, opt => opt.MapFrom(src => HashPassword(src.{propName}))) // TODO: Implement password hashing");
+            GenerateEnoToEntityMapping(sb, baseName);
         }
 
         private static void GenerateEnoUpdateToEntityMapping(StringBuilder sb, string baseName)
+        {
+            GenerateEnoToEntityMapping(sb, baseName);
+        }
+
+        private static void GenerateEnoToEntityMapping(StringBuilder sb, string baseName)
         {
             var propName = ToPascalCase(baseName);
             sb.AppendLine(CultureInfo.InvariantCulture, $"                .ForMember(dest => dest.{propName}Hashed, opt => opt.MapFrom(src => HashPassword(src.{propName}))) // TODO: Implement password hashing");
