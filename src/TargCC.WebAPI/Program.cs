@@ -627,6 +627,72 @@ try
     .WithName("DownloadGeneratedFiles")
     .WithOpenApi();
 
+    // Get file contents for preview
+    app.MapPost("/api/generate/preview", async (
+        [FromBody] DownloadRequest request,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            if (request.FilePaths == null || request.FilePaths.Count == 0)
+            {
+                return Results.BadRequest(new { Success = false, Message = "No files specified" });
+            }
+
+            var files = new List<object>();
+
+            foreach (var filePath in request.FilePaths)
+            {
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(filePath);
+                        var content = await File.ReadAllTextAsync(filePath);
+
+                        // Determine language based on file extension
+                        var language = "csharp";
+                        if (fileName.EndsWith(".ts") || fileName.EndsWith(".tsx"))
+                            language = "typescript";
+                        else if (fileName.EndsWith(".js") || fileName.EndsWith(".jsx"))
+                            language = "javascript";
+                        else if (fileName.EndsWith(".sql"))
+                            language = "sql";
+                        else if (fileName.EndsWith(".json"))
+                            language = "json";
+
+                        files.Add(new
+                        {
+                            name = fileName,
+                            code = content,
+                            language = language
+                        });
+
+                        // Limit to first 10 files for preview
+                        if (files.Count >= 10) break;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Error reading file {FilePath}", filePath);
+                    }
+                }
+            }
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Files = files
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating preview");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("PreviewGeneratedFiles")
+    .WithOpenApi();
+
     // System info endpoint
     app.MapGet("/api/system/info", () => Results.Ok(new
     {

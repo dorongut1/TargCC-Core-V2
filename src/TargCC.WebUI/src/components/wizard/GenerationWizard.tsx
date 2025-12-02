@@ -17,6 +17,9 @@ import GenerationOptions from './GenerationOptions';
 import ProgressTracker from './ProgressTracker';
 import type { ProgressItem } from './ProgressTracker';
 import { generate } from '../../api/generationApi';
+import { API_CONFIG } from '../../api/config';
+import CodeViewer from '../code/CodeViewer';
+import type { CodeFile } from '../code/CodeViewer';
 
 export interface WizardData {
   selectedTables: string[];
@@ -123,6 +126,7 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedFilePaths, setGeneratedFilePaths] = useState<string[]>([]);
+  const [previewFiles, setPreviewFiles] = useState<CodeFile[]>([]);
 
   useEffect(() => {
     // Start generation when component mounts
@@ -291,6 +295,24 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
 
           setIsComplete(true);
 
+          // Load file contents for preview
+          try {
+            const previewResponse = await fetch(`${API_CONFIG.BASE_URL}/api/generate/preview`, {
+              method: 'POST',
+              headers: API_CONFIG.DEFAULT_HEADERS,
+              body: JSON.stringify({ filePaths: result.generatedFiles }),
+            });
+
+            if (previewResponse.ok) {
+              const previewData = await previewResponse.json();
+              if (previewData.Success && previewData.Files) {
+                setPreviewFiles(previewData.Files);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to load preview:', err);
+          }
+
           // Call parent handler if provided
           if (onGenerate) {
             await onGenerate();
@@ -374,9 +396,9 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
                 startIcon={<DownloadIcon />}
                 onClick={async () => {
                   try {
-                    const response = await fetch('/api/generate/download', {
+                    const response = await fetch(`${API_CONFIG.BASE_URL}/api/generate/download`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: API_CONFIG.DEFAULT_HEADERS,
                       body: JSON.stringify({ filePaths: generatedFilePaths }),
                     });
 
@@ -400,6 +422,19 @@ const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
               </Button>
             </Box>
           </Alert>
+
+          {/* Code Preview */}
+          {previewFiles.length > 0 && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Generated Code Preview
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Review the generated code for {data.selectedTables.join(', ')}
+              </Typography>
+              <CodeViewer files={previewFiles} />
+            </Box>
+          )}
         </>
       )}
     </Box>
