@@ -44,7 +44,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
 
-            GenerateControllerClass(sb, table, entityName, controllerName, config);
+            GenerateControllerClass(sb, entityName, controllerName, config);
 
             sb.AppendLine("}");
 
@@ -62,7 +62,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
         }
 
-        private static void GenerateControllerClass(StringBuilder sb, Table table, string entityName, string controllerName, ApiGeneratorConfig config)
+        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, ApiGeneratorConfig config)
         {
             if (config.GenerateXmlDocumentation)
             {
