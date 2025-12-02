@@ -30,16 +30,17 @@ export interface WizardData {
   };
 }
 
-interface WizardStep {
-  label: string;
-  component: React.ComponentType<WizardStepProps>;
-  validate?: (data: WizardData) => boolean;
-}
-
 interface WizardStepProps {
   data: WizardData;
   onChange: (data: WizardData) => void;
   setActiveStep?: (step: number) => void;
+  onGenerate?: () => Promise<void>;
+}
+
+interface WizardStep {
+  label: string;
+  component: React.ComponentType<WizardStepProps>;
+  validate?: (data: WizardData) => boolean;
 }
 
 const ReviewStep = ({ data, setActiveStep }: WizardStepProps) => (
@@ -47,7 +48,7 @@ const ReviewStep = ({ data, setActiveStep }: WizardStepProps) => (
     <Typography variant="h6" gutterBottom>
       Review Your Selections
     </Typography>
-    
+
     <Typography variant="body2" color="text.secondary" paragraph>
       Review your choices before starting code generation
     </Typography>
@@ -67,10 +68,10 @@ const ReviewStep = ({ data, setActiveStep }: WizardStepProps) => (
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         {data.selectedTables.length > 0 ? (
           data.selectedTables.map((table) => (
-            <Chip 
-              key={table} 
-              label={table} 
-              color="primary" 
+            <Chip
+              key={table}
+              label={table}
+              color="primary"
               variant="outlined"
             />
           ))
@@ -110,183 +111,245 @@ const ReviewStep = ({ data, setActiveStep }: WizardStepProps) => (
 
     {/* Summary Stats */}
     <Alert severity="info" sx={{ mt: 3 }}>
-      Ready to generate {Object.values(data.options).filter(Boolean).length} component 
+      Ready to generate {Object.values(data.options).filter(Boolean).length} component
       type{Object.values(data.options).filter(Boolean).length !== 1 ? 's' : ''} for {data.selectedTables.length} table{data.selectedTables.length !== 1 ? 's' : ''}
     </Alert>
   </Box>
 );
 
-const GenerationProgress = ({ data }: WizardStepProps) => {
+const GenerationProgress = ({ data, onGenerate }: WizardStepProps) => {
   const [progress, setProgress] = useState(0);
-  const [currentFile, setCurrentFile] = useState<string>('');
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
-  const [estimatedTime, setEstimatedTime] = useState(30);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Build initial progress items based on selected options
-    const initialItems: ProgressItem[] = [];
-    
-    data.selectedTables.forEach((table) => {
-      if (data.options.entities) {
-        initialItems.push({
-          id: `entity-${table}`,
-          name: `${table}Entity.cs`,
-          type: 'entity',
-          status: 'pending'
-        });
-      }
-      if (data.options.repositories) {
-        initialItems.push({
-          id: `repo-${table}`,
-          name: `${table}Repository.cs`,
-          type: 'repository',
-          status: 'pending'
-        });
-      }
-      if (data.options.handlers) {
-        initialItems.push({
-          id: `handler-create-${table}`,
-          name: `Create${table}Handler.cs`,
-          type: 'handler',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `handler-query-${table}`,
-          name: `Get${table}Handler.cs`,
-          type: 'handler',
-          status: 'pending'
-        });
-      }
-      if (data.options.api) {
-        initialItems.push({
-          id: `api-${table}`,
-          name: `${table}Controller.cs`,
-          type: 'api',
-          status: 'pending'
-        });
-      }
-      if (data.options.reactUI) {
-        // Add React UI files (8 files per table)
-        initialItems.push({
-          id: `react-types-${table}`,
-          name: `${table}.types.ts`,
-          type: 'typescript',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-api-${table}`,
-          name: `${table}.api.ts`,
-          type: 'typescript',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-hooks-${table}`,
-          name: `use${table}.ts`,
-          type: 'typescript',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-form-${table}`,
-          name: `${table}Form.tsx`,
-          type: 'react',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-list-${table}`,
-          name: `${table}List.tsx`,
-          type: 'react',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-detail-${table}`,
-          name: `${table}Detail.tsx`,
-          type: 'react',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-routes-${table}`,
-          name: `${table}Routes.tsx`,
-          type: 'react',
-          status: 'pending'
-        });
-        initialItems.push({
-          id: `react-index-${table}`,
-          name: `index.ts`,
-          type: 'typescript',
-          status: 'pending'
-        });
-      }
-    });
+    // Start generation when component mounts
+    const runGeneration = async () => {
+      if (isGenerating || isComplete) return;
 
-    setProgressItems(initialItems);
+      setIsGenerating(true);
+      setError(null);
 
-    // Simulate generation process - sequential processing
-    const processNextItem = (index: number) => {
-      if (index >= initialItems.length) {
-        setIsComplete(true);
-        setCurrentFile('');
-        return;
+      try {
+        // Build expected files list for display
+        const expectedFiles: ProgressItem[] = [];
+
+        data.selectedTables.forEach((table) => {
+          if (data.options.entities) {
+            expectedFiles.push({
+              id: `entity-${table}`,
+              name: `${table}Entity.cs`,
+              type: 'entity',
+              status: 'pending'
+            });
+          }
+          if (data.options.repositories) {
+            expectedFiles.push({
+              id: `repo-${table}`,
+              name: `${table}Repository.cs`,
+              type: 'repository',
+              status: 'pending'
+            });
+          }
+          if (data.options.handlers) {
+            expectedFiles.push({
+              id: `handler-create-${table}`,
+              name: `Create${table}Handler.cs`,
+              type: 'handler',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `handler-query-${table}`,
+              name: `Get${table}Handler.cs`,
+              type: 'handler',
+              status: 'pending'
+            });
+          }
+          if (data.options.api) {
+            expectedFiles.push({
+              id: `api-${table}`,
+              name: `${table}Controller.cs`,
+              type: 'api',
+              status: 'pending'
+            });
+          }
+          if (data.options.reactUI) {
+            // Add React UI files (8 files per table)
+            expectedFiles.push({
+              id: `react-types-${table}`,
+              name: `${table}.types.ts`,
+              type: 'typescript',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-api-${table}`,
+              name: `${table}.api.ts`,
+              type: 'typescript',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-hooks-${table}`,
+              name: `use${table}.ts`,
+              type: 'typescript',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-form-${table}`,
+              name: `${table}Form.tsx`,
+              type: 'react',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-list-${table}`,
+              name: `${table}List.tsx`,
+              type: 'react',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-detail-${table}`,
+              name: `${table}Detail.tsx`,
+              type: 'react',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-routes-${table}`,
+              name: `${table}Routes.tsx`,
+              type: 'react',
+              status: 'pending'
+            });
+            expectedFiles.push({
+              id: `react-index-${table}`,
+              name: `index.ts`,
+              type: 'typescript',
+              status: 'pending'
+            });
+          }
+        });
+
+        setProgressItems(expectedFiles);
+        setProgress(10); // Show initial progress
+
+        // Call the actual generation API
+        const result = await generate({
+          tableNames: data.selectedTables,
+          options: {
+            generateEntity: data.options.entities,
+            generateRepository: data.options.repositories,
+            generateStoredProcedures: true,
+            generateController: data.options.api,
+            generateReactUI: data.options.reactUI,
+            overwriteExisting: false,
+          }
+        });
+
+        if (result.success) {
+          setProgress(100);
+
+          // Use actual generated files from API if available
+          if (result.generatedFiles && result.generatedFiles.length > 0) {
+            const actualFiles: ProgressItem[] = result.generatedFiles.map((filePath: string, index: number) => {
+              const fileName = filePath.split(/[\\/]/).pop() || filePath;
+
+              // Determine file type from extension
+              let fileType = 'default';
+              if (fileName.endsWith('.cs')) {
+                if (fileName.includes('Controller')) fileType = 'api';
+                else if (fileName.includes('Repository')) fileType = 'repository';
+                else if (fileName.includes('Handler')) fileType = 'handler';
+                else fileType = 'entity';
+              } else if (fileName.endsWith('.tsx')) {
+                fileType = 'react';
+              } else if (fileName.endsWith('.ts')) {
+                fileType = 'typescript';
+              }
+
+              return {
+                id: `generated-${index}`,
+                name: fileName,
+                type: fileType,
+                status: 'complete' as const,
+                message: 'Generated'
+              };
+            });
+
+            setProgressItems(actualFiles);
+          } else {
+            // Fallback to expected files if API doesn't return file list
+            const completedFiles = expectedFiles.map(file => ({
+              ...file,
+              status: 'complete' as const,
+              message: 'Generated'
+            }));
+
+            setProgressItems(completedFiles);
+          }
+
+          setIsComplete(true);
+
+          // Call parent handler if provided
+          if (onGenerate) {
+            await onGenerate();
+          }
+        } else {
+          // Mark as error
+          const errorFiles = expectedFiles.map(file => ({
+            ...file,
+            status: 'error' as const,
+            message: result.message || 'Failed'
+          }));
+
+          setProgressItems(errorFiles);
+          setError(result.message || 'Generation failed');
+        }
+      } catch (err) {
+        console.error('Generation error:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+
+        // Mark all as error
+        const errorFiles = progressItems.map(file => ({
+          ...file,
+          status: 'error' as const,
+          message: 'Failed'
+        }));
+        setProgressItems(errorFiles);
+      } finally {
+        setIsGenerating(false);
       }
-
-      const item = initialItems[index];
-      
-      // Set current file and status to processing
-      setCurrentFile(item.name);
-      setProgressItems(prev => prev.map((p, idx) => 
-        idx === index 
-          ? { ...p, status: 'processing' as const, message: 'Generating...' }
-          : p
-      ));
-
-      // After 600ms, mark as complete and move to next
-      setTimeout(() => {
-        setProgressItems(prev => prev.map((p, idx) => 
-          idx === index 
-            ? { ...p, status: 'complete' as const, message: 'Generated' }
-            : p
-        ));
-        
-        const newProgress = Math.round(((index + 1) / initialItems.length) * 100);
-        setProgress(newProgress);
-        
-        // Update estimated time
-        const remaining = initialItems.length - (index + 1);
-        setEstimatedTime(Math.round(remaining * 0.8));
-        
-        // Process next item after a small delay
-        setTimeout(() => processNextItem(index + 1), 200);
-      }, 600);
     };
 
-    // Start processing after a small delay
-    const startTimer = setTimeout(() => processNextItem(0), 500);
-
-    return () => {
-      clearTimeout(startTimer);
-    };
-  }, [data.selectedTables, data.options]);
+    runGeneration();
+  }, []); // Empty deps - run once on mount
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        {isComplete ? '✓ Generation Complete!' : 'Generating Code...'}
+        {isComplete ? '✓ Generation Complete!' : isGenerating ? 'Generating Code...' : 'Ready to Generate'}
       </Typography>
 
       <Typography variant="body2" color="text.secondary" paragraph>
-        {isComplete 
+        {isComplete
           ? `Successfully generated ${progressItems.length} files for ${data.selectedTables.length} table${data.selectedTables.length !== 1 ? 's' : ''}`
-          : `Generating ${progressItems.length} files...`
+          : isGenerating
+          ? `Generating ${progressItems.length} files...`
+          : 'Preparing to generate code...'
         }
       </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {/* Progress Tracker */}
       <Box sx={{ mb: 3 }}>
         <ProgressTracker
           items={progressItems}
           currentProgress={progress}
-          estimatedTimeRemaining={isComplete ? 0 : Math.round(estimatedTime)}
-          currentFile={currentFile}
+          estimatedTimeRemaining={isComplete ? 0 : undefined}
+          currentFile={isGenerating ? 'Generating...' : undefined}
         />
       </Box>
 
@@ -382,51 +445,6 @@ const GenerationWizard = () => {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handleFinish = async () => {
-    try {
-      setGenerating(true);
-      setProgress([]);
-
-      // Call the actual generation API
-      const result = await generate({
-        tableNames: wizardData.selectedTables,
-        options: {
-          generateEntity: wizardData.options.entities,
-          generateRepository: wizardData.options.repositories,
-          generateStoredProcedures: true, // Always generate SPs
-          generateController: wizardData.options.api,
-          generateReactUI: wizardData.options.reactUI,
-        }
-      });
-
-      if (result.success) {
-        const progressItems: ProgressItem[] = [
-          { label: 'Entity Generation', status: 'completed' },
-          { label: 'Repository Generation', status: 'completed' },
-          { label: 'API Generation', status: 'completed' },
-          { label: 'SQL Procedures', status: 'completed' },
-        ];
-
-        if (wizardData.options.reactUI) {
-          progressItems.push({ label: 'React UI Components', status: 'completed' });
-        }
-
-        setProgress(progressItems);
-        setActiveStep((prev) => prev + 1); // Move to completion step
-      } else {
-        setProgress([
-          { label: 'Generation Failed', status: 'error' },
-        ]);
-        setValidationError(result.message || 'Generation failed');
-      }
-    } catch (error) {
-      console.error('Generation error:', error);
-      setValidationError(error instanceof Error ? error.message : 'Generation failed');
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const CurrentStepComponent = steps[activeStep].component;
 
   return (
@@ -450,9 +468,9 @@ const GenerationWizard = () => {
       )}
 
       <Paper sx={{ p: 3, minHeight: 400 }}>
-        <CurrentStepComponent 
-          data={wizardData} 
-          onChange={setWizardData} 
+        <CurrentStepComponent
+          data={wizardData}
+          onChange={setWizardData}
           setActiveStep={setActiveStep}
         />
       </Paper>
@@ -460,8 +478,8 @@ const GenerationWizard = () => {
       {/* Navigation buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
         {/* Back button - always show except on first step */}
-        <Button 
-          disabled={activeStep === 0} 
+        <Button
+          disabled={activeStep === 0}
           onClick={handleBack}
         >
           Back
