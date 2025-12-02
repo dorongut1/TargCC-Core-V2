@@ -456,54 +456,115 @@ public class GenerationService : IGenerationService
             // Analyze database
             var (schema, table) = await AnalyzeDatabaseAsync(connectionString, tableName);
 
-            // Generate React UI components using UIGeneratorOrchestrator
-            _output.Info("Generating React UI components...");
-            var orchestrator = new TargCC.Core.Generators.UI.UIGeneratorOrchestrator(
-                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.UIGeneratorOrchestrator>());
+            var className = GetClassName(table.Name);
+            var componentDir = Path.Combine(outputDirectory, className);
+            Directory.CreateDirectory(componentDir);
 
+            // Configure UI generation
             var uiConfig = new TargCC.Core.Generators.UI.UIGeneratorConfig
             {
                 OutputDirectory = outputDirectory,
-                GenerateForm = true,
-                GenerateList = true,
-                GenerateDetail = true,
-                GenerateOrchestrator = true,
-                GenerateApiClient = true,
-                GenerateHooks = true,
-                GenerateTypes = true
+                TypeScriptNamespace = "generated",
+                UseReactQuery = true,
+                UseMaterialUI = true,
+                GenerateComments = true,
+                GenerateJsDoc = true
             };
 
-            var uiResult = await orchestrator.GenerateAsync(table, schema, uiConfig);
-
-            if (uiResult.Success)
+            var componentConfig = new TargCC.Core.Generators.UI.Components.ComponentGeneratorConfig
             {
-                // Add all generated files to result
-                foreach (var file in uiResult.GeneratedFiles)
-                {
-                    result.GeneratedFiles.Add(new GeneratedFile
-                    {
-                        FilePath = file.FilePath,
-                        FileType = file.FileType,
-                        SizeBytes = file.Content?.Length ?? 0,
-                        LineCount = file.Content?.Split('\n').Length ?? 0
-                    });
-                    _output.Success($"Generated: {Path.GetFileName(file.FilePath)}");
-                }
+                OutputDirectory = outputDirectory,
+                Framework = TargCC.Core.Generators.UI.Components.UIFramework.MaterialUI,
+                ValidationLibrary = TargCC.Core.Generators.UI.Components.FormValidationLibrary.ReactHookForm,
+                UseTypeScript = true,
+                UseReactRouter = true,
+                IncludeAccessibility = true
+            };
 
-                result.Success = true;
-            }
-            else
+            // 1. Generate TypeScript Types
+            _output.Info("Generating TypeScript types...");
+            var typesGenerator = new TargCC.Core.Generators.UI.TypeScriptTypeGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.TypeScriptTypeGenerator>());
+            var typesCode = await typesGenerator.GenerateAsync(table, schema, uiConfig);
+            var typesPath = Path.Combine(componentDir, $"{className}.types.ts");
+            await File.WriteAllTextAsync(typesPath, typesCode);
+            result.GeneratedFiles.Add(new GeneratedFile
             {
-                result.Success = false;
-                result.ErrorMessage = "React UI generation failed";
-                foreach (var error in uiResult.Errors)
+                FilePath = typesPath,
+                FileType = "TypeScriptTypes",
+                SizeBytes = typesCode.Length,
+                LineCount = typesCode.Split('\n').Length
+            });
+            _output.Success($"Generated: {className}.types.ts");
+
+            // 2. Generate API Client
+            _output.Info("Generating API client...");
+            var apiGenerator = new TargCC.Core.Generators.UI.ReactApiGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.ReactApiGenerator>());
+            var apiCode = await apiGenerator.GenerateAsync(table, schema, uiConfig);
+            var apiPath = Path.Combine(componentDir, $"{className}.api.ts");
+            await File.WriteAllTextAsync(apiPath, apiCode);
+            result.GeneratedFiles.Add(new GeneratedFile
+            {
+                FilePath = apiPath,
+                FileType = "ApiClient",
+                SizeBytes = apiCode.Length,
+                LineCount = apiCode.Split('\n').Length
+            });
+            _output.Success($"Generated: {className}.api.ts");
+
+            // 3. Generate React Hooks
+            _output.Info("Generating React hooks...");
+            var hookGenerator = new TargCC.Core.Generators.UI.ReactHookGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.ReactHookGenerator>());
+            var hooksCode = await hookGenerator.GenerateAsync(table, schema, uiConfig);
+            var hooksPath = Path.Combine(componentDir, $"use{className}.ts");
+            await File.WriteAllTextAsync(hooksPath, hooksCode);
+            result.GeneratedFiles.Add(new GeneratedFile
+            {
+                FilePath = hooksPath,
+                FileType = "ReactHooks",
+                SizeBytes = hooksCode.Length,
+                LineCount = hooksCode.Split('\n').Length
+            });
+            _output.Success($"Generated: use{className}.ts");
+
+            // 4. Generate React Components (Form, List, Detail, Routes, Index)
+            _output.Info("Generating React components...");
+            var listGenerator = new TargCC.Core.Generators.UI.Components.ReactListComponentGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.Components.ReactListComponentGenerator>());
+            var formGenerator = new TargCC.Core.Generators.UI.Components.ReactFormComponentGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.Components.ReactFormComponentGenerator>());
+            var detailGenerator = new TargCC.Core.Generators.UI.Components.ReactDetailComponentGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.Components.ReactDetailComponentGenerator>());
+            var componentOrchestrator = new TargCC.Core.Generators.UI.Components.ReactComponentOrchestratorGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.UI.Components.ReactComponentOrchestratorGenerator>(),
+                listGenerator,
+                formGenerator,
+                detailGenerator);
+
+            var components = await componentOrchestrator.GenerateAllComponentsAsync(table, schema, componentConfig);
+
+            foreach (var kvp in components)
+            {
+                var filePath = Path.Combine(componentDir, kvp.Key);
+                var fileCode = kvp.Value;
+                await File.WriteAllTextAsync(filePath, fileCode);
+                result.GeneratedFiles.Add(new GeneratedFile
                 {
-                    _output.Error(error);
-                }
+                    FilePath = filePath,
+                    FileType = "ReactComponent",
+                    SizeBytes = fileCode.Length,
+                    LineCount = fileCode.Split('\n').Length
+                });
+                _output.Success($"Generated: {kvp.Key}");
             }
 
+            result.Success = true;
             sw.Stop();
             result.Duration = sw.Elapsed;
+
+            _output.Success($"✓ Generated {result.GeneratedFiles.Count} React UI files for {tableName}");
         }
         catch (Exception ex)
         {
@@ -514,6 +575,23 @@ public class GenerationService : IGenerationService
         }
 
         return result;
+    }
+
+    private static string GetClassName(string tableName)
+    {
+        // Remove common prefixes
+        var prefixes = new[] { "tbl", "TBL", "Tbl" };
+        foreach (var prefix in prefixes)
+        {
+            if (tableName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                tableName = tableName.Substring(prefix.Length);
+                break;
+            }
+        }
+
+        // Convert to PascalCase
+        return char.ToUpper(tableName[0]) + tableName.Substring(1);
     }
 
     private async Task<(DatabaseSchema Schema, Table Table)> AnalyzeDatabaseAsync(
