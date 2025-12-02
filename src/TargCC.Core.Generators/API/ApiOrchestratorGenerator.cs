@@ -164,15 +164,15 @@ namespace TargCC.Core.Generators.API
             }
 
             // Simple pluralization rules
-            if (word.EndsWith("y", StringComparison.OrdinalIgnoreCase) && word.Length > 1 &&
+            if (word.EndsWith('y', StringComparison.OrdinalIgnoreCase) && word.Length > 1 &&
                 !IsVowel(word[word.Length - 2]))
             {
-                return word.Substring(0, word.Length - 1) + "ies";
+                return string.Concat(word.AsSpan(0, word.Length - 1), "ies");
             }
 
-            if (word.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-                word.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-                word.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            if (word.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
+                word.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
                 word.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 word.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {
