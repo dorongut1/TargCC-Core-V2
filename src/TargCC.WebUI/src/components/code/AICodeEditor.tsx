@@ -298,52 +298,66 @@ const AICodeEditor = ({
         </Tabs>
       </Paper>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 2, height: `calc(${height} + 100px)`, overflow: 'auto' }}>
+      <Grid container spacing={2} sx={{ minHeight: height }}>
+        <Grid item xs={12} lg={8}>
+          <Paper
+            sx={{
+              p: 2,
+              height: '100%',
+              minHeight: height,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
             {activeTab === 'editor' && (
-              <Box>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="subtitle2">Code Editor</Typography>
                 </Box>
-                <Editor
-                  height={height}
-                  language={language}
-                  value={currentCode}
-                  theme={theme}
-                  onChange={handleCodeEdit}
-                  options={{
-                    readOnly: false,
-                    minimap: { enabled: true },
-                    scrollBeyondLastLine: false,
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                    folding: true,
-                    automaticLayout: true,
-                    wordWrap: 'on',
-                  }}
-                />
+                <Box sx={{ flex: 1, minHeight: 500 }}>
+                  <Editor
+                    height="100%"
+                    language={language}
+                    value={currentCode}
+                    theme={theme}
+                    onChange={handleCodeEdit}
+                    options={{
+                      readOnly: false,
+                      minimap: { enabled: true },
+                      scrollBeyondLastLine: false,
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      folding: true,
+                      automaticLayout: true,
+                      wordWrap: 'on',
+                    }}
+                  />
+                </Box>
               </Box>
             )}
 
             {activeTab === 'diff' && (
-              <CodeDiffViewer
-                originalCode={originalCode}
-                modifiedCode={currentCode}
-                changes={changes}
-                height={height}
-              />
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <CodeDiffViewer
+                  originalCode={originalCode}
+                  modifiedCode={currentCode}
+                  changes={changes}
+                  height="100%"
+                />
+              </Box>
             )}
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <AIChatPanel
-            chatHistory={chatHistory}
-            onSendMessage={handleAIInstruction}
-            isLoading={isModifying}
-            height={`calc(${height} + 100px)`}
-          />
+        <Grid item xs={12} lg={4}>
+          <Box sx={{ position: 'sticky', top: 16 }}>
+            <AIChatPanel
+              chatHistory={chatHistory}
+              onSendMessage={handleAIInstruction}
+              isLoading={isModifying}
+              height={height}
+            />
+          </Box>
         </Grid>
       </Grid>
     </Box>

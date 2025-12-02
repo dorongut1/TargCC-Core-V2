@@ -166,6 +166,57 @@ const GenerationProgress = ({ data }: WizardStepProps) => {
           status: 'pending'
         });
       }
+      if (data.options.reactUI) {
+        // Add React UI files (8 files per table)
+        initialItems.push({
+          id: `react-types-${table}`,
+          name: `${table}.types.ts`,
+          type: 'typescript',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-api-${table}`,
+          name: `${table}.api.ts`,
+          type: 'typescript',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-hooks-${table}`,
+          name: `use${table}.ts`,
+          type: 'typescript',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-form-${table}`,
+          name: `${table}Form.tsx`,
+          type: 'react',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-list-${table}`,
+          name: `${table}List.tsx`,
+          type: 'react',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-detail-${table}`,
+          name: `${table}Detail.tsx`,
+          type: 'react',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-routes-${table}`,
+          name: `${table}Routes.tsx`,
+          type: 'react',
+          status: 'pending'
+        });
+        initialItems.push({
+          id: `react-index-${table}`,
+          name: `index.ts`,
+          type: 'typescript',
+          status: 'pending'
+        });
+      }
     });
 
     setProgressItems(initialItems);

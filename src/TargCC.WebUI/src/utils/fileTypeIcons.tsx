@@ -4,6 +4,8 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ApiIcon from '@mui/icons-material/Api';
 import CodeIcon from '@mui/icons-material/Code';
 import DataObjectIcon from '@mui/icons-material/DataObject';
+import JavascriptIcon from '@mui/icons-material/Javascript';
+import WebIcon from '@mui/icons-material/Web';
 
 /**
  * Maps file types to their corresponding Material-UI icons
@@ -28,6 +30,10 @@ export const getFileTypeIcon = (type: string) => {
     case 'model':
     case 'dto':
       return <DataObjectIcon />;
+    case 'typescript':
+      return <JavascriptIcon />;
+    case 'react':
+      return <WebIcon />;
     default:
       return <CodeIcon />;
   }
@@ -55,6 +61,10 @@ export const getFileTypeColor = (type: string): string => {
     case 'model':
     case 'dto':
       return 'warning';
+    case 'typescript':
+      return 'info';
+    case 'react':
+      return 'primary';
     default:
       return 'default';
   }

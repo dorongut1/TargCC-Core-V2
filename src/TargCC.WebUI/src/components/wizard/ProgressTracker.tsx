@@ -1,9 +1,12 @@
-import { Box, Paper, LinearProgress, Typography, Chip } from '@mui/material';
+import { useState } from 'react';
+import { Box, Paper, LinearProgress, Typography, Chip, IconButton, Tooltip } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import PendingIcon from '@mui/icons-material/Pending';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getFileTypeIcon, getFileTypeColor } from '../../utils/fileTypeIcons';
+import ReactComponentPreview from '../code/ReactComponentPreview';
 
 export interface ProgressItem {
   id: string;
@@ -11,6 +14,7 @@ export interface ProgressItem {
   type: string;
   status: 'pending' | 'processing' | 'complete' | 'error';
   message?: string;
+  code?: string; // Optional: the generated code for preview
 }
 
 export interface ProgressTrackerProps {
@@ -20,12 +24,18 @@ export interface ProgressTrackerProps {
   currentFile?: string;
 }
 
-const ProgressTracker = ({ 
-  items, 
+const ProgressTracker = ({
+  items,
   currentProgress,
   estimatedTimeRemaining,
   currentFile
 }: ProgressTrackerProps) => {
+  const [previewItem, setPreviewItem] = useState<ProgressItem | null>(null);
+
+  const isReactComponent = (item: ProgressItem) => {
+    return item.type === 'react' && item.name.endsWith('.tsx');
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'complete':
@@ -163,15 +173,37 @@ const ProgressTracker = ({
               )}
             </Box>
 
-            <Chip 
+            <Chip
               label={item.status}
               color={getStatusColor(item.status)}
               size="small"
               variant="outlined"
             />
+
+            {isReactComponent(item) && item.status === 'complete' && (
+              <Tooltip title="Preview Component">
+                <IconButton
+                  size="small"
+                  onClick={() => setPreviewItem(item)}
+                  color="primary"
+                >
+                  <VisibilityIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         ))}
       </Box>
+
+      {/* Preview Dialog */}
+      {previewItem && (
+        <ReactComponentPreview
+          code={previewItem.code || `// Code not available for preview\n// Component: ${previewItem.name}`}
+          componentName={previewItem.name.replace('.tsx', '')}
+          open={previewItem !== null}
+          onClose={() => setPreviewItem(null)}
+        />
+      )}
     </Paper>
   );
 };
