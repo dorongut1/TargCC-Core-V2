@@ -17,10 +17,8 @@ public class ProgramCsGenerator : IProgramCsGenerator
         var sb = new StringBuilder();
 
         // Using statements
-        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Application;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure;");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure.Data;");
         sb.AppendLine();
 
         // Builder creation
@@ -32,12 +30,6 @@ public class ProgramCsGenerator : IProgramCsGenerator
         sb.AppendLine("builder.Services.AddControllers();");
         sb.AppendLine("builder.Services.AddEndpointsApiExplorer();");
         sb.AppendLine("builder.Services.AddSwaggerGen();");
-        sb.AppendLine();
-
-        // Database context
-        sb.AppendLine("// Database");
-        sb.AppendLine("builder.Services.AddDbContext<ApplicationDbContext>(options =>");
-        sb.AppendLine("    options.UseSqlServer(builder.Configuration.GetConnectionString(\"DefaultConnection\")));");
         sb.AppendLine();
 
         // Application services
