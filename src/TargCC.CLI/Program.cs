@@ -77,7 +77,14 @@ public class Program
         services.AddSingleton<Services.Analysis.IAnalysisService, Services.Analysis.AnalysisService>();
         services.AddSingleton<Documentation.IDocumentationGenerator, Documentation.DocumentationGenerator>();
         services.AddSingleton<IProjectGenerationService, ProjectGenerationService>();
-        
+
+        // Database Analyzer (connection string will be provided at runtime)
+        services.AddSingleton<Core.Interfaces.IDatabaseAnalyzer>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<Core.Analyzers.Database.DatabaseAnalyzer>>();
+            return new Core.Analyzers.Database.DatabaseAnalyzer(string.Empty, logger);
+        });
+
         // Watch Mode Services
         services.AddSingleton<Core.Analyzers.ISchemaChangeDetector, Core.Analyzers.SchemaChangeDetector>();
         services.AddSingleton<Core.Services.IGenerationTracker, Core.Services.GenerationTracker>();
