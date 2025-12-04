@@ -4,12 +4,10 @@
 
 namespace TargCC.Core.Tests.Integration
 {
+    using System.Linq;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using Microsoft.Extensions.Logging;
-    using Moq;
     using TargCC.Core.Generators.Sql.Templates;
-    using TargCC.Core.Interfaces.Models;
     using TargCC.Core.Tests.TestHelpers;
     using Xunit;
 
@@ -18,15 +16,6 @@ namespace TargCC.Core.Tests.Integration
     /// </summary>
     public class SqlGeneratorIntegrationTests
     {
-        private readonly Mock<ILogger> _mockLogger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SqlGeneratorIntegrationTests"/> class.
-        /// </summary>
-        public SqlGeneratorIntegrationTests()
-        {
-            _mockLogger = new Mock<ILogger>();
-        }
 
         [Fact]
         public async Task EndToEnd_CompleteTableGeneration_GeneratesAllProcedures()
@@ -52,12 +41,9 @@ namespace TargCC.Core.Tests.Integration
                 .WithNonUniqueIndex("IX_Customer_Status", "lkp_Status")
                 .Build();
 
-            var getByIdTemplate = new SpGetByIdTemplate(_mockLogger.Object);
-            var updateTemplate = new SpUpdateTemplate(_mockLogger.Object);
-
             // Act - Generate all procedures
-            var getByIdSql = await getByIdTemplate.GenerateAsync(table);
-            var updateSql = await updateTemplate.GenerateAsync(table);
+            var getByIdSql = await SpGetByIdTemplate.GenerateAsync(table);
+            var updateSql = await SpUpdateTemplate.GenerateAsync(table);
             var indexSql = await SpGetByIndexTemplate.GenerateAllIndexProcedures(table);
 
             // Assert - Verify GetByID
@@ -106,12 +92,9 @@ namespace TargCC.Core.Tests.Integration
                 .WithColumn(c => c.WithName("Stock").AsInt().NotNullable().Build())
                 .Build();
 
-            var getByIdTemplate = new SpGetByIdTemplate(_mockLogger.Object);
-            var updateTemplate = new SpUpdateTemplate(_mockLogger.Object);
-
             // Act
-            var getByIdSql = await getByIdTemplate.GenerateAsync(table);
-            var updateSql = await updateTemplate.GenerateAsync(table);
+            var getByIdSql = await SpGetByIdTemplate.GenerateAsync(table);
+            var updateSql = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             getByIdSql.Should().Contain("SP_GetProductByID");
@@ -142,12 +125,9 @@ namespace TargCC.Core.Tests.Integration
                 .WithColumn(c => c.WithName("agg_RecordCount").AsInt().AsAggregate().Build())
                 .Build();
 
-            var getByIdTemplate = new SpGetByIdTemplate(_mockLogger.Object);
-            var updateTemplate = new SpUpdateTemplate(_mockLogger.Object);
-
             // Act
-            var getByIdSql = await getByIdTemplate.GenerateAsync(table);
-            var updateSql = await updateTemplate.GenerateAsync(table);
+            var getByIdSql = await SpGetByIdTemplate.GenerateAsync(table);
+            var updateSql = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert - GetByID should work normally
             getByIdSql.Should().Contain("SP_GetReportByID");
@@ -175,12 +155,9 @@ namespace TargCC.Core.Tests.Integration
                 .WithColumn(c => c.WithName("Discount").AsDecimal(5, 2).Build())
                 .Build();
 
-            var getByIdTemplate = new SpGetByIdTemplate(_mockLogger.Object);
-            var updateTemplate = new SpUpdateTemplate(_mockLogger.Object);
-
             // Act
-            var getByIdSql = await getByIdTemplate.GenerateAsync(table);
-            var updateSql = await updateTemplate.GenerateAsync(table);
+            var getByIdSql = await SpGetByIdTemplate.GenerateAsync(table);
+            var updateSql = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert - GetByID with composite key
             getByIdSql.Should().Contain("@OrderID int");
