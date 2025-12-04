@@ -135,3 +135,4 @@ Generated/
 # OS files
 .DS_Store
 Thumbs.db
+/src/TargCC.WebAPI/logs
