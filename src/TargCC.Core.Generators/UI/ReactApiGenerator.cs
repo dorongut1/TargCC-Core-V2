@@ -186,7 +186,7 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            sb.AppendLine("import { api } from '../config';");
+            sb.AppendLine("import { api } from './client';");
             sb.AppendLine("import type {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
