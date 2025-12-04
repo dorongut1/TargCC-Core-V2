@@ -706,6 +706,7 @@ export default App;
           }
         );
 
+        export const api = apiClient;
         export default apiClient;
         """;
     }
