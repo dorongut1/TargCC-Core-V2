@@ -151,8 +151,7 @@ public class ProjectGenerationService : IProjectGenerationService
         {
             Name = options.ProjectName,
             OutputDirectory = options.OutputDirectory,
-            Projects = projects.ToList(),
-            SlnPath = Path.Combine(options.OutputDirectory, $"{options.ProjectName}.sln")
+            Projects = projects.ToList()
         };
 
         var solutionContent = _solutionGenerator.Generate(solutionInfo);
