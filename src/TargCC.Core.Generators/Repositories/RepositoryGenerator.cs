@@ -61,7 +61,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateAsync(Table table)
+    public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
         ArgumentNullException.ThrowIfNull(table);
 

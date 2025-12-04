@@ -120,5 +120,5 @@ public interface IRepositoryGenerator
     /// // public class CustomerRepository : ICustomerRepository { ... }
     /// </code>
     /// </example>
-    Task<string> GenerateAsync(Table table);
+    Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp");
 }

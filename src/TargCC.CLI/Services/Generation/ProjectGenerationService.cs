@@ -223,7 +223,7 @@ public class ProjectGenerationService : IProjectGenerationService
 
         // 4. Repository Implementation
         var repoGen = new RepositoryGenerator(_loggerFactory.CreateLogger<RepositoryGenerator>());
-        var repoImpl = await repoGen.GenerateAsync(table);
+        var repoImpl = await repoGen.GenerateAsync(table, rootNamespace);
         var repoImplPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "Repositories", $"{table.Name}Repository.cs");
         await SaveFileAsync(repoImplPath, repoImpl);
         filesCount++;

@@ -9,6 +9,7 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
+            // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -56,9 +57,10 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using System.Threading.Tasks;");
-            sb.AppendLine("using AutoMapper;");
+            sb.AppendLine("// using AutoMapper; // Removed - using entities directly");
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
-            sb.AppendLine("using Microsoft.Extensions.Logging;");
+            sb.AppendLine("using Microsoft.Extensions.Logging;
+            // Note: Domain.Interfaces using added by generator based on config.Namespace");
             sb.AppendLine();
         }
 
@@ -108,7 +110,7 @@ namespace TargCC.Core.Generators.API
         private static void GenerateFields(StringBuilder sb, string entityName)
         {
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly IRepository<{entityName}> _repository;");
-            sb.AppendLine("        private readonly IMapper _mapper;");
+            sb.AppendLine("        ");
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{MakePlural(entityName)}Controller> _logger;");
         }
 
@@ -126,11 +128,11 @@ namespace TargCC.Core.Generators.API
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public {controllerName}Controller(");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            IRepository<{entityName}> repository,");
-            sb.AppendLine("            IMapper mapper,");
+            sb.AppendLine("            ");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            ILogger<{controllerName}Controller> logger)");
             sb.AppendLine("        {");
             sb.AppendLine("            _repository = repository ?? throw new ArgumentNullException(nameof(repository));");
-            sb.AppendLine("            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));");
+            sb.AppendLine("            ");
             sb.AppendLine("            _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
             sb.AppendLine("        }");
         }

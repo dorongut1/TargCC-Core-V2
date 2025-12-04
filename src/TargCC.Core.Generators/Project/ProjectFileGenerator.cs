@@ -233,6 +233,9 @@ public class ProjectFileGenerator : IProjectFileGenerator
             ProjectType.Api => new List<PackageReference>
             {
                 new() { Name = "Swashbuckle.AspNetCore", Version = "6.5.0" },
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
                 new() { Name = "Microsoft.AspNetCore.OpenApi", Version = "8.0.10" }
             },
             ProjectType.Tests => new List<PackageReference>
