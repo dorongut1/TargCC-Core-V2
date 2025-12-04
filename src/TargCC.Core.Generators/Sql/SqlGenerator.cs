@@ -186,8 +186,8 @@ namespace TargCC.Core.Generators.Sql
             sb.AppendLine();
 
             var validTables = schema.Tables
-                .OrderBy(t => t.Name)
-                .Where(CanGenerate);
+                .Where(CanGenerate)
+                .OrderBy(t => t.Name);
 
             foreach (var table in validTables)
             {
