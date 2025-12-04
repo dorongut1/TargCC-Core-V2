@@ -64,11 +64,8 @@ public class ProgramCsGenerator : IProgramCsGenerator
 
         // Configure middleware
         sb.AppendLine("// Configure the HTTP request pipeline");
-        sb.AppendLine("if (app.Environment.IsDevelopment())");
-        sb.AppendLine("{");
-        sb.AppendLine("    app.UseSwagger();");
-        sb.AppendLine("    app.UseSwaggerUI();");
-        sb.AppendLine("}");
+        sb.AppendLine("app.UseSwagger();");
+        sb.AppendLine("app.UseSwaggerUI();");
         sb.AppendLine();
 
         sb.AppendLine("app.UseHttpsRedirection();");
