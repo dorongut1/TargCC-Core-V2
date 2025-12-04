@@ -273,7 +273,8 @@ public class ProjectGenerationService : IProjectGenerationService
         // React API Client
         var reactApiGen = new ReactApiGenerator(_loggerFactory.CreateLogger<ReactApiGenerator>());
         var reactApiCode = await reactApiGen.GenerateAsync(table, schema, uiConfig);
-        var reactApiPath = Path.Combine(outputDirectory, "client", "src", "api", $"{className}Api.ts");
+        var camelClassName = char.ToLowerInvariant(className[0]) + className.Substring(1);
+        var reactApiPath = Path.Combine(outputDirectory, "client", "src", "api", $"{camelClassName}Api.ts");
         await SaveFileAsync(reactApiPath, reactApiCode);
         filesCount++;
 
@@ -459,6 +460,7 @@ public class ProjectGenerationService : IProjectGenerationService
             "axios": "^1.6.2",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
+            "react-hook-form": "^7.48.2",
             "react-router-dom": "^6.20.0"
           },
           "devDependencies": {
