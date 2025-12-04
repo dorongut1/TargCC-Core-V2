@@ -8,6 +8,8 @@ using TargCC.Core.Generators.Sql;
 using TargCC.Core.Generators.Repositories;
 using TargCC.Core.Generators.API;
 using TargCC.Core.Generators.Common;
+using TargCC.Core.Generators.UI;
+using TargCC.Core.Generators.UI.Components;
 using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.CLI.Services.Generation;
@@ -128,9 +130,19 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("  ✓ Support files generated!");
             _output.BlankLine();
 
+            _output.Info("Step 5: Generating React Frontend Setup...");
+
+            // Generate React setup files
+            await GenerateReactSetupFilesAsync(outputDirectory, rootNamespace, tables);
+
+            _output.Info("  ✓ React setup files generated!");
+            _output.BlankLine();
+
             _output.Info($"✓ Complete project generated successfully!");
             _output.Info($"  Project: {rootNamespace}");
             _output.Info($"  Tables: {tables.Count}");
+            _output.Info($"  Backend: {outputDirectory}/src");
+            _output.Info($"  Frontend: {outputDirectory}/client");
             _output.Info($"  Location: {outputDirectory}");
         }
         catch (Exception ex)
@@ -243,6 +255,59 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(apiPath, apiCode);
         filesCount++;
 
+        // 6. React Frontend Files
+        var uiConfig = new UIGeneratorConfig
+        {
+            OutputDirectory = Path.Combine(outputDirectory, "client"),
+            ApiBaseUrl = "http://localhost:5000",
+            Framework = UIFramework.MaterialUI
+        };
+
+        // TypeScript Types
+        var typeGen = new TypeScriptTypeGenerator(_loggerFactory.CreateLogger<TypeScriptTypeGenerator>());
+        var typeCode = await typeGen.GenerateAsync(table, schema, uiConfig);
+        var typePath = Path.Combine(outputDirectory, "client", "src", "types", $"{className}.types.ts");
+        await SaveFileAsync(typePath, typeCode);
+        filesCount++;
+
+        // React API Client
+        var reactApiGen = new ReactApiGenerator(_loggerFactory.CreateLogger<ReactApiGenerator>());
+        var reactApiCode = await reactApiGen.GenerateAsync(table, schema, uiConfig);
+        var reactApiPath = Path.Combine(outputDirectory, "client", "src", "api", $"{className}Api.ts");
+        await SaveFileAsync(reactApiPath, reactApiCode);
+        filesCount++;
+
+        // React Hooks
+        var hookGen = new ReactHookGenerator(_loggerFactory.CreateLogger<ReactHookGenerator>());
+        var hookCode = await hookGen.GenerateAsync(table, schema, uiConfig);
+        var hookPath = Path.Combine(outputDirectory, "client", "src", "hooks", $"use{className}.ts");
+        await SaveFileAsync(hookPath, hookCode);
+        filesCount++;
+
+        // React Components
+        var componentConfig = new ComponentGeneratorConfig
+        {
+            OutputDirectory = Path.Combine(outputDirectory, "client", "src", "components"),
+        };
+
+        var listGen = new ReactListComponentGenerator(_loggerFactory.CreateLogger<ReactListComponentGenerator>());
+        var listCode = await listGen.GenerateAsync(table, schema, componentConfig);
+        var listPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}List.tsx");
+        await SaveFileAsync(listPath, listCode);
+        filesCount++;
+
+        var formGen = new ReactFormComponentGenerator(_loggerFactory.CreateLogger<ReactFormComponentGenerator>());
+        var formCode = await formGen.GenerateAsync(table, schema, componentConfig);
+        var formPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Form.tsx");
+        await SaveFileAsync(formPath, formCode);
+        filesCount++;
+
+        var detailGen = new ReactDetailComponentGenerator(_loggerFactory.CreateLogger<ReactDetailComponentGenerator>());
+        var detailCode = await detailGen.GenerateAsync(table, schema, componentConfig);
+        var detailPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Detail.tsx");
+        await SaveFileAsync(detailPath, detailCode);
+        filesCount++;
+
         return filesCount;
     }
 
@@ -317,5 +382,358 @@ public class ProjectGenerationService : IProjectGenerationService
         var infraDIPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "DependencyInjection.cs");
         await SaveFileAsync(infraDIPath, infrastructureDI);
         _output.Info("  ✓ Infrastructure/DependencyInjection.cs");
+    }
+
+    private async Task GenerateReactSetupFilesAsync(
+        string outputDirectory,
+        string rootNamespace,
+        List<Table> tables)
+    {
+        var clientDir = Path.Combine(outputDirectory, "client");
+
+        // package.json
+        var packageJson = GeneratePackageJson(rootNamespace);
+        await SaveFileAsync(Path.Combine(clientDir, "package.json"), packageJson);
+        _output.Info("  ✓ package.json");
+
+        // tsconfig.json
+        var tsConfig = GenerateTsConfig();
+        await SaveFileAsync(Path.Combine(clientDir, "tsconfig.json"), tsConfig);
+        _output.Info("  ✓ tsconfig.json");
+
+        // public/index.html
+        var indexHtml = GenerateIndexHtml(rootNamespace);
+        await SaveFileAsync(Path.Combine(clientDir, "public", "index.html"), indexHtml);
+        _output.Info("  ✓ public/index.html");
+
+        // src/index.tsx
+        var indexTsx = GenerateIndexTsx();
+        await SaveFileAsync(Path.Combine(clientDir, "src", "index.tsx"), indexTsx);
+        _output.Info("  ✓ src/index.tsx");
+
+        // src/App.tsx
+        var appTsx = GenerateAppTsx(tables);
+        await SaveFileAsync(Path.Combine(clientDir, "src", "App.tsx"), appTsx);
+        _output.Info("  ✓ src/App.tsx");
+
+        // src/api/client.ts (axios setup)
+        var apiClient = GenerateApiClient();
+        await SaveFileAsync(Path.Combine(clientDir, "src", "api", "client.ts"), apiClient);
+        _output.Info("  ✓ src/api/client.ts");
+
+        // .gitignore
+        var gitignore = GenerateGitignore();
+        await SaveFileAsync(Path.Combine(clientDir, ".gitignore"), gitignore);
+        _output.Info("  ✓ .gitignore");
+
+        // README.md
+        var readme = GenerateReactReadme(rootNamespace);
+        await SaveFileAsync(Path.Combine(clientDir, "README.md"), readme);
+        _output.Info("  ✓ README.md");
+    }
+
+    private static string GeneratePackageJson(string projectName)
+    {
+        return $$"""
+        {
+          "name": "{{projectName.ToLowerInvariant()}}-client",
+          "version": "0.1.0",
+          "private": true,
+          "dependencies": {
+            "@emotion/react": "^11.11.1",
+            "@emotion/styled": "^11.11.0",
+            "@mui/icons-material": "^5.14.19",
+            "@mui/material": "^5.14.20",
+            "@mui/x-data-grid": "^6.18.5",
+            "@tanstack/react-query": "^5.12.2",
+            "axios": "^1.6.2",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+            "react-router-dom": "^6.20.0"
+          },
+          "devDependencies": {
+            "@types/node": "^20.10.4",
+            "@types/react": "^18.2.42",
+            "@types/react-dom": "^18.2.17",
+            "@vitejs/plugin-react": "^4.2.1",
+            "typescript": "^5.3.3",
+            "vite": "^5.0.5"
+          },
+          "scripts": {
+            "dev": "vite",
+            "build": "tsc && vite build",
+            "preview": "vite preview",
+            "lint": "tsc --noEmit"
+          }
+        }
+        """;
+    }
+
+    private static string GenerateTsConfig()
+    {
+        return """
+        {
+          "compilerOptions": {
+            "target": "ES2020",
+            "useDefineForClassFields": true,
+            "lib": ["ES2020", "DOM", "DOM.Iterable"],
+            "module": "ESNext",
+            "skipLibCheck": true,
+            "moduleResolution": "bundler",
+            "allowImportingTsExtensions": true,
+            "resolveJsonModule": true,
+            "isolatedModules": true,
+            "noEmit": true,
+            "jsx": "react-jsx",
+            "strict": true,
+            "noUnusedLocals": true,
+            "noUnusedParameters": true,
+            "noFallthroughCasesInSwitch": true
+          },
+          "include": ["src"],
+          "references": [{ "path": "./tsconfig.node.json" }]
+        }
+        """;
+    }
+
+    private static string GenerateIndexHtml(string projectName)
+    {
+        return $$"""
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>{{projectName}}</title>
+          </head>
+          <body>
+            <div id="root"></div>
+            <script type="module" src="/src/index.tsx"></script>
+          </body>
+        </html>
+        """;
+    }
+
+    private static string GenerateIndexTsx()
+    {
+        return """
+        import React from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { BrowserRouter } from 'react-router-dom';
+        import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+        import App from './App';
+
+        const queryClient = new QueryClient({
+          defaultOptions: {
+            queries: {
+              refetchOnWindowFocus: false,
+              retry: 1,
+            },
+          },
+        });
+
+        ReactDOM.createRoot(document.getElementById('root')!).render(
+          <React.StrictMode>
+            <QueryClientProvider client={queryClient}>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </QueryClientProvider>
+          </React.StrictMode>
+        );
+        """;
+    }
+
+    private static string GenerateAppTsx(List<Table> tables)
+    {
+        var routes = string.Join("\n", tables.Select(t =>
+        {
+            var className = BaseApiGenerator.GetClassName(t.Name);
+            var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
+            return $"          <Route path=\"/{camelName}s\" element={{<{className}List />}} />";
+        }));
+
+        var imports = string.Join("\n", tables.Select(t =>
+        {
+            var className = BaseApiGenerator.GetClassName(t.Name);
+            return $"import {{ {className}List }} from './components/{className}/{className}List';";
+        }));
+
+        return $$"""
+        import React from 'react';
+        import { Routes, Route, Link } from 'react-router-dom';
+        import { AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+        {{imports}}
+
+        const drawerWidth = 240;
+
+        function App() {
+          return (
+            <Box sx={{ display: 'flex' }}>
+              <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                  <Typography variant="h6" noWrap component="div">
+                    {{BaseApiGenerator.GetClassName(tables[0].Schema.DatabaseName)}} Admin
+                  </Typography>
+                </Toolbar>
+              </AppBar>
+              <Drawer
+                variant="permanent"
+                sx={{
+                  width: drawerWidth,
+                  flexShrink: 0,
+                  '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
+                }}
+              >
+                <Toolbar />
+                <Box sx={{ overflow: 'auto' }}>
+                  <List>
+        {{string.Join("\n", tables.Select(t =>
+        {
+            var className = BaseApiGenerator.GetClassName(t.Name);
+            var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
+            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
+        }))}}
+                  </List>
+                </Box>
+              </Drawer>
+              <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                <Toolbar />
+                <Container maxWidth="xl">
+                  <Routes>
+                    <Route path="/" element={{<Typography variant="h4">Welcome</Typography>}} />
+        {{routes}}
+                  </Routes>
+                </Container>
+              </Box>
+            </Box>
+          );
+        }
+
+        export default App;
+        """;
+    }
+
+    private static string GenerateApiClient()
+    {
+        return """
+        import axios from 'axios';
+
+        const apiClient = axios.create({
+          baseURL: 'http://localhost:5000/api',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        // Request interceptor
+        apiClient.interceptors.request.use(
+          (config) => {
+            // Add auth token if available
+            const token = localStorage.getItem('token');
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+          },
+          (error) => Promise.reject(error)
+        );
+
+        // Response interceptor
+        apiClient.interceptors.response.use(
+          (response) => response,
+          (error) => {
+            if (error.response?.status === 401) {
+              // Handle unauthorized
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+            }
+            return Promise.reject(error);
+          }
+        );
+
+        export default apiClient;
+        """;
+    }
+
+    private static string GenerateGitignore()
+    {
+        return """
+        # Dependencies
+        node_modules
+        /.pnp
+        .pnp.js
+
+        # Testing
+        /coverage
+
+        # Production
+        /build
+        /dist
+
+        # Misc
+        .DS_Store
+        .env.local
+        .env.development.local
+        .env.test.local
+        .env.production.local
+
+        npm-debug.log*
+        yarn-debug.log*
+        yarn-error.log*
+
+        # Editor
+        .vscode
+        .idea
+        """;
+    }
+
+    private static string GenerateReactReadme(string projectName)
+    {
+        return $$"""
+        # {{projectName}} - React Frontend
+
+        This is the React frontend for {{projectName}}, built with:
+        - React 18
+        - TypeScript
+        - Material-UI
+        - React Router
+        - React Query
+        - Vite
+
+        ## Getting Started
+
+        1. Install dependencies:
+        ```bash
+        npm install
+        ```
+
+        2. Start the development server:
+        ```bash
+        npm run dev
+        ```
+
+        3. Open http://localhost:5173 in your browser
+
+        ## Available Scripts
+
+        - `npm run dev` - Start development server
+        - `npm run build` - Build for production
+        - `npm run preview` - Preview production build
+        - `npm run lint` - Run TypeScript checks
+
+        ## Project Structure
+
+        ```
+        src/
+          api/         - API client setup and endpoints
+          components/  - React components
+          hooks/       - Custom React hooks
+          types/       - TypeScript type definitions
+          App.tsx      - Main app component
+          index.tsx    - Entry point
+        ```
+        """;
     }
 }
