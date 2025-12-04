@@ -143,11 +143,16 @@ public class ProjectGenerationService : IProjectGenerationService
 
     private async Task GenerateSolutionStructureAsync(ProjectGenerationOptions options)
     {
-        // Solution file
+        // Get project structure first
+        var projects = _structureGenerator.GetProjectsForArchitecture(options);
+
+        // Solution file with projects
         var solutionInfo = new SolutionInfo
         {
             Name = options.ProjectName,
-            OutputDirectory = options.OutputDirectory
+            OutputDirectory = options.OutputDirectory,
+            Projects = projects.ToList(),
+            SlnPath = Path.Combine(options.OutputDirectory, $"{options.ProjectName}.sln")
         };
 
         var solutionContent = _solutionGenerator.Generate(solutionInfo);
@@ -155,9 +160,6 @@ public class ProjectGenerationService : IProjectGenerationService
         await File.WriteAllTextAsync(solutionPath, solutionContent);
 
         _output.Info($"  ✓ {Path.GetFileName(solutionPath)}");
-
-        // Get project structure
-        var projects = _structureGenerator.GetProjectsForArchitecture(options);
 
         // Create directories
         var directories = await _structureGenerator.CreateFolderStructureAsync(options);
