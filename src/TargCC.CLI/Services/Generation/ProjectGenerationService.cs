@@ -412,10 +412,10 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(Path.Combine(clientDir, "vite.config.ts"), viteConfig);
         _output.Info("  ✓ vite.config.ts");
 
-        // public/index.html
+        // index.html (root of client folder for Vite)
         var indexHtml = GenerateIndexHtml(rootNamespace);
-        await SaveFileAsync(Path.Combine(clientDir, "public", "index.html"), indexHtml);
-        _output.Info("  ✓ public/index.html");
+        await SaveFileAsync(Path.Combine(clientDir, "index.html"), indexHtml);
+        _output.Info("  ✓ index.html");
 
         // src/index.tsx
         var indexTsx = GenerateIndexTsx();
