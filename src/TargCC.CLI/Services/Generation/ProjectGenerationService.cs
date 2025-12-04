@@ -605,7 +605,7 @@ public class ProjectGenerationService : IProjectGenerationService
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"            <ListItem disablePadding>\n              <ListItemButton component={{{{Link}}}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
+            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
         }));
 
         var routes = string.Join("\n", tables.Select(t =>
@@ -653,7 +653,7 @@ function App() {{
         <Toolbar />
         <Container maxWidth=""xl"">
           <Routes>
-            <Route path=""/"" element={{<Typography variant=""h4"">Welcome</Typography>}}}} />
+            <Route path=""/"" element={{<Typography variant=""h4"">Welcome</Typography>}} />
 {routes}
           </Routes>
         </Container>
