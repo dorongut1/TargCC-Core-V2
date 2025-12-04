@@ -71,7 +71,8 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("Step 1: Analyzing database schema...");
 
             // Get all tables from database
-            var analyzer = new DatabaseAnalyzer(connectionString, (ILogger<DatabaseAnalyzer>)_logger);
+            var analyzerLogger = _loggerFactory.CreateLogger<DatabaseAnalyzer>();
+            var analyzer = new DatabaseAnalyzer(connectionString, analyzerLogger);
             var schema = await analyzer.AnalyzeAsync();
             var tables = schema.Tables.ToList();
 

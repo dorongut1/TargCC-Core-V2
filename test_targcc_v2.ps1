@@ -15,7 +15,7 @@ param(
 # Configuration
 $TestDir = "$env:TEMP\TargCCTest_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 $TestDbName = "TargCCTest_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-$ConnectionString = "Server=$SqlServer;Database=$TestDbName;Trusted_Connection=true;"
+$ConnectionString = "Server=$SqlServer;Database=$TestDbName;Trusted_Connection=true;TrustServerCertificate=true;"
 
 # Functions
 function Write-Header {
