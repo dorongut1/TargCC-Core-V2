@@ -71,8 +71,7 @@ namespace TargCC.Core.Generators.Sql
             // GetByID
             try
             {
-                var getByIdTemplate = new SpGetByIdTemplate(_logger);
-                var getByIdSql = await getByIdTemplate.GenerateAsync(table);
+                var getByIdSql = await SpGetByIdTemplate.GenerateAsync(table);
                 sb.AppendLine(getByIdSql);
                 sb.AppendLine("GO");
                 sb.AppendLine();
@@ -85,8 +84,7 @@ namespace TargCC.Core.Generators.Sql
             // Update
             try
             {
-                var updateTemplate = new SpUpdateTemplate(_logger);
-                var updateSql = await updateTemplate.GenerateAsync(table);
+                var updateSql = await SpUpdateTemplate.GenerateAsync(table);
                 sb.AppendLine(updateSql);
                 sb.AppendLine("GO");
                 sb.AppendLine();
@@ -99,8 +97,7 @@ namespace TargCC.Core.Generators.Sql
             // Delete
             try
             {
-                var deleteTemplate = new SpDeleteTemplate(_logger);
-                var deleteSql = await deleteTemplate.GenerateAsync(table);
+                var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
                 sb.AppendLine(deleteSql);
                 sb.AppendLine("GO");
                 sb.AppendLine();
