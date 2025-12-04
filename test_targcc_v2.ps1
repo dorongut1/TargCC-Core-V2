@@ -29,22 +29,22 @@ function Write-Header {
 
 function Write-Success {
     param([string]$Text)
-    Write-Host "✓ $Text" -ForegroundColor Green
+    Write-Host "[OK] $Text" -ForegroundColor Green
 }
 
 function Write-ErrorMsg {
     param([string]$Text)
-    Write-Host "✗ $Text" -ForegroundColor Red
+    Write-Host "[ERROR] $Text" -ForegroundColor Red
 }
 
 function Write-Warning {
     param([string]$Text)
-    Write-Host "⚠ $Text" -ForegroundColor Yellow
+    Write-Host "[WARN] $Text" -ForegroundColor Yellow
 }
 
 function Write-Info {
     param([string]$Text)
-    Write-Host "ℹ $Text" -ForegroundColor Blue
+    Write-Host "[INFO] $Text" -ForegroundColor Blue
 }
 
 # =============================================================================

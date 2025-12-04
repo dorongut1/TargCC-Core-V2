@@ -85,6 +85,20 @@ public class Program
             return new Core.Analyzers.Database.DatabaseAnalyzer(string.Empty, logger);
         });
 
+        // AI Service (disabled by default - no API key required)
+        services.AddSingleton<AI.Services.IAIService>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<AI.Services.ClaudeAIService>>();
+            var httpClient = new System.Net.Http.HttpClient();
+            var config = Microsoft.Extensions.Options.Options.Create(
+                new AI.Configuration.AIConfiguration
+                {
+                    Enabled = false,  // Disabled by default - no API key needed
+                    ApiKey = string.Empty
+                });
+            return new AI.Services.ClaudeAIService(httpClient, config, logger);
+        });
+
         // Watch Mode Services
         services.AddSingleton<Core.Analyzers.ISchemaChangeDetector, Core.Analyzers.SchemaChangeDetector>();
         services.AddSingleton<Core.Services.IGenerationTracker, Core.Services.GenerationTracker>();
