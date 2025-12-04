@@ -19,6 +19,48 @@ namespace TargCC.Core.Generators.Sql
     /// </summary>
     public class SqlGenerator : ISqlGenerator
     {
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingTableProcedures =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(1, nameof(LogGeneratingTableProcedures)),
+                "Generating stored procedures for table: {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogGetByIdGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(2, nameof(LogGetByIdGenerationWarning)),
+                "Could not generate GetByID procedure for {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogUpdateGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(3, nameof(LogUpdateGenerationWarning)),
+                "Could not generate Update procedure for {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogDeleteGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(4, nameof(LogDeleteGenerationWarning)),
+                "Could not generate Delete procedure for {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogIndexProceduresWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(5, nameof(LogIndexProceduresWarning)),
+                "Could not generate index procedures for {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogCompletedTableGeneration =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(6, nameof(LogCompletedTableGeneration)),
+                "Completed stored procedure generation for {TableName}");
+
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingSchemaProcedures =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(7, nameof(LogGeneratingSchemaProcedures)),
+                "Generating stored procedures for schema: {SchemaName}");
+
         private readonly ILogger _logger;
         private readonly bool _includeAdvancedProcedures;
 
@@ -56,7 +98,7 @@ namespace TargCC.Core.Generators.Sql
         {
             ArgumentNullException.ThrowIfNull(table);
 
-            _logger.LogInformation("Generating stored procedures for table: {TableName}", table.Name);
+            LogGeneratingTableProcedures(_logger, table.Name, null);
 
             var sb = new StringBuilder();
 
@@ -77,7 +119,7 @@ namespace TargCC.Core.Generators.Sql
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogWarning(ex, "Could not generate GetByID procedure for {TableName}", table.Name);
+                LogGetByIdGenerationWarning(_logger, table.Name, ex);
             }
 
             // Update
@@ -90,7 +132,7 @@ namespace TargCC.Core.Generators.Sql
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not generate Update procedure for {TableName}", table.Name);
+                LogUpdateGenerationWarning(_logger, table.Name, ex);
             }
 
             // Delete
@@ -103,11 +145,11 @@ namespace TargCC.Core.Generators.Sql
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not generate Delete procedure for {TableName}", table.Name);
+                LogDeleteGenerationWarning(_logger, table.Name, ex);
             }
 
             // Index procedures
-            if (_includeAdvancedProcedures && table.Indexes != null && table.Indexes.Any())
+            if (_includeAdvancedProcedures && table.Indexes != null && table.Indexes.Count > 0)
             {
                 try
                 {
@@ -119,11 +161,11 @@ namespace TargCC.Core.Generators.Sql
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Could not generate index procedures for {TableName}", table.Name);
+                    LogIndexProceduresWarning(_logger, table.Name, ex);
                 }
             }
 
-            _logger.LogInformation("Completed stored procedure generation for {TableName}", table.Name);
+            LogCompletedTableGeneration(_logger, table.Name, null);
 
             return sb.ToString();
         }
@@ -133,22 +175,24 @@ namespace TargCC.Core.Generators.Sql
         {
             ArgumentNullException.ThrowIfNull(schema);
 
-            _logger.LogInformation("Generating stored procedures for schema: {SchemaName}", schema.Name);
+            LogGeneratingSchemaProcedures(_logger, schema.DatabaseName, null);
 
             var sb = new StringBuilder();
 
             sb.AppendLine($"-- =========================================");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Stored Procedures for Database Schema: {schema.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Stored Procedures for Database Schema: {schema.DatabaseName}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
             sb.AppendLine($"-- =========================================");
             sb.AppendLine();
-            foreach (var tableSql in from table in schema.Tables.OrderBy(t => t.Name)
-                                     where CanGenerate(table)
-                                     let tableSql = await GenerateAsync(table)
-                                     select tableSql)
+
+            foreach (var table in schema.Tables.OrderBy(t => t.Name))
             {
-                sb.AppendLine(tableSql);
-                sb.AppendLine();
+                if (CanGenerate(table))
+                {
+                    var tableSql = await GenerateAsync(table);
+                    sb.AppendLine(tableSql);
+                    sb.AppendLine();
+                }
             }
 
             return sb.ToString();
