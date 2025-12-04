@@ -208,14 +208,18 @@ Write-Success "Test directory created"
 # =============================================================================
 Write-Header "Step 5: Initializing TargCC"
 
-$TargCCCli = Join-Path $TargCCRoot "src\TargCC.CLI\bin\Release\net9.0\TargCC.CLI.exe"
+# Try lowercase first (actual build output), then capitalized
+$TargCCCli = Join-Path $TargCCRoot "src\TargCC.CLI\bin\Release\net9.0\targcc.exe"
 
 if (-not (Test-Path $TargCCCli)) {
-    # Try without .exe
-    $TargCCCli = Join-Path $TargCCRoot "src\TargCC.CLI\bin\Release\net9.0\TargCC.CLI"
+    $TargCCCli = Join-Path $TargCCRoot "src\TargCC.CLI\bin\Release\net9.0\TargCC.CLI.exe"
     if (-not (Test-Path $TargCCCli)) {
-        Write-ErrorMsg "TargCC CLI not found at: $TargCCCli"
-        exit 1
+        # Try without .exe extension
+        $TargCCCli = Join-Path $TargCCRoot "src\TargCC.CLI\bin\Release\net9.0\targcc"
+        if (-not (Test-Path $TargCCCli)) {
+            Write-Error "TargCC CLI not found. Tried: targcc.exe, TargCC.CLI.exe, targcc"
+            exit 1
+        }
     }
 }
 
