@@ -4,8 +4,7 @@
     "documentationRules": {
       "companyName": "PlaceholderCompany",
       "copyrightText": "Copyright (c) {companyName}. All rights reserved.",
-      "headerDecoration": "-----------------------------------------------------------------------",
-      "xmlHeader": true,
+      "xmlHeader": false,
       "documentInterfaces": true,
       "documentExposedElements": true,
       "documentInternalElements": false,
