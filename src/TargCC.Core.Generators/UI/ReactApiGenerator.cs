@@ -180,7 +180,7 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
             var camelName = GetCamelCaseName(table.Name);
-            var apiPath = $"/api/{camelName}s";
+            var apiPath = $"/{camelName}s";
 
             // File header
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
