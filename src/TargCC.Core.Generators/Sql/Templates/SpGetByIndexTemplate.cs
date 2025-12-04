@@ -148,7 +148,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                     sb.Append(" AND ");
                 }
 
-                sb.Append(CultureInfo.InvariantCulture, $"[{indexColumns[i]!.Name}] = @{indexColumns[i]!.Name}");
+                sb.Append(CultureInfo.InvariantCulture, $"[{indexColumns[i] !.Name}] = @{indexColumns[i] !.Name}");
             }
 
             sb.AppendLine();

@@ -5,10 +5,12 @@
 namespace TargCC.Core.Generators.Sql
 {
     using System;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using TargCC.Application.Common.Models;
     using TargCC.Core.Generators.Sql.Templates;
     using TargCC.Core.Interfaces.Models;
 
@@ -46,16 +48,13 @@ namespace TargCC.Core.Generators.Sql
             }
 
             // Must have at least one column
-            return table.Columns != null && table.Columns.Any();
+            return table.Columns != null && table.Columns.Count != 0;
         }
 
         /// <inheritdoc/>
         public async Task<string> GenerateAsync(Table table)
         {
-            if (table == null)
-            {
-                throw new ArgumentNullException(nameof(table));
-            }
+            ArgumentNullException.ThrowIfNull(table);
 
             _logger.LogInformation("Generating stored procedures for table: {TableName}", table.Name);
 
@@ -63,8 +62,8 @@ namespace TargCC.Core.Generators.Sql
 
             // Header
             sb.AppendLine($"-- =========================================");
-            sb.AppendLine($"-- Stored Procedures for Table: {table.Name}");
-            sb.AppendLine($"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Stored Procedures for Table: {table.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
             sb.AppendLine($"-- =========================================");
             sb.AppendLine();
 
@@ -132,29 +131,24 @@ namespace TargCC.Core.Generators.Sql
         /// <inheritdoc/>
         public async Task<string> GenerateAsync(DatabaseSchema schema)
         {
-            if (schema == null)
-            {
-                throw new ArgumentNullException(nameof(schema));
-            }
+            ArgumentNullException.ThrowIfNull(schema);
 
             _logger.LogInformation("Generating stored procedures for schema: {SchemaName}", schema.Name);
 
             var sb = new StringBuilder();
 
             sb.AppendLine($"-- =========================================");
-            sb.AppendLine($"-- Stored Procedures for Database Schema: {schema.Name}");
-            sb.AppendLine($"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Stored Procedures for Database Schema: {schema.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
             sb.AppendLine($"-- =========================================");
             sb.AppendLine();
-
-            foreach (var table in schema.Tables.OrderBy(t => t.Name))
+            foreach (var tableSql in from table in schema.Tables.OrderBy(t => t.Name)
+                                     where CanGenerate(table)
+                                     let tableSql = await GenerateAsync(table)
+                                     select tableSql)
             {
-                if (CanGenerate(table))
-                {
-                    var tableSql = await GenerateAsync(table);
-                    sb.AppendLine(tableSql);
-                    sb.AppendLine();
-                }
+                sb.AppendLine(tableSql);
+                sb.AppendLine();
             }
 
             return sb.ToString();

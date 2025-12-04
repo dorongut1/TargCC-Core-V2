@@ -39,8 +39,8 @@ namespace TargCC.Core.Generators.Sql.Templates
             var updateableColumns = GetUpdateableColumns(table);
 
             // Check for audit columns
-            var hasChangedOn = table.Columns.Any(c => c.Name == "ChangedOn");
-            var hasChangedBy = table.Columns.Any(c => c.Name == "ChangedBy");
+            var hasChangedOn = table.Columns.Exists(c => c.Name == "ChangedOn");
+            var hasChangedBy = table.Columns.Exists(c => c.Name == "ChangedBy");
 
             // Remove ChangedOn from updateable columns (will be auto-set to GETDATE())
             if (hasChangedOn)
@@ -73,8 +73,8 @@ namespace TargCC.Core.Generators.Sql.Templates
                 !c.Name.StartsWith("clc_", StringComparison.OrdinalIgnoreCase) && // Calculated
                 !c.Name.StartsWith("blg_", StringComparison.OrdinalIgnoreCase) && // Business logic
                 !c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase) && // Aggregate
-                !c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase)    // One-way encryption
-            ).ToList();
+                !c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase)) // One-way encryption
+            .ToList();
         }
 
         private static void GenerateNoOpProcedure(StringBuilder sb)
@@ -125,7 +125,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 // Remove trailing comma from last updateable column
                 var content = sb.ToString().TrimEnd();
-                if (content.EndsWith(",", StringComparison.Ordinal))
+                if (content.EndsWith(','))
                 {
                     sb.Clear();
                     sb.Append(content[..^1]);
@@ -151,13 +151,9 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine(CultureInfo.InvariantCulture, $"    UPDATE [{table.Name}]");
             sb.AppendLine("    SET");
 
-            var setStatements = new System.Collections.Generic.List<string>();
-
-            // Regular updateable columns
-            foreach (var col in updateableColumns)
-            {
-                setStatements.Add($"        [{col.Name}] = @{col.Name}");
-            }
+            var setStatements = // Regular updateable columns
+(from col in updateableColumns
+ select $"        [{col.Name}] = @{col.Name}").ToList();
 
             // Auto-set ChangedOn
             if (hasChangedOn)

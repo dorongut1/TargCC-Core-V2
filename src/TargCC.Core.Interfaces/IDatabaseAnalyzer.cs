@@ -1,4 +1,4 @@
-// Copyright (c) TargCC Team. All rights reserved.
+// Copyright (c) PlaceholderCompany. All rights reserved.
 
 using TargCC.Core.Interfaces.Models;
 
