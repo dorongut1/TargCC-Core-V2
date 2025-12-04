@@ -219,8 +219,8 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return BadRequest(ModelState);");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine("            var created = await _repository.AddAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = created.ID }, created);");
+            sb.AppendLine("            await _repository.AddAsync(entity).ConfigureAwait(false);");
+            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.ID }, entity);");
             sb.AppendLine("        }");
         }
 
@@ -259,8 +259,8 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            entity.ID = id; // Ensure ID matches route");
-            sb.AppendLine("            var updated = await _repository.UpdateAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine("            return Ok(updated);");
+            sb.AppendLine("            await _repository.UpdateAsync(entity).ConfigureAwait(false);");
+            sb.AppendLine("            return Ok(entity);");
             sb.AppendLine("        }");
         }
 

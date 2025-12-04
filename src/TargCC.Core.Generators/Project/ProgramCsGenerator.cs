@@ -17,6 +17,9 @@ public class ProgramCsGenerator : IProgramCsGenerator
         var sb = new StringBuilder();
 
         // Using statements
+        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Application;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure;");
         sb.AppendLine();
