@@ -500,6 +500,19 @@ try
                         tableResults.Add(cqrsResult);
                     }
 
+                    // React UI generation
+                    if (request.GenerateReactUI)
+                    {
+                        var reactOutputDir = request.ReactOutputDirectory
+                            ?? Path.Combine(projectPath, "react-ui", "src", "components");
+
+                        var reactResult = await generationService.GenerateReactUIAsync(
+                            connectionString,
+                            tableName,
+                            reactOutputDir);
+                        tableResults.Add(reactResult);
+                    }
+
                     // Collect all generated files and errors
                     foreach (var result in tableResults)
                     {
@@ -550,6 +563,134 @@ try
         }
     })
     .WithName("GenerateCode")
+    .WithOpenApi();
+
+    // Download generated files as ZIP endpoint
+    app.MapPost("/api/generate/download", async (
+        [FromBody] DownloadRequest request,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            if (request.FilePaths == null || request.FilePaths.Count == 0)
+            {
+                return Results.BadRequest(new { Success = false, Message = "No files specified" });
+            }
+
+            var memoryStream = new MemoryStream();
+            using (var zip = new System.IO.Compression.ZipArchive(
+                memoryStream,
+                System.IO.Compression.ZipArchiveMode.Create,
+                true))
+            {
+                foreach (var filePath in request.FilePaths)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        var fileName = Path.GetFileName(filePath);
+                        var relativePath = filePath;
+
+                        // Try to make path relative if it's in Generated folder
+                        var generatedIndex = filePath.IndexOf("Generated", StringComparison.OrdinalIgnoreCase);
+                        if (generatedIndex >= 0)
+                        {
+                            relativePath = filePath.Substring(generatedIndex + "Generated".Length + 1);
+                        }
+
+                        var entry = zip.CreateEntry(relativePath, System.IO.Compression.CompressionLevel.Optimal);
+                        using (var entryStream = entry.Open())
+                        using (var fileStream = File.OpenRead(filePath))
+                        {
+                            await fileStream.CopyToAsync(entryStream);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("File not found: {FilePath}", filePath);
+                    }
+                }
+            }
+
+            var zipBytes = memoryStream.ToArray();
+
+            return Results.File(
+                zipBytes,
+                "application/zip",
+                $"generated-code-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating ZIP file");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("DownloadGeneratedFiles")
+    .WithOpenApi();
+
+    // Get file contents for preview
+    app.MapPost("/api/generate/preview", async (
+        [FromBody] DownloadRequest request,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            if (request.FilePaths == null || request.FilePaths.Count == 0)
+            {
+                return Results.BadRequest(new { Success = false, Message = "No files specified" });
+            }
+
+            var files = new List<object>();
+
+            foreach (var filePath in request.FilePaths)
+            {
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(filePath);
+                        var content = await File.ReadAllTextAsync(filePath);
+
+                        // Determine language based on file extension
+                        var language = "csharp";
+                        if (fileName.EndsWith(".ts") || fileName.EndsWith(".tsx"))
+                            language = "typescript";
+                        else if (fileName.EndsWith(".js") || fileName.EndsWith(".jsx"))
+                            language = "javascript";
+                        else if (fileName.EndsWith(".sql"))
+                            language = "sql";
+                        else if (fileName.EndsWith(".json"))
+                            language = "json";
+
+                        files.Add(new
+                        {
+                            name = fileName,
+                            code = content,
+                            language = language
+                        });
+
+                        // Limit to first 10 files for preview
+                        if (files.Count >= 10) break;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Error reading file {FilePath}", filePath);
+                    }
+                }
+            }
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Files = files
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating preview");
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("PreviewGeneratedFiles")
     .WithOpenApi();
 
     // System info endpoint
@@ -766,6 +907,230 @@ try
     })
     .WithName("Chat")
     .WithOpenApi();
+
+    // AI Code Editor endpoints
+    app.MapPost("/api/ai/code/modify", async (
+        [FromBody] CodeModificationRequest request,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        // Validate request
+        if (string.IsNullOrWhiteSpace(request.OriginalCode))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Original code is required",
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Instruction))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Instruction is required",
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TableName))
+        {
+            return Results.BadRequest(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = "Table name is required",
+            });
+        }
+
+        try
+        {
+            logger.LogInformation(
+                "Modifying code for table {TableName} with instruction: {Instruction}",
+                request.TableName,
+                request.Instruction);
+
+            // Build context
+            var context = await codeEditorService.BuildCodeContextAsync(
+                request.TableName,
+                request.Schema,
+                request.RelatedTables,
+                CancellationToken.None);
+
+            // Apply user preferences if provided
+            if (request.UserPreferences != null)
+            {
+                foreach (var pref in request.UserPreferences)
+                {
+                    context.UserPreferences[pref.Key] = pref.Value;
+                }
+            }
+
+            // Modify code
+            var result = await codeEditorService.ModifyCodeAsync(
+                request.OriginalCode,
+                request.Instruction,
+                context,
+                request.ConversationId,
+                CancellationToken.None);
+
+            // Map to response DTO
+            var response = new CodeModificationResponse
+            {
+                Success = result.Success,
+                ModifiedCode = result.ModifiedCode,
+                OriginalCode = result.OriginalCode,
+                ErrorMessage = result.ErrorMessage,
+                ConversationId = result.ConversationId,
+                Explanation = result.Explanation,
+                Changes = result.Changes.Select(c => new CodeChangeDto
+                {
+                    LineNumber = c.LineNumber,
+                    Type = c.Type.ToString(),
+                    Description = c.Description,
+                    OldValue = c.OldValue,
+                    NewValue = c.NewValue,
+                }).ToList(),
+                Validation = new ValidationResultDto
+                {
+                    IsValid = result.Validation.IsValid,
+                    HasBreakingChanges = result.Validation.HasBreakingChanges,
+                    Errors = result.Validation.Errors.Select(e => new ValidationErrorDto
+                    {
+                        Message = e.Message,
+                        LineNumber = e.LineNumber,
+                        Severity = e.Severity.ToString(),
+                    }).ToList(),
+                    Warnings = result.Validation.Warnings.Select(w => new ValidationWarningDto
+                    {
+                        Message = w.Message,
+                        LineNumber = w.LineNumber,
+                    }).ToList(),
+                },
+            };
+
+            logger.LogInformation(
+                "Code modification completed for table {TableName}: Success={Success}, Changes={ChangeCount}",
+                request.TableName,
+                result.Success,
+                result.Changes.Count);
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error modifying code for table {TableName}", request.TableName);
+            return Results.Ok(new CodeModificationResponse
+            {
+                Success = false,
+                ErrorMessage = $"Failed to modify code: {ex.Message}",
+                OriginalCode = request.OriginalCode,
+            });
+        }
+    })
+    .WithName("ModifyCode")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
+
+    app.MapPost("/api/ai/code/validate", async (
+        [FromBody] CodeValidationRequest request,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
+        {
+            return Results.BadRequest(new
+            {
+                Success = false,
+                Error = "Both original and modified code are required",
+            });
+        }
+
+        try
+        {
+            var validation = await codeEditorService.ValidateModificationAsync(
+                request.OriginalCode,
+                request.ModifiedCode,
+                CancellationToken.None);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Validation = new ValidationResultDto
+                {
+                    IsValid = validation.IsValid,
+                    HasBreakingChanges = validation.HasBreakingChanges,
+                    Errors = validation.Errors.Select(e => new ValidationErrorDto
+                    {
+                        Message = e.Message,
+                        LineNumber = e.LineNumber,
+                        Severity = e.Severity.ToString(),
+                    }).ToList(),
+                    Warnings = validation.Warnings.Select(w => new ValidationWarningDto
+                    {
+                        Message = w.Message,
+                        LineNumber = w.LineNumber,
+                    }).ToList(),
+                },
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error validating code");
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message,
+            });
+        }
+    })
+    .WithName("ValidateCode")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
+
+    app.MapPost("/api/ai/code/diff", async (
+        [FromBody] CodeDiffRequest request,
+        [FromServices] TargCC.Core.Services.AI.IAICodeEditorService codeEditorService,
+        ILogger<Program> logger) =>
+    {
+        if (string.IsNullOrWhiteSpace(request.OriginalCode) || string.IsNullOrWhiteSpace(request.ModifiedCode))
+        {
+            return Results.BadRequest(new
+            {
+                Success = false,
+                Error = "Both original and modified code are required",
+            });
+        }
+
+        try
+        {
+            var changes = codeEditorService.GenerateDiff(request.OriginalCode, request.ModifiedCode);
+
+            return Results.Ok(new
+            {
+                Success = true,
+                Changes = changes.Select(c => new CodeChangeDto
+                {
+                    LineNumber = c.LineNumber,
+                    Type = c.Type.ToString(),
+                    Description = c.Description,
+                    OldValue = c.OldValue,
+                    NewValue = c.NewValue,
+                }).ToList(),
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error generating diff");
+            return Results.Ok(new
+            {
+                Success = false,
+                Error = ex.Message,
+            });
+        }
+    })
+    .WithName("GenerateDiff")
+    .WithOpenApi()
+    .WithTags("AI Code Editor");
 
     // Generation History endpoints
     app.MapGet("/api/generation/history", async (

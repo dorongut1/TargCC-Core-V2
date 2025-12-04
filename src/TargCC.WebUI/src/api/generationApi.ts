@@ -23,6 +23,7 @@ export interface GenerationOptions {
   generateController: boolean;
   generateTests: boolean;
   generateStoredProcedures?: boolean;
+  generateReactUI?: boolean;
   overwriteExisting: boolean;
 }
 
@@ -172,6 +173,7 @@ export async function generate(request: GenerateRequest): Promise<GenerateRespon
     generateController: request.options.generateController,
     generateTests: request.options.generateTests,
     includeStoredProcedures: request.options.generateStoredProcedures ?? true,
+    generateReactUI: request.options.generateReactUI ?? false,
   };
 
   const response = await fetch(url, {

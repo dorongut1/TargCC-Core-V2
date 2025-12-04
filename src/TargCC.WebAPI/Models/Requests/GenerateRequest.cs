@@ -58,4 +58,14 @@ public sealed class GenerateRequest
     /// Gets or sets a value indicating whether to include stored procedures.
     /// </summary>
     public bool IncludeStoredProcedures { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to generate React UI components.
+    /// </summary>
+    public bool GenerateReactUI { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the React output directory (defaults to ProjectPath/react-ui).
+    /// </summary>
+    public string? ReactOutputDirectory { get; set; }
 }

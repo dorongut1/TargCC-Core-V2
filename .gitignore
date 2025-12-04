@@ -128,6 +128,11 @@ __pycache__/
 appsettings.Development.json
 *.local.json
 
+# Generated code output directory
+Generated/
+**/Generated/
+
 # OS files
 .DS_Store
 Thumbs.db
+/src/TargCC.WebAPI/logs

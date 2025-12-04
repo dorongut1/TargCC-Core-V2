@@ -10,6 +10,7 @@
 [![Phase 3B](https://img.shields.io/badge/Phase%203B-100%25-brightgreen)]()
 [![Phase 3C](https://img.shields.io/badge/Phase%203C-95%25-brightgreen)]()
 [![Phase 3E](https://img.shields.io/badge/Phase%203E-100%25-brightgreen)]()
+[![Phase 3F](https://img.shields.io/badge/Phase%203F-Planning-yellow)]()
 [![Backend Tests](https://img.shields.io/badge/backend%20tests-727%20passing-success)]()
 [![Frontend Tests](https://img.shields.io/badge/frontend%20tests-403%20passing-success)]()
 [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)]()
@@ -31,6 +32,7 @@ TargCC is a **next-generation code generation platform** that creates complete, 
 - 🔒 **Security Scanning** - Find unencrypted sensitive data
 - 🎨 **React UI Generator** - Auto-generate forms, grids, types, hooks ✅ **NEW!**
 - 🌐 **Web Dashboard** - Modern React-based management interface (95%)
+- 🤖 **AI Code Editor** - Modify generated code with natural language 🚧 **COMING SOON!**
 
 ---
 
@@ -292,6 +294,39 @@ Output directory: C:\MyProject\Generated
 - [ ] Download generated files
 
 **Current:** Core functionality complete, polish and final features remaining
+
+### 🚧 Phase 3F: AI-Powered Code Editor (Planning - Next Phase!)
+
+**The future is here!** Modify generated code using natural language:
+
+- 🤖 **AI-Powered Editing** - "Make the save button blue, move email field left"
+- 👁️ **Live Preview** - See changes in real-time
+- 🔄 **Version Control** - Undo/Redo, compare versions
+- ✅ **Smart Validation** - Prevents breaking changes
+- 🎨 **Monaco Editor** - Professional code editing experience
+- 💬 **Context-Aware AI** - Understands schema, relationships, conventions
+
+**What You'll Be Able To Do:**
+```
+1. Generate CustomerForm.tsx (auto-generated)
+   ↓
+2. Open in AI Editor
+   ↓
+3. You: "Move Email field to the left, make Save button blue"
+   ↓
+4. AI modifies code + shows live preview
+   ↓
+5. You approve → Saved!
+```
+
+**Status:**
+- [x] Specification complete
+- [x] Architecture designed
+- [ ] Backend service (12h)
+- [ ] Frontend components (8h)
+- [ ] Testing & polish (4h)
+
+**Read the full spec:** [SPEC_AI_CODE_EDITOR.md](docs/SPEC_AI_CODE_EDITOR.md)
 
 ### 📋 Phase 3D: Migration & Polish (Planned - Q1 2026)
 
@@ -560,15 +595,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ✅ Phase 1: Core Engine (6 weeks) - DONE
 ✅ Phase 1.5: MVP Generators (2 weeks) - DONE
 ✅ Phase 3A: CLI Core (2 weeks) - DONE
-✅ Phase 3E: React UI Generators (4 weeks) - DONE ⭐ NEW!
-🚧 Phase 3C: Local Web UI (3 weeks) - IN PROGRESS (95%) ← You are here!
+✅ Phase 3E: React UI Generators (4 weeks) - DONE ⭐
+🚧 Phase 3C: Local Web UI (3 weeks) - IN PROGRESS (95%)
+🔜 Phase 3F: AI Code Editor (2-3 weeks) - PLANNING ← You are here!
 📋 Phase 3D: Migration & Polish (2 weeks) - PLANNED (Q1 2026)
 🎯 Phase 4: General Availability (Q1 2026)
 ```
 
-**Current Progress:** Phase 3C - 95% complete
-**Latest:** React UI Generators complete, WebUI core functionality operational
-**Next:** Final polish (code preview, batch generation, downloads)
+**Current Progress:** Phase 3F - Planning complete, ready to implement
+**Latest:** React UI Generators complete, WebUI operational, AI Code Editor spec ready
+**Next:** Implement AI-powered interactive code editor
 
 ---
 

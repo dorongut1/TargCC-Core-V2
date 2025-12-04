@@ -82,6 +82,18 @@ public interface IGenerationService
         string connectionString,
         string tableName,
         string outputDirectory);
+
+    /// <summary>
+    /// Generates React UI components for a table (Form, List, Detail, Orchestrator).
+    /// </summary>
+    /// <param name="connectionString">Database connection string.</param>
+    /// <param name="tableName">Table name.</param>
+    /// <param name="outputDirectory">Output directory for React components.</param>
+    /// <returns>Generation result.</returns>
+    Task<GenerationResult> GenerateReactUIAsync(
+        string connectionString,
+        string tableName,
+        string outputDirectory);
 }
 
 /// <summary>

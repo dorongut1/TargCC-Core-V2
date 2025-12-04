@@ -11,6 +11,7 @@ export interface ProgressItem {
   type: string;
   status: 'pending' | 'processing' | 'complete' | 'error';
   message?: string;
+  code?: string; // Optional: the generated code for preview
 }
 
 export interface ProgressTrackerProps {
@@ -20,8 +21,8 @@ export interface ProgressTrackerProps {
   currentFile?: string;
 }
 
-const ProgressTracker = ({ 
-  items, 
+const ProgressTracker = ({
+  items,
   currentProgress,
   estimatedTimeRemaining,
   currentFile
@@ -163,15 +164,38 @@ const ProgressTracker = ({
               )}
             </Box>
 
-            <Chip 
+            <Chip
               label={item.status}
               color={getStatusColor(item.status)}
               size="small"
               variant="outlined"
             />
+
+            {/* Preview disabled - React components need full environment to run */}
+            {/* {isReactComponent(item) && item.status === 'complete' && item.code && (
+              <Tooltip title="Preview Component">
+                <IconButton
+                  size="small"
+                  onClick={() => setPreviewItem(item)}
+                  color="primary"
+                >
+                  <VisibilityIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )} */}
           </Box>
         ))}
       </Box>
+
+      {/* Preview Dialog - disabled for now */}
+      {/* {previewItem && (
+        <ReactComponentPreview
+          code={previewItem.code || `// Code not available for preview\n// Component: ${previewItem.name}`}
+          componentName={previewItem.name.replace('.tsx', '')}
+          open={previewItem !== null}
+          onClose={() => setPreviewItem(null)}
+        />
+      )} */}
     </Paper>
   );
 };

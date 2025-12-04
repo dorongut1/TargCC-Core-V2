@@ -30,6 +30,10 @@ const optionDescriptions = {
   api: {
     label: 'API Controllers',
     description: 'Generate REST API endpoints with standard CRUD operations'
+  },
+  reactUI: {
+    label: 'React UI Components 🎨',
+    description: 'Generate React Form, List, Detail components with Material-UI (900-1000 lines per table)'
   }
 };
 
