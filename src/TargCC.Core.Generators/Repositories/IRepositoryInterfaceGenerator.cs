@@ -112,5 +112,5 @@ public interface IRepositoryInterfaceGenerator
     /// // public interface ICustomerRepository { ... }
     /// </code>
     /// </example>
-    Task<string> GenerateAsync(Table table);
+    Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp");
 }

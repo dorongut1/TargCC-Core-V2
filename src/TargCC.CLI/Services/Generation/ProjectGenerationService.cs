@@ -216,7 +216,7 @@ public class ProjectGenerationService : IProjectGenerationService
 
         // 3. Repository Interface
         var repoInterfaceGen = new RepositoryInterfaceGenerator(_loggerFactory.CreateLogger<RepositoryInterfaceGenerator>());
-        var repoInterface = await repoInterfaceGen.GenerateAsync(table);
+        var repoInterface = await repoInterfaceGen.GenerateAsync(table, rootNamespace);
         var repoInterfacePath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Interfaces", $"I{table.Name}Repository.cs");
         await SaveFileAsync(repoInterfacePath, repoInterface);
         filesCount++;

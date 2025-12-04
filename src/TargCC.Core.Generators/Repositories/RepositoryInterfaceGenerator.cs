@@ -67,7 +67,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateAsync(Table table)
+    public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -84,7 +84,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         GenerateFileHeader(sb, table);
 
         // Add namespace and using statements
-        GenerateUsings(sb);
+        GenerateUsings(sb, rootNamespace);
 
         // Start interface
         StartInterface(sb, table);
@@ -128,11 +128,11 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <summary>
     /// Generates using statements.
     /// </summary>
-    private static void GenerateUsings(StringBuilder sb)
+    private static void GenerateUsings(StringBuilder sb, string rootNamespace)
     {
-        sb.AppendLine("namespace TargCC.Domain.Interfaces;");
+        sb.AppendLine($"namespace {rootNamespace}.Domain.Interfaces;");
         sb.AppendLine();
-        sb.AppendLine("using TargCC.Domain.Entities;");
+        sb.AppendLine($"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine();
     }
 
