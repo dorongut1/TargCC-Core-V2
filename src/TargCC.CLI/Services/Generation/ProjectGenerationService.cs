@@ -547,72 +547,75 @@ public class ProjectGenerationService : IProjectGenerationService
 
     private static string GenerateAppTsx(List<Table> tables)
     {
-        var routes = string.Join("\n", tables.Select(t =>
-        {
-            var className = BaseApiGenerator.GetClassName(t.Name);
-            var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"          <Route path=\"/{camelName}s\" element={{<{className}List />}} />";
-        }));
-
         var imports = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             return $"import {{ {className}List }} from './components/{className}/{className}List';";
         }));
 
-        return $$"""
-        import React from 'react';
-        import { Routes, Route, Link } from 'react-router-dom';
-        import { AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
-        {{imports}}
-
-        const drawerWidth = 240;
-
-        function App() {
-          return (
-            <Box sx={{ display: 'flex' }}>
-              <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-                <Toolbar>
-                  <Typography variant="h6" noWrap component="div">
-                    {{BaseApiGenerator.GetClassName(tables[0].Schema.DatabaseName)}} Admin
-                  </Typography>
-                </Toolbar>
-              </AppBar>
-              <Drawer
-                variant="permanent"
-                sx={{
-                  width: drawerWidth,
-                  flexShrink: 0,
-                  '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
-                }}
-              >
-                <Toolbar />
-                <Box sx={{ overflow: 'auto' }}>
-                  <List>
-        {{string.Join("\n", tables.Select(t =>
+        var menuItems = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
             return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
-        }))}}
-                  </List>
-                </Box>
-              </Drawer>
-              <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <Toolbar />
-                <Container maxWidth="xl">
-                  <Routes>
-                    <Route path="/" element={{<Typography variant="h4">Welcome</Typography>}} />
-        {{routes}}
-                  </Routes>
-                </Container>
-              </Box>
-            </Box>
-          );
-        }
+        }));
 
-        export default App;
-        """;
+        var routes = string.Join("\n", tables.Select(t =>
+        {
+            var className = BaseApiGenerator.GetClassName(t.Name);
+            var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
+            return $"            <Route path=\"/{camelName}s\" element={{{{<{className}List />}}}} />";
+        }));
+
+        var appName = tables.Any() ? BaseApiGenerator.GetClassName(tables[0].Name) : "App";
+
+        return $@"import React from 'react';
+import {{ Routes, Route, Link }} from 'react-router-dom';
+import {{ AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText }} from '@mui/material';
+{imports}
+
+const drawerWidth = 240;
+
+function App() {{
+  return (
+    <Box sx={{{{ display: 'flex' }}}}>
+      <AppBar position=""fixed"" sx={{{{ zIndex: (theme) => theme.zIndex.drawer + 1 }}}}>
+        <Toolbar>
+          <Typography variant=""h6"" noWrap component=""div"">
+            {appName} Admin
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant=""permanent""
+        sx={{{{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {{ width: drawerWidth, boxSizing: 'border-box' }},
+        }}}}
+      >
+        <Toolbar />
+        <Box sx={{{{ overflow: 'auto' }}}}>
+          <List>
+{menuItems}
+          </List>
+        </Box>
+      </Drawer>
+      <Box component=""main"" sx={{{{ flexGrow: 1, p: 3 }}}}>
+        <Toolbar />
+        <Container maxWidth=""xl"">
+          <Routes>
+            <Route path=""/"" element={{{{<Typography variant=""h4"">Welcome</Typography>}}}} />
+{routes}
+          </Routes>
+        </Container>
+      </Box>
+    </Box>
+  );
+}}
+
+export default App;
+";
     }
 
     private static string GenerateApiClient()

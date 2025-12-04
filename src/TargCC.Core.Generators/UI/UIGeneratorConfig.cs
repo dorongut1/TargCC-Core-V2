@@ -18,6 +18,8 @@ namespace TargCC.Core.Generators.UI
         {
             OutputDirectory = "./generated";
             TypeScriptNamespace = "generated";
+            ApiBaseUrl = "http://localhost:5000";
+            Framework = UIFramework.MaterialUI;
             UseReactQuery = true;
             UseMaterialUI = true;
             UseFormik = true;
@@ -31,6 +33,16 @@ namespace TargCC.Core.Generators.UI
         /// Gets or sets the output directory for generated files.
         /// </summary>
         public string OutputDirectory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the API base URL.
+        /// </summary>
+        public string ApiBaseUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UI framework to use.
+        /// </summary>
+        public UIFramework Framework { get; set; }
 
         /// <summary>
         /// Gets or sets the TypeScript module namespace.
