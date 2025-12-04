@@ -80,6 +80,7 @@ public interface IRepositoryInterfaceGenerator
     /// Generates the repository interface code for a given table.
     /// </summary>
     /// <param name="table">The table metadata containing columns, indexes, and relationships.</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (e.g., "MyApp"). Defaults to "YourApp".</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the generated C# interface code as a string.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="table"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the table has no primary key defined.</exception>
@@ -106,7 +107,7 @@ public interface IRepositoryInterfaceGenerator
     /// <example>
     /// <code>
     /// var table = new Table { Name = "Customer", PrimaryKeyColumns = new() { "ID" } };
-    /// string code = await generator.GenerateAsync(table);
+    /// string code = await generator.GenerateAsync(table, "MyApp");
     ///
     /// // code contains:
     /// // public interface ICustomerRepository { ... }

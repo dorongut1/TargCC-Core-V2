@@ -130,9 +130,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateUsings(StringBuilder sb, string rootNamespace)
     {
-        sb.AppendLine($"namespace {rootNamespace}.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Domain.Interfaces;");
         sb.AppendLine();
-        sb.AppendLine($"using {rootNamespace}.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine();
     }
 
