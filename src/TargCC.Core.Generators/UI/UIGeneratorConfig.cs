@@ -5,6 +5,7 @@
 namespace TargCC.Core.Generators.UI
 {
     using System;
+    using TargCC.Core.Generators.UI.Components;
 
     /// <summary>
     /// Configuration for UI generators.
