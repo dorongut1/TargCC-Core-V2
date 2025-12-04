@@ -9,7 +9,8 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
-            // Note: Domain.Interfaces using added by generator based on config.Namespace
+
+    // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -59,7 +60,8 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("using System.Threading.Tasks;");
             sb.AppendLine("// using AutoMapper; // Removed - using entities directly");
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
-            sb.AppendLine("using Microsoft.Extensions.Logging;
+            sb.AppendLine("using Microsoft.Extensions.Logging;");
+
             // Note: Domain.Interfaces using added by generator based on config.Namespace");
             sb.AppendLine();
         }
