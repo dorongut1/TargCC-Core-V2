@@ -185,14 +185,15 @@ namespace TargCC.Core.Generators.Sql
             sb.AppendLine($"-- =========================================");
             sb.AppendLine();
 
-            foreach (var table in schema.Tables.OrderBy(t => t.Name))
+            var validTables = schema.Tables
+                .OrderBy(t => t.Name)
+                .Where(CanGenerate);
+
+            foreach (var table in validTables)
             {
-                if (CanGenerate(table))
-                {
-                    var tableSql = await GenerateAsync(table);
-                    sb.AppendLine(tableSql);
-                    sb.AppendLine();
-                }
+                var tableSql = await GenerateAsync(table);
+                sb.AppendLine(tableSql);
+                sb.AppendLine();
             }
 
             return sb.ToString();
