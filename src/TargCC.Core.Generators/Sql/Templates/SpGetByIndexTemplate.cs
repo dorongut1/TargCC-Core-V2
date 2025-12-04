@@ -5,10 +5,12 @@
 namespace TargCC.Core.Generators.Sql.Templates
 {
     using System;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
     using TargCC.Core.Interfaces.Models;
+    using IndexModel = TargCC.Core.Interfaces.Models.Index;
 
     /// <summary>
     /// Template for generating SP_GetByIndex stored procedures.
@@ -27,7 +29,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                 return Task.FromResult(string.Empty);
             }
 
-            if (table.Indexes == null || !table.Indexes.Any())
+            if (table.Indexes == null || table.Indexes.Count == 0)
             {
                 return Task.FromResult(string.Empty);
             }
@@ -43,7 +45,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                 }
 
                 // Skip if no columns in index
-                if (index.Columns == null || !index.Columns.Any())
+                if (index.ColumnNames == null || index.ColumnNames.Count == 0)
                 {
                     continue;
                 }
@@ -59,7 +61,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             return Task.FromResult(result);
         }
 
-        private static string GenerateProcedureForIndex(Table table, Index index)
+        private static string GenerateProcedureForIndex(Table table, IndexModel index)
         {
             var sb = new StringBuilder();
 
@@ -67,20 +69,20 @@ namespace TargCC.Core.Generators.Sql.Templates
             var prefix = index.IsUnique ? "Get" : "Fill";
 
             // Build procedure name from index columns
-            var columnNames = string.Join("And", index.Columns.Select(ToTitleCase));
+            var columnNames = string.Join("And", index.ColumnNames.Select(ToTitleCase));
             var procName = $"SP_{prefix}{table.Name}By{columnNames}";
 
             // Header comment
-            sb.AppendLine($"-- Procedure for Index: {index.Name}");
-            sb.AppendLine($"-- Index Type: {(index.IsUnique ? "Unique" : "Non-Unique")}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Procedure for Index: {index.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Index Type: {(index.IsUnique ? "Unique" : "Non-Unique")}");
             sb.AppendLine();
 
             // Procedure declaration
-            sb.AppendLine($"CREATE OR ALTER PROCEDURE [dbo].[{procName}]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[{procName}]");
 
             // Parameters from index columns
-            var indexColumns = index.Columns
-                .Select(colName => table.Columns.FirstOrDefault(c => c.Name == colName))
+            var indexColumns = index.ColumnNames
+                .Select(colName => table.Columns.Find(c => c.Name == colName))
                 .Where(c => c != null)
                 .ToList();
 
@@ -88,7 +90,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 var col = indexColumns[i];
                 var sqlType = MapToSqlType(col!);
-                sb.Append($"    @{col!.Name} {sqlType}");
+                sb.Append(CultureInfo.InvariantCulture, $"    @{col!.Name} {sqlType}");
                 if (i < indexColumns.Count - 1)
                 {
                     sb.AppendLine(",");
@@ -111,7 +113,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             for (int i = 0; i < allColumns.Count; i++)
             {
                 var col = allColumns[i];
-                sb.Append($"        [{col.Name}]");
+                sb.Append(CultureInfo.InvariantCulture, $"        [{col.Name}]");
                 if (i < allColumns.Count - 1)
                 {
                     sb.AppendLine(",");
@@ -122,7 +124,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                 }
             }
 
-            sb.AppendLine($"    FROM [{table.Name}]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    FROM [{table.Name}]");
 
             // WHERE clause
             sb.Append("    WHERE ");
@@ -134,7 +136,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                     sb.Append(" AND ");
                 }
 
-                sb.Append($"[{col!.Name}] = @{col.Name}");
+                sb.Append(CultureInfo.InvariantCulture, $"[{col!.Name}] = @{col.Name}");
             }
 
             sb.AppendLine();
@@ -143,7 +145,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             if (!index.IsUnique)
             {
                 var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
-                if (pkColumns.Any())
+                if (pkColumns.Count > 0)
                 {
                     sb.Append("    ORDER BY ");
                     for (int i = 0; i < pkColumns.Count; i++)
@@ -153,7 +155,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                             sb.Append(", ");
                         }
 
-                        sb.Append($"[{pkColumns[i].Name}]");
+                        sb.Append(CultureInfo.InvariantCulture, $"[{pkColumns[i].Name}]");
                     }
 
                     sb.AppendLine(";");
@@ -197,40 +199,40 @@ namespace TargCC.Core.Generators.Sql.Templates
 
         private static string MapToSqlType(Column column)
         {
-            var type = column.DataType.ToLowerInvariant();
+            var type = column.DataType.ToUpperInvariant();
 
             return type switch
             {
-                "int" => "int",
-                "bigint" => "bigint",
-                "smallint" => "smallint",
-                "tinyint" => "tinyint",
-                "bit" => "bit",
-                "decimal" or "numeric" => column.Scale.HasValue
-                    ? $"decimal({column.Precision ?? 18},{column.Scale})"
+                "INT" => "int",
+                "BIGINT" => "bigint",
+                "SMALLINT" => "smallint",
+                "TINYINT" => "tinyint",
+                "BIT" => "bit",
+                "DECIMAL" or "NUMERIC" => column.Scale.HasValue
+                    ? $"decimal({column.Precision ?? 18},{column.Scale.Value})"
                     : $"decimal({column.Precision ?? 18},0)",
-                "money" => "money",
-                "smallmoney" => "smallmoney",
-                "float" => "float",
-                "real" => "real",
-                "date" => "date",
-                "datetime" => "datetime",
-                "datetime2" => "datetime2",
-                "smalldatetime" => "smalldatetime",
-                "time" => "time",
-                "datetimeoffset" => "datetimeoffset",
-                "char" => column.MaxLength == -1 ? "char(MAX)" : $"char({column.MaxLength})",
-                "varchar" => column.MaxLength == -1 ? "varchar(MAX)" : $"varchar({column.MaxLength})",
-                "text" => "text",
-                "nchar" => column.MaxLength == -1 ? "nchar(MAX)" : $"nchar({column.MaxLength})",
-                "nvarchar" => column.MaxLength == -1 ? "nvarchar(MAX)" : $"nvarchar({column.MaxLength})",
-                "ntext" => "ntext",
-                "binary" => column.MaxLength == -1 ? "binary(MAX)" : $"binary({column.MaxLength})",
-                "varbinary" => column.MaxLength == -1 ? "varbinary(MAX)" : $"varbinary({column.MaxLength})",
-                "image" => "image",
-                "uniqueidentifier" => "uniqueidentifier",
-                "xml" => "xml",
-                _ => type
+                "MONEY" => "money",
+                "SMALLMONEY" => "smallmoney",
+                "FLOAT" => "float",
+                "REAL" => "real",
+                "DATE" => "date",
+                "DATETIME" => "datetime",
+                "DATETIME2" => "datetime2",
+                "SMALLDATETIME" => "smalldatetime",
+                "TIME" => "time",
+                "DATETIMEOFFSET" => "datetimeoffset",
+                "CHAR" => column.MaxLength == -1 ? "char(MAX)" : $"char({column.MaxLength})",
+                "VARCHAR" => column.MaxLength == -1 ? "varchar(MAX)" : $"varchar({column.MaxLength})",
+                "TEXT" => "text",
+                "NCHAR" => column.MaxLength == -1 ? "nchar(MAX)" : $"nchar({column.MaxLength})",
+                "NVARCHAR" => column.MaxLength == -1 ? "nvarchar(MAX)" : $"nvarchar({column.MaxLength})",
+                "NTEXT" => "ntext",
+                "BINARY" => column.MaxLength == -1 ? "binary(MAX)" : $"binary({column.MaxLength})",
+                "VARBINARY" => column.MaxLength == -1 ? "varbinary(MAX)" : $"varbinary({column.MaxLength})",
+                "IMAGE" => "image",
+                "UNIQUEIDENTIFIER" => "uniqueidentifier",
+                "XML" => "xml",
+                _ => type.ToLowerInvariant()
             };
         }
     }
