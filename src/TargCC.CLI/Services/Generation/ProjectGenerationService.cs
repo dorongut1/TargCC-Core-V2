@@ -401,6 +401,16 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(Path.Combine(clientDir, "tsconfig.json"), tsConfig);
         _output.Info("  ✓ tsconfig.json");
 
+        // tsconfig.node.json
+        var tsConfigNode = GenerateTsConfigNode();
+        await SaveFileAsync(Path.Combine(clientDir, "tsconfig.node.json"), tsConfigNode);
+        _output.Info("  ✓ tsconfig.node.json");
+
+        // vite.config.ts
+        var viteConfig = GenerateViteConfig();
+        await SaveFileAsync(Path.Combine(clientDir, "vite.config.ts"), viteConfig);
+        _output.Info("  ✓ vite.config.ts");
+
         // public/index.html
         var indexHtml = GenerateIndexHtml(rootNamespace);
         await SaveFileAsync(Path.Combine(clientDir, "public", "index.html"), indexHtml);
@@ -493,6 +503,44 @@ public class ProjectGenerationService : IProjectGenerationService
           "include": ["src"],
           "references": [{ "path": "./tsconfig.node.json" }]
         }
+        """;
+    }
+
+    private static string GenerateTsConfigNode()
+    {
+        return """
+        {
+          "compilerOptions": {
+            "composite": true,
+            "skipLibCheck": true,
+            "module": "ESNext",
+            "moduleResolution": "bundler",
+            "allowSyntheticDefaultImports": true
+          },
+          "include": ["vite.config.ts"]
+        }
+        """;
+    }
+
+    private static string GenerateViteConfig()
+    {
+        return """
+        import { defineConfig } from 'vite'
+        import react from '@vitejs/plugin-react'
+
+        // https://vitejs.dev/config/
+        export default defineConfig({
+          plugins: [react()],
+          server: {
+            port: 5173,
+            proxy: {
+              '/api': {
+                target: 'http://localhost:5000',
+                changeOrigin: true,
+              },
+            },
+          },
+        })
         """;
     }
 
