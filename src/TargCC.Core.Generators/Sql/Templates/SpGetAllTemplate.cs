@@ -28,8 +28,10 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             var sb = new StringBuilder();
 
-            // Procedure header
+            // Procedure header with pagination parameters
             sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetAll{table.Name}s]");
+            sb.AppendLine("    @Skip INT = NULL,");
+            sb.AppendLine("    @Take INT = NULL");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
@@ -62,7 +64,11 @@ namespace TargCC.Core.Generators.Sql.Templates
                     }
                     sb.Append(CultureInfo.InvariantCulture, $"[{col.Name}]");
                 }
-                sb.AppendLine(";");
+                sb.AppendLine();
+
+                // Add pagination using OFFSET/FETCH if parameters provided
+                sb.AppendLine("    OFFSET ISNULL(@Skip, 0) ROWS");
+                sb.AppendLine("    FETCH NEXT ISNULL(@Take, 2147483647) ROWS ONLY;");
             }
             else
             {
