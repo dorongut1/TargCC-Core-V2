@@ -61,7 +61,9 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         var sb = new StringBuilder();
 
         // Using statements
+        sb.AppendLine("using System;");
         sb.AppendLine("using System.Data;");
+        sb.AppendLine("using Microsoft.Data.SqlClient;");
         sb.AppendLine("using Microsoft.Data.Sqlite;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
@@ -83,6 +85,7 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("    /// Adds Infrastructure layer services to the DI container.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"services\">The service collection.</param>");
+        sb.AppendLine("    /// <param name=\"configuration\">The configuration.</param>");
         sb.AppendLine("    /// <returns>The service collection for chaining.</returns>");
         sb.AppendLine("    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)");
         sb.AppendLine("    {");
@@ -90,7 +93,19 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("        services.AddScoped<IDbConnection>(sp => ");
         sb.AppendLine("        {");
         sb.AppendLine("            var connectionString = configuration.GetConnectionString(\"DefaultConnection\");");
-        sb.AppendLine("            return new SqliteConnection(connectionString);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Auto-detect database type from connection string");
+        sb.AppendLine("            if (connectionString?.Contains(\".db\", StringComparison.OrdinalIgnoreCase) == true ||");
+        sb.AppendLine("                connectionString?.Contains(\".sqlite\", StringComparison.OrdinalIgnoreCase) == true)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                // SQLite connection for file-based databases");
+        sb.AppendLine("                return new SqliteConnection(connectionString);");
+        sb.AppendLine("            }");
+        sb.AppendLine("            else");
+        sb.AppendLine("            {");
+        sb.AppendLine("                // SQL Server connection (default for production)");
+        sb.AppendLine("                return new SqlConnection(connectionString);");
+        sb.AppendLine("            }");
         sb.AppendLine("        });");
         sb.AppendLine();
         sb.AppendLine("        // Register repositories");
