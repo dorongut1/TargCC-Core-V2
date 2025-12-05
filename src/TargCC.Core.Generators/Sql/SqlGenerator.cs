@@ -61,6 +61,12 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(7, nameof(LogGeneratingSchemaProcedures)),
                 "Generating stored procedures for schema: {SchemaName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogGetAllGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(8, nameof(LogGetAllGenerationWarning)),
+                "Could not generate GetAll procedure for {TableName}");
+
         private readonly ILogger _logger;
         private readonly bool _includeAdvancedProcedures;
 
@@ -119,7 +125,7 @@ namespace TargCC.Core.Generators.Sql
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not generate GetAll procedure for {TableName}", table.Name);
+                LogGetAllGenerationWarning(_logger, table.Name, ex);
             }
 
             // GetByID
