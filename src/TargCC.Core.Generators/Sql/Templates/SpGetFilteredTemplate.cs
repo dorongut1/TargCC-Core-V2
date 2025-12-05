@@ -23,7 +23,6 @@ namespace TargCC.Core.Generators.Sql.Templates
         /// <param name="table">The table to generate the procedure for.</param>
         /// <returns>The generated SQL stored procedure.</returns>
         /// <exception cref="ArgumentNullException">Thrown when table is null.</exception>
-        [SuppressMessage("CodeQuality", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Code generator - complexity is acceptable for template generation")]
         public static Task<string> GenerateAsync(Table table)
         {
             ArgumentNullException.ThrowIfNull(table);
@@ -42,6 +41,21 @@ namespace TargCC.Core.Generators.Sql.Templates
             var sb = new StringBuilder();
 
             // Procedure header
+            GenerateProcedureHeader(sb, table, filterableIndexes);
+
+            // SELECT and WHERE clauses
+            GenerateSelectAndWhere(sb, table, filterableIndexes);
+
+            // ORDER BY and pagination
+            GenerateOrderByAndPagination(sb, table);
+
+            sb.AppendLine("END");
+
+            return Task.FromResult(sb.ToString());
+        }
+
+        private static void GenerateProcedureHeader(StringBuilder sb, Table table, List<Index> filterableIndexes)
+        {
             sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetFiltered{table.Name}s]");
 
             // Add parameters for each indexed column
@@ -50,7 +64,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.Find(c => c.Name == columnName);
+                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
                     if (column != null)
                     {
                         // Avoid duplicate parameters
@@ -72,7 +86,10 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
             sb.AppendLine();
+        }
 
+        private static void GenerateSelectAndWhere(StringBuilder sb, Table table, List<Index> filterableIndexes)
+        {
             // SELECT statement
             sb.AppendLine("    SELECT");
 
@@ -93,7 +110,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.Find(c => c.Name == columnName);
+                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
                     if (column != null)
                     {
                         var isTextType = IsTextType(column.DataType);
@@ -112,7 +129,10 @@ namespace TargCC.Core.Generators.Sql.Templates
                     }
                 }
             }
+        }
 
+        private static void GenerateOrderByAndPagination(StringBuilder sb, Table table)
+        {
             // Order by primary key
             var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
             if (pkColumns.Count > 0)
@@ -139,10 +159,6 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 sb.AppendLine(";");
             }
-
-            sb.AppendLine("END");
-
-            return Task.FromResult(sb.ToString());
         }
 
         private static string GetSqlType(string dataType, int? maxLength)
