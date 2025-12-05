@@ -49,7 +49,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
 
-            GenerateControllerClass(sb, entityName, controllerName, config);
+            GenerateControllerClass(sb, entityName, controllerName, table, config);
 
             sb.AppendLine("}");
 
@@ -68,7 +68,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
         }
 
-        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, ApiGeneratorConfig config)
+        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, ApiGeneratorConfig config)
         {
             if (config.GenerateXmlDocumentation)
             {
@@ -98,6 +98,9 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
 
             GenerateGetAllMethod(sb, entityName, config);
+            sb.AppendLine();
+
+            GenerateGetFilteredMethod(sb, entityName, table, config);
             sb.AppendLine();
 
             GenerateCreateMethod(sb, entityName, config);
@@ -294,6 +297,88 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("            await _repository.DeleteAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            return NoContent();");
             sb.AppendLine("        }");
+        }
+
+        private static void GenerateGetFilteredMethod(StringBuilder sb, string entityName, Table table, ApiGeneratorConfig config)
+        {
+            var filterableIndexes = table.Indexes?
+                .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
+                .ToList();
+
+            if (filterableIndexes == null || filterableIndexes.Count == 0)
+            {
+                // No filterable indexes, skip
+                return;
+            }
+
+            var parameters = new List<(string paramName, string paramType, string columnName)>();
+            var processedColumns = new HashSet<string>();
+
+            foreach (var index in filterableIndexes)
+            {
+                foreach (var columnName in index.ColumnNames)
+                {
+                    if (!processedColumns.Contains(columnName))
+                    {
+                        processedColumns.Add(columnName);
+                        var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                        if (column != null)
+                        {
+                            string paramName = GetPropertyName(columnName).ToLower();
+                            string paramType = GetCSharpTypeName(column.DataType);
+                            parameters.Add((paramName, paramType, columnName));
+                        }
+                    }
+                }
+            }
+
+            if (parameters.Count == 0)
+            {
+                return;
+            }
+
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityName)} based on indexed columns.");
+                sb.AppendLine("        /// </summary>");
+                foreach (var (paramName, _, columnName) in parameters)
+                {
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
+                }
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityName} entities.</returns>");
+            }
+
+            sb.AppendLine("        [HttpGet(\"filter\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}>), 200)]");
+            }
+
+            var queryParams = string.Join(", ", parameters.Select(p => $"[FromQuery] {p.paramType}? {p.paramName} = null"));
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}>>> GetFiltered({queryParams})");
+            sb.AppendLine("        {");
+
+            var repoParams = string.Join(", ", parameters.Select(p => p.paramName));
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var entities = await _repository.GetFilteredAsync({repoParams}).ConfigureAwait(false);");
+            sb.AppendLine("            return Ok(entities);");
+            sb.AppendLine("        }");
+        }
+
+        private static string GetCSharpTypeName(string sqlType)
+        {
+            var upper = sqlType.ToUpperInvariant();
+            return upper switch
+            {
+                _ when upper.Contains("INT") => "int",
+                _ when upper.Contains("VARCHAR") || upper.Contains("CHAR") || upper.Contains("TEXT") => "string",
+                _ when upper.Contains("DATE") || upper.Contains("TIME") => "DateTime",
+                _ when upper.Contains("BIT") => "bool",
+                _ when upper.Contains("DECIMAL") || upper.Contains("NUMERIC") || upper.Contains("MONEY") => "decimal",
+                _ when upper.Contains("FLOAT") || upper.Contains("REAL") => "double",
+                _ => "string",
+            };
         }
 
         private static string MakePlural(string word)
