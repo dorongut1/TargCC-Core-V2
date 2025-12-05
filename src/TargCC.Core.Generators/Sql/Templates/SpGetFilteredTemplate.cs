@@ -5,6 +5,7 @@
 namespace TargCC.Core.Generators.Sql.Templates
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Text;
@@ -22,6 +23,7 @@ namespace TargCC.Core.Generators.Sql.Templates
         /// <param name="table">The table to generate the procedure for.</param>
         /// <returns>The generated SQL stored procedure.</returns>
         /// <exception cref="ArgumentNullException">Thrown when table is null.</exception>
+        [SuppressMessage("CodeQuality", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Code generator - complexity is acceptable for template generation")]
         public static Task<string> GenerateAsync(Table table)
         {
             ArgumentNullException.ThrowIfNull(table);
