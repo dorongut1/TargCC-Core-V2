@@ -367,7 +367,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine();
 
             // Load existing data if editing
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: existing{className}, isLoading: isLoadingEntity }} = use{className}({camelName}Id || null);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: existing{className}, isPending: isLoadingEntity }} = use{className}({camelName}Id || null);");
             sb.AppendLine();
 
             // Form hook
@@ -381,8 +381,8 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine();
 
             // Mutation hooks
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: createEntity, isLoading: isCreating }} = useCreate{className}();");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: updateEntity, isLoading: isUpdating }} = useUpdate{className}();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: createEntity, isPending: isCreating }} = useCreate{className}();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: updateEntity, isPending: isUpdating }} = useUpdate{className}();");
             sb.AppendLine();
             sb.AppendLine("  const isSubmitting = isCreating || isUpdating;");
             sb.AppendLine();

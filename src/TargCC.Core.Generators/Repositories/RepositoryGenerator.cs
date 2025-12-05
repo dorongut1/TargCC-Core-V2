@@ -61,7 +61,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateAsync(Table table)
+    public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -78,7 +78,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         GenerateFileHeader(sb, table);
 
         // Add using statements
-        GenerateUsings(sb);
+        GenerateUsings(sb, rootNamespace);
 
         // Start class
         StartClass(sb, table);
@@ -132,15 +132,15 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates using statements.
     /// </summary>
-    private static void GenerateUsings(StringBuilder sb)
+    private static void GenerateUsings(StringBuilder sb, string rootNamespace)
     {
-        sb.AppendLine("namespace TargCC.Infrastructure.Repositories;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Infrastructure.Repositories;");
         sb.AppendLine();
         sb.AppendLine("using System.Data;");
         sb.AppendLine("using Dapper;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
-        sb.AppendLine("using TargCC.Domain.Entities;");
-        sb.AppendLine("using TargCC.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
         sb.AppendLine();
     }
 

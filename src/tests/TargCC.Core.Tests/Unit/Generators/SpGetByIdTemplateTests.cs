@@ -7,10 +7,7 @@ namespace TargCC.Core.Tests.Unit.Generators
     using System;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using Microsoft.Extensions.Logging;
-    using Moq;
     using TargCC.Core.Generators.Sql.Templates;
-    using TargCC.Core.Interfaces.Models;
     using TargCC.Core.Tests.TestHelpers;
     using Xunit;
 
@@ -19,18 +16,6 @@ namespace TargCC.Core.Tests.Unit.Generators
     /// </summary>
     public class SpGetByIdTemplateTests
     {
-        private readonly Mock<ILogger> _mockLogger;
-        private readonly SpGetByIdTemplate _template;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpGetByIdTemplateTests"/> class.
-        /// </summary>
-        public SpGetByIdTemplateTests()
-        {
-            _mockLogger = new Mock<ILogger>();
-            _template = new SpGetByIdTemplate(_mockLogger.Object);
-        }
-
         [Fact]
         public async Task GenerateAsync_SimpleSinglePK_GeneratesCorrectProcedure()
         {
@@ -43,7 +28,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpGetByIdTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().NotBeNullOrWhiteSpace();
@@ -70,7 +55,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpGetByIdTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("SP_GetOrderDetailByID");
@@ -89,7 +74,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            Func<Task> act = async () => await _template.GenerateAsync(table);
+            Func<Task> act = async () => await SpGetByIdTemplate.GenerateAsync(table);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -110,7 +95,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpGetByIdTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("[eno_Password]");
@@ -131,7 +116,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpGetByIdTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("@ID bigint");
@@ -145,7 +130,7 @@ namespace TargCC.Core.Tests.Unit.Generators
         {
             // Arrange
             // Act
-            Func<Task> act = async () => await _template.GenerateAsync(null!);
+            Func<Task> act = async () => await SpGetByIdTemplate.GenerateAsync(null!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();

@@ -17,10 +17,11 @@ public class ProgramCsGenerator : IProgramCsGenerator
         var sb = new StringBuilder();
 
         // Using statements
-        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
+        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Application;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure;");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure.Data;");
         sb.AppendLine();
 
         // Builder creation
@@ -34,12 +35,6 @@ public class ProgramCsGenerator : IProgramCsGenerator
         sb.AppendLine("builder.Services.AddSwaggerGen();");
         sb.AppendLine();
 
-        // Database context
-        sb.AppendLine("// Database");
-        sb.AppendLine("builder.Services.AddDbContext<ApplicationDbContext>(options =>");
-        sb.AppendLine("    options.UseSqlServer(builder.Configuration.GetConnectionString(\"DefaultConnection\")));");
-        sb.AppendLine();
-
         // Application services
         sb.AppendLine("// Application layer");
         sb.AppendLine("builder.Services.AddApplicationServices();");
@@ -47,7 +42,7 @@ public class ProgramCsGenerator : IProgramCsGenerator
 
         // Infrastructure services
         sb.AppendLine("// Infrastructure layer");
-        sb.AppendLine("builder.Services.AddInfrastructureServices();");
+        sb.AppendLine("builder.Services.AddInfrastructureServices(builder.Configuration);");
         sb.AppendLine();
 
         // CORS (optional)
@@ -69,11 +64,8 @@ public class ProgramCsGenerator : IProgramCsGenerator
 
         // Configure middleware
         sb.AppendLine("// Configure the HTTP request pipeline");
-        sb.AppendLine("if (app.Environment.IsDevelopment())");
-        sb.AppendLine("{");
-        sb.AppendLine("    app.UseSwagger();");
-        sb.AppendLine("    app.UseSwaggerUI();");
-        sb.AppendLine("}");
+        sb.AppendLine("app.UseSwagger();");
+        sb.AppendLine("app.UseSwaggerUI();");
         sb.AppendLine();
 
         sb.AppendLine("app.UseHttpsRedirection();");

@@ -7,10 +7,7 @@ namespace TargCC.Core.Tests.Unit.Generators;
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Moq;
 using TargCC.Core.Generators.Sql.Templates;
-using TargCC.Core.Interfaces.Models;
 using TargCC.Core.Tests.TestHelpers;
 using Xunit;
 
@@ -20,15 +17,6 @@ using Xunit;
 /// </summary>
 public class SpDeleteTemplateTests
 {
-    private readonly Mock<ILogger> _mockLogger;
-    private readonly SpDeleteTemplate _template;
-
-    public SpDeleteTemplateTests()
-    {
-        _mockLogger = new Mock<ILogger>();
-        _template = new SpDeleteTemplate(_mockLogger.Object);
-    }
-
     [Fact]
     public async Task GenerateAsync_SimpleTable_CreatesDeleteStoredProcedure()
     {
@@ -41,7 +29,7 @@ public class SpDeleteTemplateTests
             .Build();
 
         // Act
-        var result = await _template.GenerateAsync(table);
+        var result = await SpDeleteTemplate.GenerateAsync(table);
 
         // Assert
         result.Should().NotBeNullOrWhiteSpace();
@@ -62,7 +50,7 @@ public class SpDeleteTemplateTests
             .Build();
 
         // Act
-        var result = await _template.GenerateAsync(table);
+        var result = await SpDeleteTemplate.GenerateAsync(table);
 
         // Assert
         result.Should().Contain("@ID int");
@@ -81,7 +69,7 @@ public class SpDeleteTemplateTests
             .Build();
 
         // Act
-        var result = await _template.GenerateAsync(table);
+        var result = await SpDeleteTemplate.GenerateAsync(table);
 
         // Assert
         result.Should().Contain("@OrderID int");
@@ -93,7 +81,7 @@ public class SpDeleteTemplateTests
     public async Task GenerateAsync_NullTable_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Task> act = async () => await _template.GenerateAsync(null!);
+        Func<Task> act = async () => await SpDeleteTemplate.GenerateAsync(null!);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();

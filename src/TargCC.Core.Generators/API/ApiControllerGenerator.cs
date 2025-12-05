@@ -9,6 +9,8 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
+
+    // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -35,11 +37,14 @@ namespace TargCC.Core.Generators.API
             var entityName = className;
             var controllerName = MakePlural(className);
 
+            // Extract root namespace from config.Namespace (e.g., "TestApp.API" -> "TestApp")
+            var rootNamespace = config.Namespace.Split('.')[0];
+
             var sb = new StringBuilder();
 
             sb.Append(GenerateFileHeader(table.Name, "API Controller Generator"));
 
-            AppendUsings(sb);
+            AppendUsings(sb, rootNamespace);
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
@@ -51,14 +56,15 @@ namespace TargCC.Core.Generators.API
             return sb.ToString();
         }
 
-        private static void AppendUsings(StringBuilder sb)
+        private static void AppendUsings(StringBuilder sb, string rootNamespace)
         {
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using System.Threading.Tasks;");
-            sb.AppendLine("using AutoMapper;");
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sb.AppendLine("using Microsoft.Extensions.Logging;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
             sb.AppendLine();
         }
 
@@ -107,8 +113,8 @@ namespace TargCC.Core.Generators.API
 
         private static void GenerateFields(StringBuilder sb, string entityName)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly IRepository<{entityName}> _repository;");
-            sb.AppendLine("        private readonly IMapper _mapper;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly I{entityName}Repository _repository;");
+            sb.AppendLine("        ");
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{MakePlural(entityName)}Controller> _logger;");
         }
 
@@ -120,17 +126,14 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Initializes a new instance of the <see cref=\"{controllerName}Controller\"/> class.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"repository\">Repository for {entityName}.</param>");
-                sb.AppendLine("        /// <param name=\"mapper\">AutoMapper instance.</param>");
                 sb.AppendLine("        /// <param name=\"logger\">Logger instance.</param>");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public {controllerName}Controller(");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            IRepository<{entityName}> repository,");
-            sb.AppendLine("            IMapper mapper,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            I{entityName}Repository repository,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            ILogger<{controllerName}Controller> logger)");
             sb.AppendLine("        {");
             sb.AppendLine("            _repository = repository ?? throw new ArgumentNullException(nameof(repository));");
-            sb.AppendLine("            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));");
             sb.AppendLine("            _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
             sb.AppendLine("        }");
         }
@@ -143,18 +146,18 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets a {entityName} by ID.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The {entityName} DTO.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The {entityName} entity.</returns>");
             }
 
             sb.AppendLine("        [HttpGet(\"{id}\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 200)]");
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> GetById(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> GetById(int id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (entity == null)");
@@ -162,7 +165,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok(_mapper.Map<{entityName}Dto>(entity));");
+            sb.AppendLine("            return Ok(entity);");
             sb.AppendLine("        }");
         }
 
@@ -171,24 +174,22 @@ namespace TargCC.Core.Generators.API
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityName)} with optional filters.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityName)}.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine("        /// <param name=\"filters\">Optional filters.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityName} DTOs.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityName} entities.</returns>");
             }
 
             sb.AppendLine("        [HttpGet]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}Dto>), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}>), 200)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}Dto>>> GetAll([FromQuery] {entityName}Filters? filters)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}>>> GetAll()");
             sb.AppendLine("        {");
             sb.AppendLine("            var entities = await _repository.GetAllAsync().ConfigureAwait(false);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dtos = _mapper.Map<IEnumerable<{entityName}Dto>>(entities);");
-            sb.AppendLine("            return Ok(dtos);");
+            sb.AppendLine("            return Ok(entities);");
             sb.AppendLine("        }");
         }
 
@@ -199,30 +200,27 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        /// <summary>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Creates a new {entityName}.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine("        /// <param name=\"request\">The create request.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The created {entityName} DTO.</returns>");
+                sb.AppendLine("        /// <param name=\"entity\">The {entityName} to create.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The created {entityName}.</returns>");
             }
 
             sb.AppendLine("        [HttpPost]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 201)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 201)]");
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> Create([FromBody] Create{entityName}Request request)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> Create([FromBody] {entityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
             sb.AppendLine("                return BadRequest(ModelState);");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = _mapper.Map<{entityName}>(request);");
-            sb.AppendLine("            var created = await _repository.AddAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dto = _mapper.Map<{entityName}Dto>(created);");
-            sb.AppendLine();
-            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);");
+            sb.AppendLine("            await _repository.AddAsync(entity).ConfigureAwait(false);");
+            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.ID }, entity);");
             sb.AppendLine("        }");
         }
 
@@ -234,20 +232,20 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Updates an existing {entityName}.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
-                sb.AppendLine("        /// <param name=\"request\">The update request.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The updated {entityName} DTO.</returns>");
+                sb.AppendLine("        /// <param name=\"entity\">The updated {entityName}.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The updated {entityName}.</returns>");
             }
 
             sb.AppendLine("        [HttpPut(\"{id}\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}Dto), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 200)]");
                 sb.AppendLine("        [ProducesResponseType(404)]");
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}Dto>> Update(int id, [FromBody] Update{entityName}Request request)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> Update(int id, [FromBody] {entityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
@@ -260,11 +258,9 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine("            _mapper.Map(request, existing);");
-            sb.AppendLine("            var updated = await _repository.UpdateAsync(existing).ConfigureAwait(false);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var dto = _mapper.Map<{entityName}Dto>(updated);");
-            sb.AppendLine();
-            sb.AppendLine("            return Ok(dto);");
+            sb.AppendLine("            entity.ID = id; // Ensure ID matches route");
+            sb.AppendLine("            await _repository.UpdateAsync(entity).ConfigureAwait(false);");
+            sb.AppendLine("            return Ok(entity);");
             sb.AppendLine("        }");
         }
 

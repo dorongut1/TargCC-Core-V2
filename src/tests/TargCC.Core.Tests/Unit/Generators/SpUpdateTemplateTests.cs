@@ -7,10 +7,7 @@ namespace TargCC.Core.Tests.Unit.Generators
     using System;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using Microsoft.Extensions.Logging;
-    using Moq;
     using TargCC.Core.Generators.Sql.Templates;
-    using TargCC.Core.Interfaces.Models;
     using TargCC.Core.Tests.TestHelpers;
     using Xunit;
 
@@ -19,17 +16,6 @@ namespace TargCC.Core.Tests.Unit.Generators
     /// </summary>
     public class SpUpdateTemplateTests
     {
-        private readonly Mock<ILogger> _mockLogger;
-        private readonly SpUpdateTemplate _template;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpUpdateTemplateTests"/> class.
-        /// </summary>
-        public SpUpdateTemplateTests()
-        {
-            _mockLogger = new Mock<ILogger>();
-            _template = new SpUpdateTemplate(_mockLogger.Object);
-        }
 
         [Fact]
         public async Task GenerateAsync_SimpleTable_GeneratesCorrectProcedure()
@@ -44,7 +30,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().NotBeNullOrWhiteSpace();
@@ -76,7 +62,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("@ChangedBy nvarchar(100)");
@@ -102,7 +88,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("@CustomerName");
@@ -128,7 +114,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("@ent_CreditCard varchar(MAX) = NULL");
@@ -149,7 +135,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("CREATE OR ALTER PROCEDURE [dbo].[SP_UpdateReadOnlyTable]");
@@ -169,7 +155,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            Func<Task> act = async () => await _template.GenerateAsync(table);
+            Func<Task> act = async () => await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -181,7 +167,7 @@ namespace TargCC.Core.Tests.Unit.Generators
         {
             // Arrange
             // Act
-            Func<Task> act = async () => await _template.GenerateAsync(null!);
+            Func<Task> act = async () => await SpUpdateTemplate.GenerateAsync(null!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
@@ -200,7 +186,7 @@ namespace TargCC.Core.Tests.Unit.Generators
                 .Build();
 
             // Act
-            var result = await _template.GenerateAsync(table);
+            var result = await SpUpdateTemplate.GenerateAsync(table);
 
             // Assert
             result.Should().Contain("@OrderID int");

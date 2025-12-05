@@ -180,13 +180,13 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
             var camelName = GetCamelCaseName(table.Name);
-            var apiPath = $"/api/{camelName}s";
+            var apiPath = $"/{camelName}s";
 
             // File header
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            sb.AppendLine("import { api } from '../config';");
+            sb.AppendLine("import { api } from './client';");
             sb.AppendLine("import type {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");

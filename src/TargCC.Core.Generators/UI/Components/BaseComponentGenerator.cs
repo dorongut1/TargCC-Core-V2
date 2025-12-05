@@ -235,13 +235,13 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (sqlType.Contains("MONEY", StringComparison.Ordinal))
             {
-                return $"new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD' }}).format({value})";
+                return $"({value} != null ? new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD' }}).format({value}) : 'N/A')";
             }
 
             if (sqlType.Contains("DECIMAL", StringComparison.Ordinal) ||
                 sqlType.Contains("NUMERIC", StringComparison.Ordinal))
             {
-                return $"{value}.toFixed(2)";
+                return $"{value}?.toFixed(2) ?? 'N/A'";
             }
 
             if (sqlType.Contains("BIT", StringComparison.Ordinal))

@@ -43,20 +43,24 @@ public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
     /// Initializes a new instance of the <see cref="DatabaseAnalyzer"/> class.
     /// </summary>
     /// <param name="connectionString">SQL Server connection string. Must include database name and credentials.
-    /// Example: "Server=localhost;Database=MyDb;Integrated Security=true;".</param>
+    /// Example: "Server=localhost;Database=MyDb;Integrated Security=true;". Can be empty string if using AnalyzeDatabaseAsync.</param>
     /// <param name="logger">Logger instance for tracking operations and diagnostics.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="connectionString"/> or <paramref name="logger"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="logger"/> is null.</exception>
     /// <remarks>
     /// The constructor also initializes child analyzers (TableAnalyzer and RelationshipAnalyzer)
-    /// that are used internally for detailed analysis.
+    /// that are used internally for detailed analysis. If connectionString is empty, it must be provided
+    /// to AnalyzeDatabaseAsync method.
     /// </remarks>
     public DatabaseAnalyzer(string connectionString, ILogger<DatabaseAnalyzer> logger)
     {
-        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+        _connectionString = connectionString ?? string.Empty;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _tableAnalyzer = new TableAnalyzer(connectionString, logger);
-        _relationshipAnalyzer = new RelationshipAnalyzer(connectionString, logger);
+        if (!string.IsNullOrEmpty(_connectionString))
+        {
+            _tableAnalyzer = new TableAnalyzer(connectionString, logger);
+            _relationshipAnalyzer = new RelationshipAnalyzer(connectionString, logger);
+        }
 
         _logger.LogInformation("DatabaseAnalyzer initialized");
     }
