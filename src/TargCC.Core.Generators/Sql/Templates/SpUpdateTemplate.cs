@@ -48,6 +48,12 @@ namespace TargCC.Core.Generators.Sql.Templates
                 updateableColumns = updateableColumns.Where(c => c.Name != "ChangedOn").ToList();
             }
 
+            // Remove ChangedBy from updateable columns (will be added as separate parameter)
+            if (hasChangedBy)
+            {
+                updateableColumns = updateableColumns.Where(c => c.Name != "ChangedBy").ToList();
+            }
+
             // Procedure header
             sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Update{table.Name}]");
 

@@ -109,6 +109,19 @@ namespace TargCC.Core.Generators.Sql
             sb.AppendLine($"-- =========================================");
             sb.AppendLine();
 
+            // GetAll
+            try
+            {
+                var getAllSql = await SpGetAllTemplate.GenerateAsync(table);
+                sb.AppendLine(getAllSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not generate GetAll procedure for {TableName}", table.Name);
+            }
+
             // GetByID
             try
             {
