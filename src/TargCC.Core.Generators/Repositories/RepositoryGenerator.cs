@@ -49,8 +49,6 @@ public class RepositoryGenerator : IRepositoryGenerator
             new EventId(2, nameof(GenerateAsync)),
             "Successfully generated repository implementation for table: {TableName}");
 
-    private static readonly string[] PaginationParameters = { "int? skip = null", "int? take = null", "CancellationToken cancellationToken = default" };
-
     private readonly ILogger<RepositoryGenerator> _logger;
 
     /// <summary>
@@ -324,7 +322,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         var paramList = string.Join(
             ", ",
             parameters.Select(p => $"{p.paramType} {p.paramName} = null")
-            .Concat(PaginationParameters));
+            .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList})");

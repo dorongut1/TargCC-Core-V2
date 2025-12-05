@@ -54,8 +54,6 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             new EventId(2, nameof(GenerateAsync)),
             "Successfully generated repository interface for table: {TableName}");
 
-    private static readonly string[] PaginationParameters = { "int? skip = null", "int? take = null", "CancellationToken cancellationToken = default" };
-
     private readonly ILogger<RepositoryInterfaceGenerator> _logger;
 
     /// <summary>
@@ -437,7 +435,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         var paramList = string.Join(
             ", ",
             parameters.Select(p => $"{p.paramType} {p.paramName} = null")
-            .Concat(PaginationParameters));
+            .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList});");
         sb.AppendLine();
