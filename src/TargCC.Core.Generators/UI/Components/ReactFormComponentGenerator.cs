@@ -48,7 +48,7 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine("import React from 'react';");
-            sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+            sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
 
             if (validationLibrary == FormValidationLibrary.ReactHookForm)
             {
@@ -356,13 +356,10 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("interface Props {");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {camelName}Id?: number;");
-            sb.AppendLine("}");
-            sb.AppendLine();
-
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Form: React.FC<Props> = ({{ {camelName}Id }}) => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Form: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
+            sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {camelName}Id = id && id !== 'new' ? Number(id) : undefined;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const isEdit = !!{camelName}Id;");
             sb.AppendLine();
 

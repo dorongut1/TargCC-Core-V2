@@ -128,6 +128,22 @@ namespace TargCC.Core.Generators.Sql
                 LogGetAllGenerationWarning(_logger, table.Name, ex);
             }
 
+            // GetFiltered (based on indexes)
+            try
+            {
+                var getFilteredSql = await SpGetFilteredTemplate.GenerateAsync(table);
+                if (!string.IsNullOrWhiteSpace(getFilteredSql))
+                {
+                    sb.AppendLine(getFilteredSql);
+                    sb.AppendLine("GO");
+                    sb.AppendLine();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not generate GetFiltered procedure for {TableName}", table.Name);
+            }
+
             // GetByID
             try
             {

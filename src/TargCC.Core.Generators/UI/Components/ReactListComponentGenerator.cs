@@ -47,12 +47,13 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine("import React from 'react';");
             sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+            sb.AppendLine("import * as XLSX from 'xlsx';");
 
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';");
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';");
+                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
@@ -136,6 +137,20 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
             sb.AppendLine();
 
+            // Export to Excel handler
+            sb.AppendLine("  const handleExportToExcel = () => {");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName} || {pluralName}.length === 0) {{");
+            sb.AppendLine("      alert('No data to export');");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const ws = XLSX.utils.json_to_sheet({pluralName});");
+            sb.AppendLine("    const wb = XLSX.utils.book_new();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.utils.book_append_sheet(wb, ws, '{className}s');");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.writeFile(wb, `{className}s_${{new Date().toISOString().split('T')[0]}}.xlsx`);");
+            sb.AppendLine("  };");
+            sb.AppendLine();
+
             // Columns definition
             sb.AppendLine(GenerateColumns(table));
             sb.AppendLine();
@@ -173,13 +188,20 @@ namespace TargCC.Core.Generators.UI.Components
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("    <Box sx={{ height: 600, width: '100%' }}>");
-                sb.AppendLine("      <Box sx={{ mb: 2 }}>");
+                sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
                 sb.AppendLine("        <Button");
                 sb.AppendLine("          variant=\"contained\"");
                 sb.AppendLine("          startIcon={<AddIcon />}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
                 sb.AppendLine("        >");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+                sb.AppendLine("        </Button>");
+                sb.AppendLine("        <Button");
+                sb.AppendLine("          variant=\"outlined\"");
+                sb.AppendLine("          startIcon={<FileDownloadIcon />}");
+                sb.AppendLine("          onClick={handleExportToExcel}");
+                sb.AppendLine("        >");
+                sb.AppendLine("          Export to Excel");
                 sb.AppendLine("        </Button>");
                 sb.AppendLine("      </Box>");
                 sb.AppendLine("      <DataGrid");

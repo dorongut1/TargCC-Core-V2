@@ -461,7 +461,8 @@ public class ProjectGenerationService : IProjectGenerationService
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
             "react-hook-form": "^7.48.2",
-            "react-router-dom": "^6.20.0"
+            "react-router-dom": "^6.20.0",
+            "xlsx": "^0.18.5"
           },
           "devDependencies": {
             "@types/node": "^20.10.4",
