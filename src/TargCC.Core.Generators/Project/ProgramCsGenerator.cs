@@ -42,7 +42,7 @@ public class ProgramCsGenerator : IProgramCsGenerator
 
         // Infrastructure services
         sb.AppendLine("// Infrastructure layer");
-        sb.AppendLine("builder.Services.AddInfrastructureServices();");
+        sb.AppendLine("builder.Services.AddInfrastructureServices(builder.Configuration);");
         sb.AppendLine();
 
         // CORS (optional)

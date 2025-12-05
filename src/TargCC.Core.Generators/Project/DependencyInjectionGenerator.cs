@@ -61,6 +61,9 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         var sb = new StringBuilder();
 
         // Using statements
+        sb.AppendLine("using System.Data;");
+        sb.AppendLine("using Microsoft.Data.Sqlite;");
+        sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Domain.Interfaces;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure.Repositories;");
@@ -81,8 +84,15 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"services\">The service collection.</param>");
         sb.AppendLine("    /// <returns>The service collection for chaining.</returns>");
-        sb.AppendLine("    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)");
+        sb.AppendLine("    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)");
         sb.AppendLine("    {");
+        sb.AppendLine("        // Register database connection");
+        sb.AppendLine("        services.AddScoped<IDbConnection>(sp => ");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var connectionString = configuration.GetConnectionString(\"DefaultConnection\");");
+        sb.AppendLine("            return new SqliteConnection(connectionString);");
+        sb.AppendLine("        });");
+        sb.AppendLine();
         sb.AppendLine("        // Register repositories");
 
         // Register each table's repository
