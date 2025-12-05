@@ -92,6 +92,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Generate CRUD methods
         GenerateGetByIdAsync(sb, table);
         GenerateGetAllAsync(sb, table);
+        GenerateGetFilteredAsync(sb, table);
         GenerateAddAsync(sb, table);
         GenerateUpdateAsync(sb, table);
         GenerateDeleteAsync(sb, table);
@@ -265,6 +266,92 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error getting all {entityName} entities\");");
+        sb.AppendLine("            throw;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Generates GetFilteredAsync method based on table indexes.
+    /// </summary>
+    private static void GenerateGetFilteredAsync(StringBuilder sb, Table table)
+    {
+        var filterableIndexes = table.Indexes?
+            .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
+            .ToList();
+
+        if (filterableIndexes == null || filterableIndexes.Count == 0)
+        {
+            // No filterable indexes, skip
+            return;
+        }
+
+        string entityName = table.Name;
+        string spName = $"SP_GetFiltered{entityName}s";
+        var parameters = new List<(string paramName, string paramType, string columnName)>();
+
+        // Collect unique indexed columns
+        var processedColumns = new HashSet<string>();
+        foreach (var index in filterableIndexes)
+        {
+            foreach (var columnName in index.ColumnNames)
+            {
+                if (!processedColumns.Contains(columnName))
+                {
+                    processedColumns.Add(columnName);
+                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                    if (column != null)
+                    {
+                        string paramName = CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(columnName));
+                        string paramType = CodeGenerationHelpers.GetCSharpType(column.DataType) + "?"; // Nullable
+                        parameters.Add((paramName, paramType, columnName));
+                    }
+                }
+            }
+        }
+
+        if (parameters.Count == 0)
+        {
+            return;
+        }
+
+        // Method signature
+        var paramList = string.Join(", ",
+            parameters.Select(p => $"{p.paramType} {p.paramName} = null")
+            .Concat(new[] { "int? skip = null", "int? take = null", "CancellationToken cancellationToken = default" }));
+
+        sb.AppendLine("    /// <inheritdoc/>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList})");
+        sb.AppendLine("    {");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting filtered {entityName} entities\");");
+        sb.AppendLine();
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+
+        // Build dynamic object for parameters
+        sb.AppendLine("            var parameters = new {");
+        foreach (var (paramName, _, columnName) in parameters)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"                {columnName} = {paramName},");
+        }
+
+        sb.AppendLine("                Skip = skip,");
+        sb.AppendLine("                Take = take");
+        sb.AppendLine("            };");
+        sb.AppendLine();
+
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{entityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
+        sb.AppendLine("                parameters,");
+        sb.AppendLine("                commandType: CommandType.StoredProcedure);");
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Retrieved {{Count}} filtered {entityName} entities\", result.Count());");
+        sb.AppendLine("            return result;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error getting filtered {entityName} entities\");");
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
