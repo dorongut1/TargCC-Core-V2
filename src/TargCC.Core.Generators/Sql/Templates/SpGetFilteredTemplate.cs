@@ -48,7 +48,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                    var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
                         // Avoid duplicate parameters
@@ -91,7 +91,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                    var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
                         var isTextType = IsTextType(column.DataType);

@@ -297,16 +297,18 @@ public class RepositoryGenerator : IRepositoryGenerator
         {
             foreach (var columnName in index.ColumnNames)
             {
-                if (!processedColumns.Contains(columnName))
+                if (processedColumns.Contains(columnName))
                 {
-                    processedColumns.Add(columnName);
-                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
-                    if (column != null)
-                    {
-                        string paramName = CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(columnName));
-                        string paramType = CodeGenerationHelpers.GetCSharpType(column.DataType) + "?"; // Nullable
-                        parameters.Add((paramName, paramType, columnName));
-                    }
+                    continue;
+                }
+
+                processedColumns.Add(columnName);
+                var column = table.Columns.Find(c => c.Name == columnName);
+                if (column != null)
+                {
+                    string paramName = CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(columnName));
+                    string paramType = CodeGenerationHelpers.GetCSharpType(column.DataType) + "?"; // Nullable
+                    parameters.Add((paramName, paramType, columnName));
                 }
             }
         }
@@ -317,7 +319,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         // Method signature
-        var paramList = string.Join(", ",
+        var paramList = string.Join(
+            ", ",
             parameters.Select(p => $"{p.paramType} {p.paramName} = null")
             .Concat(new[] { "int? skip = null", "int? take = null", "CancellationToken cancellationToken = default" }));
 
