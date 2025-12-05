@@ -374,12 +374,12 @@ namespace TargCC.Core.Generators.API
             var upper = sqlType.ToUpperInvariant();
             return upper switch
             {
-                _ when upper.Contains("INT") => "int",
-                _ when upper.Contains("VARCHAR") || upper.Contains("CHAR") || upper.Contains("TEXT") => "string",
-                _ when upper.Contains("DATE") || upper.Contains("TIME") => "DateTime",
-                _ when upper.Contains("BIT") => "bool",
-                _ when upper.Contains("DECIMAL") || upper.Contains("NUMERIC") || upper.Contains("MONEY") => "decimal",
-                _ when !(!upper.Contains("FLOAT") && !upper.Contains("REAL")) => "double",
+                _ when upper.Contains("INT", StringComparison.Ordinal) => "int",
+                _ when upper.Contains("VARCHAR", StringComparison.Ordinal) || upper.Contains("CHAR", StringComparison.Ordinal) || upper.Contains("TEXT", StringComparison.Ordinal) => "string",
+                _ when upper.Contains("DATE", StringComparison.Ordinal) || upper.Contains("TIME", StringComparison.Ordinal) => "DateTime",
+                _ when upper.Contains("BIT", StringComparison.Ordinal) => "bool",
+                _ when upper.Contains("DECIMAL", StringComparison.Ordinal) || upper.Contains("NUMERIC", StringComparison.Ordinal) || upper.Contains("MONEY", StringComparison.Ordinal) => "decimal",
+                _ when !(!upper.Contains("FLOAT", StringComparison.Ordinal) && !upper.Contains("REAL", StringComparison.Ordinal)) => "double",
                 _ => "string",
             };
         }

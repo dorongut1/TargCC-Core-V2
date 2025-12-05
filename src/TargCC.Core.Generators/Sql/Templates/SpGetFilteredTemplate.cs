@@ -54,7 +54,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             return Task.FromResult(sb.ToString());
         }
 
-        private static void GenerateProcedureHeader(StringBuilder sb, Table table, List<Index> filterableIndexes)
+        private static void GenerateProcedureHeader(StringBuilder sb, Table table, List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
         {
             sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetFiltered{table.Name}s]");
 
@@ -64,7 +64,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                    var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
                         // Avoid duplicate parameters
@@ -88,7 +88,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine();
         }
 
-        private static void GenerateSelectAndWhere(StringBuilder sb, Table table, List<Index> filterableIndexes)
+        private static void GenerateSelectAndWhere(StringBuilder sb, Table table, List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
         {
             // SELECT statement
             sb.AppendLine("    SELECT");
@@ -110,7 +110,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 foreach (var columnName in index.ColumnNames)
                 {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                    var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
                         var isTextType = IsTextType(column.DataType);
