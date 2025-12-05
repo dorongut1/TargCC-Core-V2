@@ -5,6 +5,7 @@
 namespace TargCC.Core.Generators.UI
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using TargCC.Core.Generators.UI.Components;
 
     /// <summary>
@@ -38,6 +39,11 @@ namespace TargCC.Core.Generators.UI
         /// <summary>
         /// Gets or sets the API base URL.
         /// </summary>
+        /// <remarks>
+        /// This property is intentionally a string (not System.Uri) because it's used
+        /// to generate JavaScript/TypeScript code where it will be consumed as a string.
+        /// </remarks>
+        [SuppressMessage("Design", "CA1056:URI properties should not be strings", Justification = "Used for code generation - output needs to be a string for JavaScript/TypeScript")]
         public string ApiBaseUrl { get; set; }
 
         /// <summary>
