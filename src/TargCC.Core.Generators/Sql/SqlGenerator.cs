@@ -67,6 +67,12 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(8, nameof(LogGetAllGenerationWarning)),
                 "Could not generate GetAll procedure for {TableName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogGetFilteredGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(9, nameof(LogGetFilteredGenerationWarning)),
+                "Could not generate GetFiltered procedure for {TableName}");
+
         private readonly ILogger _logger;
         private readonly bool _includeAdvancedProcedures;
 
@@ -141,7 +147,7 @@ namespace TargCC.Core.Generators.Sql
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not generate GetFiltered procedure for {TableName}", table.Name);
+                LogGetFilteredGenerationWarning(_logger, table.Name, ex);
             }
 
             // GetByID

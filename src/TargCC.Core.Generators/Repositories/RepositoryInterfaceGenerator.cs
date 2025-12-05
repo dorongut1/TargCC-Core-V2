@@ -196,6 +196,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
         sb.AppendLine();
 
+        // GetFilteredAsync (if indexes exist)
+        GenerateGetFilteredAsyncMethod(sb, table);
+
         // AddAsync
         sb.AppendLine("    /// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Adds a new {entityName} entity to the database.");
@@ -365,6 +368,76 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default);");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Generates GetFilteredAsync method based on table indexes.
+    /// </summary>
+    private static void GenerateGetFilteredAsyncMethod(StringBuilder sb, Table table)
+    {
+        var filterableIndexes = table.Indexes?
+            .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
+            .ToList();
+
+        if (filterableIndexes == null || filterableIndexes.Count == 0)
+        {
+            // No filterable indexes, skip
+            return;
+        }
+
+        string entityName = table.Name;
+        var parameters = new List<(string paramName, string paramType, string columnName)>();
+
+        // Collect unique indexed columns
+        var processedColumns = new HashSet<string>();
+        foreach (var index in filterableIndexes)
+        {
+            foreach (var columnName in index.ColumnNames)
+            {
+                if (processedColumns.Contains(columnName))
+                {
+                    continue;
+                }
+
+                processedColumns.Add(columnName);
+                var column = table.Columns.Find(c => c.Name == columnName);
+                if (column != null)
+                {
+                    string paramName = CodeGenerationHelpers.ToCamelCase(CodeGenerationHelpers.SanitizeColumnName(columnName));
+                    string paramType = GetCSharpType(column.DataType) + "?"; // Nullable
+                    parameters.Add((paramName, paramType, columnName));
+                }
+            }
+        }
+
+        if (parameters.Count == 0)
+        {
+            return;
+        }
+
+        // XML Documentation
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Gets filtered {entityName} entities based on indexed columns.");
+        sb.AppendLine("    /// </summary>");
+
+        foreach (var (paramName, _, columnName) in parameters)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"{paramName}\">Filter by {columnName} (optional).</param>");
+        }
+
+        sb.AppendLine("    /// <param name=\"skip\">Number of entities to skip (for paging).</param>");
+        sb.AppendLine("    /// <param name=\"take\">Number of entities to take (for paging).</param>");
+        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>Collection of filtered {entityName} entities.</returns>");
+
+        // Method signature
+        var paramList = string.Join(
+            ", ",
+            parameters.Select(p => $"{p.paramType} {p.paramName} = null")
+            .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
+
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList});");
         sb.AppendLine();
     }
 
