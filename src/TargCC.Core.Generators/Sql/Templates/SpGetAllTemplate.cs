@@ -62,8 +62,10 @@ namespace TargCC.Core.Generators.Sql.Templates
                     {
                         sb.Append(", ");
                     }
+
                     sb.Append(CultureInfo.InvariantCulture, $"[{col.Name}]");
                 }
+
                 sb.AppendLine();
 
                 // Add pagination using OFFSET/FETCH if parameters provided
