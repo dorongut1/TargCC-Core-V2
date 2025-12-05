@@ -47,7 +47,7 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("import React from 'react';");
+            sb.AppendLine("import React, { useEffect } from 'react';");
             sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
 
             if (validationLibrary == FormValidationLibrary.ReactHookForm)
@@ -371,10 +371,18 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const {");
             sb.AppendLine("    register,");
             sb.AppendLine("    handleSubmit,");
+            sb.AppendLine("    reset,");
             sb.AppendLine("    formState: { errors },");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  }} = useForm<Create{className}Request>({{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    defaultValues: existing{className} || {{}},");
+            sb.AppendLine("    defaultValues: {},");
             sb.AppendLine("  });");
+            sb.AppendLine();
+            sb.AppendLine("  // Update form when data loads");
+            sb.AppendLine("  useEffect(() => {");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (existing{className}) {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      reset(existing{className});");
+            sb.AppendLine("    }");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [existing{className}, reset]);");
             sb.AppendLine();
 
             // Mutation hooks
