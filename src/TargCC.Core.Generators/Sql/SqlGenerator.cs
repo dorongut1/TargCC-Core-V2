@@ -256,6 +256,32 @@ namespace TargCC.Core.Generators.Sql
                 sb.AppendLine();
             }
 
+            // Generate FK relationship procedures (Master-Detail Views)
+            if (_includeAdvancedProcedures && schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                sb.AppendLine("-- =========================================");
+                sb.AppendLine("-- Foreign Key Relationship Procedures");
+                sb.AppendLine("-- (Master-Detail Views)");
+                sb.AppendLine("-- =========================================");
+                sb.AppendLine();
+
+                foreach (var table in validTables)
+                {
+                    try
+                    {
+                        var relatedSql = await SpGetRelatedTemplate.GenerateAllRelatedProcedures(table, schema);
+                        if (!string.IsNullOrWhiteSpace(relatedSql))
+                        {
+                            sb.AppendLine(relatedSql);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not generate related procedures for table: {TableName}", table.Name);
+                    }
+                }
+            }
+
             return sb.ToString();
         }
     }
