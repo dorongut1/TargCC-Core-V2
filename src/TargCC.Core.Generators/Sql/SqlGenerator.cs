@@ -31,6 +31,12 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(2, nameof(LogGetByIdGenerationWarning)),
                 "Could not generate GetByID procedure for {TableName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogAddGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(10, nameof(LogAddGenerationWarning)),
+                "Could not generate Add procedure for {TableName}");
+
         private static readonly Action<ILogger, string, Exception?> LogUpdateGenerationWarning =
             LoggerMessage.Define<string>(
                 LogLevel.Warning,
@@ -161,6 +167,19 @@ namespace TargCC.Core.Generators.Sql
             catch (InvalidOperationException ex)
             {
                 LogGetByIdGenerationWarning(_logger, table.Name, ex);
+            }
+
+            // Add
+            try
+            {
+                var addSql = await SpAddTemplate.GenerateAsync(table);
+                sb.AppendLine(addSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogAddGenerationWarning(_logger, table.Name, ex);
             }
 
             // Update
