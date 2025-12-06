@@ -495,7 +495,7 @@ namespace TargCC.Core.Generators.UI.Components
                 }
 
                 // Generate appropriate default value based on field type
-                string defaultValue = prefix switch
+                string? defaultValue = prefix switch
                 {
                     "LKP" => $"{ToCamelCase(baseName)}Code: ''",  // Lookup fields need empty string for Select
                     "ENM" => $"{fieldName}: ''",  // Enum fields (Select) need empty string
@@ -513,7 +513,7 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 foreach (var value in defaultValues)
                 {
-                    sb.AppendLine($"      {value},");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"      {value},");
                 }
             }
 
