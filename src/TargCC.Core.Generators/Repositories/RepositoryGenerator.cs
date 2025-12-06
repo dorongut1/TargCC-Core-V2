@@ -432,7 +432,8 @@ public class RepositoryGenerator : IRepositoryGenerator
             .Where(c => !c.IsPrimaryKey &&
                        !IsAuditColumn(c.Name) &&
                        !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
-                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase))
+                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         foreach (var column in updateableColumns)
@@ -441,8 +442,10 @@ public class RepositoryGenerator : IRepositoryGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
         }
 
-        // Add ChangedBy if BLG_ChangedBy exists
-        var changedByColumn = table.Columns.Find(c => c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase));
+        // Add ChangedBy if BLG_ChangedBy or ChangedBy exists
+        var changedByColumn = table.Columns.Find(c =>
+            c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase) ||
+            c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase));
         if (changedByColumn != null)
         {
             sb.AppendLine("            parameters.Add(\"@ChangedBy\", entity.ChangedBy);");
