@@ -374,7 +374,9 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    reset,");
             sb.AppendLine("    formState: { errors },");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  }} = useForm<Create{className}Request>({{");
-            sb.AppendLine("    defaultValues: {},");
+            sb.AppendLine("    defaultValues: {");
+            sb.Append(GenerateDefaultValues(table));
+            sb.AppendLine("    },");
             sb.AppendLine("  });");
             sb.AppendLine();
             sb.AppendLine("  // Update form when data loads");
@@ -465,6 +467,55 @@ namespace TargCC.Core.Generators.UI.Components
 
             // Component
             sb.AppendLine(GenerateComponentBody(table, className, camelName, config.Framework));
+
+            return sb.ToString();
+        }
+
+        private static string GenerateDefaultValues(Table table)
+        {
+            var sb = new StringBuilder();
+            var defaultValues = new List<string>();
+
+            foreach (var column in table.Columns)
+            {
+                // Skip primary key and auto-generated fields
+                if (column.IsPrimaryKey)
+                {
+                    continue;
+                }
+
+                var (prefix, baseName) = SplitPrefix(column.Name);
+                var propertyName = GetPropertyName(column.Name);
+                var fieldName = ToCamelCase(propertyName);
+
+                // Skip read-only fields (CLC, BLG, AGG, SCB)
+                if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
+                {
+                    continue;
+                }
+
+                // Generate appropriate default value based on field type
+                string defaultValue = prefix switch
+                {
+                    "LKP" => $"{ToCamelCase(baseName)}Code: ''",  // Lookup fields need empty string for Select
+                    "ENM" => $"{fieldName}: ''",  // Enum fields (Select) need empty string
+                    "BIT" => $"{fieldName}: false",  // Boolean fields
+                    _ => null,  // Other fields can be undefined
+                };
+
+                if (defaultValue != null)
+                {
+                    defaultValues.Add(defaultValue);
+                }
+            }
+
+            if (defaultValues.Count > 0)
+            {
+                foreach (var value in defaultValues)
+                {
+                    sb.AppendLine($"      {value},");
+                }
+            }
 
             return sb.ToString();
         }

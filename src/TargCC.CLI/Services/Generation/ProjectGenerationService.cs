@@ -451,26 +451,26 @@ public class ProjectGenerationService : IProjectGenerationService
           "version": "0.1.0",
           "private": true,
           "dependencies": {
-            "@emotion/react": "^11.11.1",
-            "@emotion/styled": "^11.11.0",
-            "@mui/icons-material": "^5.14.19",
-            "@mui/material": "^5.14.20",
-            "@mui/x-data-grid": "^6.18.5",
-            "@tanstack/react-query": "^5.12.2",
-            "axios": "^1.6.2",
-            "react": "^18.2.0",
-            "react-dom": "^18.2.0",
-            "react-hook-form": "^7.48.2",
-            "react-router-dom": "^6.20.0",
-            "xlsx": "^0.18.5"
+            "@emotion/react": "^11.14.0",
+            "@emotion/styled": "^11.14.0",
+            "@mui/icons-material": "^6.3.0",
+            "@mui/material": "^6.3.0",
+            "@mui/x-data-grid": "^7.24.0",
+            "@tanstack/react-query": "^5.62.0",
+            "axios": "^1.7.9",
+            "react": "^18.3.1",
+            "react-dom": "^18.3.1",
+            "react-hook-form": "^7.54.0",
+            "react-router-dom": "^7.1.1",
+            "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
           },
           "devDependencies": {
-            "@types/node": "^20.10.4",
-            "@types/react": "^18.2.42",
-            "@types/react-dom": "^18.2.17",
-            "@vitejs/plugin-react": "^4.2.1",
-            "typescript": "^5.3.3",
-            "vite": "^5.0.5"
+            "@types/node": "^22.10.2",
+            "@types/react": "^18.3.18",
+            "@types/react-dom": "^18.3.5",
+            "@vitejs/plugin-react": "^4.3.4",
+            "typescript": "^5.7.2",
+            "vite": "^6.2.6"
           },
           "scripts": {
             "dev": "vite",
@@ -587,7 +587,12 @@ public class ProjectGenerationService : IProjectGenerationService
         ReactDOM.createRoot(document.getElementById('root')!).render(
           <React.StrictMode>
             <QueryClientProvider client={queryClient}>
-              <BrowserRouter>
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
                 <App />
               </BrowserRouter>
             </QueryClientProvider>
