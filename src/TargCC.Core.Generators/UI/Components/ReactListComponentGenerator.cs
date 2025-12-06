@@ -263,25 +263,28 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static List<Index> GetFilterableIndexes(Table table)
+        private static List<TargCC.Core.Interfaces.Models.Index> GetFilterableIndexes(Table table)
         {
-            return table.Indexes?
+            if (table.Indexes == null)
+            {
+                return new List<TargCC.Core.Interfaces.Models.Index>();
+            }
+
+            return table.Indexes
                 .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
-                .ToList() ?? new List<Index>();
+                .ToList();
         }
 
-        private static void AppendFilterFieldsForIndex(StringBuilder sb, Table table, Index index, System.Collections.Generic.HashSet<string> processedColumns)
+        private static void AppendFilterFieldsForIndex(StringBuilder sb, Table table, TargCC.Core.Interfaces.Models.Index index, System.Collections.Generic.HashSet<string> processedColumns)
         {
-            foreach (var columnName in index.ColumnNames)
+            var columns = index.ColumnNames
+                .Where(columnName => processedColumns.Add(columnName))
+                .Select(columnName => table.Columns.Find(c => c.Name == columnName))
+                .Where(column => column != null);
+
+            foreach (var column in columns)
             {
-                if (processedColumns.Add(columnName))
-                {
-                    var column = table.Columns.Find(c => c.Name == columnName);
-                    if (column != null)
-                    {
-                        AppendFilterField(sb, column);
-                    }
-                }
+                AppendFilterField(sb, column!);
             }
         }
 
