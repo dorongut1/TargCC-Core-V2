@@ -312,11 +312,16 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("            InputLabelProps={{ shrink: true }}");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{{valueDisplay}}}");
-            sb.AppendLine("            onChange={(e) => setFilters(prev => ({");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            defaultValue={{{valueDisplay}}}");
+            sb.AppendLine("            onBlur={(e) => setFilters(prev => ({");
             sb.AppendLine("              ...prev,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
             sb.AppendLine("            }))}");
+            sb.AppendLine("            onKeyDown={(e) => {");
+            sb.AppendLine("              if (e.key === 'Enter') {");
+            sb.AppendLine("                e.currentTarget.blur();");
+            sb.AppendLine("              }");
+            sb.AppendLine("            }}");
             sb.AppendLine("          />");
         }
 
