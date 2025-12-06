@@ -133,8 +133,18 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+            sb.AppendLine();
+            sb.AppendLine("  const handleApplyFilters = () => {");
+            sb.AppendLine("    setFilters(localFilters);");
+            sb.AppendLine("  };");
+            sb.AppendLine();
+            sb.AppendLine("  const handleClearFilters = () => {");
+            sb.AppendLine("    setLocalFilters({});");
+            sb.AppendLine("    setFilters({});");
+            sb.AppendLine("  };");
             sb.AppendLine();
 
             // Export to Excel handler
@@ -312,14 +322,14 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("            InputLabelProps={{ shrink: true }}");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            defaultValue={{{valueDisplay}}}");
-            sb.AppendLine("            onBlur={(e) => setFilters(prev => ({");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters.{propertyName} ?? ''}}");
+            sb.AppendLine("            onChange={(e) => setLocalFilters(prev => ({");
             sb.AppendLine("              ...prev,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
             sb.AppendLine("            }))}");
             sb.AppendLine("            onKeyDown={(e) => {");
             sb.AppendLine("              if (e.key === 'Enter') {");
-            sb.AppendLine("                e.currentTarget.blur();");
+            sb.AppendLine("                handleApplyFilters();");
             sb.AppendLine("              }");
             sb.AppendLine("            }}");
             sb.AppendLine("          />");
@@ -362,13 +372,21 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static void AppendClearFiltersButton(StringBuilder sb)
         {
-            sb.AppendLine("          <IconButton");
+            sb.AppendLine("          <Button");
+            sb.AppendLine("            variant=\"contained\"");
             sb.AppendLine("            color=\"primary\"");
-            sb.AppendLine("            onClick={() => setFilters({})}");
-            sb.AppendLine("            title=\"Clear Filters\"");
+            sb.AppendLine("            onClick={handleApplyFilters}");
+            sb.AppendLine("            size=\"small\"");
             sb.AppendLine("          >");
-            sb.AppendLine("            <ClearIcon />");
-            sb.AppendLine("          </IconButton>");
+            sb.AppendLine("            Apply Filters");
+            sb.AppendLine("          </Button>");
+            sb.AppendLine("          <Button");
+            sb.AppendLine("            variant=\"outlined\"");
+            sb.AppendLine("            onClick={handleClearFilters}");
+            sb.AppendLine("            size=\"small\"");
+            sb.AppendLine("          >");
+            sb.AppendLine("            Clear");
+            sb.AppendLine("          </Button>");
         }
 
         private static bool IsNumericType(string dataType)

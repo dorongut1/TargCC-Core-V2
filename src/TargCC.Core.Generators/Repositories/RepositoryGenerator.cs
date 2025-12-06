@@ -382,9 +382,38 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+
+        // Add only insertable columns (exclude IDENTITY, audit columns that are auto-set)
+        var insertableColumns = table.Columns
+            .Where(c => !c.IsPrimaryKey &&
+                       !IsAuditColumn(c.Name) &&
+                       !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("BLG_AddedBy", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var column in insertableColumns)
+        {
+            var propertyName = PrefixHandler.GetPropertyName(column);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
+        }
+
+        // Add AddedBy if AddedBy or BLG_AddedBy exists
+        var addedByColumn = table.Columns.Find(c =>
+            c.Name.Equals("BLG_AddedBy", StringComparison.OrdinalIgnoreCase) ||
+            c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase));
+        if (addedByColumn != null)
+        {
+            sb.AppendLine("            parameters.Add(\"@AddedBy\", entity.AddedBy);");
+        }
+
+        sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await _connection.ExecuteAsync(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                entity,");
+        sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} added successfully\");");
