@@ -423,9 +423,31 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.ID);");
+
+        // Add only updateable columns (exclude audit columns)
+        foreach (var column in table.Columns.Where(c =>
+            !c.IsPrimaryKey &&
+            !IsAuditColumn(c.Name) &&
+            !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
+            !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase)))
+        {
+            var propertyName = CodeGenerationHelpers.GetPropertyName(column.Name);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
+        }
+
+        // Add ChangedBy if BLG_ChangedBy exists
+        var changedByColumn = table.Columns.Find(c => c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase));
+        if (changedByColumn != null)
+        {
+            sb.AppendLine("            parameters.Add(\"@ChangedBy\", entity.ChangedBy);");
+        }
+
+        sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await _connection.ExecuteAsync(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                entity,");
+        sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} updated successfully. ID: {{Id}}\", entity.ID);");
@@ -719,6 +741,17 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+    }
+
+    /// <summary>
+    /// Determines if a column is an audit column (CLC_, BLG_, AGG_, SCB_).
+    /// </summary>
+    private static bool IsAuditColumn(string columnName)
+    {
+        return columnName.StartsWith("CLC_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("BLG_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("AGG_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("SCB_", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
