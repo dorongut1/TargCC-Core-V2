@@ -390,6 +390,169 @@ namespace TargCC.Core.Tests.Unit.Generators.UI.Components
             Assert.Contains("type=\"number\"", result);
         }
 
+        [Fact]
+        public async Task GenerateAsync_GeneratesDefaultValuesForLookupFields()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "Order",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
+                    new Column { Name = "lkp_Status", DataType = "varchar(20)", IsNullable = false },
+                    new Column { Name = "lkp_Priority", DataType = "varchar(20)", IsNullable = true },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should have defaultValues with empty strings for LKP fields
+            Assert.Contains("defaultValues:", result);
+            Assert.Contains("statusCode: ''", result);
+            Assert.Contains("priorityCode: ''", result);
+        }
+
+        [Fact]
+        public async Task GenerateAsync_GeneratesDefaultValuesForEnumFields()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "Product",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
+                    new Column { Name = "enm_Category", DataType = "int", IsNullable = false },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should have defaultValues with empty string for ENM fields
+            Assert.Contains("defaultValues:", result);
+            Assert.Contains("category: ''", result);
+        }
+
+        [Fact]
+        public async Task GenerateAsync_GeneratesDefaultValuesForBitFields()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "Feature",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
+                    new Column { Name = "IsActive", DataType = "bit", IsNullable = false },
+                    new Column { Name = "IsEnabled", DataType = "bit", IsNullable = true },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should have defaultValues with false for BIT fields
+            Assert.Contains("defaultValues:", result);
+            Assert.Contains("isActive: false", result);
+            Assert.Contains("isEnabled: false", result);
+        }
+
+        [Fact]
+        public async Task GenerateAsync_DefaultValuesExcludesAuditAndPKColumns()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "Customer",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true, IsIdentity = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "lkp_Status", DataType = "varchar(20)", IsNullable = false },
+                    new Column { Name = "AddedOn", DataType = "datetime", IsNullable = false },
+                    new Column { Name = "AddedBy", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "clc_TotalAmount", DataType = "decimal", IsNullable = true },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should include statusCode in defaultValues
+            Assert.Contains("statusCode: ''", result);
+
+            // Should NOT include PK or audit columns in defaultValues
+            Assert.DoesNotContain("id:", result.ToLower());
+            Assert.DoesNotContain("addedOn:", result.ToLower());
+            Assert.DoesNotContain("addedBy:", result.ToLower());
+            Assert.DoesNotContain("totalAmount:", result.ToLower());
+        }
+
+        [Fact]
+        public async Task GenerateAsync_DefaultValuesWithMultipleFieldTypes()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "Product",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "lkp_Category", DataType = "varchar(50)", IsNullable = false },
+                    new Column { Name = "enm_Status", DataType = "int", IsNullable = false },
+                    new Column { Name = "IsActive", DataType = "bit", IsNullable = false },
+                    new Column { Name = "Price", DataType = "decimal", IsNullable = false },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should have defaultValues with correct types for each field
+            Assert.Contains("defaultValues:", result);
+            Assert.Contains("categoryCode: ''", result);
+            Assert.Contains("status: ''", result);
+            Assert.Contains("isActive: false", result);
+        }
+
+        [Fact]
+        public async Task GenerateAsync_EmptyDefaultValuesWhenNoSpecialFields()
+        {
+            // Arrange
+            var table = new Table
+            {
+                Name = "SimpleTable",
+                Columns = new List<Column>
+                {
+                    new Column { Name = "ID", DataType = "int", IsPrimaryKey = true },
+                    new Column { Name = "Name", DataType = "nvarchar(100)", IsNullable = false },
+                    new Column { Name = "Email", DataType = "nvarchar(100)", IsNullable = true },
+                },
+            };
+            var schema = new DatabaseSchema { Tables = new List<Table> { table } };
+
+            // Act
+            var result = await _generator.GenerateAsync(table, schema, _config);
+
+            // Assert
+            // Should have defaultValues block (even if empty)
+            Assert.Contains("defaultValues:", result);
+        }
+
         private static Table CreateSimpleTable()
         {
             return new Table
