@@ -83,15 +83,15 @@ namespace TargCC.Core.Generators.UI.Components
                 if (prefix == "LKP")
                 {
                     var baseName = ToCamelCase(SplitPrefix(column.Name).baseName);
-                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (params) => params.row.{baseName}Text || params.row.{baseName}Code");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (value, row) => row.{baseName}Text || row.{baseName}Code");
                 }
                 else if (prefix == "LOC")
                 {
-                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (params) => params.row.{propertyName}Localized || params.row.{propertyName}");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (value, row) => row.{propertyName}Localized || row.{propertyName}");
                 }
                 else if (column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal))
                 {
-                    sb.Append(CultureInfo.InvariantCulture, $", valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString() : ''");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueFormatter: (value) => value ? new Date(value).toLocaleDateString() : ''");
                 }
 
                 sb.AppendLine(" },");
@@ -187,7 +187,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  return (");
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("    <Box sx={{ height: 600, width: '100%' }}>");
+                sb.AppendLine("    <Box sx={{ height: 'calc(100vh - 200px)', width: '100%', display: 'flex', flexDirection: 'column' }}>");
                 sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
                 sb.AppendLine("        <Button");
                 sb.AppendLine("          variant=\"contained\"");
@@ -208,16 +208,18 @@ namespace TargCC.Core.Generators.UI.Components
                 // Add Filter UI
                 sb.AppendLine(GenerateFilterUI(table));
 
-                sb.AppendLine("      <DataGrid");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        rows={{{pluralName} || []}}");
-                sb.AppendLine("        columns={columns}");
-                sb.AppendLine("        initialState={{");
-                sb.AppendLine("          pagination: { paginationModel: { pageSize: 10 } },");
-                sb.AppendLine("        }}");
-                sb.AppendLine("        pageSizeOptions={[5, 10, 25, 100]}");
-                sb.AppendLine("        checkboxSelection");
-                sb.AppendLine("        disableRowSelectionOnClick");
-                sb.AppendLine("      />");
+                sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
+                sb.AppendLine("        <DataGrid");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
+                sb.AppendLine("          columns={columns}");
+                sb.AppendLine("          initialState={{");
+                sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
+                sb.AppendLine("          }}");
+                sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
+                sb.AppendLine("          checkboxSelection");
+                sb.AppendLine("          disableRowSelectionOnClick");
+                sb.AppendLine("        />");
+                sb.AppendLine("      </Box>");
                 sb.AppendLine("    </Box>");
             }
             else
