@@ -427,13 +427,15 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("            var parameters = new DynamicParameters();");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.ID);");
 
-        // Add only updateable columns (exclude audit columns)
+        // Add only updateable columns (exclude audit columns and ChangedBy - which is added separately)
         var updateableColumns = table.Columns
             .Where(c => !c.IsPrimaryKey &&
                        !IsAuditColumn(c.Name) &&
                        !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
                        !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase) &&
-                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase))
+                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         foreach (var column in updateableColumns)
