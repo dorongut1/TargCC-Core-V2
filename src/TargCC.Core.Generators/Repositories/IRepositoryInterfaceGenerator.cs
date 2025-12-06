@@ -114,4 +114,17 @@ public interface IRepositoryInterfaceGenerator
     /// </code>
     /// </example>
     Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp");
+
+    /// <summary>
+    /// Generates the repository interface code for a given table with full schema context for FK relationships.
+    /// </summary>
+    /// <param name="table">The table metadata containing columns, indexes, and relationships.</param>
+    /// <param name="schema">The full database schema for detecting FK relationships.</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (e.g., "MyApp"). Defaults to "YourApp".</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the generated C# interface code as a string.</returns>
+    /// <remarks>
+    /// This overload generates additional GetRelated methods for Master-Detail views based on FK relationships.
+    /// Example: For Customer table with Orders child, generates Task&lt;IEnumerable&lt;Order&gt;&gt; GetOrdersAsync(int customerId, ...)
+    /// </remarks>
+    Task<string> GenerateAsync(Table table, DatabaseSchema schema, string rootNamespace = "YourApp");
 }

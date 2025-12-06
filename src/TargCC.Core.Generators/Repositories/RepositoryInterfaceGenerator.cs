@@ -69,6 +69,12 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <inheritdoc/>
     public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
+        return await GenerateAsync(table, null, rootNamespace);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> GenerateAsync(Table table, DatabaseSchema? schema, string rootNamespace = "YourApp")
+    {
         ArgumentNullException.ThrowIfNull(table);
 
         if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
@@ -97,6 +103,12 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         // Generate aggregate methods if needed
         GenerateAggregateMethods(sb, table);
+
+        // Generate related data methods (Master-Detail Views)
+        if (schema != null)
+        {
+            GenerateRelatedDataMethods(sb, table, schema);
+        }
 
         // Generate helper methods
         GenerateHelperMethods(sb, table);
@@ -467,11 +479,121 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     }
 
     /// <summary>
+    /// Generates methods for fetching related data (Master-Detail Views) based on FK relationships.
+    /// </summary>
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
+    {
+        if (schema.Relationships == null || schema.Relationships.Count == 0)
+        {
+            return;
+        }
+
+        // Find all relationships where this table is the parent
+        var parentRelationships = schema.Relationships
+            .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+            .ToList();
+
+        if (parentRelationships.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine("    // ======================================");
+        sb.AppendLine("    // Master-Detail Views (Related Data)");
+        sb.AppendLine("    // ======================================");
+        sb.AppendLine();
+
+        foreach (var relationship in parentRelationships)
+        {
+            var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+            if (childTable == null)
+            {
+                continue;
+            }
+
+            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            if (pkColumn == null)
+            {
+                continue;
+            }
+
+            var pkType = GetCSharpType(pkColumn.DataType);
+            var childrenName = Pluralize(childTable.Name);
+            var methodName = $"Get{childrenName}Async";
+
+            // Generate XML documentation
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Fetches all {childrenName.ToLower()} for the specified {table.Name.ToLower()}.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"{ToCamelCase(table.Name)}Id\">The {table.Name} ID.</param>");
+            sb.AppendLine("    /// <param name=\"skip\">Number of records to skip (for pagination).</param>");
+            sb.AppendLine("    /// <param name=\"take\">Number of records to take (for pagination).</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {childTable.Name} entities.</returns>");
+
+            // Generate method signature
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"    Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+                $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
+        }
+    }
+
+    /// <summary>
     /// Closes the interface declaration.
     /// </summary>
     private static void CloseInterface(StringBuilder sb)
     {
         sb.AppendLine("}");
+    }
+
+    /// <summary>
+    /// Pluralizes an English singular noun.
+    /// </summary>
+    private static string Pluralize(string singular)
+    {
+        if (string.IsNullOrEmpty(singular))
+        {
+            return singular;
+        }
+
+        // Simple English pluralization rules
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+        {
+            // Category → Categories
+            return singular[..^1] + "ies";
+        }
+
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+        {
+            // Address → Addresses, Box → Boxes
+            return singular + "es";
+        }
+
+        // Default: just add 's'
+        // Order → Orders, Customer → Customers
+        return singular + "s";
+    }
+
+    /// <summary>
+    /// Converts PascalCase to camelCase.
+    /// </summary>
+    private static string ToCamelCase(string pascalCase)
+    {
+        if (string.IsNullOrEmpty(pascalCase))
+        {
+            return pascalCase;
+        }
+
+        return char.ToLowerInvariant(pascalCase[0]) + pascalCase[1..];
     }
 
     /// <summary>
