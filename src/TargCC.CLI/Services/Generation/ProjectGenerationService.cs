@@ -601,7 +601,7 @@ public class ProjectGenerationService : IProjectGenerationService
         var imports = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
-            return $"import {{ {className}List }} from './components/{className}/{className}List';";
+            return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Form }} from './components/{className}/{className}Form';";
         }));
 
         var menuItems = string.Join("\n", tables.Select(t =>
@@ -615,7 +615,7 @@ public class ProjectGenerationService : IProjectGenerationService
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />";
+            return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/new\" element={{<{className}Form />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Form />}} />";
         }));
 
         var appName = tables.Any() ? BaseApiGenerator.GetClassName(tables[0].Name) : "App";

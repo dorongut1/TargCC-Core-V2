@@ -69,7 +69,9 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get all {className}s with optional filters.");
             sb.AppendLine("   */");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  getAll: async (filters?: {className}Filters): Promise<{className}[]> => {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{className}[]>('{apiPath}', {{");
+            sb.AppendLine("    // Use /filter endpoint when filters are provided");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const endpoint = filters && Object.keys(filters).length > 0 ? '{apiPath}/filter' : '{apiPath}';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{className}[]>(endpoint, {{");
             sb.AppendLine("      params: filters,");
             sb.AppendLine("    });");
             sb.AppendLine("    return response.data;");

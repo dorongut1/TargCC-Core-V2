@@ -272,15 +272,32 @@ namespace TargCC.Core.Generators.UI.Components
                     {
                         var propertyName = ToCamelCase(GetPropertyName(column.Name));
                         var displayName = GetPropertyName(column.Name);
+                        var isNumeric = IsNumericType(column.DataType);
+                        var isDate = column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
+
+                        // Determine input type and value conversion
+                        var inputType = isDate ? "date" : (isNumeric ? "number" : "text");
+                        var valueConversion = isNumeric
+                            ? $"e.target.value ? Number(e.target.value) : undefined"
+                            : (isDate ? $"e.target.value || undefined" : $"e.target.value || undefined");
+                        var valueDisplay = isDate
+                            ? $"filters.{propertyName} ? (filters.{propertyName} instanceof Date ? filters.{propertyName}.toISOString().split('T')[0] : filters.{propertyName}) : ''"
+                            : $"filters.{propertyName} ?? ''";
 
                         sb.AppendLine("          <TextField");
                         sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"            type=\"{inputType}\"");
                         sb.AppendLine("            size=\"small\"");
                         sb.AppendLine("            sx={{ minWidth: 200 }}");
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters.{propertyName} || ''}}");
+                        if (isDate)
+                        {
+                            sb.AppendLine("            InputLabelProps={{ shrink: true }}");
+                        }
+
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{{valueDisplay}}}");
                         sb.AppendLine("            onChange={(e) => setFilters(prev => ({");
                         sb.AppendLine("              ...prev,");
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value || undefined");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
                         sb.AppendLine("            }))}");
                         sb.AppendLine("          />");
                     }
@@ -300,6 +317,17 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      </Paper>");
 
             return sb.ToString();
+        }
+
+        private static bool IsNumericType(string dataType)
+        {
+            var upperType = dataType.ToUpperInvariant();
+            return upperType.Contains("INT", StringComparison.Ordinal) ||
+                   upperType.Contains("DECIMAL", StringComparison.Ordinal) ||
+                   upperType.Contains("NUMERIC", StringComparison.Ordinal) ||
+                   upperType.Contains("FLOAT", StringComparison.Ordinal) ||
+                   upperType.Contains("DOUBLE", StringComparison.Ordinal) ||
+                   upperType.Contains("MONEY", StringComparison.Ordinal);
         }
 
         private static int GetColumnWidth(Column column)
