@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TargCC.Core.Generators.Common;
+using TargCC.Core.Generators.Entities;
 using TargCC.Core.Interfaces.Models;
 
 /// <summary>
@@ -427,13 +428,16 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.ID);");
 
         // Add only updateable columns (exclude audit columns)
-        foreach (var column in table.Columns.Where(c =>
-            !c.IsPrimaryKey &&
-            !IsAuditColumn(c.Name) &&
-            !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
-            !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase)))
+        var updateableColumns = table.Columns
+            .Where(c => !c.IsPrimaryKey &&
+                       !IsAuditColumn(c.Name) &&
+                       !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var column in updateableColumns)
         {
-            var propertyName = CodeGenerationHelpers.GetPropertyName(column.Name);
+            var propertyName = PrefixHandler.GetPropertyName(column);
             sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
         }
 
