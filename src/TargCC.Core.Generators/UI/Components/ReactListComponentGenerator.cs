@@ -52,8 +52,8 @@ namespace TargCC.Core.Generators.UI.Components
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';");
-                sb.AppendLine("import { Button, Box, CircularProgress, Alert } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';");
+                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, IconButton } from '@mui/material';");
+                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
@@ -204,10 +204,17 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          Export to Excel");
                 sb.AppendLine("        </Button>");
                 sb.AppendLine("      </Box>");
+
+                // Add Filter UI
+                sb.AppendLine(GenerateFilterUI(table, className));
+
                 sb.AppendLine("      <DataGrid");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        rows={{{pluralName} || []}}");
                 sb.AppendLine("        columns={columns}");
-                sb.AppendLine("        pageSizeOptions={[5, 10, 25]}");
+                sb.AppendLine("        initialState={{");
+                sb.AppendLine("          pagination: { paginationModel: { pageSize: 10 } },");
+                sb.AppendLine("        }}");
+                sb.AppendLine("        pageSizeOptions={[5, 10, 25, 100]}");
                 sb.AppendLine("        checkboxSelection");
                 sb.AppendLine("        disableRowSelectionOnClick");
                 sb.AppendLine("      />");
@@ -227,6 +234,70 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine("  );");
             sb.AppendLine("};");
+
+            return sb.ToString();
+        }
+
+        private static string GenerateFilterUI(Table table, string className)
+        {
+            var sb = new StringBuilder();
+
+            // Get indexed columns (excluding PK)
+            var filterableIndexes = table.Indexes?
+                .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
+                .ToList();
+
+            if (filterableIndexes == null || filterableIndexes.Count == 0)
+            {
+                return string.Empty; // No filters if no indexes
+            }
+
+            var processedColumns = new System.Collections.Generic.HashSet<string>();
+
+            sb.AppendLine("      <Paper sx={{ p: 2, mb: 2 }}>");
+            sb.AppendLine("        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>");
+
+            foreach (var index in filterableIndexes)
+            {
+                foreach (var columnName in index.ColumnNames)
+                {
+                    if (processedColumns.Contains(columnName))
+                    {
+                        continue; // Skip duplicates
+                    }
+
+                    processedColumns.Add(columnName);
+                    var column = table.Columns.Find(c => c.Name == columnName);
+                    if (column != null)
+                    {
+                        var propertyName = ToCamelCase(GetPropertyName(column.Name));
+                        var displayName = GetPropertyName(column.Name);
+
+                        sb.AppendLine("          <TextField");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
+                        sb.AppendLine("            size=\"small\"");
+                        sb.AppendLine("            sx={{ minWidth: 200 }}");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters.{propertyName} || ''}}");
+                        sb.AppendLine("            onChange={(e) => setFilters(prev => ({");
+                        sb.AppendLine("              ...prev,");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value || undefined");
+                        sb.AppendLine("            }))}");
+                        sb.AppendLine("          />");
+                    }
+                }
+            }
+
+            // Clear Filters button
+            sb.AppendLine("          <IconButton");
+            sb.AppendLine("            color=\"primary\"");
+            sb.AppendLine("            onClick={() => setFilters({})}");
+            sb.AppendLine("            title=\"Clear Filters\"");
+            sb.AppendLine("          >");
+            sb.AppendLine("            <ClearIcon />");
+            sb.AppendLine("          </IconButton>");
+
+            sb.AppendLine("        </Box>");
+            sb.AppendLine("      </Paper>");
 
             return sb.ToString();
         }
