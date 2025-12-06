@@ -206,7 +206,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("      </Box>");
 
                 // Add Filter UI
-                sb.AppendLine(GenerateFilterUI(table, className));
+                sb.AppendLine(GenerateFilterUI(table));
 
                 sb.AppendLine("      <DataGrid");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        rows={{{pluralName} || []}}");
@@ -238,7 +238,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateFilterUI(Table table, string className)
+        private static string GenerateFilterUI(Table table)
         {
             var sb = new StringBuilder();
 
