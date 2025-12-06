@@ -240,71 +240,118 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static string GenerateFilterUI(Table table)
         {
-            var sb = new StringBuilder();
-
-            // Get indexed columns (excluding PK)
-            var filterableIndexes = table.Indexes?
-                .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
-                .ToList();
-
-            if (filterableIndexes == null || filterableIndexes.Count == 0)
+            var filterableIndexes = GetFilterableIndexes(table);
+            if (filterableIndexes.Count == 0)
             {
-                return string.Empty; // No filters if no indexes
+                return string.Empty;
             }
 
-            var processedColumns = new System.Collections.Generic.HashSet<string>();
-
+            var sb = new StringBuilder();
             sb.AppendLine("      <Paper sx={{ p: 2, mb: 2 }}>");
             sb.AppendLine("        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>");
 
+            var processedColumns = new System.Collections.Generic.HashSet<string>();
             foreach (var index in filterableIndexes)
             {
-                foreach (var columnName in index.ColumnNames)
-                {
-                    if (processedColumns.Contains(columnName))
-                    {
-                        continue; // Skip duplicates
-                    }
+                AppendFilterFieldsForIndex(sb, table, index, processedColumns);
+            }
 
-                    processedColumns.Add(columnName);
+            AppendClearFiltersButton(sb);
+            sb.AppendLine("        </Box>");
+            sb.AppendLine("      </Paper>");
+
+            return sb.ToString();
+        }
+
+        private static List<Index> GetFilterableIndexes(Table table)
+        {
+            return table.Indexes?
+                .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
+                .ToList() ?? new List<Index>();
+        }
+
+        private static void AppendFilterFieldsForIndex(StringBuilder sb, Table table, Index index, System.Collections.Generic.HashSet<string> processedColumns)
+        {
+            foreach (var columnName in index.ColumnNames)
+            {
+                if (processedColumns.Add(columnName))
+                {
                     var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
-                        var propertyName = ToCamelCase(GetPropertyName(column.Name));
-                        var displayName = GetPropertyName(column.Name);
-                        var isNumeric = IsNumericType(column.DataType);
-                        var isDate = column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
-
-                        // Determine input type and value conversion
-                        var inputType = isDate ? "date" : (isNumeric ? "number" : "text");
-                        var valueConversion = isNumeric
-                            ? $"e.target.value ? Number(e.target.value) : undefined"
-                            : (isDate ? $"e.target.value || undefined" : $"e.target.value || undefined");
-                        var valueDisplay = isDate
-                            ? $"filters.{propertyName} ? (filters.{propertyName} instanceof Date ? filters.{propertyName}.toISOString().split('T')[0] : filters.{propertyName}) : ''"
-                            : $"filters.{propertyName} ?? ''";
-
-                        sb.AppendLine("          <TextField");
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"            type=\"{inputType}\"");
-                        sb.AppendLine("            size=\"small\"");
-                        sb.AppendLine("            sx={{ minWidth: 200 }}");
-                        if (isDate)
-                        {
-                            sb.AppendLine("            InputLabelProps={{ shrink: true }}");
-                        }
-
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{{valueDisplay}}}");
-                        sb.AppendLine("            onChange={(e) => setFilters(prev => ({");
-                        sb.AppendLine("              ...prev,");
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
-                        sb.AppendLine("            }))}");
-                        sb.AppendLine("          />");
+                        AppendFilterField(sb, column);
                     }
                 }
             }
+        }
 
-            // Clear Filters button
+        private static void AppendFilterField(StringBuilder sb, Column column)
+        {
+            var propertyName = ToCamelCase(GetPropertyName(column.Name));
+            var displayName = GetPropertyName(column.Name);
+            var isNumeric = IsNumericType(column.DataType);
+            var isDate = IsDateType(column.DataType);
+
+            var inputType = GetInputType(isDate, isNumeric);
+            var valueConversion = GetValueConversion(isNumeric);
+            var valueDisplay = GetValueDisplay(propertyName, isDate);
+
+            sb.AppendLine("          <TextField");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            type=\"{inputType}\"");
+            sb.AppendLine("            size=\"small\"");
+            sb.AppendLine("            sx={{ minWidth: 200 }}");
+
+            if (isDate)
+            {
+                sb.AppendLine("            InputLabelProps={{ shrink: true }}");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{{valueDisplay}}}");
+            sb.AppendLine("            onChange={(e) => setFilters(prev => ({");
+            sb.AppendLine("              ...prev,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
+            sb.AppendLine("            }))}");
+            sb.AppendLine("          />");
+        }
+
+        private static string GetInputType(bool isDate, bool isNumeric)
+        {
+            if (isDate)
+            {
+                return "date";
+            }
+
+            if (isNumeric)
+            {
+                return "number";
+            }
+
+            return "text";
+        }
+
+        private static string GetValueConversion(bool isNumeric)
+        {
+            if (isNumeric)
+            {
+                return "e.target.value ? Number(e.target.value) : undefined";
+            }
+
+            return "e.target.value || undefined";
+        }
+
+        private static string GetValueDisplay(string propertyName, bool isDate)
+        {
+            if (isDate)
+            {
+                return $"filters.{propertyName} ? (filters.{propertyName} instanceof Date ? filters.{propertyName}.toISOString().split('T')[0] : filters.{propertyName}) : ''";
+            }
+
+            return $"filters.{propertyName} ?? ''";
+        }
+
+        private static void AppendClearFiltersButton(StringBuilder sb)
+        {
             sb.AppendLine("          <IconButton");
             sb.AppendLine("            color=\"primary\"");
             sb.AppendLine("            onClick={() => setFilters({})}");
@@ -312,11 +359,6 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("          >");
             sb.AppendLine("            <ClearIcon />");
             sb.AppendLine("          </IconButton>");
-
-            sb.AppendLine("        </Box>");
-            sb.AppendLine("      </Paper>");
-
-            return sb.ToString();
         }
 
         private static bool IsNumericType(string dataType)
@@ -328,6 +370,11 @@ namespace TargCC.Core.Generators.UI.Components
                    upperType.Contains("FLOAT", StringComparison.Ordinal) ||
                    upperType.Contains("DOUBLE", StringComparison.Ordinal) ||
                    upperType.Contains("MONEY", StringComparison.Ordinal);
+        }
+
+        private static bool IsDateType(string dataType)
+        {
+            return dataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
         }
 
         private static int GetColumnWidth(Column column)
