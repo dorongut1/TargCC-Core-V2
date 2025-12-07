@@ -175,43 +175,47 @@ namespace TargCC.Core.Generators.Sql
                 LogGetByIdGenerationWarning(_logger, table.Name, ex);
             }
 
-            // Add
-            try
+            // Skip write operations (Add/Update/Delete) for VIEWs - they are read-only
+            if (!table.IsView)
             {
-                var addSql = await SpAddTemplate.GenerateAsync(table);
-                sb.AppendLine(addSql);
-                sb.AppendLine("GO");
-                sb.AppendLine();
-            }
-            catch (Exception ex)
-            {
-                LogAddGenerationWarning(_logger, table.Name, ex);
-            }
+                // Add
+                try
+                {
+                    var addSql = await SpAddTemplate.GenerateAsync(table);
+                    sb.AppendLine(addSql);
+                    sb.AppendLine("GO");
+                    sb.AppendLine();
+                }
+                catch (Exception ex)
+                {
+                    LogAddGenerationWarning(_logger, table.Name, ex);
+                }
 
-            // Update
-            try
-            {
-                var updateSql = await SpUpdateTemplate.GenerateAsync(table);
-                sb.AppendLine(updateSql);
-                sb.AppendLine("GO");
-                sb.AppendLine();
-            }
-            catch (Exception ex)
-            {
-                LogUpdateGenerationWarning(_logger, table.Name, ex);
-            }
+                // Update
+                try
+                {
+                    var updateSql = await SpUpdateTemplate.GenerateAsync(table);
+                    sb.AppendLine(updateSql);
+                    sb.AppendLine("GO");
+                    sb.AppendLine();
+                }
+                catch (Exception ex)
+                {
+                    LogUpdateGenerationWarning(_logger, table.Name, ex);
+                }
 
-            // Delete
-            try
-            {
-                var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
-                sb.AppendLine(deleteSql);
-                sb.AppendLine("GO");
-                sb.AppendLine();
-            }
-            catch (Exception ex)
-            {
-                LogDeleteGenerationWarning(_logger, table.Name, ex);
+                // Delete
+                try
+                {
+                    var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
+                    sb.AppendLine(deleteSql);
+                    sb.AppendLine("GO");
+                    sb.AppendLine();
+                }
+                catch (Exception ex)
+                {
+                    LogDeleteGenerationWarning(_logger, table.Name, ex);
+                }
             }
 
             // Index procedures
