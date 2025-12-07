@@ -135,7 +135,7 @@ namespace TargCC.Core.Generators.UI.Components
             var pluralName = camelName + "s";
 
             // Get primary key column name for DataGrid getRowId
-            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
             var pkPropertyName = pkColumn != null ? GetPropertyName(pkColumn.Name) : "id";
             var pkCamelName = pkPropertyName.Length > 0 ? char.ToLowerInvariant(pkPropertyName[0]) + pkPropertyName.Substring(1) : "id";
 

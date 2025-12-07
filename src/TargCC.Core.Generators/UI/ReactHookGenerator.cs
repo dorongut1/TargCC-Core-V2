@@ -259,7 +259,6 @@ namespace TargCC.Core.Generators.UI
             return singular + "s";
         }
 
-
         private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
