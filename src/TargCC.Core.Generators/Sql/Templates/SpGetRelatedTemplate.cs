@@ -161,7 +161,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine(CultureInfo.InvariantCulture, $"    WHERE [{childFkColumn.Name}] = @{parentPkColumn.Name}");
 
             // ORDER BY (try to order by date column if exists, otherwise by PK)
-            var orderByColumn = childTable.Columns. Find(c =>
+            var orderByColumn = childTable.Columns.Find(c =>
                 c.Name.Contains("Date", StringComparison.OrdinalIgnoreCase) ||
                 c.Name.Contains("Time", StringComparison.OrdinalIgnoreCase) ||
                 c.Name.Contains("AddedOn", StringComparison.OrdinalIgnoreCase))
@@ -240,7 +240,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             }
 
             // Simple English pluralization rules
-            if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -250,9 +250,9 @@ namespace TargCC.Core.Generators.Sql.Templates
                 return singular[..^1] + "ies";
             }
 
-            if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {

@@ -48,12 +48,22 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("import React from 'react';");
             sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
 
+            GenerateFrameworkImports(sb, table, schema, framework);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
+            GenerateRelatedDataImports(sb, table, schema, className);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
+            GenerateChildEntityTypeImports(sb, table, schema);
+
+            return sb.ToString();
+        }
+
+        private static void GenerateFrameworkImports(StringBuilder sb, Table table, DatabaseSchema schema, UIFramework framework)
+        {
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
                 sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
 
-                // Check if there are related tables - if so, import DataGrid
                 var hasRelatedData = schema.Relationships != null &&
                     schema.Relationships.Exists(r => r.ParentTable == table.Name && r.IsEnabled);
 
@@ -62,49 +72,51 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
                 }
             }
+        }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
-
-            // Import related data hooks
-            if (schema.Relationships != null)
+        private static void GenerateRelatedDataImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
+        {
+            if (schema.Relationships == null)
             {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        var childrenName = Pluralize(childClassName);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}{childrenName} }} from '../../hooks/use{className}';");
-                    }
-                }
+                return;
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .ToList();
 
-            // Import child entity types
-            if (schema.Relationships != null)
+            foreach (var relationship in parentRelationships)
             {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
+                if (childTable != null)
                 {
-                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
-                    }
+                    var childClassName = GetClassName(childTable.Name);
+                    var childrenName = Pluralize(childClassName);
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}{childrenName} }} from '../../hooks/use{className}';");
                 }
             }
+        }
 
-            return sb.ToString();
+        private static void GenerateChildEntityTypeImports(StringBuilder sb, Table table, DatabaseSchema schema)
+        {
+            if (schema.Relationships == null)
+            {
+                return;
+            }
+
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .ToList();
+
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
+                if (childTable != null)
+                {
+                    var childClassName = GetClassName(childTable.Name);
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
+                }
+            }
         }
 
         private static string Pluralize(string singular)
@@ -211,41 +223,34 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateComponentBody(Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
+        private static void GenerateRelatedDataHooksDeclarations(StringBuilder sb, Table table, DatabaseSchema schema, string className)
         {
-            var sb = new StringBuilder();
-
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Detail: React.FC = () => {{");
-            sb.AppendLine("  const navigate = useNavigate();");
-            sb.AppendLine("  const { id } = useParams<{ id: string }>();");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: entity, isLoading, error }} = use{className}(id ? parseInt(id, 10) : null);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
-
-            // Add hooks for related data
-            if (schema.Relationships != null)
+            if (schema.Relationships == null)
             {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        var childrenName = Pluralize(childClassName);
-                        var childrenCamelCase = ToCamelCase(childrenName);
-                        sb.AppendLine(
-                            CultureInfo.InvariantCulture,
-                            $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
-                    }
-                }
+                return;
             }
 
-            sb.AppendLine();
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .ToList();
 
-            // Handle delete
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
+                if (childTable != null)
+                {
+                    var childClassName = GetClassName(childTable.Name);
+                    var childrenName = Pluralize(childClassName);
+                    var childrenCamelCase = ToCamelCase(childrenName);
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
+                }
+            }
+        }
+
+        private static void GenerateDeleteHandler(StringBuilder sb, string camelName)
+        {
             sb.AppendLine("  const handleDelete = () => {");
             sb.AppendLine("    if (confirm('Are you sure you want to delete this item?')) {");
             sb.AppendLine("      deleteEntity(parseInt(id!, 10), {");
@@ -253,9 +258,10 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      });");
             sb.AppendLine("    }");
             sb.AppendLine("  };");
-            sb.AppendLine();
+        }
 
-            // Loading state
+        private static void GenerateLoadingState(StringBuilder sb, UIFramework framework)
+        {
             sb.AppendLine("  if (isLoading) {");
             if (framework == UIFramework.MaterialUI)
             {
@@ -267,9 +273,10 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             sb.AppendLine("  }");
-            sb.AppendLine();
+        }
 
-            // Error state
+        private static void GenerateErrorState(StringBuilder sb, UIFramework framework, string camelName)
+        {
             sb.AppendLine("  if (error || !entity) {");
             if (framework == UIFramework.MaterialUI)
             {
@@ -281,6 +288,25 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             sb.AppendLine("  }");
+        }
+
+        private static string GenerateComponentBody(Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Detail: React.FC = () => {{");
+            sb.AppendLine("  const navigate = useNavigate();");
+            sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: entity, isLoading, error }} = use{className}(id ? parseInt(id, 10) : null);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+
+            GenerateRelatedDataHooksDeclarations(sb, table, schema, className);
+            sb.AppendLine();
+            GenerateDeleteHandler(sb, camelName);
+            sb.AppendLine();
+            GenerateLoadingState(sb, framework);
+            sb.AppendLine();
+            GenerateErrorState(sb, framework, camelName);
             sb.AppendLine();
 
             // Render

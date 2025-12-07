@@ -359,16 +359,6 @@ namespace TargCC.Core.Generators.UI.Components
             return "e.target.value || undefined";
         }
 
-        private static string GetValueDisplay(string propertyName, bool isDate)
-        {
-            if (isDate)
-            {
-                return $"filters.{propertyName} ? (filters.{propertyName} instanceof Date ? filters.{propertyName}.toISOString().split('T')[0] : filters.{propertyName}) : ''";
-            }
-
-            return $"filters.{propertyName} ?? ''";
-        }
-
         private static void AppendClearFiltersButton(StringBuilder sb)
         {
             sb.AppendLine("          <Button");

@@ -901,10 +901,9 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
 
         // Logging
-        sb.AppendLine(
-            CultureInfo.InvariantCulture,
-            $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
-            $"result.Count(), {parentIdParamName});");
+        var logMessage = $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
+            $"result.Count(), {parentIdParamName});";
+        sb.AppendLine(CultureInfo.InvariantCulture, logMessage);
         sb.AppendLine();
         sb.AppendLine("            return result;");
         sb.AppendLine("        }");
@@ -930,7 +929,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         // Category → Categories
-        if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -940,9 +939,9 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         // Address → Addresses, Box → Boxes
-        if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
         {

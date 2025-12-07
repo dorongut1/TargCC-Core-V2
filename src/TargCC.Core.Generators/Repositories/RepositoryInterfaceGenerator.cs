@@ -532,10 +532,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {childTable.Name} entities.</returns>");
 
             // Generate method signature
-            sb.AppendLine(
-                CultureInfo.InvariantCulture,
-                $"    Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
-                $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
+            var methodSignature = $"    Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+                $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);";
+            sb.AppendLine(CultureInfo.InvariantCulture, methodSignature);
             sb.AppendLine();
         }
     }
@@ -559,7 +558,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         }
 
         // Simple English pluralization rules
-        if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
             !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -569,9 +568,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return singular[..^1] + "ies";
         }
 
-        if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
         {
