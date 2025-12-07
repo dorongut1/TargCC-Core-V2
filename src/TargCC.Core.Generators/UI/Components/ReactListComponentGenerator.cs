@@ -51,7 +51,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarDensitySelector } from '@mui/x-data-grid';");
+                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector } from '@mui/x-data-grid';");
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, IconButton } from '@mui/material';");
                 sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';");
             }
@@ -63,7 +63,6 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  return (");
             sb.AppendLine("    <GridToolbarContainer>");
             sb.AppendLine("      <GridToolbarColumnsButton />");
-            sb.AppendLine("      <GridToolbarFilterButton />");
             sb.AppendLine("      <GridToolbarDensitySelector />");
             sb.AppendLine("    </GridToolbarContainer>");
             sb.AppendLine("  );");
