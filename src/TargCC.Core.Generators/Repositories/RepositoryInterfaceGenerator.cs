@@ -151,7 +151,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void StartInterface(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string interfaceName = $"I{entityName}Repository";
 
         sb.AppendLine("/// <summary>");
@@ -175,7 +175,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateCrudMethods(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -254,7 +254,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         // Process each non-primary key index
         foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
@@ -340,7 +340,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -400,7 +400,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
         // Collect unique indexed columns
@@ -460,7 +460,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateHelperMethods(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -531,10 +531,10 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine("    /// <param name=\"skip\">Number of records to skip (for pagination).</param>");
             sb.AppendLine("    /// <param name=\"take\">Number of records to take (for pagination).</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {childTable.Name} entities.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {GetClassName(childTable.Name)} entities.</returns>");
 
             // Generate method signature
-            var methodSignature = $"    Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+            var methodSignature = $"    Task<IEnumerable<{GetClassName(childTable.Name)}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
                 $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);";
             sb.AppendLine(methodSignature);
             sb.AppendLine();
@@ -680,5 +680,14 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         // Fallback: use first column
         return table.Columns[0];
+    }
+
+    /// <summary>
+    /// Gets the class name for an entity from the table name.
+    /// Uses the same PascalCase conversion as API generators for consistency.
+    /// </summary>
+    private static string GetClassName(string tableName)
+    {
+        return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
     }
 }

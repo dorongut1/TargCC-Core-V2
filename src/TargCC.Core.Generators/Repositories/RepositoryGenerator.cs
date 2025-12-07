@@ -169,7 +169,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void StartClass(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string className = $"{entityName}Repository";
         string interfaceName = $"I{entityName}Repository";
 
@@ -191,7 +191,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateFields(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         sb.AppendLine("    private readonly IDbConnection _connection;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly ILogger<{entityName}Repository> _logger;");
@@ -203,7 +203,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateConstructor(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string className = $"{entityName}Repository";
 
         sb.AppendLine("    /// <summary>");
@@ -224,7 +224,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateGetByIdAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -264,7 +264,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateGetAllAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_GetAll{entityName}s";
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -306,7 +306,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_GetFiltered{entityName}s";
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
@@ -385,7 +385,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateAddAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Add{entityName}";
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -450,7 +450,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateUpdateAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Update{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -522,7 +522,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateDeleteAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Delete{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -566,7 +566,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         // Process each non-primary key index
         foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
@@ -705,7 +705,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Update{entityName}Aggregates";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -764,7 +764,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateExistsAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -830,7 +830,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -871,7 +871,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         string pkType)
     {
         // Pluralize child table name (Order → Orders)
-        string childrenName = Pluralize(childTable.Name);
+        string childEntityName = GetClassName(childTable.Name);
+        string childrenName = Pluralize(childEntityName);
         string methodName = $"Get{childrenName}Async";
         string spName = $"SP_Get{parentEntityName}{childrenName}";
         string parentIdParamName = ToCamelCase(parentEntityName) + "Id";
@@ -882,7 +883,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Method signature
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"    public async Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+            $"    public async Task<IEnumerable<{childEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(
             CultureInfo.InvariantCulture,
@@ -899,7 +900,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
 
         // Dapper call
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{childTable.Name}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{childEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -1027,6 +1028,15 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         // Fallback: use first column
         return table.Columns[0];
+    }
+
+    /// <summary>
+    /// Gets the class name for an entity from the table name.
+    /// Uses the same PascalCase conversion as API generators for consistency.
+    /// </summary>
+    private static string GetClassName(string tableName)
+    {
+        return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
     }
 
     /// <summary>
