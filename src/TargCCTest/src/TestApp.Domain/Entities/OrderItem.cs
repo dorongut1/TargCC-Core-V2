@@ -14,7 +14,7 @@ namespace TestApp.Domain.Entities
 {
     /// <summary>
     /// Entity class for OrderItem table.
-    /// Generated: 2025-12-07 16:44:36
+    /// Generated: 2025-12-07 18:03:37
     /// </summary>
     [Table("OrderItem")]
     public partial class OrderItem
