@@ -252,7 +252,10 @@ namespace TargCC.Core.Generators.UI
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
             var camelName = GetCamelCaseName(table.Name);
-            var apiPath = $"/{camelName}s";
+
+            // Use PascalCase for API path to match ASP.NET Core controller routing
+            // Controller: VwCustomerOrderSummariesController → /api/VwCustomerOrderSummaries
+            var apiPath = $"/{Pluralize(className)}";
 
             // File header
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
