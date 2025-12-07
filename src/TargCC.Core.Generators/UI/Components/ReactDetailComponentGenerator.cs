@@ -38,10 +38,10 @@ namespace TargCC.Core.Generators.UI.Components
 
             LogComponentGeneration(table.Name);
 
-            return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
+            return await Task.Run(() => Generate(table, schema, config)).ConfigureAwait(false);
         }
 
-        private static string GenerateImports(string className, UIFramework framework)
+        private static string GenerateImports(Table table, DatabaseSchema schema, string className, UIFramework framework)
         {
             var sb = new StringBuilder();
 
@@ -52,12 +52,90 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
                 sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
+
+                // Check if there are related tables - if so, import DataGrid
+                var hasRelatedData = schema.Relationships != null &&
+                    schema.Relationships.Any(r => r.ParentTable == table.Name && r.IsEnabled);
+
+                if (hasRelatedData)
+                {
+                    sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
+                }
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
+
+            // Import related data hooks
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        var childrenName = Pluralize(childClassName);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}{childrenName} }} from '../../hooks/use{className}';");
+                    }
+                }
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
 
+            // Import child entity types
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
+                    }
+                }
+            }
+
             return sb.ToString();
+        }
+
+        private static string Pluralize(string singular)
+        {
+            if (string.IsNullOrEmpty(singular))
+            {
+                return singular;
+            }
+
+            // Category → Categories
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular[..^1] + "ies";
+            }
+
+            // Address → Addresses, Box → Boxes
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular + "es";
+            }
+
+            // Order → Orders, Customer → Customers
+            return singular + "s";
         }
 
         private static string GenerateDetailField(Column column, UIFramework framework)
@@ -133,7 +211,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateComponentBody(Table table, string className, string camelName, UIFramework framework)
+        private static string GenerateComponentBody(Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
         {
             var sb = new StringBuilder();
 
@@ -142,6 +220,28 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const { id } = useParams<{ id: string }>();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: entity, isLoading, error }} = use{className}(id ? parseInt(id, 10) : null);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+
+            // Add hooks for related data
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        var childrenName = Pluralize(childClassName);
+                        var childrenCamelCase = ToCamelCase(childrenName);
+                        sb.AppendLine(CultureInfo.InvariantCulture,
+                            $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
+                    }
+                }
+            }
+
             sb.AppendLine();
 
             // Handle delete
@@ -220,6 +320,25 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(GenerateDetailFields(table, framework));
                 sb.AppendLine("        </CardContent>");
                 sb.AppendLine("      </Card>");
+
+                // Add related data grids (Master-Detail Views)
+                if (schema.Relationships != null)
+                {
+                    var parentRelationships = schema.Relationships
+                        .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                        .ToList();
+
+                    foreach (var relationship in parentRelationships)
+                    {
+                        var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                        if (childTable != null)
+                        {
+                            sb.AppendLine();
+                            sb.AppendLine(GenerateRelatedDataGrid(table, childTable, framework));
+                        }
+                    }
+                }
+
                 sb.AppendLine("    </Box>");
             }
             else
@@ -237,7 +356,60 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string Generate(Table table, ComponentGeneratorConfig config)
+        private static string GenerateRelatedDataGrid(Table parentTable, Table childTable, UIFramework framework)
+        {
+            var sb = new StringBuilder();
+            var parentClassName = GetClassName(parentTable.Name);
+            var childClassName = GetClassName(childTable.Name);
+            var childrenName = Pluralize(childClassName);
+            var childrenCamelCase = ToCamelCase(childrenName);
+
+            if (framework == UIFramework.MaterialUI)
+            {
+                sb.AppendLine("      <Card sx={{ mt: 2 }}>");
+                sb.AppendLine("        <CardContent>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h6\" gutterBottom>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"            {childrenName}");
+                sb.AppendLine("          </Typography>");
+
+                // Column definitions
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          <Box sx={{ height: 400, width: '100%' }}>");
+                sb.AppendLine("            <DataGrid");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"              rows={{{childrenCamelCase} || []}}");
+                sb.AppendLine("              columns={[");
+
+                // Generate columns for visible fields (first 5 columns excluding ENO)
+                var displayColumns = GetDataColumns(childTable)
+                    .Where(c => !c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase))
+                    .Take(5)
+                    .ToList();
+
+                foreach (var column in displayColumns)
+                {
+                    var propertyName = GetPropertyName(column.Name);
+                    var fieldName = ToCamelCase(propertyName);
+                    var width = column.DataType.ToUpperInvariant().Contains("INT") ? 100 : 150;
+
+                    sb.AppendLine(CultureInfo.InvariantCulture,
+                        $"                {{ field: '{fieldName}', headerName: '{propertyName}', width: {width} }},");
+                }
+
+                sb.AppendLine("              ]}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"              loading={{{childrenCamelCase}Loading}}");
+                sb.AppendLine("              pageSizeOptions={[5, 10, 25]}");
+                sb.AppendLine("              initialState={{");
+                sb.AppendLine("                pagination: { paginationModel: { pageSize: 5 } },");
+                sb.AppendLine("              }}");
+                sb.AppendLine("            />");
+                sb.AppendLine("          </Box>");
+                sb.AppendLine("        </CardContent>");
+                sb.AppendLine("      </Card>");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string Generate(Table table, DatabaseSchema schema, ComponentGeneratorConfig config)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -247,11 +419,11 @@ namespace TargCC.Core.Generators.UI.Components
             sb.Append(GenerateComponentHeader(table.Name));
 
             // Imports
-            sb.AppendLine(GenerateImports(className, config.Framework));
+            sb.AppendLine(GenerateImports(table, schema, className, config.Framework));
             sb.AppendLine();
 
             // Component
-            sb.AppendLine(GenerateComponentBody(table, className, camelName, config.Framework));
+            sb.AppendLine(GenerateComponentBody(table, schema, className, camelName, config.Framework));
 
             return sb.ToString();
         }

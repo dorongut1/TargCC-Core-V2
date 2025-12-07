@@ -64,6 +64,12 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <inheritdoc/>
     public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
+        return await GenerateAsync(table, null, rootNamespace);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> GenerateAsync(Table table, DatabaseSchema? schema, string rootNamespace = "YourApp")
+    {
         ArgumentNullException.ThrowIfNull(table);
 
         if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
@@ -103,6 +109,12 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         // Generate aggregate methods if needed
         GenerateUpdateAggregatesAsync(sb, table);
+
+        // Generate related data methods (Master-Detail Views)
+        if (schema != null)
+        {
+            GenerateRelatedDataMethods(sb, table, schema, rootNamespace);
+        }
 
         // Generate helper methods
         GenerateExistsAsync(sb, table);
@@ -790,6 +802,166 @@ public class RepositoryGenerator : IRepositoryGenerator
                columnName.StartsWith("BLG_", StringComparison.OrdinalIgnoreCase) ||
                columnName.StartsWith("AGG_", StringComparison.OrdinalIgnoreCase) ||
                columnName.StartsWith("SCB_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Generates related data methods (Master-Detail Views) based on FK relationships.
+    /// </summary>
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string rootNamespace)
+    {
+        if (schema.Relationships == null || schema.Relationships.Count == 0)
+        {
+            return;
+        }
+
+        // Find all relationships where this table is the parent
+        var parentRelationships = schema.Relationships
+            .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+            .ToList();
+
+        if (parentRelationships.Count == 0)
+        {
+            return;
+        }
+
+        string entityName = table.Name;
+        var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+
+        if (pkColumn == null)
+        {
+            return;
+        }
+
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+
+        foreach (var relationship in parentRelationships)
+        {
+            // Find the child table
+            var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+            if (childTable == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                GenerateSingleRelatedDataMethod(sb, table, childTable, relationship, entityName, pkType);
+            }
+            catch
+            {
+                // Skip relationships that cannot be generated
+                continue;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Generates a single GetRelated method implementation.
+    /// </summary>
+    private static void GenerateSingleRelatedDataMethod(
+        StringBuilder sb,
+        Table parentTable,
+        Table childTable,
+        Relationship relationship,
+        string parentEntityName,
+        string pkType)
+    {
+        // Pluralize child table name (Order → Orders)
+        string childrenName = Pluralize(childTable.Name);
+        string methodName = $"Get{childrenName}Async";
+        string spName = $"SP_Get{parentEntityName}{childrenName}";
+        string parentIdParamName = ToCamelCase(parentEntityName) + "Id";
+
+        // XML Documentation
+        sb.AppendLine("    /// <inheritdoc/>");
+
+        // Method signature
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"    public async Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {parentIdParamName}, " +
+            $"int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+        sb.AppendLine("    {");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"        _logger.LogDebug(\"Fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+        sb.AppendLine();
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+
+        // Build DynamicParameters
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{parentTable.PrimaryKeyColumns[0]}\", {parentIdParamName});");
+        sb.AppendLine("            parameters.Add(\"@Skip\", skip);");
+        sb.AppendLine("            parameters.Add(\"@Take\", take);");
+        sb.AppendLine();
+
+        // Dapper call
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{childTable.Name}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
+        sb.AppendLine("                parameters,");
+        sb.AppendLine("                commandType: CommandType.StoredProcedure);");
+        sb.AppendLine();
+
+        // Logging
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
+            $"result.Count(), {parentIdParamName});");
+        sb.AppendLine();
+        sb.AppendLine("            return result;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"            _logger.LogError(ex, \"Error fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+        sb.AppendLine("            throw;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Pluralizes a singular noun using simple English rules.
+    /// </summary>
+    private static string Pluralize(string singular)
+    {
+        if (string.IsNullOrEmpty(singular))
+        {
+            return singular;
+        }
+
+        // Category → Categories
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+        {
+            return singular[..^1] + "ies";
+        }
+
+        // Address → Addresses, Box → Boxes
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+        {
+            return singular + "es";
+        }
+
+        // Order → Orders, Customer → Customers
+        return singular + "s";
+    }
+
+    /// <summary>
+    /// Converts a string to camelCase.
+    /// </summary>
+    private static string ToCamelCase(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return char.ToLowerInvariant(value[0]) + value[1..];
     }
 
     /// <summary>

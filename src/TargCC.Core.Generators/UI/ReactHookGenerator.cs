@@ -44,7 +44,7 @@ namespace TargCC.Core.Generators.UI
 
             LogGeneratingHooks(Logger, table.Name, null);
 
-            return await Task.Run(() => Generate(table)).ConfigureAwait(false);
+            return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
         private static string GenerateUseEntityHook(string className, string camelName)
@@ -142,7 +142,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string Generate(Table table)
+        private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -152,6 +152,28 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
+            GenerateImports(sb, table, schema, className, camelName);
+
+            // Query hooks
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+
+            // Related data hooks (Master-Detail Views)
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                GenerateRelatedDataHooks(sb, table, schema);
+            }
+
+            // Mutation hooks
+            sb.AppendLine(GenerateUseCreateHook(className, camelName));
+            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+
+            return sb.ToString();
+        }
+
+        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
+        {
             sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
@@ -160,18 +182,137 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+
+            // Import child entity types for related data hooks
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                    }
+                }
+            }
+
             sb.AppendLine();
+        }
 
-            // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+        private static void GenerateRelatedDataHooks(StringBuilder sb, Table table, DatabaseSchema schema)
+        {
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
 
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .ToList();
 
-            return sb.ToString();
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                if (childTable == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    GenerateSingleRelatedDataHook(sb, table, childTable, className, camelName);
+                }
+                catch
+                {
+                    // Skip relationships that cannot be generated
+                    continue;
+                }
+            }
+        }
+
+        private static void GenerateSingleRelatedDataHook(StringBuilder sb, Table parentTable, Table childTable, string parentClassName, string parentCamelName)
+        {
+            var childClassName = GetClassName(childTable.Name);
+            var childrenName = Pluralize(childClassName);
+            var childrenCamelCase = GetCamelCaseName(childrenName);
+
+            sb.AppendLine("/**");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch {childrenCamelCase} for a specific {parentClassName.ToLower(CultureInfo.InvariantCulture)}.");
+            sb.AppendLine(" */");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{parentClassName}{childrenName} = (");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {parentCamelName}Id: number | null,");
+            sb.AppendLine("  skip?: number,");
+            sb.AppendLine("  take?: number");
+            sb.AppendLine(") => {");
+            sb.AppendLine("  return useQuery({");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{parentCamelName}', {parentCamelName}Id, '{childrenCamelCase}', skip, take],");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {parentCamelName}Api.get{childrenName}({parentCamelName}Id!, skip, take),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    enabled: {parentCamelName}Id !== null,");
+            sb.AppendLine("  });");
+            sb.AppendLine("};");
+            sb.AppendLine();
+        }
+
+        private static string Pluralize(string singular)
+        {
+            if (string.IsNullOrEmpty(singular))
+            {
+                return singular;
+            }
+
+            // Category → Categories
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular[..^1] + "ies";
+            }
+
+            // Address → Addresses, Box → Boxes
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular + "es";
+            }
+
+            // Order → Orders, Customer → Customers
+            return singular + "s";
+        }
+
+        private static string GetClassName(string tableName)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                throw new ArgumentException("Table name cannot be null or empty.", nameof(tableName));
+            }
+
+            // Remove c_ prefix if exists
+            if (tableName.StartsWith("c_", StringComparison.OrdinalIgnoreCase))
+            {
+                tableName = tableName.Substring(2);
+            }
+
+            // Convert to PascalCase - simple version for now
+            return char.ToUpperInvariant(tableName[0]) + tableName.Substring(1);
+        }
+
+        private static string GetCamelCaseName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return name;
+            }
+
+            var className = GetClassName(name);
+            return char.ToLowerInvariant(className[0]) + className.Substring(1);
         }
     }
 }

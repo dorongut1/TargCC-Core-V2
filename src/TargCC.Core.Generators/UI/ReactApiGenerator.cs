@@ -45,7 +45,7 @@ namespace TargCC.Core.Generators.UI
 
             LogGeneratingApiClient(Logger, table.Name, null);
 
-            return await Task.Run(() => Generate(table)).ConfigureAwait(false);
+            return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
         private static string GenerateGetById(string className, string apiPath)
@@ -143,22 +143,58 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static string GenerateGetChildren(string className, string apiPath, Relationship relationship)
+        private static string GenerateGetRelatedData(string parentClassName, string apiPath, Table childTable)
         {
-            var childClassName = GetClassName(relationship.ChildTable);
-            var childCamelName = GetCamelCaseName(relationship.ChildTable);
+            var childClassName = GetClassName(childTable.Name);
+            var childrenName = Pluralize(childClassName);
+            var childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
 
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {childClassName}s for this {className}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {childrenLowerCase} for this {parentClassName.ToLower(CultureInfo.InvariantCulture)}.");
             sb.AppendLine("   */");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  get{childClassName}s: async (id: number): Promise<{childClassName}[]> => {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{childClassName}[]>(`{apiPath}/${{id}}/{childCamelName}s`);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  get{childrenName}: async (id: number, skip?: number, take?: number): Promise<{childClassName}[]> => {{");
+            sb.AppendLine("    const params = new URLSearchParams();");
+            sb.AppendLine("    if (skip !== undefined) params.append('skip', skip.toString());");
+            sb.AppendLine("    if (take !== undefined) params.append('take', take.toString());");
+            sb.AppendLine("    const queryString = params.toString() ? `?${params.toString()}` : '';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{childClassName}[]>(`{apiPath}/${{id}}/{childrenLowerCase}${{queryString}}`);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
 
             return sb.ToString();
+        }
+
+        private static string Pluralize(string singular)
+        {
+            if (string.IsNullOrEmpty(singular))
+            {
+                return singular;
+            }
+
+            // Category → Categories
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular[..^1] + "ies";
+            }
+
+            // Address → Addresses, Box → Boxes
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular + "es";
+            }
+
+            // Order → Orders, Customer → Customers
+            return singular + "s";
         }
 
         private static string GetTypeScriptTypeForColumn(Column column)
@@ -177,7 +213,7 @@ namespace TargCC.Core.Generators.UI
             };
         }
 
-        private string Generate(Table table)
+        private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -188,14 +224,7 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            sb.AppendLine("import { api } from './client';");
-            sb.AppendLine("import type {");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-            sb.AppendLine();
+            GenerateImports(sb, table, schema, className);
 
             // API object
             sb.AppendLine("/**");
@@ -221,16 +250,57 @@ namespace TargCC.Core.Generators.UI
                 }
             }
 
-            // Relationship methods (one-to-many)
-            var relationships = table.Relationships.Where(r => r.ChildTable == table.Name).Take(3);
-            foreach (var rel in relationships)
+            // Related data methods (Master-Detail Views)
+            if (schema.Relationships != null)
             {
-                sb.AppendLine(GenerateGetChildren(className, apiPath, rel));
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
+                    }
+                }
             }
 
             sb.AppendLine("};");
 
             return sb.ToString();
+        }
+
+        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
+        {
+            sb.AppendLine("import { api } from './client';");
+            sb.AppendLine("import type {");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+
+            // Import child entity types for related data methods
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                    }
+                }
+            }
+
+            sb.AppendLine();
         }
     }
 }

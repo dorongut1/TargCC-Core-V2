@@ -49,7 +49,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
 
-            GenerateControllerClass(sb, entityName, controllerName, table, config);
+            GenerateControllerClass(sb, entityName, controllerName, table, schema, config);
 
             sb.AppendLine("}");
 
@@ -69,6 +69,11 @@ namespace TargCC.Core.Generators.API
         }
 
         private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, ApiGeneratorConfig config)
+        {
+            GenerateControllerClass(sb, entityName, controllerName, table, null, config);
+        }
+
+        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, DatabaseSchema? schema, ApiGeneratorConfig config)
         {
             if (config.GenerateXmlDocumentation)
             {
@@ -102,6 +107,12 @@ namespace TargCC.Core.Generators.API
 
             GenerateGetFilteredMethod(sb, entityName, table, config);
             sb.AppendLine();
+
+            // Generate related data endpoints (Master-Detail Views)
+            if (schema != null)
+            {
+                GenerateRelatedDataEndpoints(sb, table, schema, config);
+            }
 
             GenerateCreateMethod(sb, entityName, config);
             sb.AppendLine();
@@ -414,6 +425,98 @@ namespace TargCC.Core.Generators.API
         private static bool IsVowel(char c)
         {
             return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Generates related data endpoints for Master-Detail views.
+        /// </summary>
+        private static void GenerateRelatedDataEndpoints(StringBuilder sb, Table table, DatabaseSchema schema, ApiGeneratorConfig config)
+        {
+            if (schema.Relationships == null || schema.Relationships.Count == 0)
+            {
+                return;
+            }
+
+            var entityName = GetClassName(table.Name);
+
+            // Find all relationships where this table is the parent
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .ToList();
+
+            if (parentRelationships.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                if (childTable == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    GenerateSingleRelatedDataEndpoint(sb, table, childTable, relationship, entityName, config);
+                    sb.AppendLine();
+                }
+                catch
+                {
+                    // Skip relationships that cannot be generated
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates a single related data endpoint.
+        /// </summary>
+        private static void GenerateSingleRelatedDataEndpoint(
+            StringBuilder sb,
+            Table parentTable,
+            Table childTable,
+            Relationship relationship,
+            string parentEntityName,
+            ApiGeneratorConfig config)
+        {
+            string childEntityName = GetClassName(childTable.Name);
+            string childrenName = MakePlural(childEntityName);
+            string childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
+
+            if (config.GenerateXmlDocumentation)
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToLower(CultureInfo.InvariantCulture)}.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"id\">The parent entity ID.</param>");
+                sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");
+                sb.AppendLine("        /// <param name=\"take\">Number of records to take for pagination.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {childEntityName} entities.</returns>");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        [HttpGet(\"{{id}}/{childrenLowerCase}\")]");
+
+            if (config.GenerateSwaggerAttributes)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{childEntityName}>), 200)]");
+                sb.AppendLine("        [ProducesResponseType(404)]");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"        public async Task<ActionResult<IEnumerable<{childEntityName}>>> Get{childrenName}(int id, [FromQuery] int? skip = null, [FromQuery] int? take = null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            // Verify parent exists");
+            sb.AppendLine("            var parent = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
+            sb.AppendLine("            if (parent == null)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return NotFound();");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var {childrenLowerCase} = await _repository.Get{childrenName}Async(id, skip, take).ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok({childrenLowerCase});");
+            sb.AppendLine("        }");
         }
     }
 }
