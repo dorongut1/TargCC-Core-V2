@@ -73,9 +73,13 @@ namespace TargCC.Core.Generators.Sql.Templates
         private static string GenerateProcedureForIndex(Table table, IndexModel index)
         {
             var sb = new StringBuilder();
+
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
             var prefix = index.IsUnique ? "Get" : "Fill";
             var columnNames = string.Join("And", index.ColumnNames.Select(ToTitleCase));
-            var procName = $"SP_{prefix}{table.Name}By{columnNames}";
+            var procName = $"SP_{prefix}{entityName}By{columnNames}";
 
             AppendHeader(sb, index);
             AppendProcedureDeclaration(sb, procName, table, index);

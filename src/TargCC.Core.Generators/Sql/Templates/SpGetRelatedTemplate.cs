@@ -37,12 +37,16 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             var sb = new StringBuilder();
 
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var parentEntityName = API.BaseApiGenerator.GetClassName(parentTable.Name);
+            var childEntityName = API.BaseApiGenerator.GetClassName(childTable.Name);
+
             // Pluralize child table name (Order → Orders)
-            var childrenName = Pluralize(childTable.Name);
+            var childrenName = Pluralize(childEntityName);
 
             // Procedure name: SP_Get{Parent}{Children}
             // Example: SP_GetCustomerOrders
-            var procName = $"SP_Get{parentTable.Name}{childrenName}";
+            var procName = $"SP_Get{parentEntityName}{childrenName}";
 
             // Get parent PK column
             var parentPkColumn = parentTable.Columns.Find(c => c.IsPrimaryKey)

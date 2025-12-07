@@ -26,10 +26,13 @@ namespace TargCC.Core.Generators.Sql.Templates
         {
             ArgumentNullException.ThrowIfNull(table);
 
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
             var sb = new StringBuilder();
 
             // Procedure header with pagination parameters
-            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetAll{table.Name}s]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetAll{entityName}s]");
             sb.AppendLine("    @Skip INT = NULL,");
             sb.AppendLine("    @Take INT = NULL");
             sb.AppendLine("AS");

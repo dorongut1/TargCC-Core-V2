@@ -47,8 +47,11 @@ namespace TargCC.Core.Generators.Sql.Templates
                 insertableColumns = insertableColumns.Where(c => c.Name != "AddedBy").ToList();
             }
 
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
             // Procedure header
-            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Add{table.Name}]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Add{entityName}]");
 
             // Check if there are any insertable columns
             if (insertableColumns.Count == 0 && !hasAddedBy)
