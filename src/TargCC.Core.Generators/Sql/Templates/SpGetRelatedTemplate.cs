@@ -120,8 +120,8 @@ namespace TargCC.Core.Generators.Sql.Templates
                 }
                 catch (Exception ex)
                 {
-                    sb.AppendLine($"-- Warning: Could not generate SP_Get{parentTable.Name}{Pluralize(childTable.Name)}");
-                    sb.AppendLine($"-- Reason: {ex.Message}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"-- Warning: Could not generate SP_Get{parentTable.Name}{Pluralize(childTable.Name)}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"-- Reason: {ex.Message}");
                     sb.AppendLine();
                 }
             }
@@ -240,7 +240,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             }
 
             // Simple English pluralization rules
-            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -250,9 +250,9 @@ namespace TargCC.Core.Generators.Sql.Templates
                 return singular[..^1] + "ies";
             }
 
-            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {

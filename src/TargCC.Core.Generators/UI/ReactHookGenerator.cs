@@ -47,6 +47,36 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
+        private string Generate(Table table, DatabaseSchema schema)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            GenerateImports(sb, table, schema, className, camelName);
+
+            // Query hooks
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+
+            // Related data hooks (Master-Detail Views)
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                GenerateRelatedDataHooks(sb, table, schema);
+            }
+
+            // Mutation hooks
+            sb.AppendLine(GenerateUseCreateHook(className, camelName));
+            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+
+            return sb.ToString();
+        }
+
         private static string GenerateUseEntityHook(string className, string camelName)
         {
             var sb = new StringBuilder();
@@ -142,36 +172,6 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string Generate(Table table, DatabaseSchema schema)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            GenerateImports(sb, table, schema, className, camelName);
-
-            // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
-
-            // Related data hooks (Master-Detail Views)
-            if (schema.Relationships != null && schema.Relationships.Count > 0)
-            {
-                GenerateRelatedDataHooks(sb, table, schema);
-            }
-
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
-
-            return sb.ToString();
-        }
-
         private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
         {
             sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
@@ -264,7 +264,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Category → Categories
-            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -274,9 +274,9 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Address → Addresses, Box → Boxes
-            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {
@@ -287,7 +287,7 @@ namespace TargCC.Core.Generators.UI
             return singular + "s";
         }
 
-        private static string GetClassName(string tableName)
+        private static new string GetClassName(string tableName)
         {
             if (string.IsNullOrWhiteSpace(tableName))
             {
@@ -304,7 +304,7 @@ namespace TargCC.Core.Generators.UI
             return char.ToUpperInvariant(tableName[0]) + tableName.Substring(1);
         }
 
-        private static string GetCamelCaseName(string name)
+        private static new string GetCamelCaseName(string name)
         {
             if (string.IsNullOrEmpty(name))
             {

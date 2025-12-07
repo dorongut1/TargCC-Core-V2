@@ -55,10 +55,16 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(5, nameof(LogIndexProceduresWarning)),
                 "Could not generate index procedures for {TableName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogRelatedProceduresWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(6, nameof(LogRelatedProceduresWarning)),
+                "Could not generate related procedures for table: {TableName}");
+
         private static readonly Action<ILogger, string, Exception?> LogCompletedTableGeneration =
             LoggerMessage.Define<string>(
                 LogLevel.Information,
-                new EventId(6, nameof(LogCompletedTableGeneration)),
+                new EventId(7, nameof(LogCompletedTableGeneration)),
                 "Completed stored procedure generation for {TableName}");
 
         private static readonly Action<ILogger, string, Exception?> LogGeneratingSchemaProcedures =
@@ -247,7 +253,8 @@ namespace TargCC.Core.Generators.Sql
 
             var validTables = schema.Tables
                 .Where(CanGenerate)
-                .OrderBy(t => t.Name);
+                .OrderBy(t => t.Name)
+                .ToList();
 
             foreach (var table in validTables)
             {
@@ -277,7 +284,7 @@ namespace TargCC.Core.Generators.Sql
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Could not generate related procedures for table: {TableName}", table.Name);
+                        LogRelatedProceduresWarning(_logger, table.Name, ex);
                     }
                 }
             }

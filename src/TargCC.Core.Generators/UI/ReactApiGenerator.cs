@@ -174,7 +174,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Category → Categories
-            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -184,9 +184,9 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Address → Addresses, Box → Boxes
-            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {
@@ -211,6 +211,37 @@ namespace TargCC.Core.Generators.UI
                 _ when sqlType.Contains("DATE", StringComparison.Ordinal) => "Date",
                 _ => "string",
             };
+        }
+
+        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
+        {
+            sb.AppendLine("import { api } from './client';");
+            sb.AppendLine("import type {");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+
+            // Import child entity types for related data methods
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                    }
+                }
+            }
+
+            sb.AppendLine();
         }
 
         private string Generate(Table table, DatabaseSchema schema)
@@ -270,37 +301,6 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine("};");
 
             return sb.ToString();
-        }
-
-        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
-        {
-            sb.AppendLine("import { api } from './client';");
-            sb.AppendLine("import type {");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-
-            // Import child entity types for related data methods
-            if (schema.Relationships != null)
-            {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.Name && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
-                    }
-                }
-            }
-
-            sb.AppendLine();
         }
     }
 }
