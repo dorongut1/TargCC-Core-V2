@@ -83,11 +83,11 @@ namespace TargCC.Core.Generators.UI.Components
                 if (prefix == "LKP")
                 {
                     var baseName = ToCamelCase(SplitPrefix(column.Name).baseName);
-                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (value, row) => row.{baseName}Text || row.{baseName}Code");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (_, row) => row.{baseName}Text || row.{baseName}Code");
                 }
                 else if (prefix == "LOC")
                 {
-                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (value, row) => row.{propertyName}Localized || row.{propertyName}");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueGetter: (_, row) => row.{propertyName}Localized || row.{propertyName}");
                 }
                 else if (column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal))
                 {
@@ -190,6 +190,39 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine(CultureInfo.InvariantCulture, $"    const ws = XLSX.utils.json_to_sheet({pluralName});");
+            sb.AppendLine();
+            sb.AppendLine("    // Get the range of the worksheet");
+            sb.AppendLine("    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');");
+            sb.AppendLine();
+            sb.AppendLine("    // Style the header row");
+            sb.AppendLine("    for (let col = range.s.c; col <= range.e.c; col++) {");
+            sb.AppendLine("      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });");
+            sb.AppendLine("      if (!ws[cellAddress]) continue;");
+            sb.AppendLine("      ws[cellAddress].s = {");
+            sb.AppendLine("        font: { bold: true, color: { rgb: 'FFFFFF' } },");
+            sb.AppendLine("        fill: { fgColor: { rgb: '4472C4' } },");
+            sb.AppendLine("        alignment: { horizontal: 'center', vertical: 'center' }");
+            sb.AppendLine("      };");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    // Set column widths (auto-fit)");
+            sb.AppendLine("    const colWidths = [];");
+            sb.AppendLine("    for (let col = range.s.c; col <= range.e.c; col++) {");
+            sb.AppendLine("      let maxWidth = 10;");
+            sb.AppendLine("      for (let row = range.s.r; row <= range.e.r; row++) {");
+            sb.AppendLine("        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });");
+            sb.AppendLine("        if (ws[cellAddress] && ws[cellAddress].v) {");
+            sb.AppendLine("          const cellLength = String(ws[cellAddress].v).length;");
+            sb.AppendLine("          maxWidth = Math.max(maxWidth, cellLength);");
+            sb.AppendLine("        }");
+            sb.AppendLine("      }");
+            sb.AppendLine("      colWidths.push({ wch: Math.min(maxWidth + 2, 50) });");
+            sb.AppendLine("    }");
+            sb.AppendLine("    ws['!cols'] = colWidths;");
+            sb.AppendLine();
+            sb.AppendLine("    // Freeze the header row");
+            sb.AppendLine("    ws['!freeze'] = { xSplit: 0, ySplit: 1 };");
+            sb.AppendLine();
             sb.AppendLine("    const wb = XLSX.utils.book_new();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.utils.book_append_sheet(wb, ws, '{className}s');");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.writeFile(wb, `{className}s_${{new Date().toISOString().split('T')[0]}}.xlsx`);");
@@ -418,7 +451,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("            InputLabelProps={{ shrink: true }}");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters.{propertyName} ?? ''}}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{(localFilters as any).{propertyName} ?? ''}}");
             sb.AppendLine("            onChange={(e) => setLocalFilters(prev => ({");
             sb.AppendLine("              ...prev,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");

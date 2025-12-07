@@ -221,8 +221,14 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine("import { api } from './client';");
             sb.AppendLine("import type {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+
+            // Only import write types for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
 
@@ -271,11 +277,21 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
 
             // CRUD methods
-            sb.AppendLine(GenerateGetById(className, apiPath));
+            // VIEWs are read-only - only generate Get methods
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateGetById(className, apiPath));
+            }
+
             sb.AppendLine(GenerateGetAll(className, apiPath));
-            sb.AppendLine(GenerateCreate(className, apiPath));
-            sb.AppendLine(GenerateUpdate(className, apiPath));
-            sb.AppendLine(GenerateDelete(className, apiPath));
+
+            // Write methods only for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateCreate(className, apiPath));
+                sb.AppendLine(GenerateUpdate(className, apiPath));
+                sb.AppendLine(GenerateDelete(className, apiPath));
+            }
 
             // GetByXXX from indexes
             foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
