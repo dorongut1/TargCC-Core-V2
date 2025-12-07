@@ -68,11 +68,6 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
         }
 
-        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, ApiGeneratorConfig config)
-        {
-            GenerateControllerClass(sb, entityName, controllerName, table, null, config);
-        }
-
         private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, DatabaseSchema? schema, ApiGeneratorConfig config)
         {
             if (config.GenerateXmlDocumentation)
