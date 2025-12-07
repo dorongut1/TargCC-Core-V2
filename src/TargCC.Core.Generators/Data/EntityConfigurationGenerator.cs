@@ -80,8 +80,11 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
         // Add class documentation
         GenerateClassDocumentation(sb, table);
 
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
         // Start class
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {table.Name}Configuration : IEntityTypeConfiguration<{table.Name}>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {entityName}Configuration : IEntityTypeConfiguration<{entityName}>");
         sb.AppendLine("{");
 
         // Generate Configure method
@@ -141,11 +144,14 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     /// </summary>
     private static void GenerateConfigureMethod(StringBuilder sb, Table table)
     {
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
         sb.AppendLine("    /// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Configures the {table.Name} entity.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"builder\">The builder used to configure the entity.</param>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public void Configure(EntityTypeBuilder<{table.Name}> builder)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public void Configure(EntityTypeBuilder<{entityName}> builder)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(builder);");
         sb.AppendLine();
