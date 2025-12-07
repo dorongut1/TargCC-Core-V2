@@ -126,6 +126,9 @@ namespace TargCC.Core.Generators.UI.Components
                 return singular;
             }
 
+            // CA1867: String literals required here because char overload doesn't support StringComparison
+            #pragma warning disable CA1867
+
             // Category → Categories
             if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
@@ -135,6 +138,9 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 return singular[..^1] + "ies";
             }
+
+            // CA1867: String literals required here because char overload doesn't support StringComparison
+            #pragma warning disable CA1867
 
             // Address → Addresses, Box → Boxes
             if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||

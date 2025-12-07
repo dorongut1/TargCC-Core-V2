@@ -68,11 +68,6 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
         }
 
-        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, ApiGeneratorConfig config)
-        {
-            GenerateControllerClass(sb, entityName, controllerName, table, null, config);
-        }
-
         private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, DatabaseSchema? schema, ApiGeneratorConfig config)
         {
             if (config.GenerateXmlDocumentation)
@@ -480,12 +475,12 @@ namespace TargCC.Core.Generators.API
         {
             string childEntityName = GetClassName(childTable.Name);
             string childrenName = MakePlural(childEntityName);
-            string childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
+            string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToLower(CultureInfo.InvariantCulture)}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToUpper(CultureInfo.InvariantCulture)}.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The parent entity ID.</param>");
                 sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");

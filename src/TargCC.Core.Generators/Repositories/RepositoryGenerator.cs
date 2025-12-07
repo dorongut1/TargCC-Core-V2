@@ -874,7 +874,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("    /// <inheritdoc/>");
 
         // Method signature
-        sb.AppendLine(CultureInfo.InvariantCulture,
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"    public async Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(
