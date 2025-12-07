@@ -116,6 +116,17 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info($"  ✓ Generated {totalFiles} files from {tables.Count} tables!");
             _output.BlankLine();
 
+            _output.Info("Step 3.5: Generating SQL stored procedures with Master-Detail relationships...");
+
+            // Generate ALL SQL including Master-Detail SPs for entire schema
+            var sqlGen = new SqlGenerator(_loggerFactory.CreateLogger<SqlGenerator>());
+            var allSql = await sqlGen.GenerateAsync(schema);
+            var sqlPath = Path.Combine(outputDirectory, "sql", "all_procedures.sql");
+            await SaveFileAsync(sqlPath, allSql);
+
+            _output.Info($"  ✓ SQL file generated with Master-Detail stored procedures!");
+            _output.BlankLine();
+
             _output.Info("Step 4: Generating support files...");
 
             // Generate Program.cs
@@ -219,23 +230,18 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(entityPath, entityCode);
         filesCount++;
 
-        // 2. SQL Stored Procedures
-        var sqlGen = new SqlGenerator(_loggerFactory.CreateLogger<SqlGenerator>());
-        var sqlCode = await sqlGen.GenerateAsync(table);
-        var sqlPath = Path.Combine(outputDirectory, "sql", $"{table.Name}.sql");
-        await SaveFileAsync(sqlPath, sqlCode);
-        filesCount++;
+        // 2. SQL Stored Procedures - SKIP HERE, will be generated once for entire schema after all tables
 
-        // 3. Repository Interface
+        // 3. Repository Interface (with schema for Master-Detail methods)
         var repoInterfaceGen = new RepositoryInterfaceGenerator(_loggerFactory.CreateLogger<RepositoryInterfaceGenerator>());
-        var repoInterface = await repoInterfaceGen.GenerateAsync(table, rootNamespace);
+        var repoInterface = await repoInterfaceGen.GenerateAsync(table, schema, rootNamespace);
         var repoInterfacePath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Interfaces", $"I{table.Name}Repository.cs");
         await SaveFileAsync(repoInterfacePath, repoInterface);
         filesCount++;
 
-        // 4. Repository Implementation
+        // 4. Repository Implementation (with schema for Master-Detail methods)
         var repoGen = new RepositoryGenerator(_loggerFactory.CreateLogger<RepositoryGenerator>());
-        var repoImpl = await repoGen.GenerateAsync(table, rootNamespace);
+        var repoImpl = await repoGen.GenerateAsync(table, schema, rootNamespace);
         var repoImplPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "Repositories", $"{table.Name}Repository.cs");
         await SaveFileAsync(repoImplPath, repoImpl);
         filesCount++;
