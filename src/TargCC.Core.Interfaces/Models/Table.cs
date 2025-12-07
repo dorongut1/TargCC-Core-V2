@@ -298,6 +298,20 @@ public class Table
     public bool IsSystemTable { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether this is a database VIEW (read-only) rather than a TABLE.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Views are treated as read-only data sources. Code generation will:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>✅ Generate: List, Detail, API GET endpoints, Repository Read methods</item>
+    /// <item>❌ Skip: Form, API POST/PUT/DELETE, Repository Write methods</item>
+    /// </list>
+    /// </remarks>
+    public bool IsView { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of rows in the table.
     /// </summary>
     public long RowCount { get; set; }

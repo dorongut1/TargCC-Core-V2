@@ -97,29 +97,33 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(" },");
             }
 
-            // Actions column
-            sb.AppendLine("    {");
-            sb.AppendLine("      field: 'actions',");
-            sb.AppendLine("      type: 'actions',");
-            sb.AppendLine("      headerName: 'Actions',");
-            sb.AppendLine("      width: 100,");
-            sb.AppendLine("      getActions: (params) => [");
-            sb.AppendLine("        <GridActionsCellItem");
-            sb.AppendLine("          icon={<EditIcon />}");
-            sb.AppendLine("          label=\"Edit\"");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{ToCamelCase(GetClassName(table.Name))}s/${{params.id}}`)}}");
-            sb.AppendLine("        />,");
-            sb.AppendLine("        <GridActionsCellItem");
-            sb.AppendLine("          icon={<DeleteIcon />}");
-            sb.AppendLine("          label=\"Delete\"");
-            sb.AppendLine("          onClick={() => {");
-            sb.AppendLine("            if (confirm('Are you sure?')) {");
-            sb.AppendLine("              deleteEntity(params.id as number);");
-            sb.AppendLine("            }");
-            sb.AppendLine("          }}");
-            sb.AppendLine("        />,");
-            sb.AppendLine("      ],");
-            sb.AppendLine("    },");
+            // Actions column - only for tables, not for views (views are read-only)
+            if (!table.IsView)
+            {
+                sb.AppendLine("    {");
+                sb.AppendLine("      field: 'actions',");
+                sb.AppendLine("      type: 'actions',");
+                sb.AppendLine("      headerName: 'Actions',");
+                sb.AppendLine("      width: 100,");
+                sb.AppendLine("      getActions: (params) => [");
+                sb.AppendLine("        <GridActionsCellItem");
+                sb.AppendLine("          icon={<EditIcon />}");
+                sb.AppendLine("          label=\"Edit\"");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{ToCamelCase(GetClassName(table.Name))}s/${{params.id}}`)}}");
+                sb.AppendLine("        />,");
+                sb.AppendLine("        <GridActionsCellItem");
+                sb.AppendLine("          icon={<DeleteIcon />}");
+                sb.AppendLine("          label=\"Delete\"");
+                sb.AppendLine("          onClick={() => {");
+                sb.AppendLine("            if (confirm('Are you sure?')) {");
+                sb.AppendLine("              deleteEntity(params.id as number);");
+                sb.AppendLine("            }");
+                sb.AppendLine("          }}");
+                sb.AppendLine("        />,");
+                sb.AppendLine("      ],");
+                sb.AppendLine("    },");
+            }
+
             sb.AppendLine("  ];");
 
             return sb.ToString();
@@ -199,13 +203,19 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 sb.AppendLine("    <Box sx={{ height: 'calc(100vh - 200px)', width: '100%', display: 'flex', flexDirection: 'column' }}>");
                 sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
-                sb.AppendLine("        <Button");
-                sb.AppendLine("          variant=\"contained\"");
-                sb.AppendLine("          startIcon={<AddIcon />}");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
-                sb.AppendLine("        >");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
-                sb.AppendLine("        </Button>");
+
+                // Only show Create button for tables, not for views (views are read-only)
+                if (!table.IsView)
+                {
+                    sb.AppendLine("        <Button");
+                    sb.AppendLine("          variant=\"contained\"");
+                    sb.AppendLine("          startIcon={<AddIcon />}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
+                    sb.AppendLine("        >");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+                    sb.AppendLine("        </Button>");
+                }
+
                 sb.AppendLine("        <Button");
                 sb.AppendLine("          variant=\"outlined\"");
                 sb.AppendLine("          startIcon={<FileDownloadIcon />}");

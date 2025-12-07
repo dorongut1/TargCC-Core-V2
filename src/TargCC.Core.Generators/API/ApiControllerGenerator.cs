@@ -109,13 +109,17 @@ namespace TargCC.Core.Generators.API
                 GenerateRelatedDataEndpoints(sb, table, schema, config);
             }
 
-            GenerateCreateMethod(sb, entityName, config);
-            sb.AppendLine();
+            // Only generate Create/Update/Delete for tables, not for views (views are read-only)
+            if (!table.IsView)
+            {
+                GenerateCreateMethod(sb, entityName, config);
+                sb.AppendLine();
 
-            GenerateUpdateMethod(sb, entityName, config);
-            sb.AppendLine();
+                GenerateUpdateMethod(sb, entityName, config);
+                sb.AppendLine();
 
-            GenerateDeleteMethod(sb, entityName, config);
+                GenerateDeleteMethod(sb, entityName, config);
+            }
 
             sb.AppendLine("    }");
         }

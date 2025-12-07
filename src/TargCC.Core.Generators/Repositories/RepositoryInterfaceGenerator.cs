@@ -211,35 +211,39 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         // GetFilteredAsync (if indexes exist)
         GenerateGetFilteredAsyncMethod(sb, table);
 
-        // AddAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Adds a new {entityName} entity to the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+        // Only generate Add/Update/Delete for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            // AddAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Adds a new {entityName} entity to the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
 
-        // UpdateAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Updates an existing {entityName} entity in the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+            // UpdateAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Updates an existing {entityName} entity in the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
 
-        // DeleteAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Deletes a {entityName} entity from the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+            // DeleteAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Deletes a {entityName} entity from the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
+        }
     }
 
     /// <summary>

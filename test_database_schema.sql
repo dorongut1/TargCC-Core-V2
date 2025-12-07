@@ -171,6 +171,87 @@ PRINT '  ✓ OrderItem table created with 2 indexes and 2 FKs';
 GO
 
 -- =============================================================================
+-- VIEWS (Read-Only Reporting)
+-- Demonstrates: Complex queries, aggregations, joins - will generate read-only UI
+-- =============================================================================
+
+PRINT 'Creating views for reporting...';
+GO
+
+-- View 1: Customer Order Summary
+CREATE VIEW [dbo].[vw_CustomerOrderSummary] AS
+SELECT
+    c.ID AS CustomerID,
+    c.Name AS CustomerName,
+    c.Email,
+    c.lkp_Status AS Status,
+    COUNT(o.ID) AS TotalOrders,
+    SUM(o.TotalAmount) AS TotalSpent,
+    MAX(o.OrderDate) AS LastOrderDate,
+    MIN(o.OrderDate) AS FirstOrderDate
+FROM
+    [dbo].[Customer] c
+LEFT JOIN
+    [dbo].[Order] o ON c.ID = o.CustomerID
+GROUP BY
+    c.ID, c.Name, c.Email, c.lkp_Status;
+GO
+
+PRINT '  ✓ vw_CustomerOrderSummary created (aggregated customer data)';
+GO
+
+-- View 2: Order Details with Customer Info
+CREATE VIEW [dbo].[vw_OrderDetails] AS
+SELECT
+    o.ID AS OrderID,
+    o.OrderDate,
+    o.TotalAmount,
+    o.enm_Status AS OrderStatus,
+    c.ID AS CustomerID,
+    c.Name AS CustomerName,
+    c.Email AS CustomerEmail,
+    c.Phone AS CustomerPhone,
+    COUNT(oi.ID) AS ItemCount,
+    SUM(oi.Quantity) AS TotalQuantity
+FROM
+    [dbo].[Order] o
+INNER JOIN
+    [dbo].[Customer] c ON o.CustomerID = c.ID
+LEFT JOIN
+    [dbo].[OrderItem] oi ON o.ID = oi.OrderID
+GROUP BY
+    o.ID, o.OrderDate, o.TotalAmount, o.enm_Status,
+    c.ID, c.Name, c.Email, c.Phone;
+GO
+
+PRINT '  ✓ vw_OrderDetails created (orders with customer info)';
+GO
+
+-- View 3: Product Sales Report
+CREATE VIEW [dbo].[vw_ProductSales] AS
+SELECT
+    p.ID AS ProductID,
+    p.Name AS ProductName,
+    p.enm_Category AS Category,
+    p.Price AS CurrentPrice,
+    p.StockQuantity,
+    p.IsActive,
+    COUNT(oi.ID) AS TimesSold,
+    SUM(oi.Quantity) AS TotalQuantitySold,
+    SUM(oi.clc_LineTotal) AS TotalRevenue,
+    AVG(oi.UnitPrice) AS AverageSellingPrice
+FROM
+    [dbo].[Product] p
+LEFT JOIN
+    [dbo].[OrderItem] oi ON p.ID = oi.ProductID
+GROUP BY
+    p.ID, p.Name, p.enm_Category, p.Price, p.StockQuantity, p.IsActive;
+GO
+
+PRINT '  ✓ vw_ProductSales created (product performance analytics)';
+GO
+
+-- =============================================================================
 -- Sample Data
 -- =============================================================================
 

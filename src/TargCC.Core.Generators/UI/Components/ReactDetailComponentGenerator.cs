@@ -328,21 +328,27 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("        >");
                 sb.AppendLine("          Back");
                 sb.AppendLine("        </Button>");
-                sb.AppendLine("        <Button");
-                sb.AppendLine("          variant=\"contained\"");
-                sb.AppendLine("          startIcon={<EditIcon />}");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{camelName}s/${{id}}/edit`)}}");
-                sb.AppendLine("        >");
-                sb.AppendLine("          Edit");
-                sb.AppendLine("        </Button>");
-                sb.AppendLine("        <Button");
-                sb.AppendLine("          variant=\"outlined\"");
-                sb.AppendLine("          color=\"error\"");
-                sb.AppendLine("          startIcon={<DeleteIcon />}");
-                sb.AppendLine("          onClick={handleDelete}");
-                sb.AppendLine("        >");
-                sb.AppendLine("          Delete");
-                sb.AppendLine("        </Button>");
+
+                // Only show Edit/Delete buttons for tables, not for views (views are read-only)
+                if (!table.IsView)
+                {
+                    sb.AppendLine("        <Button");
+                    sb.AppendLine("          variant=\"contained\"");
+                    sb.AppendLine("          startIcon={<EditIcon />}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{camelName}s/${{id}}/edit`)}}");
+                    sb.AppendLine("        >");
+                    sb.AppendLine("          Edit");
+                    sb.AppendLine("        </Button>");
+                    sb.AppendLine("        <Button");
+                    sb.AppendLine("          variant=\"outlined\"");
+                    sb.AppendLine("          color=\"error\"");
+                    sb.AppendLine("          startIcon={<DeleteIcon />}");
+                    sb.AppendLine("          onClick={handleDelete}");
+                    sb.AppendLine("        >");
+                    sb.AppendLine("          Delete");
+                    sb.AppendLine("        </Button>");
+                }
+
                 sb.AppendLine("      </Box>");
                 sb.AppendLine();
                 sb.AppendLine("      <Card>");

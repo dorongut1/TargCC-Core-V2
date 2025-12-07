@@ -313,11 +313,15 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(listPath, listCode);
         filesCount++;
 
-        var formGen = new ReactFormComponentGenerator(_loggerFactory.CreateLogger<ReactFormComponentGenerator>());
-        var formCode = await formGen.GenerateAsync(table, schema, componentConfig);
-        var formPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Form.tsx");
-        await SaveFileAsync(formPath, formCode);
-        filesCount++;
+        // Only generate Form for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            var formGen = new ReactFormComponentGenerator(_loggerFactory.CreateLogger<ReactFormComponentGenerator>());
+            var formCode = await formGen.GenerateAsync(table, schema, componentConfig);
+            var formPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Form.tsx");
+            await SaveFileAsync(formPath, formCode);
+            filesCount++;
+        }
 
         var detailGen = new ReactDetailComponentGenerator(_loggerFactory.CreateLogger<ReactDetailComponentGenerator>());
         var detailCode = await detailGen.GenerateAsync(table, schema, componentConfig);
@@ -622,6 +626,11 @@ public class ProjectGenerationService : IProjectGenerationService
         var imports = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
+            // For views, skip Form import (views are read-only)
+            if (t.IsView)
+            {
+                return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Detail }} from './components/{className}/{className}Detail';";
+            }
             return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Detail }} from './components/{className}/{className}Detail';\nimport {{ {className}Form }} from './components/{className}/{className}Form';";
         }));
 
@@ -629,13 +638,20 @@ public class ProjectGenerationService : IProjectGenerationService
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
+            // Add "Report" suffix for views to distinguish from tables
+            var displayName = t.IsView ? $"{className}s Report" : $"{className}s";
+            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{displayName}\" />\n              </ListItemButton>\n            </ListItem>";
         }));
 
         var routes = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
+            // For views, only generate List and Detail routes (no create/edit)
+            if (t.IsView)
+            {
+                return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Detail />}} />";
+            }
             return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/new\" element={{<{className}Form />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Detail />}} />\n            <Route path=\"/{camelName}s/:id/edit\" element={{<{className}Form />}} />";
         }));
 

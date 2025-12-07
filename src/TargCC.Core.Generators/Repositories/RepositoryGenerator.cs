@@ -100,15 +100,23 @@ public class RepositoryGenerator : IRepositoryGenerator
         GenerateGetByIdAsync(sb, table);
         GenerateGetAllAsync(sb, table);
         GenerateGetFilteredAsync(sb, table);
-        GenerateAddAsync(sb, table);
-        GenerateUpdateAsync(sb, table);
-        GenerateDeleteAsync(sb, table);
+
+        // Only generate Add/Update/Delete for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            GenerateAddAsync(sb, table);
+            GenerateUpdateAsync(sb, table);
+            GenerateDeleteAsync(sb, table);
+        }
 
         // Generate index-based query methods
         GenerateIndexBasedMethods(sb, table);
 
-        // Generate aggregate methods if needed
-        GenerateUpdateAggregatesAsync(sb, table);
+        // Only generate aggregate updates for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            GenerateUpdateAggregatesAsync(sb, table);
+        }
 
         // Generate related data methods (Master-Detail Views)
         if (schema != null)
