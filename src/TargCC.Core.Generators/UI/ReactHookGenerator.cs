@@ -17,6 +17,12 @@ namespace TargCC.Core.Generators.UI
     /// </summary>
     public class ReactHookGenerator : BaseUIGenerator
     {
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(1, nameof(LogGeneratingHooks)),
+                "Generating React hooks for table {TableName}");
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
         /// </summary>
@@ -41,11 +47,35 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
-        private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
-            LoggerMessage.Define<string>(
-                LogLevel.Information,
-                new EventId(1, nameof(LogGeneratingHooks)),
-                "Generating React hooks for table {TableName}");
+        private string Generate(Table table, DatabaseSchema schema)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            GenerateImports(sb, table, schema, className, camelName);
+
+            // Query hooks
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+
+            // Related data hooks (Master-Detail Views)
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                GenerateRelatedDataHooks(sb, table, schema);
+            }
+
+            // Mutation hooks
+            sb.AppendLine(GenerateUseCreateHook(className, camelName));
+            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+
+            return sb.ToString();
+        }
 
         private static string GenerateUseEntityHook(string className, string camelName)
         {
@@ -285,36 +315,6 @@ namespace TargCC.Core.Generators.UI
 
             var className = GetClassName(name);
             return char.ToLowerInvariant(className[0]) + className.Substring(1);
-        }
-
-        private string Generate(Table table, DatabaseSchema schema)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            GenerateImports(sb, table, schema, className, camelName);
-
-            // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
-
-            // Related data hooks (Master-Detail Views)
-            if (schema.Relationships != null && schema.Relationships.Count > 0)
-            {
-                GenerateRelatedDataHooks(sb, table, schema);
-            }
-
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
-
-            return sb.ToString();
         }
     }
 }
