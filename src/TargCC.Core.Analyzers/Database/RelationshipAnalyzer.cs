@@ -660,18 +660,24 @@ namespace TargCC.Core.Analyzers.Database
         /// <returns>Relationship object.</returns>
         private Relationship CreateRelationshipFromData(dynamic data, List<Table> tables)
         {
+            // CRITICAL FIX: SQL terminology is opposite of domain model terminology!
+            // SQL: ParentTable = table WITH FK (Order), ReferencedTable = table REFERENCED (Customer)
+            // Model: ParentTable = referenced table (Customer), ChildTable = table with FK (Order)
+            // We must swap them to match the domain model expectations
             return new Relationship
             {
                 ConstraintName = data.ConstraintName,
-                ParentTable = data.ParentTable,
-                ReferencedTable = data.ReferencedTable,
-                ParentColumn = data.ParentColumn,
-                ReferencedColumn = data.ReferencedColumn,
+                ParentTable = data.ReferencedTable,      // Customer (the "one" in 1:N)
+                ChildTable = data.ParentTable,            // Order (the "many" in 1:N)
+                ReferencedTable = data.ReferencedTable,   // Customer
+                ParentColumn = data.ReferencedColumn,     // Customer.ID
+                ChildColumn = data.ParentColumn,          // Order.CustomerID
+                ReferencedColumn = data.ReferencedColumn, // Customer.ID
                 DeleteAction = data.DeleteAction,
                 UpdateAction = data.UpdateAction,
                 IsDisabled = data.IsDisabled,
                 RelationshipType = tables != null
-                    ? DetermineRelationshipType(data.ParentTable, data.ReferencedTable, tables)
+                    ? DetermineRelationshipType(data.ReferencedTable, data.ParentTable, tables)
                     : RelationshipType.OneToMany
             };
         }
