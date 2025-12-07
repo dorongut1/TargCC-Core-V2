@@ -23,15 +23,6 @@ namespace TargCC.Core.Generators.UI
                 new EventId(1, nameof(LogGeneratingHooks)),
                 "Generating React hooks for table {TableName}");
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
-        /// </summary>
-        /// <param name="logger">Logger instance.</param>
-        public ReactHookGenerator(ILogger<ReactHookGenerator> logger)
-            : base(logger)
-        {
-        }
-
         private static string GenerateUseEntityHook(string className, string camelName)
         {
             var sb = new StringBuilder();
@@ -270,6 +261,15 @@ namespace TargCC.Core.Generators.UI
 
             var className = GetClassName(name);
             return char.ToLowerInvariant(className[0]) + className.Substring(1);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
+        /// </summary>
+        /// <param name="logger">Logger instance.</param>
+        public ReactHookGenerator(ILogger<ReactHookGenerator> logger)
+            : base(logger)
+        {
         }
 
         /// <inheritdoc/>
