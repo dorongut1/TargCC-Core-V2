@@ -52,32 +52,12 @@ namespace TargCC.Core.Generators.UI.Components
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
-                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, IconButton } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';");
+                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper } from '@mui/material';");
+                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon } from '@mui/icons-material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
-            sb.AppendLine();
-            sb.AppendLine("interface CustomToolbarProps {");
-            sb.AppendLine("  onClearFilters: () => void;");
-            sb.AppendLine("}");
-            sb.AppendLine();
-            sb.AppendLine("function CustomToolbar({ onClearFilters }: CustomToolbarProps) {");
-            sb.AppendLine("  return (");
-            sb.AppendLine("    <GridToolbarContainer>");
-            sb.AppendLine("      <GridToolbarColumnsButton />");
-            sb.AppendLine("      <GridToolbarDensitySelector />");
-            sb.AppendLine("      <Button");
-            sb.AppendLine("        size=\"small\"");
-            sb.AppendLine("        startIcon={<ClearIcon />}");
-            sb.AppendLine("        onClick={onClearFilters}");
-            sb.AppendLine("      >");
-            sb.AppendLine("        Clear All Filters");
-            sb.AppendLine("      </Button>");
-            sb.AppendLine("    </GridToolbarContainer>");
-            sb.AppendLine("  );");
-            sb.AppendLine("}");
 
             return sb.ToString();
         }
@@ -185,6 +165,22 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    setFilterModel({ items: [] });");
             sb.AppendLine("  };");
             sb.AppendLine();
+            sb.AppendLine("  function CustomToolbar() {");
+            sb.AppendLine("    return (");
+            sb.AppendLine("      <GridToolbarContainer>");
+            sb.AppendLine("        <GridToolbarColumnsButton />");
+            sb.AppendLine("        <GridToolbarDensitySelector />");
+            sb.AppendLine("        <Button");
+            sb.AppendLine("          size=\"small\"");
+            sb.AppendLine("          startIcon={<ClearIcon />}");
+            sb.AppendLine("          onClick={handleClearAllFilters}");
+            sb.AppendLine("        >");
+            sb.AppendLine("          Clear All Filters");
+            sb.AppendLine("        </Button>");
+            sb.AppendLine("      </GridToolbarContainer>");
+            sb.AppendLine("    );");
+            sb.AppendLine("  }");
+            sb.AppendLine();
 
             // Export to Excel handler
             sb.AppendLine("  const handleExportToExcel = () => {");
@@ -274,9 +270,6 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          onFilterModelChange={setFilterModel}");
                 sb.AppendLine("          slots={{");
                 sb.AppendLine("            toolbar: CustomToolbar,");
-                sb.AppendLine("          }}");
-                sb.AppendLine("          slotProps={{");
-                sb.AppendLine("            toolbar: { onClearFilters: handleClearAllFilters },");
                 sb.AppendLine("          }}");
                 sb.AppendLine("          initialState={{");
                 sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
