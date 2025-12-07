@@ -51,13 +51,23 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';");
+                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarDensitySelector } from '@mui/x-data-grid';");
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, IconButton } from '@mui/material';");
                 sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
+            sb.AppendLine();
+            sb.AppendLine("function CustomToolbar() {");
+            sb.AppendLine("  return (");
+            sb.AppendLine("    <GridToolbarContainer>");
+            sb.AppendLine("      <GridToolbarColumnsButton />");
+            sb.AppendLine("      <GridToolbarFilterButton />");
+            sb.AppendLine("      <GridToolbarDensitySelector />");
+            sb.AppendLine("    </GridToolbarContainer>");
+            sb.AppendLine("  );");
+            sb.AppendLine("}");
 
             return sb.ToString();
         }
@@ -238,6 +248,9 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
                 sb.AppendLine("          columns={columns}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
+                sb.AppendLine("          slots={{");
+                sb.AppendLine("            toolbar: CustomToolbar,");
+                sb.AppendLine("          }}");
                 sb.AppendLine("          initialState={{");
                 sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
                 sb.AppendLine("          }}");
