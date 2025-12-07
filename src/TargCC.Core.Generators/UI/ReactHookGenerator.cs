@@ -15,67 +15,17 @@ namespace TargCC.Core.Generators.UI
     /// <summary>
     /// Generates React Query hooks from database tables.
     /// </summary>
-    public class ReactHookGenerator : BaseUIGenerator
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
+    /// </remarks>
+    /// <param name="logger">Logger instance.</param>
+    public class ReactHookGenerator(ILogger<ReactHookGenerator> logger) : BaseUIGenerator(logger)
     {
         private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
             LoggerMessage.Define<string>(
                 LogLevel.Information,
                 new EventId(1, nameof(LogGeneratingHooks)),
                 "Generating React hooks for table {TableName}");
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ReactHookGenerator"/> class.
-        /// </summary>
-        /// <param name="logger">Logger instance.</param>
-        public ReactHookGenerator(ILogger<ReactHookGenerator> logger)
-            : base(logger)
-        {
-        }
-
-        /// <inheritdoc/>
-        public override UIGeneratorType GeneratorType => UIGeneratorType.ReactHooks;
-
-        /// <inheritdoc/>
-        public override async Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config)
-        {
-            ArgumentNullException.ThrowIfNull(table);
-            ArgumentNullException.ThrowIfNull(schema);
-            ArgumentNullException.ThrowIfNull(config);
-
-            LogGeneratingHooks(Logger, table.Name, null);
-
-            return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
-        }
-
-        private string Generate(Table table, DatabaseSchema schema)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            GenerateImports(sb, table, schema, className, camelName);
-
-            // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
-
-            // Related data hooks (Master-Detail Views)
-            if (schema.Relationships != null && schema.Relationships.Count > 0)
-            {
-                GenerateRelatedDataHooks(sb, table, schema);
-            }
-
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
-
-            return sb.ToString();
-        }
 
         private static string GenerateUseEntityHook(string className, string camelName)
         {
@@ -239,7 +189,7 @@ namespace TargCC.Core.Generators.UI
             var childrenCamelCase = GetCamelCaseName(childrenName);
 
             sb.AppendLine("/**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch {childrenCamelCase} for a specific {parentClassName.ToLower(CultureInfo.InvariantCulture)}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch {childrenCamelCase} for a specific {parentClassName.ToUpper(CultureInfo.InvariantCulture)}.");
             sb.AppendLine(" */");
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{parentClassName}{childrenName} = (");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {parentCamelName}Id: number | null,");
@@ -312,6 +262,51 @@ namespace TargCC.Core.Generators.UI
 
             var className = GetClassName(name);
             return char.ToLowerInvariant(className[0]) + className.Substring(1);
+        }
+
+        /// <inheritdoc/>
+        public override UIGeneratorType GeneratorType => UIGeneratorType.ReactHooks;
+
+        /// <inheritdoc/>
+        public override async Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config)
+        {
+            ArgumentNullException.ThrowIfNull(table);
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(config);
+
+            LogGeneratingHooks(Logger, table.Name, null);
+
+            return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
+        }
+
+        private string Generate(Table table, DatabaseSchema schema)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            GenerateImports(sb, table, schema, className, camelName);
+
+            // Query hooks
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
+
+            // Related data hooks (Master-Detail Views)
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                GenerateRelatedDataHooks(sb, table, schema);
+            }
+
+            // Mutation hooks
+            sb.AppendLine(GenerateUseCreateHook(className, camelName));
+            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+
+            return sb.ToString();
         }
     }
 }

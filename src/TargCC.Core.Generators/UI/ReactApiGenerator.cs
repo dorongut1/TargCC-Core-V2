@@ -147,11 +147,11 @@ namespace TargCC.Core.Generators.UI
         {
             var childClassName = GetClassName(childTable.Name);
             var childrenName = Pluralize(childClassName);
-            var childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
+            var childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {childrenLowerCase} for this {parentClassName.ToLower(CultureInfo.InvariantCulture)}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get {childrenLowerCase} for this {parentClassName.ToUpper(CultureInfo.InvariantCulture)}.");
             sb.AppendLine("   */");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  get{childrenName}: async (id: number, skip?: number, take?: number): Promise<{childClassName}[]> => {{");
             sb.AppendLine("    const params = new URLSearchParams();");
@@ -232,7 +232,7 @@ namespace TargCC.Core.Generators.UI
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);

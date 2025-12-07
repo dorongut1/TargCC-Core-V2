@@ -845,7 +845,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
             try
             {
-                GenerateSingleRelatedDataMethod(sb,table, childTable, entityName, pkType);
+                GenerateSingleRelatedDataMethod(sb, table, childTable, entityName, pkType);
             }
             catch
             {
@@ -874,13 +874,14 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("    /// <inheritdoc/>");
 
         // Method signature
-        sb.AppendLine(CultureInfo.InvariantCulture,
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"    public async Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {parentIdParamName}, " +
             $"int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"        _logger.LogDebug(\"Fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+            $"        _logger.LogDebug(\"Fetching {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
@@ -902,7 +903,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Logging
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
+            $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
             $"result.Count(), {parentIdParamName});");
         sb.AppendLine();
         sb.AppendLine("            return result;");
@@ -911,7 +912,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        {");
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"            _logger.LogError(ex, \"Error fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+            $"            _logger.LogError(ex, \"Error fetching {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");

@@ -335,7 +335,7 @@ namespace TargCC.Core.Generators.UI.Components
                         if (childTable != null)
                         {
                             sb.AppendLine();
-                            var relatedGrid = GenerateRelatedDataGrid(table, childTable, framework);
+                            var relatedGrid = GenerateRelatedDataGrid(childTable, framework);
                             sb.Append(relatedGrid);
                         }
                     }

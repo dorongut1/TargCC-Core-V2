@@ -451,7 +451,7 @@ namespace TargCC.Core.Generators.API
 
             foreach (var relationship in parentRelationships)
             {
-                var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                 if (childTable == null)
                 {
                     continue;
@@ -459,13 +459,12 @@ namespace TargCC.Core.Generators.API
 
                 try
                 {
-                    GenerateSingleRelatedDataEndpoint(sb, table, childTable, relationship, entityName, config);
+                    GenerateSingleRelatedDataEndpoint(sb, childTable, entityName, config);
                     sb.AppendLine();
                 }
                 catch
                 {
                     // Skip relationships that cannot be generated
-                    continue;
                 }
             }
         }
@@ -475,20 +474,18 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         private static void GenerateSingleRelatedDataEndpoint(
             StringBuilder sb,
-            Table parentTable,
             Table childTable,
-            Relationship relationship,
             string parentEntityName,
             ApiGeneratorConfig config)
         {
             string childEntityName = GetClassName(childTable.Name);
             string childrenName = MakePlural(childEntityName);
-            string childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
+            string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToLower(CultureInfo.InvariantCulture)}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToUpper(CultureInfo.InvariantCulture)}.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The parent entity ID.</param>");
                 sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");
@@ -504,7 +501,8 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture,
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
                 $"        public async Task<ActionResult<IEnumerable<{childEntityName}>>> Get{childrenName}(int id, [FromQuery] int? skip = null, [FromQuery] int? take = null)");
             sb.AppendLine("        {");
             sb.AppendLine("            // Verify parent exists");
