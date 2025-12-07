@@ -133,10 +133,13 @@ public class QueryGenerator : IQueryGenerator
         // For property names, sanitize but preserve common acronyms like ID
         var pkPropertyName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
 
-        var queryClassName = $"Get{table.Name}Query";
-        var handlerClassName = $"Get{table.Name}Handler";
-        var validatorClassName = $"Get{table.Name}Validator";
-        var dtoClassName = $"{table.Name}Dto";
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        var queryClassName = $"Get{entityName}Query";
+        var handlerClassName = $"Get{entityName}Handler";
+        var validatorClassName = $"Get{entityName}Validator";
+        var dtoClassName = $"{entityName}Dto";
 
         return new QueryGenerationResult
         {
@@ -153,11 +156,14 @@ public class QueryGenerator : IQueryGenerator
 
     private static QueryGenerationResult GenerateGetAllQuery(Table table)
     {
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+
         var queryClassName = $"Get{pluralName}Query";
         var handlerClassName = $"Get{pluralName}Handler";
         var validatorClassName = $"Get{pluralName}Validator";
-        var dtoClassName = $"{table.Name}Dto";
+        var dtoClassName = $"{entityName}Dto";
 
         return new QueryGenerationResult
         {
@@ -178,10 +184,13 @@ public class QueryGenerator : IQueryGenerator
         var methodSuffix = BuildMethodSuffix(indexColumns);
         var isUnique = index.IsUnique;
 
-        var queryClassName = $"Get{table.Name}By{methodSuffix}Query";
-        var handlerClassName = $"Get{table.Name}By{methodSuffix}Handler";
-        var validatorClassName = $"Get{table.Name}By{methodSuffix}Validator";
-        var dtoClassName = $"{table.Name}Dto";
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        var queryClassName = $"Get{entityName}By{methodSuffix}Query";
+        var handlerClassName = $"Get{entityName}By{methodSuffix}Handler";
+        var validatorClassName = $"Get{entityName}By{methodSuffix}Validator";
+        var dtoClassName = $"{entityName}Dto";
 
         return new QueryGenerationResult
         {

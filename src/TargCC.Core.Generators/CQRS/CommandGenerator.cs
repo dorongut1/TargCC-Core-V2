@@ -207,9 +207,12 @@ public class CommandGenerator : ICommandGenerator
 
     private static CommandGenerationResult GenerateCreateCommand(Table table)
     {
-        var commandClassName = $"Create{table.Name}Command";
-        var handlerClassName = $"Create{table.Name}Handler";
-        var validatorClassName = $"Create{table.Name}Validator";
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        var commandClassName = $"Create{entityName}Command";
+        var handlerClassName = $"Create{entityName}Handler";
+        var validatorClassName = $"Create{entityName}Validator";
 
         return new CommandGenerationResult
         {
@@ -225,9 +228,12 @@ public class CommandGenerator : ICommandGenerator
 
     private static CommandGenerationResult GenerateUpdateCommand(Table table)
     {
-        var commandClassName = $"Update{table.Name}Command";
-        var handlerClassName = $"Update{table.Name}Handler";
-        var validatorClassName = $"Update{table.Name}Validator";
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        var commandClassName = $"Update{entityName}Command";
+        var handlerClassName = $"Update{entityName}Handler";
+        var validatorClassName = $"Update{entityName}Validator";
 
         return new CommandGenerationResult
         {
@@ -243,9 +249,12 @@ public class CommandGenerator : ICommandGenerator
 
     private static CommandGenerationResult GenerateDeleteCommand(Table table)
     {
-        var commandClassName = $"Delete{table.Name}Command";
-        var handlerClassName = $"Delete{table.Name}Handler";
-        var validatorClassName = $"Delete{table.Name}Validator";
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        var commandClassName = $"Delete{entityName}Command";
+        var handlerClassName = $"Delete{entityName}Handler";
+        var validatorClassName = $"Delete{entityName}Validator";
 
         return new CommandGenerationResult
         {

@@ -97,6 +97,9 @@ public class DtoGenerator : IDtoGenerator
 
         LogGenerating(_logger, dtoType, table.Name, null);
 
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
         var properties = GetPropertiesForDtoType(table, dtoType);
         var className = GetDtoClassName(table.Name, dtoType);
         var code = GenerateDtoCode(table, dtoType, className, properties);
@@ -108,7 +111,7 @@ public class DtoGenerator : IDtoGenerator
             Code = code,
             ClassName = className,
             DtoType = dtoType,
-            Namespace = $"TargCC.Application.Features.{table.Name}s.Dtos",
+            Namespace = $"TargCC.Application.Features.{entityName}s.Dtos",
             Properties = properties,
         });
     }
@@ -165,14 +168,17 @@ public class DtoGenerator : IDtoGenerator
 
     private static string GetDtoClassName(string tableName, DtoType dtoType)
     {
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(tableName);
+
         return dtoType switch
         {
-            DtoType.Basic => $"{tableName}Dto",
-            DtoType.List => $"{tableName}ListDto",
-            DtoType.Detail => $"{tableName}DetailDto",
-            DtoType.Create => $"Create{tableName}Dto",
-            DtoType.Update => $"Update{tableName}Dto",
-            _ => $"{tableName}Dto",
+            DtoType.Basic => $"{entityName}Dto",
+            DtoType.List => $"{entityName}ListDto",
+            DtoType.Detail => $"{entityName}DetailDto",
+            DtoType.Create => $"Create{entityName}Dto",
+            DtoType.Update => $"Update{entityName}Dto",
+            _ => $"{entityName}Dto",
         };
     }
 
