@@ -126,7 +126,7 @@ export const OrderDetail: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             OrderItems
           </Typography>
-          <Box sx={ height: 400, width: '100%' }>
+          <Box sx={{ height: 400, width: '100%' }}>
             <DataGrid
               rows={orderItems || []}
               columns={[
