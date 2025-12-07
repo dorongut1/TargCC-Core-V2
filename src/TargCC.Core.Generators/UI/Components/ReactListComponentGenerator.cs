@@ -244,6 +244,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
                 sb.AppendLine("          checkboxSelection");
                 sb.AppendLine("          disableRowSelectionOnClick");
+                sb.AppendLine("          disableColumnFilter");
                 sb.AppendLine("        />");
                 sb.AppendLine("      </Box>");
                 sb.AppendLine("    </Box>");
@@ -269,19 +270,37 @@ namespace TargCC.Core.Generators.UI.Components
         private static string GenerateFilterUI(Table table)
         {
             var filterableIndexes = GetFilterableIndexes(table);
-            if (filterableIndexes.Count == 0)
-            {
-                return string.Empty;
-            }
-
             var sb = new StringBuilder();
             sb.AppendLine("      <Paper sx={{ p: 2, mb: 2 }}>");
             sb.AppendLine("        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>");
 
             var processedColumns = new System.Collections.Generic.HashSet<string>();
-            foreach (var index in filterableIndexes)
+
+            if (filterableIndexes.Count > 0)
             {
-                AppendFilterFieldsForIndex(sb, table, index, processedColumns);
+                // Generate filters based on indexes
+                foreach (var index in filterableIndexes)
+                {
+                    AppendFilterFieldsForIndex(sb, table, index, processedColumns);
+                }
+            }
+            else
+            {
+                // No indexes found (common for VIEWs) - generate filters for first filterable columns
+                var filterableColumns = GetFilterableColumnsForViewsOrTablesWithoutIndexes(table);
+                foreach (var column in filterableColumns)
+                {
+                    if (processedColumns.Add(column.Name))
+                    {
+                        AppendFilterField(sb, column);
+                    }
+                }
+            }
+
+            // Only show filter UI if we have at least one filter field
+            if (processedColumns.Count == 0)
+            {
+                return string.Empty;
             }
 
             AppendClearFiltersButton(sb);
@@ -301,6 +320,37 @@ namespace TargCC.Core.Generators.UI.Components
             return table.Indexes
                 .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
                 .ToList();
+        }
+
+        private static List<Column> GetFilterableColumnsForViewsOrTablesWithoutIndexes(Table table)
+        {
+            // For VIEWs or tables without indexes, generate filters for commonly filterable columns
+            // Prioritize: non-primary key columns that are numeric, string, or date types
+            var filterableColumns = table.Columns
+                .Where(c => !c.IsPrimaryKey) // Skip primary key
+                .Where(c => IsFilterableType(c.DataType)) // Only filterable types
+                .Take(5) // Limit to 5 columns to avoid cluttering the UI
+                .ToList();
+
+            return filterableColumns;
+        }
+
+        private static bool IsFilterableType(string dataType)
+        {
+            var upperType = dataType.ToUpperInvariant();
+
+            // Allow numeric, string, and date types for filtering
+            return upperType.Contains("INT", StringComparison.Ordinal) ||
+                   upperType.Contains("DECIMAL", StringComparison.Ordinal) ||
+                   upperType.Contains("NUMERIC", StringComparison.Ordinal) ||
+                   upperType.Contains("FLOAT", StringComparison.Ordinal) ||
+                   upperType.Contains("DOUBLE", StringComparison.Ordinal) ||
+                   upperType.Contains("MONEY", StringComparison.Ordinal) ||
+                   upperType.Contains("VARCHAR", StringComparison.Ordinal) ||
+                   upperType.Contains("NVARCHAR", StringComparison.Ordinal) ||
+                   upperType.Contains("CHAR", StringComparison.Ordinal) ||
+                   upperType.Contains("TEXT", StringComparison.Ordinal) ||
+                   upperType.Contains("DATE", StringComparison.Ordinal);
         }
 
         private static void AppendFilterFieldsForIndex(StringBuilder sb, Table table, TargCC.Core.Interfaces.Models.Index index, System.Collections.Generic.HashSet<string> processedColumns)
