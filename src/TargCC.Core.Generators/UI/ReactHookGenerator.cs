@@ -259,33 +259,6 @@ namespace TargCC.Core.Generators.UI
             return singular + "s";
         }
 
-        private static new string GetClassName(string tableName)
-        {
-            if (string.IsNullOrWhiteSpace(tableName))
-            {
-                throw new ArgumentException("Table name cannot be null or empty.", nameof(tableName));
-            }
-
-            // Remove c_ prefix if exists
-            if (tableName.StartsWith("c_", StringComparison.OrdinalIgnoreCase))
-            {
-                tableName = tableName.Substring(2);
-            }
-
-            // Convert to PascalCase - simple version for now
-            return char.ToUpperInvariant(tableName[0]) + tableName.Substring(1);
-        }
-
-        private static new string GetCamelCaseName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return name;
-            }
-
-            var className = GetClassName(name);
-            return char.ToLowerInvariant(className[0]) + className.Substring(1);
-        }
 
         private string Generate(Table table, DatabaseSchema schema)
         {
