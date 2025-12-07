@@ -175,48 +175,8 @@ namespace TargCC.Core.Generators.Sql
                 LogGetByIdGenerationWarning(_logger, table.Name, ex);
             }
 
-            // Skip write operations (Add/Update/Delete) for VIEWs - they are read-only
-            if (!table.IsView)
-            {
-                // Add
-                try
-                {
-                    var addSql = await SpAddTemplate.GenerateAsync(table);
-                    sb.AppendLine(addSql);
-                    sb.AppendLine("GO");
-                    sb.AppendLine();
-                }
-                catch (Exception ex)
-                {
-                    LogAddGenerationWarning(_logger, table.Name, ex);
-                }
-
-                // Update
-                try
-                {
-                    var updateSql = await SpUpdateTemplate.GenerateAsync(table);
-                    sb.AppendLine(updateSql);
-                    sb.AppendLine("GO");
-                    sb.AppendLine();
-                }
-                catch (Exception ex)
-                {
-                    LogUpdateGenerationWarning(_logger, table.Name, ex);
-                }
-
-                // Delete
-                try
-                {
-                    var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
-                    sb.AppendLine(deleteSql);
-                    sb.AppendLine("GO");
-                    sb.AppendLine();
-                }
-                catch (Exception ex)
-                {
-                    LogDeleteGenerationWarning(_logger, table.Name, ex);
-                }
-            }
+            // Generate write operations (Add/Update/Delete) - skip for VIEWs as they are read-only
+            await GenerateWriteProceduresAsync(table, sb);
 
             // Index procedures
             if (_includeAdvancedProcedures && table.Indexes != null && table.Indexes.Count > 0)
@@ -294,6 +254,60 @@ namespace TargCC.Core.Generators.Sql
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates write stored procedures (Add, Update, Delete) for a table.
+        /// Skips generation for VIEWs as they are read-only.
+        /// </summary>
+        /// <param name="table">The table to generate procedures for.</param>
+        /// <param name="sb">The StringBuilder to append the generated SQL to.</param>
+        private async Task GenerateWriteProceduresAsync(Table table, StringBuilder sb)
+        {
+            // Skip write operations for VIEWs - they are read-only
+            if (table.IsView)
+            {
+                return;
+            }
+
+            // Add
+            try
+            {
+                var addSql = await SpAddTemplate.GenerateAsync(table);
+                sb.AppendLine(addSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogAddGenerationWarning(_logger, table.Name, ex);
+            }
+
+            // Update
+            try
+            {
+                var updateSql = await SpUpdateTemplate.GenerateAsync(table);
+                sb.AppendLine(updateSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogUpdateGenerationWarning(_logger, table.Name, ex);
+            }
+
+            // Delete
+            try
+            {
+                var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
+                sb.AppendLine(deleteSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogDeleteGenerationWarning(_logger, table.Name, ex);
+            }
         }
     }
 }
