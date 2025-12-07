@@ -79,6 +79,7 @@ public class ProjectGenerationService : IProjectGenerationService
             var tables = schema.Tables.ToList();
 
             _output.Info($"  ✓ Found {tables.Count} tables");
+            _output.Info($"  ✓ Found {schema.Relationships?.Count ?? 0} relationships");
             _output.BlankLine();
 
             _output.Info("Step 2: Creating solution structure...");
@@ -117,6 +118,7 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.BlankLine();
 
             _output.Info("Step 3.5: Generating SQL stored procedures with Master-Detail relationships...");
+            _output.Info($"  Schema has {schema.Relationships?.Count ?? 0} relationships for Master-Detail generation");
 
             // Generate ALL SQL including Master-Detail SPs for entire schema
             var sqlGen = new SqlGenerator(_loggerFactory.CreateLogger<SqlGenerator>());
@@ -124,7 +126,15 @@ public class ProjectGenerationService : IProjectGenerationService
             var sqlPath = Path.Combine(outputDirectory, "sql", "all_procedures.sql");
             await SaveFileAsync(sqlPath, allSql);
 
-            _output.Info($"  ✓ SQL file generated with Master-Detail stored procedures!");
+            _output.Info($"  ✓ SQL file generated with {allSql.Length} characters");
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                _output.Info($"  ✓ Included Master-Detail stored procedures for {schema.Relationships.Count} relationships");
+            }
+            else
+            {
+                _output.Warning("  ⚠ No relationships found - Master-Detail SPs were NOT generated!");
+            }
             _output.BlankLine();
 
             _output.Info("Step 4: Generating support files...");
