@@ -180,12 +180,12 @@ namespace TargCC.Core.Generators.UI
             var camelName = GetCamelCaseName(table.Name);
 
             var parentRelationships = schema.Relationships
-                .Where(r => r.ParentTable == table.Name && r.IsEnabled)
+                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
             foreach (var relationship in parentRelationships)
             {
-                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
+                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable == null)
                 {
                     continue;

@@ -54,13 +54,13 @@ namespace TargCC.Core.Generators.Entities
             var sb = new StringBuilder();
 
             // Determine if this table is the parent or child in the relationship
-            var isParent = relationship.ParentTable.Equals(currentTable.Name, StringComparison.OrdinalIgnoreCase);
+            var isParent = relationship.ParentTable.Equals(currentTable.FullName, StringComparison.OrdinalIgnoreCase);
 
             if (isParent)
             {
                 // This is the parent (one side) - generate collection navigation property
                 var childTable = schema.Tables.Find(t =>
-                    t.Name.Equals(relationship.ChildTable, StringComparison.OrdinalIgnoreCase));
+                    t.FullName.Equals(relationship.ChildTable, StringComparison.OrdinalIgnoreCase));
 
                 if (childTable != null)
                 {
@@ -79,7 +79,7 @@ namespace TargCC.Core.Generators.Entities
             {
                 // This is the child (many side) - generate reference navigation property
                 var parentTable = schema.Tables.Find(t =>
-                    t.Name.Equals(relationship.ParentTable, StringComparison.OrdinalIgnoreCase));
+                    t.FullName.Equals(relationship.ParentTable, StringComparison.OrdinalIgnoreCase));
 
                 if (parentTable != null)
                 {

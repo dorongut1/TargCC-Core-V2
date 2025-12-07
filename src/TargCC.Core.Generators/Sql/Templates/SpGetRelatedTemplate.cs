@@ -100,12 +100,12 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             // Find all relationships where this table is the parent
             var parentRelationships = schema.Relationships
-                .Where(r => r.ParentTable == parentTable.Name && r.IsEnabled)
+                .Where(r => r.ParentTable == parentTable.FullName && r.IsEnabled)
                 .ToList();
 
             foreach (var relationship in parentRelationships)
             {
-                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
+                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable == null)
                 {
                     continue;

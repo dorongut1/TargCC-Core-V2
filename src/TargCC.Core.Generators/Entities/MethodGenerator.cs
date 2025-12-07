@@ -43,11 +43,11 @@ namespace TargCC.Core.Generators.Entities
             {
                 foreach (var relationship in table.Relationships)
                 {
-                    var isParent = relationship.ParentTable.Equals(table.Name, StringComparison.OrdinalIgnoreCase);
+                    var isParent = relationship.ParentTable.Equals(table.FullName, StringComparison.OrdinalIgnoreCase);
                     if (isParent)
                     {
                         var childTable = schema.Tables.Find(t =>
-                            t.Name.Equals(relationship.ChildTable, StringComparison.OrdinalIgnoreCase));
+                            t.FullName.Equals(relationship.ChildTable, StringComparison.OrdinalIgnoreCase));
 
                         if (childTable != null)
                         {
