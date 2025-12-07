@@ -2,13 +2,23 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { CustomerList } from './components/Customer/CustomerList';
+import { CustomerDetail } from './components/Customer/CustomerDetail';
 import { CustomerForm } from './components/Customer/CustomerForm';
 import { OrderList } from './components/Order/OrderList';
+import { OrderDetail } from './components/Order/OrderDetail';
 import { OrderForm } from './components/Order/OrderForm';
 import { OrderItemList } from './components/OrderItem/OrderItemList';
+import { OrderItemDetail } from './components/OrderItem/OrderItemDetail';
 import { OrderItemForm } from './components/OrderItem/OrderItemForm';
 import { ProductList } from './components/Product/ProductList';
+import { ProductDetail } from './components/Product/ProductDetail';
 import { ProductForm } from './components/Product/ProductForm';
+import { VwCustomerOrderSummaryList } from './components/VwCustomerOrderSummary/VwCustomerOrderSummaryList';
+import { VwCustomerOrderSummaryDetail } from './components/VwCustomerOrderSummary/VwCustomerOrderSummaryDetail';
+import { VwOrderDetailsList } from './components/VwOrderDetails/VwOrderDetailsList';
+import { VwOrderDetailsDetail } from './components/VwOrderDetails/VwOrderDetailsDetail';
+import { VwProductSalesList } from './components/VwProductSales/VwProductSalesList';
+import { VwProductSalesDetail } from './components/VwProductSales/VwProductSalesDetail';
 
 const drawerWidth = 240;
 
@@ -53,6 +63,21 @@ function App() {
                 <ListItemText primary="Products" />
               </ListItemButton>
             </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/vwCustomerOrderSummarys">
+                <ListItemText primary="VwCustomerOrderSummarys Report" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/vwOrderDetailss">
+                <ListItemText primary="VwOrderDetailss Report" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/vwProductSaless">
+                <ListItemText primary="VwProductSaless Report" />
+              </ListItemButton>
+            </ListItem>
           </List>
         </Box>
       </Drawer>
@@ -63,16 +88,26 @@ function App() {
             <Route path="/" element={<Typography variant="h4">Welcome</Typography>} />
             <Route path="/customers" element={<CustomerList />} />
             <Route path="/customers/new" element={<CustomerForm />} />
-            <Route path="/customers/:id" element={<CustomerForm />} />
+            <Route path="/customers/:id" element={<CustomerDetail />} />
+            <Route path="/customers/:id/edit" element={<CustomerForm />} />
             <Route path="/orders" element={<OrderList />} />
             <Route path="/orders/new" element={<OrderForm />} />
-            <Route path="/orders/:id" element={<OrderForm />} />
+            <Route path="/orders/:id" element={<OrderDetail />} />
+            <Route path="/orders/:id/edit" element={<OrderForm />} />
             <Route path="/orderItems" element={<OrderItemList />} />
             <Route path="/orderItems/new" element={<OrderItemForm />} />
-            <Route path="/orderItems/:id" element={<OrderItemForm />} />
+            <Route path="/orderItems/:id" element={<OrderItemDetail />} />
+            <Route path="/orderItems/:id/edit" element={<OrderItemForm />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/new" element={<ProductForm />} />
-            <Route path="/products/:id" element={<ProductForm />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/products/:id/edit" element={<ProductForm />} />
+            <Route path="/vwCustomerOrderSummarys" element={<VwCustomerOrderSummaryList />} />
+            <Route path="/vwCustomerOrderSummarys/:id" element={<VwCustomerOrderSummaryDetail />} />
+            <Route path="/vwOrderDetailss" element={<VwOrderDetailsList />} />
+            <Route path="/vwOrderDetailss/:id" element={<VwOrderDetailsDetail />} />
+            <Route path="/vwProductSaless" element={<VwProductSalesList />} />
+            <Route path="/vwProductSaless/:id" element={<VwProductSalesDetail />} />
           </Routes>
         </Container>
       </Box>
