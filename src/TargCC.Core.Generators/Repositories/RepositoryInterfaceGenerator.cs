@@ -505,13 +505,13 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         foreach (var relationship in parentRelationships)
         {
-            var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+            var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
             if (childTable == null)
             {
                 continue;
             }
 
-            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
             if (pkColumn == null)
             {
                 continue;
@@ -523,7 +523,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
             // Generate XML documentation
             sb.AppendLine("    /// <summary>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Fetches all {childrenName.ToLower()} for the specified {table.Name.ToLower()}.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Fetches all {childrenName.ToLower(CultureInfo.CurrentCulture)} for the specified {table.Name.ToLower(CultureInfo.CurrentCulture)}.");
             sb.AppendLine("    /// </summary>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"{ToCamelCase(table.Name)}Id\">The {table.Name} ID.</param>");
             sb.AppendLine("    /// <param name=\"skip\">Number of records to skip (for pagination).</param>");
@@ -532,7 +532,8 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {childTable.Name} entities.</returns>");
 
             // Generate method signature
-            sb.AppendLine(CultureInfo.InvariantCulture,
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
                 $"    Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
                 $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
             sb.AppendLine();

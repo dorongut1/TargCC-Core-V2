@@ -45,17 +45,17 @@ namespace TargCC.Core.Generators.Sql.Templates
             var procName = $"SP_Get{parentTable.Name}{childrenName}";
 
             // Get parent PK column
-            var parentPkColumn = parentTable.Columns.FirstOrDefault(c => c.IsPrimaryKey)
+            var parentPkColumn = parentTable.Columns.Find(c => c.IsPrimaryKey)
                 ?? throw new InvalidOperationException($"Parent table '{parentTable.Name}' has no primary key.");
 
             // Get child FK column
-            var childFkColumn = childTable.Columns.FirstOrDefault(c => c.Name == relationship.ChildColumn)
+            var childFkColumn = childTable.Columns.Find(c => c.Name == relationship.ChildColumn)
                 ?? throw new InvalidOperationException($"Child table '{childTable.Name}' does not have FK column '{relationship.ChildColumn}'.");
 
             // Header comment
             sb.AppendLine("-- =========================================");
             sb.AppendLine(CultureInfo.InvariantCulture, $"-- {procName}");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Fetches all {childrenName.ToLower()} for a given {parentTable.Name.ToLower()}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"-- Fetches all {childrenName.ToLower(CultureInfo.CurrentCulture)} for a given {parentTable.Name.ToLower(CultureInfo.CurrentCulture)}");
             sb.AppendLine($"-- =========================================");
 
             // Procedure declaration
@@ -105,7 +105,7 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             foreach (var relationship in parentRelationships)
             {
-                var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                 if (childTable == null)
                 {
                     continue;
@@ -161,11 +161,11 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine(CultureInfo.InvariantCulture, $"    WHERE [{childFkColumn.Name}] = @{parentPkColumn.Name}");
 
             // ORDER BY (try to order by date column if exists, otherwise by PK)
-            var orderByColumn = childTable.Columns.FirstOrDefault(c =>
+            var orderByColumn = childTable.Columns. Find(c =>
                 c.Name.Contains("Date", StringComparison.OrdinalIgnoreCase) ||
                 c.Name.Contains("Time", StringComparison.OrdinalIgnoreCase) ||
                 c.Name.Contains("AddedOn", StringComparison.OrdinalIgnoreCase))
-                ?? childTable.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+                ?? childTable.Columns.Find(c => c.IsPrimaryKey);
 
             if (orderByColumn != null)
             {

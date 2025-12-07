@@ -150,6 +150,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 columnNames.Add("        [AddedOn]");
             }
+
             if (hasAddedBy)
             {
                 columnNames.Add("        [AddedBy]");
@@ -167,6 +168,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             {
                 values.Add("        GETDATE()");
             }
+
             if (hasAddedBy)
             {
                 values.Add("        @AddedBy");
@@ -177,7 +179,7 @@ namespace TargCC.Core.Generators.Sql.Templates
             sb.AppendLine();
 
             // Return the new ID
-            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
             if (pkColumn != null)
             {
                 sb.AppendLine("    SELECT SCOPE_IDENTITY() AS NewID;");

@@ -290,7 +290,7 @@ namespace TargCC.Core.Generators.UI
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
