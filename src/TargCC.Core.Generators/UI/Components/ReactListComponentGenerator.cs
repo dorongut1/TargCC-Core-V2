@@ -164,6 +164,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
+            sb.AppendLine("  const [filterModel, setFilterModel] = React.useState<any>({ items: [] });");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
             sb.AppendLine();
@@ -180,10 +181,8 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Clear top panel filters");
             sb.AppendLine("    setLocalFilters({});");
             sb.AppendLine("    setFilters({});");
-            sb.AppendLine("    // Clear DataGrid column filters using API");
-            sb.AppendLine("    if (apiRef.current) {");
-            sb.AppendLine("      apiRef.current.setFilterModel({ items: [] });");
-            sb.AppendLine("    }");
+            sb.AppendLine("    // Clear DataGrid column filters");
+            sb.AppendLine("    setFilterModel({ items: [] });");
             sb.AppendLine("  };");
             sb.AppendLine();
 
@@ -270,6 +269,9 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
                 sb.AppendLine("          columns={columns}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
+                sb.AppendLine("          filterMode=\"client\"");
+                sb.AppendLine("          filterModel={filterModel}");
+                sb.AppendLine("          onFilterModelChange={setFilterModel}");
                 sb.AppendLine("          slots={{");
                 sb.AppendLine("            toolbar: CustomToolbar,");
                 sb.AppendLine("          }}");
