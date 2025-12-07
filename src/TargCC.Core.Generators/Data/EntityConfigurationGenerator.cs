@@ -442,12 +442,12 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     private static void GenerateRelationshipConfiguration(StringBuilder sb, Relationship relationship, Table table)
     {
         // Determine relationship type and generate appropriate configuration
-        if (relationship.ChildTable == table.Name)
+        if (relationship.ChildTable == table.FullName)
         {
             // This table has the foreign key (Many-to-One)
             GenerateManyToOneRelationship(sb, relationship);
         }
-        else if (relationship.ParentTable == table.Name)
+        else if (relationship.ParentTable == table.FullName)
         {
             // This table is referenced (One-to-Many)
             GenerateOneToManyRelationship(sb, relationship);
