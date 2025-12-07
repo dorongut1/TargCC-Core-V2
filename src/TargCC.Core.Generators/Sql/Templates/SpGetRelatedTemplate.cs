@@ -240,6 +240,8 @@ namespace TargCC.Core.Generators.Sql.Templates
             }
 
             // Simple English pluralization rules
+            // CA1867: String literals required here because char overload doesn't support StringComparison
+#pragma warning disable CA1867
             if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
@@ -255,6 +257,7 @@ namespace TargCC.Core.Generators.Sql.Templates
                 singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1867
             {
                 // Address → Addresses, Box → Boxes
                 return singular + "es";

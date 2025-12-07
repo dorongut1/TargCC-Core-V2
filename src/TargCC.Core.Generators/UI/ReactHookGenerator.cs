@@ -41,6 +41,12 @@ namespace TargCC.Core.Generators.UI
             return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
+        private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
+            LoggerMessage.Define<string>(
+                LogLevel.Information,
+                new EventId(1, nameof(LogGeneratingHooks)),
+                "Generating React hooks for table {TableName}");
+
         private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
@@ -70,12 +76,6 @@ namespace TargCC.Core.Generators.UI
 
             return sb.ToString();
         }
-
-        private static readonly Action<ILogger, string, Exception?> LogGeneratingHooks =
-            LoggerMessage.Define<string>(
-                LogLevel.Information,
-                new EventId(1, nameof(LogGeneratingHooks)),
-                "Generating React hooks for table {TableName}");
 
         private static string GenerateUseEntityHook(string className, string camelName)
         {
@@ -263,6 +263,8 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Category → Categories
+            // CA1867: String literals required here because char overload doesn't support StringComparison
+#pragma warning disable CA1867
             if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
@@ -278,6 +280,7 @@ namespace TargCC.Core.Generators.UI
                 singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1867
             {
                 return singular + "es";
             }

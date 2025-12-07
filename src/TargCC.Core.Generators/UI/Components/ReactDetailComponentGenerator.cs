@@ -127,7 +127,7 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             // Category → Categories
-            if (singular.EndsWith('y', StringComparison.OrdinalIgnoreCase) &&
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
                 !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
@@ -137,9 +137,9 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             // Address → Addresses, Box → Boxes
-            if (singular.EndsWith('s', StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith('x', StringComparison.OrdinalIgnoreCase) ||
-                singular.EndsWith('z', StringComparison.OrdinalIgnoreCase) ||
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
                 singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {
