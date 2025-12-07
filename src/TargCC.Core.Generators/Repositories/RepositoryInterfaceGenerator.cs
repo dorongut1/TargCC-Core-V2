@@ -77,35 +77,8 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     {
         ArgumentNullException.ThrowIfNull(table);
 
-        // For VIEWs, try to infer a primary key column (ID column or first column)
-        if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
-        {
-            if (table.IsView)
-            {
-                // Try to find an ID column
-                var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
-                                                       c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
-                if (idColumn == null && table.Columns.Count > 0)
-                {
-                    // Use first column as pseudo-PK
-                    idColumn = table.Columns[0];
-                }
-
-                if (idColumn != null)
-                {
-                    table.PrimaryKeyColumns = new List<string> { idColumn.Name };
-                    idColumn.IsPrimaryKey = true;
-                }
-                else
-                {
-                    throw new InvalidOperationException($"VIEW '{table.Name}' has no columns to use as identifier.");
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
-            }
-        }
+        // Ensure table has a primary key (infers identifier for VIEWs)
+        EnsurePrimaryKey(table);
 
         LogGeneratingInterface(_logger, table.Name, null);
 
@@ -651,5 +624,61 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             "VARBINARY" or "BINARY" or "IMAGE" => "byte[]",
             _ => "string"
         };
+    }
+
+    /// <summary>
+    /// Ensures the table has a primary key. For VIEWs, infers an identifier column.
+    /// </summary>
+    /// <param name="table">The table to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when no primary key can be determined.</exception>
+    private static void EnsurePrimaryKey(Table table)
+    {
+        if (table.PrimaryKeyColumns != null && table.PrimaryKeyColumns.Count > 0)
+        {
+            return; // Already has PK
+        }
+
+        if (!table.IsView)
+        {
+            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
+        }
+
+        // For VIEWs: infer identifier column (ID column or first column)
+        var idColumn = FindIdentifierColumn(table);
+        if (idColumn == null)
+        {
+            throw new InvalidOperationException($"VIEW '{table.Name}' has no columns to use as identifier.");
+        }
+
+        table.PrimaryKeyColumns = new List<string> { idColumn.Name };
+        idColumn.IsPrimaryKey = true;
+    }
+
+    /// <summary>
+    /// Finds a suitable identifier column for a VIEW (ID column or first column).
+    /// </summary>
+    private static Column? FindIdentifierColumn(Table table)
+    {
+        if (table.Columns.Count == 0)
+        {
+            return null;
+        }
+
+        // Try to find column named "ID" (case-insensitive)
+        var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Try to find column ending with "ID" (e.g., CustomerID, OrderID)
+        idColumn = table.Columns.Find(c => c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Fallback: use first column
+        return table.Columns[0];
     }
 }
