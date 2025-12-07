@@ -51,7 +51,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector } from '@mui/x-data-grid';");
+                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, IconButton } from '@mui/material';");
                 sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';");
             }
@@ -161,9 +161,9 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
+            sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
-            sb.AppendLine("  const [filterModel, setFilterModel] = React.useState({ items: [] });");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
             sb.AppendLine();
@@ -180,8 +180,10 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Clear top panel filters");
             sb.AppendLine("    setLocalFilters({});");
             sb.AppendLine("    setFilters({});");
-            sb.AppendLine("    // Clear DataGrid column filters");
-            sb.AppendLine("    setFilterModel({ items: [] });");
+            sb.AppendLine("    // Clear DataGrid column filters using API");
+            sb.AppendLine("    if (apiRef.current) {");
+            sb.AppendLine("      apiRef.current.setFilterModel({ items: [] });");
+            sb.AppendLine("    }");
             sb.AppendLine("  };");
             sb.AppendLine();
 
@@ -264,6 +266,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                 sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
                 sb.AppendLine("        <DataGrid");
+                sb.AppendLine("          apiRef={apiRef}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
                 sb.AppendLine("          columns={columns}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
@@ -273,8 +276,6 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          slotProps={{");
                 sb.AppendLine("            toolbar: { onClearFilters: handleClearAllFilters },");
                 sb.AppendLine("          }}");
-                sb.AppendLine("          filterModel={filterModel}");
-                sb.AppendLine("          onFilterModelChange={(newModel) => setFilterModel(newModel)}");
                 sb.AppendLine("          initialState={{");
                 sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
                 sb.AppendLine("          }}");
