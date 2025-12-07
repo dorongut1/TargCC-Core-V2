@@ -134,6 +134,11 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
             var pluralName = camelName + "s";
 
+            // Get primary key column name for DataGrid getRowId
+            var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+            var pkPropertyName = pkColumn != null ? GetPropertyName(pkColumn.Name) : "id";
+            var pkCamelName = pkPropertyName.Length > 0 ? char.ToLowerInvariant(pkPropertyName[0]) + pkPropertyName.Substring(1) : "id";
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
@@ -232,6 +237,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("        <DataGrid");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
                 sb.AppendLine("          columns={columns}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
                 sb.AppendLine("          initialState={{");
                 sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
                 sb.AppendLine("          }}");
