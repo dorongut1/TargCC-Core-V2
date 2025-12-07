@@ -77,9 +77,34 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     {
         ArgumentNullException.ThrowIfNull(table);
 
+        // For VIEWs, try to infer a primary key column (ID column or first column)
         if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
         {
-            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
+            if (table.IsView)
+            {
+                // Try to find an ID column
+                var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+                                                       c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
+                if (idColumn == null && table.Columns.Count > 0)
+                {
+                    // Use first column as pseudo-PK
+                    idColumn = table.Columns[0];
+                }
+
+                if (idColumn != null)
+                {
+                    table.PrimaryKeyColumns = new List<string> { idColumn.Name };
+                    idColumn.IsPrimaryKey = true;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"VIEW '{table.Name}' has no columns to use as identifier.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
+            }
         }
 
         LogGeneratingInterface(_logger, table.Name, null);
