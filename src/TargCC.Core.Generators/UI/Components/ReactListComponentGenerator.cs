@@ -59,11 +59,22 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
             sb.AppendLine();
-            sb.AppendLine("function CustomToolbar() {");
+            sb.AppendLine("interface CustomToolbarProps {");
+            sb.AppendLine("  onClearFilters: () => void;");
+            sb.AppendLine("}");
+            sb.AppendLine();
+            sb.AppendLine("function CustomToolbar({ onClearFilters }: CustomToolbarProps) {");
             sb.AppendLine("  return (");
             sb.AppendLine("    <GridToolbarContainer>");
             sb.AppendLine("      <GridToolbarColumnsButton />");
             sb.AppendLine("      <GridToolbarDensitySelector />");
+            sb.AppendLine("      <Button");
+            sb.AppendLine("        size=\"small\"");
+            sb.AppendLine("        startIcon={<ClearIcon />}");
+            sb.AppendLine("        onClick={onClearFilters}");
+            sb.AppendLine("      >");
+            sb.AppendLine("        Clear All Filters");
+            sb.AppendLine("      </Button>");
             sb.AppendLine("    </GridToolbarContainer>");
             sb.AppendLine("  );");
             sb.AppendLine("}");
@@ -152,6 +163,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
+            sb.AppendLine("  const [filterModel, setFilterModel] = React.useState({ items: [] });");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
             sb.AppendLine();
@@ -162,6 +174,14 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const handleClearFilters = () => {");
             sb.AppendLine("    setLocalFilters({});");
             sb.AppendLine("    setFilters({});");
+            sb.AppendLine("  };");
+            sb.AppendLine();
+            sb.AppendLine("  const handleClearAllFilters = () => {");
+            sb.AppendLine("    // Clear top panel filters");
+            sb.AppendLine("    setLocalFilters({});");
+            sb.AppendLine("    setFilters({});");
+            sb.AppendLine("    // Clear DataGrid column filters");
+            sb.AppendLine("    setFilterModel({ items: [] });");
             sb.AppendLine("  };");
             sb.AppendLine();
 
@@ -250,6 +270,11 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          slots={{");
                 sb.AppendLine("            toolbar: CustomToolbar,");
                 sb.AppendLine("          }}");
+                sb.AppendLine("          slotProps={{");
+                sb.AppendLine("            toolbar: { onClearFilters: handleClearAllFilters },");
+                sb.AppendLine("          }}");
+                sb.AppendLine("          filterModel={filterModel}");
+                sb.AppendLine("          onFilterModelChange={(newModel) => setFilterModel(newModel)}");
                 sb.AppendLine("          initialState={{");
                 sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
                 sb.AppendLine("          }}");
