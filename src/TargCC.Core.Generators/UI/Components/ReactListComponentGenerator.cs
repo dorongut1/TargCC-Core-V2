@@ -244,7 +244,6 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
                 sb.AppendLine("          checkboxSelection");
                 sb.AppendLine("          disableRowSelectionOnClick");
-                sb.AppendLine("          disableColumnFilter");
                 sb.AppendLine("        />");
                 sb.AppendLine("      </Box>");
                 sb.AppendLine("    </Box>");
