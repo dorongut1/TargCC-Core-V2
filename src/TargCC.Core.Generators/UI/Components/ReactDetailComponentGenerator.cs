@@ -406,7 +406,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          </Typography>");
 
                 // Column definitions
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          <Box sx={{ height: 400, width: '100%' }}>");
+                sb.AppendLine("          <Box sx={{ height: 400, width: '100%' }}>");
                 sb.AppendLine("            <DataGrid");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"              rows={{{childrenCamelCase} || []}}");
                 sb.AppendLine("              columns={[");
