@@ -288,12 +288,11 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 // No indexes found (common for VIEWs) - generate filters for first filterable columns
                 var filterableColumns = GetFilterableColumnsForViewsOrTablesWithoutIndexes(table);
-                foreach (var column in filterableColumns)
+                foreach (var column in from column in filterableColumns
+                                       where processedColumns.Add(column.Name)
+                                       select column)
                 {
-                    if (processedColumns.Add(column.Name))
-                    {
-                        AppendFilterField(sb, column);
-                    }
+                    AppendFilterField(sb, column);
                 }
             }
 
