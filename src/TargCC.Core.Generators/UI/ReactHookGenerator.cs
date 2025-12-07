@@ -192,7 +192,7 @@ namespace TargCC.Core.Generators.UI
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
@@ -215,7 +215,7 @@ namespace TargCC.Core.Generators.UI
 
             foreach (var relationship in parentRelationships)
             {
-                var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                 if (childTable == null)
                 {
                     continue;
@@ -223,17 +223,16 @@ namespace TargCC.Core.Generators.UI
 
                 try
                 {
-                    GenerateSingleRelatedDataHook(sb, table, childTable, className, camelName);
+                    GenerateSingleRelatedDataHook(sb, childTable, className, camelName);
                 }
                 catch
                 {
                     // Skip relationships that cannot be generated
-                    continue;
                 }
             }
         }
 
-        private static void GenerateSingleRelatedDataHook(StringBuilder sb, Table parentTable, Table childTable, string parentClassName, string parentCamelName)
+        private static void GenerateSingleRelatedDataHook(StringBuilder sb, Table childTable, string parentClassName, string parentCamelName)
         {
             var childClassName = GetClassName(childTable.Name);
             var childrenName = Pluralize(childClassName);

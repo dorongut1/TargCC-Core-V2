@@ -113,7 +113,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Generate related data methods (Master-Detail Views)
         if (schema != null)
         {
-            GenerateRelatedDataMethods(sb, table, schema, rootNamespace);
+            GenerateRelatedDataMethods(sb, table, schema);
         }
 
         // Generate helper methods
@@ -807,7 +807,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates related data methods (Master-Detail Views) based on FK relationships.
     /// </summary>
-    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string rootNamespace)
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
     {
         if (schema.Relationships == null || schema.Relationships.Count == 0)
         {
@@ -825,7 +825,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         string entityName = table.Name;
-        var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
         {
@@ -837,7 +837,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         foreach (var relationship in parentRelationships)
         {
             // Find the child table
-            var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+            var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
             if (childTable == null)
             {
                 continue;
@@ -845,12 +845,11 @@ public class RepositoryGenerator : IRepositoryGenerator
 
             try
             {
-                GenerateSingleRelatedDataMethod(sb, table, childTable, relationship, entityName, pkType);
+                GenerateSingleRelatedDataMethod(sb,table, childTable, entityName, pkType);
             }
             catch
             {
                 // Skip relationships that cannot be generated
-                continue;
             }
         }
     }
@@ -862,7 +861,6 @@ public class RepositoryGenerator : IRepositoryGenerator
         StringBuilder sb,
         Table parentTable,
         Table childTable,
-        Relationship relationship,
         string parentEntityName,
         string pkType)
     {
@@ -880,7 +878,8 @@ public class RepositoryGenerator : IRepositoryGenerator
             $"    public async Task<IEnumerable<{childTable.Name}>> {methodName}({pkType} {parentIdParamName}, " +
             $"int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
-        sb.AppendLine(CultureInfo.InvariantCulture,
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"        _logger.LogDebug(\"Fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
         sb.AppendLine();
         sb.AppendLine("        try");
@@ -901,7 +900,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
 
         // Logging
-        sb.AppendLine(CultureInfo.InvariantCulture,
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
             $"result.Count(), {parentIdParamName});");
         sb.AppendLine();
@@ -909,7 +909,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture,
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"            _logger.LogError(ex, \"Error fetching {childrenName.ToLower(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");

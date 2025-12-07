@@ -309,7 +309,6 @@ namespace TargCC.Core.Generators.UI.Components
 
             var inputType = GetInputType(isDate, isNumeric);
             var valueConversion = GetValueConversion(isNumeric);
-            var valueDisplay = GetValueDisplay(propertyName, isDate);
 
             sb.AppendLine("          <TextField");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");

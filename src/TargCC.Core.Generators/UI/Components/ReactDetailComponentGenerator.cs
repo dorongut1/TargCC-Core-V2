@@ -55,7 +55,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                 // Check if there are related tables - if so, import DataGrid
                 var hasRelatedData = schema.Relationships != null &&
-                    schema.Relationships.Any(r => r.ParentTable == table.Name && r.IsEnabled);
+                    schema.Relationships.Exists(r => r.ParentTable == table.Name && r.IsEnabled);
 
                 if (hasRelatedData)
                 {
@@ -74,7 +74,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
@@ -95,7 +95,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
@@ -230,13 +230,14 @@ namespace TargCC.Core.Generators.UI.Components
 
                 foreach (var relationship in parentRelationships)
                 {
-                    var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                    var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
                         var childrenName = Pluralize(childClassName);
                         var childrenCamelCase = ToCamelCase(childrenName);
-                        sb.AppendLine(CultureInfo.InvariantCulture,
+                        sb.AppendLine(
+                            CultureInfo.InvariantCulture,
                             $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
                     }
                 }
@@ -330,7 +331,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                     foreach (var relationship in parentRelationships)
                     {
-                        var childTable = schema.Tables.FirstOrDefault(t => t.Name == relationship.ChildTable);
+                        var childTable = schema.Tables.Find(t => t.Name == relationship.ChildTable);
                         if (childTable != null)
                         {
                             sb.AppendLine();
@@ -356,10 +357,9 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateRelatedDataGrid(Table parentTable, Table childTable, UIFramework framework)
+        private static string GenerateRelatedDataGrid(Table childTable, UIFramework framework)
         {
             var sb = new StringBuilder();
-            var parentClassName = GetClassName(parentTable.Name);
             var childClassName = GetClassName(childTable.Name);
             var childrenName = Pluralize(childClassName);
             var childrenCamelCase = ToCamelCase(childrenName);
@@ -388,9 +388,10 @@ namespace TargCC.Core.Generators.UI.Components
                 {
                     var propertyName = GetPropertyName(column.Name);
                     var fieldName = ToCamelCase(propertyName);
-                    var width = column.DataType.ToUpperInvariant().Contains("INT") ? 100 : 150;
+                    var width = column.DataType.Contains("INT", StringComparison.InvariantCultureIgnoreCase) ? 100 : 150;
 
-                    sb.AppendLine(CultureInfo.InvariantCulture,
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
                         $"                {{ field: '{fieldName}', headerName: '{propertyName}', width: {width} }},");
                 }
 
