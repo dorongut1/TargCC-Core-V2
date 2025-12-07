@@ -170,8 +170,8 @@ namespace TargCC.Core.Generators.Entities
 
         private static string GetClassName(string tableName)
         {
-            return tableName.Replace("tbl_", string.Empty, StringComparison.OrdinalIgnoreCase)
-                           .Replace("tbl", string.Empty, StringComparison.OrdinalIgnoreCase);
+            // Use the same PascalCase conversion as API generators for consistency
+            return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
         }
 
         // LoggerMessage delegates
