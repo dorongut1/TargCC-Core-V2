@@ -160,11 +160,8 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine("  const apiRef = useGridApiRef();");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
-            sb.AppendLine("  const [quickSearch, setQuickSearch] = React.useState('');");
-            sb.AppendLine("  const [searchColumn, setSearchColumn] = React.useState('all');");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [columnFilters, setColumnFilters] = React.useState<Record<string, string>>({{}});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s({{}});");
 
             // Only add useDelete hook for tables, not for VIEWs
             if (!table.IsView)
@@ -175,47 +172,26 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine();
 
             // Generate filtered data logic
-            sb.AppendLine("  // Client-side quick search filter");
+            sb.AppendLine("  // Client-side column filters");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const filteredData = React.useMemo(() => {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName} || !quickSearch) return {pluralName};");
-            sb.AppendLine("    const searchLower = quickSearch.toLowerCase();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName}) return {pluralName};");
+            sb.AppendLine();
+            sb.AppendLine("    // Get active filters");
+            sb.AppendLine("    const activeFilters = Object.entries(columnFilters).filter(([_, value]) => value && value.trim() !== '');");
+            sb.AppendLine("    if (activeFilters.length === 0) return " + pluralName + ";");
+            sb.AppendLine();
+            sb.AppendLine("    // Apply all filters with AND logic");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    return {pluralName}.filter(item => {{");
-            sb.AppendLine("      if (searchColumn === 'all') {");
-            sb.AppendLine("        return (");
-
-            // Add all text/searchable columns
-            var dataColumns = GetDataColumns(table).Take(10).ToList();
-            foreach (var column in dataColumns)
-            {
-                var propertyName = ToCamelCase(GetPropertyName(column.Name));
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          item.{propertyName}?.toString().toLowerCase().includes(searchLower) ||");
-            }
-
-            sb.AppendLine("          false");
-            sb.AppendLine("        );");
-            sb.AppendLine("      } else {");
-            sb.AppendLine("        return item[searchColumn as keyof typeof item]?.toString().toLowerCase().includes(searchLower) || false;");
-            sb.AppendLine("      }");
+            sb.AppendLine("      return activeFilters.every(([column, filterValue]) => {");
+            sb.AppendLine("        const itemValue = item[column as keyof typeof item];");
+            sb.AppendLine("        return itemValue?.toString().toLowerCase().includes(filterValue.toLowerCase());");
+            sb.AppendLine("      });");
             sb.AppendLine("    });");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, quickSearch, searchColumn]);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, columnFilters]);");
             sb.AppendLine();
 
-            sb.AppendLine("  const handleApplyFilters = () => {");
-            sb.AppendLine("    setFilters(localFilters);");
-            sb.AppendLine("  };");
-            sb.AppendLine();
-            sb.AppendLine("  const handleClearFilters = () => {");
-            sb.AppendLine("    setLocalFilters({});");
-            sb.AppendLine("    setFilters({});");
-            sb.AppendLine("  };");
-            sb.AppendLine();
             sb.AppendLine("  const handleClearAllFilters = () => {");
-            sb.AppendLine("    // Clear top panel filters");
-            sb.AppendLine("    setLocalFilters({});");
-            sb.AppendLine("    setFilters({});");
-            sb.AppendLine("    // Clear quick search");
-            sb.AppendLine("    setQuickSearch('');");
-            sb.AppendLine("    setSearchColumn('all');");
+            sb.AppendLine("    setColumnFilters({});");
             sb.AppendLine("  };");
             sb.AppendLine();
             sb.AppendLine("  function CustomToolbar() {");
@@ -388,69 +364,37 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static string GenerateFilterUI(Table table)
         {
-            var filterableIndexes = GetFilterableIndexes(table);
             var sb = new StringBuilder();
             sb.AppendLine("      <Paper sx={{ p: 2, mb: 2 }}>");
             sb.AppendLine("        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>");
 
-            // Add Quick Search with column selector first
+            // Add a text field for each column
             var dataColumns = GetDataColumns(table).Take(10).ToList();
-            sb.AppendLine("          <TextField");
-            sb.AppendLine("            select");
-            sb.AppendLine("            label=\"Search Column\"");
+            foreach (var column in dataColumns)
+            {
+                var propertyName = ToCamelCase(GetPropertyName(column.Name));
+                var displayName = GetPropertyName(column.Name);
+
+                sb.AppendLine("          <TextField");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
+                sb.AppendLine("            size=\"small\"");
+                sb.AppendLine("            sx={{ minWidth: 150 }}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
+                sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
+                sb.AppendLine("              ...prev,");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
+                sb.AppendLine("            }))}");
+                sb.AppendLine("          />");
+            }
+
+            // Clear button
+            sb.AppendLine("          <Button");
+            sb.AppendLine("            variant=\"outlined\"");
             sb.AppendLine("            size=\"small\"");
-            sb.AppendLine("            sx={{ minWidth: 150 }}");
-            sb.AppendLine("            value={searchColumn}");
-            sb.AppendLine("            onChange={(e) => setSearchColumn(e.target.value)}");
+            sb.AppendLine("            onClick={handleClearAllFilters}");
             sb.AppendLine("          >");
-            sb.AppendLine("            <MenuItem value=\"all\">All Columns</MenuItem>");
-            foreach (var (propertyName, displayName) in from column in dataColumns
-                                                        let propertyName = ToCamelCase(GetPropertyName(column.Name))
-                                                        let displayName = GetPropertyName(column.Name)
-                                                        select (propertyName, displayName))
-            {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"            <MenuItem value=\"{propertyName}\">{displayName}</MenuItem>");
-            }
-
-            sb.AppendLine("          </TextField>");
-            sb.AppendLine("          <TextField");
-            sb.AppendLine("            label=\"Quick Search\"");
-            sb.AppendLine("            placeholder=\"Type to search...\"");
-            sb.AppendLine("            size=\"small\"");
-            sb.AppendLine("            sx={{ minWidth: 300 }}");
-            sb.AppendLine("            value={quickSearch}");
-            sb.AppendLine("            onChange={(e) => setQuickSearch(e.target.value)}");
-            sb.AppendLine("          />");
-
-            var processedColumns = new System.Collections.Generic.HashSet<string>();
-
-            if (filterableIndexes.Count > 0)
-            {
-                // Generate filters based on indexes
-                foreach (var index in filterableIndexes)
-                {
-                    AppendFilterFieldsForIndex(sb, table, index, processedColumns);
-                }
-            }
-            else
-            {
-                // No indexes found (common for VIEWs) - generate filters for first filterable columns
-                var filterableColumns = GetFilterableColumnsForViewsOrTablesWithoutIndexes(table);
-                foreach (var column in from column in filterableColumns
-                                       where processedColumns.Add(column.Name)
-                                       select column)
-                {
-                    AppendFilterField(sb, column);
-                }
-            }
-
-            // Only show filter UI if we have at least one filter field
-            if (processedColumns.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            AppendClearFiltersButton(sb);
+            sb.AppendLine("            Clear");
+            sb.AppendLine("          </Button>");
 
             // Add row count display
             var pluralName = ToCamelCase(GetClassName(table.Name)) + "s";
