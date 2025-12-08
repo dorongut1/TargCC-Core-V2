@@ -194,6 +194,12 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("          itemValue = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear().toString().slice(-2)}`;");
             sb.AppendLine("        }");
             sb.AppendLine("        ");
+            sb.AppendLine("        // Convert filter value from date picker (YYYY-MM-DD) to MM/DD/YY format");
+            sb.AppendLine("        if (typeof filterValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(filterValue)) {");
+            sb.AppendLine("          const d = new Date(filterValue);");
+            sb.AppendLine("          filterValue = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear().toString().slice(-2)}`;");
+            sb.AppendLine("        }");
+            sb.AppendLine("        ");
             sb.AppendLine("        // Convert boolean values to readable text");
             sb.AppendLine("        if (typeof itemValue === 'boolean') {");
             sb.AppendLine("          itemValue = itemValue ? 'true' : 'false';");
