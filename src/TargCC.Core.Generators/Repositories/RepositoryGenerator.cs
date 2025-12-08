@@ -234,6 +234,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
         string spName = $"SP_Get{entityName}ByID";
+        string pkParamName = pkColumn.Name; // Use actual PK column name for SP parameter
 
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default)");
@@ -244,7 +245,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{entityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                new { ID = id },");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"                new {{ {pkParamName} = id }},");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"{entityName} found: {{Found}}\", result != null);");
@@ -774,6 +775,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
         string spName = $"SP_Get{entityName}ByID";
+        string pkParamName = pkColumn.Name; // Use actual PK column name for SP parameter
 
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<bool> ExistsAsync({pkType} id, CancellationToken cancellationToken = default)");
@@ -784,7 +786,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{entityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                new { ID = id },");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"                new {{ {pkParamName} = id }},");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine("            bool exists = result != null;");
