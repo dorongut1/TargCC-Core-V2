@@ -52,7 +52,7 @@ namespace TargCC.Core.Generators.UI.Components
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
-                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper } from '@mui/material';");
+                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, MenuItem, Typography } from '@mui/material';");
 
                 // Only import Edit/Delete/Add icons for tables, not for VIEWs
                 if (!table.IsView)
@@ -94,7 +94,7 @@ namespace TargCC.Core.Generators.UI.Components
                 var displayName = GetPropertyName(column.Name);
                 var width = GetColumnWidth(column);
 
-                sb.Append(CultureInfo.InvariantCulture, $"    {{ field: '{propertyName}', headerName: '{displayName}', width: {width}, filterable: true");
+                sb.Append(CultureInfo.InvariantCulture, $"    {{ field: '{propertyName}', headerName: '{displayName}', width: {width}");
 
                 // Add valueGetter for special types
                 var (prefix, _) = SplitPrefix(column.Name);
@@ -159,11 +159,11 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
-            sb.AppendLine("  // apiRef is used to access filtered/sorted rows for Excel export");
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
-            sb.AppendLine("  const [filterModel, setFilterModel] = React.useState<any>({ items: [] });");
+            sb.AppendLine("  const [quickSearch, setQuickSearch] = React.useState('');");
+            sb.AppendLine("  const [searchColumn, setSearchColumn] = React.useState('all');");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
 
             // Only add useDelete hook for tables, not for VIEWs
@@ -173,6 +173,32 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             sb.AppendLine();
+
+            // Generate filtered data logic
+            sb.AppendLine("  // Client-side quick search filter");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const filteredData = React.useMemo(() => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName} || !quickSearch) return {pluralName};");
+            sb.AppendLine("    const searchLower = quickSearch.toLowerCase();");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    return {pluralName}.filter(item => {{");
+            sb.AppendLine("      if (searchColumn === 'all') {");
+            sb.AppendLine("        return (");
+
+            // Add all text/searchable columns
+            var dataColumns = GetDataColumns(table).Take(10).ToList();
+            foreach (var column in dataColumns)
+            {
+                var propertyName = ToCamelCase(GetPropertyName(column.Name));
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          item.{propertyName}?.toString().toLowerCase().includes(searchLower) ||");
+            }
+            sb.AppendLine("          false");
+            sb.AppendLine("        );");
+            sb.AppendLine("      } else {");
+            sb.AppendLine("        return item[searchColumn as keyof typeof item]?.toString().toLowerCase().includes(searchLower) || false;");
+            sb.AppendLine("      }");
+            sb.AppendLine("    });");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, quickSearch, searchColumn]);");
+            sb.AppendLine();
+
             sb.AppendLine("  const handleApplyFilters = () => {");
             sb.AppendLine("    setFilters(localFilters);");
             sb.AppendLine("  };");
@@ -186,8 +212,9 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Clear top panel filters");
             sb.AppendLine("    setLocalFilters({});");
             sb.AppendLine("    setFilters({});");
-            sb.AppendLine("    // Clear DataGrid column filters");
-            sb.AppendLine("    setFilterModel({ items: [] });");
+            sb.AppendLine("    // Clear quick search");
+            sb.AppendLine("    setQuickSearch('');");
+            sb.AppendLine("    setSearchColumn('all');");
             sb.AppendLine("  };");
             sb.AppendLine();
             sb.AppendLine("  function CustomToolbar() {");
@@ -209,10 +236,8 @@ namespace TargCC.Core.Generators.UI.Components
 
             // Export to Excel handler
             sb.AppendLine("  const handleExportToExcel = () => {");
-            sb.AppendLine("    // Get filtered and sorted rows from DataGrid (respects user's view)");
-            sb.AppendLine("    const visibleRows = apiRef.current");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"      ? Array.from(apiRef.current.getRowModels().values())");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"      : {pluralName} || [];");
+            sb.AppendLine("    // Export only the filtered data visible on screen");
+            sb.AppendLine("    const visibleRows = filteredData || [];");
             sb.AppendLine();
             sb.AppendLine("    if (!visibleRows || visibleRows.length === 0) {");
             sb.AppendLine("      alert('No data to export');");
@@ -250,8 +275,9 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    }");
             sb.AppendLine("    ws['!cols'] = colWidths;");
             sb.AppendLine();
-            sb.AppendLine("    // Freeze the header row");
-            sb.AppendLine("    ws['!freeze'] = { xSplit: 0, ySplit: 1, state: 'frozen' };");
+            sb.AppendLine("    // Freeze the header row (using both methods for maximum compatibility)");
+            sb.AppendLine("    ws['!freeze'] = { xSplit: 0, ySplit: 1 };");
+            sb.AppendLine("    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2' }];");
             sb.AppendLine();
             sb.AppendLine("    const wb = XLSX.utils.book_new();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.utils.book_append_sheet(wb, ws, '{className}s');");
@@ -325,13 +351,9 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
                 sb.AppendLine("        <DataGrid");
                 sb.AppendLine("          apiRef={apiRef}");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
+                sb.AppendLine("          rows={filteredData || []}");
                 sb.AppendLine("          columns={columns}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
-                sb.AppendLine("          filterMode=\"client\"");
-                sb.AppendLine("          filterModel={filterModel}");
-                sb.AppendLine("          onFilterModelChange={setFilterModel}");
-                sb.AppendLine("          disableMultipleColumnsFiltering={false}");
                 sb.AppendLine("          slots={{");
                 sb.AppendLine("            toolbar: CustomToolbar,");
                 sb.AppendLine("          }}");
@@ -370,6 +392,33 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      <Paper sx={{ p: 2, mb: 2 }}>");
             sb.AppendLine("        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>");
 
+            // Add Quick Search with column selector first
+            var dataColumns = GetDataColumns(table).Take(10).ToList();
+            sb.AppendLine("          <TextField");
+            sb.AppendLine("            select");
+            sb.AppendLine("            label=\"Search Column\"");
+            sb.AppendLine("            size=\"small\"");
+            sb.AppendLine("            sx={{ minWidth: 150 }}");
+            sb.AppendLine("            value={searchColumn}");
+            sb.AppendLine("            onChange={(e) => setSearchColumn(e.target.value)}");
+            sb.AppendLine("          >");
+            sb.AppendLine("            <MenuItem value=\"all\">All Columns</MenuItem>");
+            foreach (var column in dataColumns)
+            {
+                var propertyName = ToCamelCase(GetPropertyName(column.Name));
+                var displayName = GetPropertyName(column.Name);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"            <MenuItem value=\"{propertyName}\">{displayName}</MenuItem>");
+            }
+            sb.AppendLine("          </TextField>");
+            sb.AppendLine("          <TextField");
+            sb.AppendLine("            label=\"Quick Search\"");
+            sb.AppendLine("            placeholder=\"Type to search...\"");
+            sb.AppendLine("            size=\"small\"");
+            sb.AppendLine("            sx={{ minWidth: 300 }}");
+            sb.AppendLine("            value={quickSearch}");
+            sb.AppendLine("            onChange={(e) => setQuickSearch(e.target.value)}");
+            sb.AppendLine("          />");
+
             var processedColumns = new System.Collections.Generic.HashSet<string>();
 
             if (filterableIndexes.Count > 0)
@@ -399,6 +448,16 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             AppendClearFiltersButton(sb);
+
+            // Add row count display
+            var className = GetClassName(table.Name);
+            var pluralName = ToCamelCase(GetClassName(table.Name)) + "s";
+            sb.AppendLine("          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>");
+            sb.AppendLine("            <Typography variant=\"body2\" color=\"text.secondary\">");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"              Showing {{filteredData?.length || 0}} of {{{pluralName}?.length || 0}} rows");
+            sb.AppendLine("            </Typography>");
+            sb.AppendLine("          </Box>");
+
             sb.AppendLine("        </Box>");
             sb.AppendLine("      </Paper>");
 
