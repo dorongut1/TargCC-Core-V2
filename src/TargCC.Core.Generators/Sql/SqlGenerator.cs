@@ -31,6 +31,12 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(2, nameof(LogGetByIdGenerationWarning)),
                 "Could not generate GetByID procedure for {TableName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogAddGenerationWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(10, nameof(LogAddGenerationWarning)),
+                "Could not generate Add procedure for {TableName}");
+
         private static readonly Action<ILogger, string, Exception?> LogUpdateGenerationWarning =
             LoggerMessage.Define<string>(
                 LogLevel.Warning,
@@ -49,10 +55,16 @@ namespace TargCC.Core.Generators.Sql
                 new EventId(5, nameof(LogIndexProceduresWarning)),
                 "Could not generate index procedures for {TableName}");
 
+        private static readonly Action<ILogger, string, Exception?> LogRelatedProceduresWarning =
+            LoggerMessage.Define<string>(
+                LogLevel.Warning,
+                new EventId(6, nameof(LogRelatedProceduresWarning)),
+                "Could not generate related procedures for table: {TableName}");
+
         private static readonly Action<ILogger, string, Exception?> LogCompletedTableGeneration =
             LoggerMessage.Define<string>(
                 LogLevel.Information,
-                new EventId(6, nameof(LogCompletedTableGeneration)),
+                new EventId(7, nameof(LogCompletedTableGeneration)),
                 "Completed stored procedure generation for {TableName}");
 
         private static readonly Action<ILogger, string, Exception?> LogGeneratingSchemaProcedures =
@@ -163,31 +175,8 @@ namespace TargCC.Core.Generators.Sql
                 LogGetByIdGenerationWarning(_logger, table.Name, ex);
             }
 
-            // Update
-            try
-            {
-                var updateSql = await SpUpdateTemplate.GenerateAsync(table);
-                sb.AppendLine(updateSql);
-                sb.AppendLine("GO");
-                sb.AppendLine();
-            }
-            catch (Exception ex)
-            {
-                LogUpdateGenerationWarning(_logger, table.Name, ex);
-            }
-
-            // Delete
-            try
-            {
-                var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
-                sb.AppendLine(deleteSql);
-                sb.AppendLine("GO");
-                sb.AppendLine();
-            }
-            catch (Exception ex)
-            {
-                LogDeleteGenerationWarning(_logger, table.Name, ex);
-            }
+            // Generate write operations (Add/Update/Delete) - skip for VIEWs as they are read-only
+            await GenerateWriteProceduresAsync(table, sb);
 
             // Index procedures
             if (_includeAdvancedProcedures && table.Indexes != null && table.Indexes.Count > 0)
@@ -228,7 +217,8 @@ namespace TargCC.Core.Generators.Sql
 
             var validTables = schema.Tables
                 .Where(CanGenerate)
-                .OrderBy(t => t.Name);
+                .OrderBy(t => t.Name)
+                .ToList();
 
             foreach (var table in validTables)
             {
@@ -237,7 +227,87 @@ namespace TargCC.Core.Generators.Sql
                 sb.AppendLine();
             }
 
+            // Generate FK relationship procedures (Master-Detail Views)
+            if (_includeAdvancedProcedures && schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                sb.AppendLine("-- =========================================");
+                sb.AppendLine("-- Foreign Key Relationship Procedures");
+                sb.AppendLine("-- (Master-Detail Views)");
+                sb.AppendLine("-- =========================================");
+                sb.AppendLine();
+
+                foreach (var table in validTables)
+                {
+                    try
+                    {
+                        var relatedSql = await SpGetRelatedTemplate.GenerateAllRelatedProcedures(table, schema);
+                        if (!string.IsNullOrWhiteSpace(relatedSql))
+                        {
+                            sb.AppendLine(relatedSql);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogRelatedProceduresWarning(_logger, table.Name, ex);
+                    }
+                }
+            }
+
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates write stored procedures (Add, Update, Delete) for a table.
+        /// Skips generation for VIEWs as they are read-only.
+        /// </summary>
+        /// <param name="table">The table to generate procedures for.</param>
+        /// <param name="sb">The StringBuilder to append the generated SQL to.</param>
+        private async Task GenerateWriteProceduresAsync(Table table, StringBuilder sb)
+        {
+            // Skip write operations for VIEWs - they are read-only
+            if (table.IsView)
+            {
+                return;
+            }
+
+            // Add
+            try
+            {
+                var addSql = await SpAddTemplate.GenerateAsync(table);
+                sb.AppendLine(addSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogAddGenerationWarning(_logger, table.Name, ex);
+            }
+
+            // Update
+            try
+            {
+                var updateSql = await SpUpdateTemplate.GenerateAsync(table);
+                sb.AppendLine(updateSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogUpdateGenerationWarning(_logger, table.Name, ex);
+            }
+
+            // Delete
+            try
+            {
+                var deleteSql = await SpDeleteTemplate.GenerateAsync(table);
+                sb.AppendLine(deleteSql);
+                sb.AppendLine("GO");
+                sb.AppendLine();
+            }
+            catch (Exception ex)
+            {
+                LogDeleteGenerationWarning(_logger, table.Name, ex);
+            }
         }
     }
 }

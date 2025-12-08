@@ -33,10 +33,13 @@ namespace TargCC.Core.Generators.Sql.Templates
                 throw new InvalidOperationException($"Table '{table.Name}' has no primary key. Cannot generate Delete procedure.");
             }
 
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
             var sb = new StringBuilder();
 
             // Procedure header
-            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Delete{table.Name}]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Delete{entityName}]");
 
             // Parameters (PK columns)
             for (int i = 0; i < pkColumns.Count; i++)

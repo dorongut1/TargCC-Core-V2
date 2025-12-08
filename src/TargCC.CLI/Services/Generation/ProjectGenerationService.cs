@@ -79,6 +79,7 @@ public class ProjectGenerationService : IProjectGenerationService
             var tables = schema.Tables.ToList();
 
             _output.Info($"  ✓ Found {tables.Count} tables");
+            _output.Info($"  ✓ Found {schema.Relationships?.Count ?? 0} relationships");
             _output.BlankLine();
 
             _output.Info("Step 2: Creating solution structure...");
@@ -114,6 +115,26 @@ public class ProjectGenerationService : IProjectGenerationService
             }
 
             _output.Info($"  ✓ Generated {totalFiles} files from {tables.Count} tables!");
+            _output.BlankLine();
+
+            _output.Info("Step 3.5: Generating SQL stored procedures with Master-Detail relationships...");
+            _output.Info($"  Schema has {schema.Relationships?.Count ?? 0} relationships for Master-Detail generation");
+
+            // Generate ALL SQL including Master-Detail SPs for entire schema
+            var sqlGen = new SqlGenerator(_loggerFactory.CreateLogger<SqlGenerator>());
+            var allSql = await sqlGen.GenerateAsync(schema);
+            var sqlPath = Path.Combine(outputDirectory, "sql", "all_procedures.sql");
+            await SaveFileAsync(sqlPath, allSql);
+
+            _output.Info($"  ✓ SQL file generated with {allSql.Length} characters");
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                _output.Info($"  ✓ Included Master-Detail stored procedures for {schema.Relationships.Count} relationships");
+            }
+            else
+            {
+                _output.Warning("  ⚠ No relationships found - Master-Detail SPs were NOT generated!");
+            }
             _output.BlankLine();
 
             _output.Info("Step 4: Generating support files...");
@@ -219,23 +240,18 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(entityPath, entityCode);
         filesCount++;
 
-        // 2. SQL Stored Procedures
-        var sqlGen = new SqlGenerator(_loggerFactory.CreateLogger<SqlGenerator>());
-        var sqlCode = await sqlGen.GenerateAsync(table);
-        var sqlPath = Path.Combine(outputDirectory, "sql", $"{table.Name}.sql");
-        await SaveFileAsync(sqlPath, sqlCode);
-        filesCount++;
+        // 2. SQL Stored Procedures - SKIP HERE, will be generated once for entire schema after all tables
 
-        // 3. Repository Interface
+        // 3. Repository Interface (with schema for Master-Detail methods)
         var repoInterfaceGen = new RepositoryInterfaceGenerator(_loggerFactory.CreateLogger<RepositoryInterfaceGenerator>());
-        var repoInterface = await repoInterfaceGen.GenerateAsync(table, rootNamespace);
+        var repoInterface = await repoInterfaceGen.GenerateAsync(table, schema, rootNamespace);
         var repoInterfacePath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Interfaces", $"I{table.Name}Repository.cs");
         await SaveFileAsync(repoInterfacePath, repoInterface);
         filesCount++;
 
-        // 4. Repository Implementation
+        // 4. Repository Implementation (with schema for Master-Detail methods)
         var repoGen = new RepositoryGenerator(_loggerFactory.CreateLogger<RepositoryGenerator>());
-        var repoImpl = await repoGen.GenerateAsync(table, rootNamespace);
+        var repoImpl = await repoGen.GenerateAsync(table, schema, rootNamespace);
         var repoImplPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "Repositories", $"{table.Name}Repository.cs");
         await SaveFileAsync(repoImplPath, repoImpl);
         filesCount++;
@@ -297,11 +313,15 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(listPath, listCode);
         filesCount++;
 
-        var formGen = new ReactFormComponentGenerator(_loggerFactory.CreateLogger<ReactFormComponentGenerator>());
-        var formCode = await formGen.GenerateAsync(table, schema, componentConfig);
-        var formPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Form.tsx");
-        await SaveFileAsync(formPath, formCode);
-        filesCount++;
+        // Only generate Form for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            var formGen = new ReactFormComponentGenerator(_loggerFactory.CreateLogger<ReactFormComponentGenerator>());
+            var formCode = await formGen.GenerateAsync(table, schema, componentConfig);
+            var formPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Form.tsx");
+            await SaveFileAsync(formPath, formCode);
+            filesCount++;
+        }
 
         var detailGen = new ReactDetailComponentGenerator(_loggerFactory.CreateLogger<ReactDetailComponentGenerator>());
         var detailCode = await detailGen.GenerateAsync(table, schema, componentConfig);
@@ -451,26 +471,26 @@ public class ProjectGenerationService : IProjectGenerationService
           "version": "0.1.0",
           "private": true,
           "dependencies": {
-            "@emotion/react": "^11.11.1",
-            "@emotion/styled": "^11.11.0",
-            "@mui/icons-material": "^5.14.19",
-            "@mui/material": "^5.14.20",
-            "@mui/x-data-grid": "^6.18.5",
-            "@tanstack/react-query": "^5.12.2",
-            "axios": "^1.6.2",
-            "react": "^18.2.0",
-            "react-dom": "^18.2.0",
-            "react-hook-form": "^7.48.2",
-            "react-router-dom": "^6.20.0",
-            "xlsx": "^0.18.5"
+            "@emotion/react": "^11.14.0",
+            "@emotion/styled": "^11.14.0",
+            "@mui/icons-material": "^6.3.0",
+            "@mui/material": "^6.3.0",
+            "@mui/x-data-grid": "^7.24.0",
+            "@tanstack/react-query": "^5.62.0",
+            "axios": "^1.7.9",
+            "react": "^18.3.1",
+            "react-dom": "^18.3.1",
+            "react-hook-form": "^7.54.0",
+            "react-router-dom": "^7.1.1",
+            "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
           },
           "devDependencies": {
-            "@types/node": "^20.10.4",
-            "@types/react": "^18.2.42",
-            "@types/react-dom": "^18.2.17",
-            "@vitejs/plugin-react": "^4.2.1",
-            "typescript": "^5.3.3",
-            "vite": "^5.0.5"
+            "@types/node": "^22.10.2",
+            "@types/react": "^18.3.18",
+            "@types/react-dom": "^18.3.5",
+            "@vitejs/plugin-react": "^4.3.4",
+            "typescript": "^5.7.2",
+            "vite": "^6.2.6"
           },
           "scripts": {
             "dev": "vite",
@@ -587,7 +607,12 @@ public class ProjectGenerationService : IProjectGenerationService
         ReactDOM.createRoot(document.getElementById('root')!).render(
           <React.StrictMode>
             <QueryClientProvider client={queryClient}>
-              <BrowserRouter>
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
                 <App />
               </BrowserRouter>
             </QueryClientProvider>
@@ -601,21 +626,33 @@ public class ProjectGenerationService : IProjectGenerationService
         var imports = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
-            return $"import {{ {className}List }} from './components/{className}/{className}List';";
+            // For views, skip Form import (views are read-only)
+            if (t.IsView)
+            {
+                return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Detail }} from './components/{className}/{className}Detail';";
+            }
+            return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Detail }} from './components/{className}/{className}Detail';\nimport {{ {className}Form }} from './components/{className}/{className}Form';";
         }));
 
         var menuItems = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{className}s\" />\n              </ListItemButton>\n            </ListItem>";
+            // Add "Report" suffix for views to distinguish from tables
+            var displayName = t.IsView ? $"{className}s Report" : $"{className}s";
+            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{displayName}\" />\n              </ListItemButton>\n            </ListItem>";
         }));
 
         var routes = string.Join("\n", tables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
-            return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />";
+            // For views, only generate List and Detail routes (no create/edit)
+            if (t.IsView)
+            {
+                return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Detail />}} />";
+            }
+            return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/new\" element={{<{className}Form />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Detail />}} />\n            <Route path=\"/{camelName}s/:id/edit\" element={{<{className}Form />}} />";
         }));
 
         var appName = tables.Any() ? BaseApiGenerator.GetClassName(tables[0].Name) : "App";

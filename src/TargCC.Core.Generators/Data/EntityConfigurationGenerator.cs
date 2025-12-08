@@ -80,8 +80,11 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
         // Add class documentation
         GenerateClassDocumentation(sb, table);
 
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
         // Start class
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {table.Name}Configuration : IEntityTypeConfiguration<{table.Name}>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {entityName}Configuration : IEntityTypeConfiguration<{entityName}>");
         sb.AppendLine("{");
 
         // Generate Configure method
@@ -141,11 +144,14 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     /// </summary>
     private static void GenerateConfigureMethod(StringBuilder sb, Table table)
     {
+        // Use PascalCase conversion for consistency with other generators
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
         sb.AppendLine("    /// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Configures the {table.Name} entity.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"builder\">The builder used to configure the entity.</param>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public void Configure(EntityTypeBuilder<{table.Name}> builder)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public void Configure(EntityTypeBuilder<{entityName}> builder)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(builder);");
         sb.AppendLine();
@@ -442,12 +448,12 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     private static void GenerateRelationshipConfiguration(StringBuilder sb, Relationship relationship, Table table)
     {
         // Determine relationship type and generate appropriate configuration
-        if (relationship.ChildTable == table.Name)
+        if (relationship.ChildTable == table.FullName)
         {
             // This table has the foreign key (Many-to-One)
             GenerateManyToOneRelationship(sb, relationship);
         }
-        else if (relationship.ParentTable == table.Name)
+        else if (relationship.ParentTable == table.FullName)
         {
             // This table is referenced (One-to-Many)
             GenerateOneToManyRelationship(sb, relationship);
@@ -459,11 +465,15 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     /// </summary>
     private static void GenerateManyToOneRelationship(StringBuilder sb, Relationship relationship)
     {
-        var navigationProperty = relationship.ParentTable;
+        // Extract table name from FullName (dbo.Customer -> Customer)
+        var parentTableName = ExtractTableName(relationship.ParentTable);
+        var childTableName = ExtractTableName(relationship.ChildTable);
+
+        var navigationProperty = parentTableName;
         var foreignKeyProperty = CodeGenerationHelpers.SanitizeColumnName(relationship.ChildColumn);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"        builder.HasOne(e => e.{navigationProperty})");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            .WithMany(r => r.{CodeGenerationHelpers.MakePlural(relationship.ChildTable)})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            .WithMany(r => r.{CodeGenerationHelpers.MakePlural(childTableName)})");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            .HasForeignKey(e => e.{foreignKeyProperty})");
 
         if (!string.IsNullOrEmpty(relationship.Name))
@@ -480,12 +490,16 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
     /// </summary>
     private static void GenerateOneToManyRelationship(StringBuilder sb, Relationship relationship)
     {
-        var navigationProperty = CodeGenerationHelpers.MakePlural(relationship.ChildTable);
+        // Extract table name from FullName (dbo.Order -> Order)
+        var parentTableName = ExtractTableName(relationship.ParentTable);
+        var childTableName = ExtractTableName(relationship.ChildTable);
+
+        var navigationProperty = CodeGenerationHelpers.MakePlural(childTableName);
         var foreignKeyProperty = CodeGenerationHelpers.SanitizeColumnName(relationship.ChildColumn);
         var deleteBehavior = GetDeleteBehavior(relationship.DeleteAction);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"        builder.HasMany(e => e.{navigationProperty})");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            .WithOne(o => o.{relationship.ParentTable})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            .WithOne(o => o.{parentTableName})");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            .HasForeignKey(o => o.{foreignKeyProperty})");
 
         if (!string.IsNullOrEmpty(relationship.Name))
@@ -514,5 +528,20 @@ public class EntityConfigurationGenerator : IEntityConfigurationGenerator
             "NO ACTION" => "NoAction",
             _ => "Restrict"
         };
+    }
+
+    /// <summary>
+    /// Extracts table name from FullName format (dbo.Customer -> Customer).
+    /// </summary>
+    private static string ExtractTableName(string fullName)
+    {
+        if (string.IsNullOrEmpty(fullName))
+        {
+            return fullName;
+        }
+
+        // Handle FullName format: "dbo.Customer" -> "Customer"
+        var lastDotIndex = fullName.LastIndexOf('.');
+        return lastDotIndex >= 0 ? fullName.Substring(lastDotIndex + 1) : fullName;
     }
 }

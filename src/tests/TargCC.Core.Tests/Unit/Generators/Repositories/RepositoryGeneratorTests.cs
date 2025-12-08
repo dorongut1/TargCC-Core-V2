@@ -463,4 +463,228 @@ public class RepositoryGeneratorTests
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
+
+    /// <summary>
+    /// Test 17: AddAsync uses DynamicParameters and excludes non-insertable columns.
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_AddAsync_UsesDynamicParametersAndExcludesNonInsertableColumns()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("Customer")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("Email").AsNvarchar(100).Build())
+            .WithColumn(c => c.WithName("AddedOn").AsDateTime().NotNullable().Build())
+            .WithColumn(c => c.WithName("AddedBy").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("ChangedOn").AsDateTime().Build())
+            .WithColumn(c => c.WithName("ChangedBy").AsNvarchar(100).Build())
+            .WithColumn(c => c.WithName("clc_TotalOrders").AsInt().AsCalculated().Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("public async Task AddAsync(Customer entity, CancellationToken cancellationToken = default)");
+
+        // Should use DynamicParameters
+        result.Should().Contain("var parameters = new DynamicParameters();");
+
+        // Should add insertable columns
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@Email\", entity.Email);");
+
+        // Should NOT add PrimaryKey column
+        result.Should().NotContain("parameters.Add(\"@ID\"");
+
+        // Should NOT add audit columns as regular parameters
+        result.Should().NotContain("parameters.Add(\"@AddedOn\"");
+        result.Should().NotContain("parameters.Add(\"@ChangedOn\"");
+        result.Should().NotContain("parameters.Add(\"@ChangedBy\"");
+
+        // Should add AddedBy as separate parameter after the loop
+        result.Should().Contain("parameters.Add(\"@AddedBy\", entity.AddedBy);");
+
+        // Should NOT add calculated columns
+        result.Should().NotContain("parameters.Add(\"@clc_TotalOrders\"");
+
+        // Should call ExecuteAsync with parameters
+        result.Should().Contain("await _connection.ExecuteAsync(");
+        result.Should().Contain("\"SP_AddCustomer\"");
+        result.Should().Contain("parameters,");
+    }
+
+    /// <summary>
+    /// Test 18: UpdateAsync uses DynamicParameters and excludes non-updateable columns.
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_UpdateAsync_UsesDynamicParametersAndExcludesNonUpdateableColumns()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("Customer")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("Email").AsNvarchar(100).Build())
+            .WithColumn(c => c.WithName("AddedOn").AsDateTime().NotNullable().Build())
+            .WithColumn(c => c.WithName("AddedBy").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("ChangedOn").AsDateTime().Build())
+            .WithColumn(c => c.WithName("ChangedBy").AsNvarchar(100).Build())
+            .WithColumn(c => c.WithName("clc_TotalOrders").AsInt().AsCalculated().Build())
+            .WithColumn(c => c.WithName("blg_InternalScore").AsInt().AsBusinessLogic().Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("public async Task UpdateAsync(Customer entity, CancellationToken cancellationToken = default)");
+
+        // Should use DynamicParameters
+        result.Should().Contain("var parameters = new DynamicParameters();");
+
+        // Should add PK column first
+        result.Should().Contain("parameters.Add(\"@ID\", entity.ID);");
+
+        // Should add updateable columns
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@Email\", entity.Email);");
+
+        // Should NOT add AddedOn/AddedBy (set on creation only)
+        result.Should().NotContain("parameters.Add(\"@AddedOn\"");
+        result.Should().NotContain("parameters.Add(\"@AddedBy\"");
+
+        // Should NOT add ChangedOn (handled by SP with GETDATE())
+        result.Should().NotContain("parameters.Add(\"@ChangedOn\"");
+
+        // Should add ChangedBy as separate parameter after the loop
+        result.Should().Contain("parameters.Add(\"@ChangedBy\", entity.ChangedBy);");
+
+        // Should NOT add calculated or business logic columns
+        result.Should().NotContain("parameters.Add(\"@clc_TotalOrders\"");
+        result.Should().NotContain("parameters.Add(\"@blg_InternalScore\"");
+
+        // Should call ExecuteAsync with parameters
+        result.Should().Contain("await _connection.ExecuteAsync(");
+        result.Should().Contain("\"SP_UpdateCustomer\"");
+        result.Should().Contain("parameters,");
+    }
+
+    /// <summary>
+    /// Test 19: AddAsync handles table without audit columns.
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_AddAsync_WithoutAuditColumns_BuildsParametersCorrectly()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("Product")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("Price").AsDecimal(18, 2).Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("var parameters = new DynamicParameters();");
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@Price\", entity.Price);");
+        result.Should().NotContain("parameters.Add(\"@AddedBy\"");
+    }
+
+    /// <summary>
+    /// Test 20: UpdateAsync handles table without ChangedBy column.
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_UpdateAsync_WithoutChangedByColumn_BuildsParametersCorrectly()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("Product")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("Price").AsDecimal(18, 2).Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("var parameters = new DynamicParameters();");
+        result.Should().Contain("parameters.Add(\"@ID\", entity.ID);");
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@Price\", entity.Price);");
+        result.Should().NotContain("parameters.Add(\"@ChangedBy\"");
+    }
+
+    /// <summary>
+    /// Test 21: AddAsync excludes all audit prefix columns (CLC, BLG, AGG, SCB, ENO).
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_AddAsync_ExcludesAllAuditPrefixColumns()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("TestTable")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("CLC_Calculated").AsDecimal().AsCalculated().Build())
+            .WithColumn(c => c.WithName("BLG_BusinessLogic").AsInt().AsBusinessLogic().Build())
+            .WithColumn(c => c.WithName("AGG_Aggregate").AsInt().AsAggregate().Build())
+            .WithColumn(c => c.WithName("SCB_Security").AsVarchar(50).Build())
+            .WithColumn(c => c.WithName("ENO_Password").AsVarchar(64).WithOneWayEncryption().Build())
+            .WithColumn(c => c.WithName("ent_CreditCard").AsVarchar(-1).WithTwoWayEncryption().Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@ent_CreditCard\", entity.CreditCard);"); // Two-way encryption is insertable
+
+        result.Should().NotContain("parameters.Add(\"@CLC_");
+        result.Should().NotContain("parameters.Add(\"@BLG_");
+        result.Should().NotContain("parameters.Add(\"@AGG_");
+        result.Should().NotContain("parameters.Add(\"@SCB_");
+        result.Should().NotContain("parameters.Add(\"@ENO_"); // One-way encryption excluded
+    }
+
+    /// <summary>
+    /// Test 22: UpdateAsync excludes all audit prefix columns (CLC, BLG, AGG, SCB, ENO).
+    /// </summary>
+    [Fact]
+    public async Task GenerateAsync_UpdateAsync_ExcludesAllAuditPrefixColumns()
+    {
+        // Arrange
+        var table = new TableBuilder()
+            .WithName("TestTable")
+            .WithColumn(c => c.WithName("ID").AsInt().AsPrimaryKey().AsIdentity().Build())
+            .WithColumn(c => c.WithName("Name").AsNvarchar(100).NotNullable().Build())
+            .WithColumn(c => c.WithName("CLC_Calculated").AsDecimal().AsCalculated().Build())
+            .WithColumn(c => c.WithName("BLG_BusinessLogic").AsInt().AsBusinessLogic().Build())
+            .WithColumn(c => c.WithName("AGG_Aggregate").AsInt().AsAggregate().Build())
+            .WithColumn(c => c.WithName("SCB_Security").AsVarchar(50).Build())
+            .WithColumn(c => c.WithName("ENO_Password").AsVarchar(64).WithOneWayEncryption().Build())
+            .WithColumn(c => c.WithName("ent_CreditCard").AsVarchar(-1).WithTwoWayEncryption().Build())
+            .Build();
+
+        // Act
+        var result = await _generator.GenerateAsync(table);
+
+        // Assert
+        result.Should().Contain("parameters.Add(\"@ID\", entity.ID);");
+        result.Should().Contain("parameters.Add(\"@Name\", entity.Name);");
+        result.Should().Contain("parameters.Add(\"@ent_CreditCard\", entity.CreditCard);"); // Two-way encryption is updateable
+
+        result.Should().NotContain("parameters.Add(\"@CLC_");
+        result.Should().NotContain("parameters.Add(\"@BLG_");
+        result.Should().NotContain("parameters.Add(\"@AGG_");
+        result.Should().NotContain("parameters.Add(\"@SCB_");
+        result.Should().NotContain("parameters.Add(\"@ENO_"); // One-way encryption excluded
+    }
 }

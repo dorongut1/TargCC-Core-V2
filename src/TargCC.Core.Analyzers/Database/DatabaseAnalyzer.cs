@@ -38,6 +38,7 @@ public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
     private readonly ILogger<DatabaseAnalyzer> _logger;
     private readonly TableAnalyzer _tableAnalyzer;
     private readonly RelationshipAnalyzer _relationshipAnalyzer;
+    private readonly Dictionary<string, bool> _tableViewFlags = new ();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DatabaseAnalyzer"/> class.
@@ -152,20 +153,40 @@ public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
             _logger.LogInformation("Reading table list...");
 
             const string query = @"
-                SELECT 
-                    SCHEMA_NAME(t.schema_id) + '.' + t.name AS TableName
-                FROM 
+                SELECT
+                    SCHEMA_NAME(t.schema_id) + '.' + t.name AS TableName,
+                    0 AS IsView
+                FROM
                     sys.tables t
-                WHERE 
+                WHERE
                     t.is_ms_shipped = 0
-                ORDER BY 
-                    SCHEMA_NAME(t.schema_id), t.name";
+                UNION ALL
+                SELECT
+                    SCHEMA_NAME(v.schema_id) + '.' + v.name AS TableName,
+                    1 AS IsView
+                FROM
+                    sys.views v
+                WHERE
+                    v.is_ms_shipped = 0
+                ORDER BY
+                    TableName";
 
             await using var connection = new SqlConnection(_connectionString);
-            var tables = await connection.QueryAsync<string>(query);
-            var tableList = tables.ToList();
+            var results = await connection.QueryAsync(query);
+            var tableList = results.Select(r => (string)r.TableName).ToList();
 
-            _logger.LogInformation("Found {TableCount} tables", tableList.Count);
+            // Store IsView flags for later use
+            foreach (var result in results)
+            {
+                string tableName = result.TableName;
+                bool isView = result.IsView == 1;
+                if (!_tableViewFlags.ContainsKey(tableName))
+                {
+                    _tableViewFlags[tableName] = isView;
+                }
+            }
+
+            _logger.LogInformation("Found {TableCount} tables and views", tableList.Count);
             return tableList;
         }
         catch (SqlException ex)
@@ -446,6 +467,13 @@ public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
             {
                 _logger.LogDebug("Analyzing table: {TableName}", tableName);
                 var table = await _tableAnalyzer.AnalyzeTableAsync(tableName);
+
+                // Set IsView flag if this is a view
+                if (_tableViewFlags.TryGetValue(tableName, out bool isView))
+                {
+                    table.IsView = isView;
+                }
+
                 schema.Tables.Add(table);
             }
             catch (Exception ex)

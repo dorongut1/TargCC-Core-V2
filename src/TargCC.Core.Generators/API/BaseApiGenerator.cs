@@ -182,11 +182,9 @@ namespace TargCC.Core.Generators.API
             {
                 if (!string.IsNullOrWhiteSpace(word))
                 {
-                    result.Append(char.ToUpperInvariant(word[0]));
-                    for (int i = 1; i < word.Length; i++)
-                    {
-                        result.Append(char.ToLowerInvariant(word[i]));
-                    }
+                    // Use NormalizeSingleWord to preserve existing PascalCase
+                    // e.g., "CustomerOrderSummary" stays "CustomerOrderSummary", not "Customerordersummary"
+                    result.Append(NormalizeSingleWord(word));
                 }
             }
 

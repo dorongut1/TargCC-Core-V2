@@ -192,20 +192,15 @@ namespace TargCC.Core.Generators.UI
                 return NormalizeSingleWord(words[0]);
             }
 
-            // Multiple words - convert each word
+            // Multiple words - convert each word using NormalizeSingleWord to preserve existing PascalCase
             var result = new StringBuilder();
             foreach (var word in words)
             {
                 if (!string.IsNullOrWhiteSpace(word))
                 {
-                    // First character uppercase
-                    result.Append(char.ToUpperInvariant(word[0]));
-
-                    // Rest of characters lowercase (manually to avoid CA1308)
-                    for (int i = 1; i < word.Length; i++)
-                    {
-                        result.Append(char.ToLowerInvariant(word[i]));
-                    }
+                    // Use NormalizeSingleWord to preserve existing PascalCase
+                    // e.g., "CustomerOrderSummary" stays "CustomerOrderSummary", not "Customerordersummary"
+                    result.Append(NormalizeSingleWord(word));
                 }
             }
 

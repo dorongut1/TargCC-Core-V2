@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TargCC.Core.Generators.Common;
+using TargCC.Core.Generators.Entities;
 using TargCC.Core.Interfaces.Models;
 
 /// <summary>
@@ -63,12 +64,16 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <inheritdoc/>
     public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
+        return await GenerateAsync(table, null, rootNamespace);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> GenerateAsync(Table table, DatabaseSchema? schema, string rootNamespace = "YourApp")
+    {
         ArgumentNullException.ThrowIfNull(table);
 
-        if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
-        {
-            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
-        }
+        // Ensure table has a primary key (infers identifier for VIEWs)
+        EnsurePrimaryKey(table);
 
         LogGeneratingRepository(_logger, table.Name, null);
 
@@ -93,15 +98,29 @@ public class RepositoryGenerator : IRepositoryGenerator
         GenerateGetByIdAsync(sb, table);
         GenerateGetAllAsync(sb, table);
         GenerateGetFilteredAsync(sb, table);
-        GenerateAddAsync(sb, table);
-        GenerateUpdateAsync(sb, table);
-        GenerateDeleteAsync(sb, table);
+
+        // Only generate Add/Update/Delete for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            GenerateAddAsync(sb, table);
+            GenerateUpdateAsync(sb, table);
+            GenerateDeleteAsync(sb, table);
+        }
 
         // Generate index-based query methods
         GenerateIndexBasedMethods(sb, table);
 
-        // Generate aggregate methods if needed
-        GenerateUpdateAggregatesAsync(sb, table);
+        // Only generate aggregate updates for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            GenerateUpdateAggregatesAsync(sb, table);
+        }
+
+        // Generate related data methods (Master-Detail Views)
+        if (schema != null)
+        {
+            GenerateRelatedDataMethods(sb, table, schema);
+        }
 
         // Generate helper methods
         GenerateExistsAsync(sb, table);
@@ -150,7 +169,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void StartClass(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string className = $"{entityName}Repository";
         string interfaceName = $"I{entityName}Repository";
 
@@ -172,7 +191,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateFields(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         sb.AppendLine("    private readonly IDbConnection _connection;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly ILogger<{entityName}Repository> _logger;");
@@ -184,7 +203,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateConstructor(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string className = $"{entityName}Repository";
 
         sb.AppendLine("    /// <summary>");
@@ -205,7 +224,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateGetByIdAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -245,7 +264,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateGetAllAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_GetAll{entityName}s";
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -287,7 +306,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_GetFiltered{entityName}s";
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
@@ -366,7 +385,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateAddAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Add{entityName}";
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -381,9 +400,38 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+
+        // Add only insertable columns (exclude IDENTITY, audit columns that are auto-set)
+        var insertableColumns = table.Columns
+            .Where(c => !c.IsPrimaryKey &&
+                       !IsAuditColumn(c.Name) &&
+                       !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("BLG_AddedBy", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var column in insertableColumns)
+        {
+            var propertyName = PrefixHandler.GetPropertyName(column);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
+        }
+
+        // Add AddedBy if AddedBy or BLG_AddedBy exists
+        var addedByColumn = table.Columns.Find(c =>
+            c.Name.Equals("BLG_AddedBy", StringComparison.OrdinalIgnoreCase) ||
+            c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase));
+        if (addedByColumn != null)
+        {
+            sb.AppendLine("            parameters.Add(\"@AddedBy\", entity.AddedBy);");
+        }
+
+        sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await _connection.ExecuteAsync(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                entity,");
+        sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} added successfully\");");
@@ -402,7 +450,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateUpdateAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Update{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -423,9 +471,39 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.ID);");
+
+        // Add only updateable columns (exclude audit columns and ChangedBy - which is added separately)
+        var updateableColumns = table.Columns
+            .Where(c => !c.IsPrimaryKey &&
+                       !IsAuditColumn(c.Name) &&
+                       !c.Name.Equals("AddedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("AddedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedOn", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase) &&
+                       !c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var column in updateableColumns)
+        {
+            var propertyName = PrefixHandler.GetPropertyName(column);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{column.Name}\", entity.{propertyName});");
+        }
+
+        // Add ChangedBy if BLG_ChangedBy or ChangedBy exists
+        var changedByColumn = table.Columns.Find(c =>
+            c.Name.Equals("BLG_ChangedBy", StringComparison.OrdinalIgnoreCase) ||
+            c.Name.Equals("ChangedBy", StringComparison.OrdinalIgnoreCase));
+        if (changedByColumn != null)
+        {
+            sb.AppendLine("            parameters.Add(\"@ChangedBy\", entity.ChangedBy);");
+        }
+
+        sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await _connection.ExecuteAsync(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
-        sb.AppendLine("                entity,");
+        sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} updated successfully. ID: {{Id}}\", entity.ID);");
@@ -444,7 +522,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateDeleteAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Delete{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -488,7 +566,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         // Process each non-primary key index
         foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
@@ -627,7 +705,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string spName = $"SP_Update{entityName}Aggregates";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -686,7 +764,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateExistsAsync(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -719,6 +797,246 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+    }
+
+    /// <summary>
+    /// Determines if a column is an audit column (CLC_, BLG_, AGG_, SCB_).
+    /// </summary>
+    private static bool IsAuditColumn(string columnName)
+    {
+        return columnName.StartsWith("CLC_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("BLG_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("AGG_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("SCB_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Generates related data methods (Master-Detail Views) based on FK relationships.
+    /// </summary>
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
+    {
+        if (schema.Relationships == null || schema.Relationships.Count == 0)
+        {
+            return;
+        }
+
+        // Find all relationships where this table is the parent
+        var parentRelationships = schema.Relationships
+            .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+            .ToList();
+
+        if (parentRelationships.Count == 0)
+        {
+            return;
+        }
+
+        string entityName = GetClassName(table.Name);
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+
+        if (pkColumn == null)
+        {
+            return;
+        }
+
+        string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+
+        foreach (var relationship in parentRelationships)
+        {
+            // Find the child table
+            var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+            if (childTable == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                GenerateSingleRelatedDataMethod(sb, table, childTable, entityName, pkType);
+            }
+            catch
+            {
+                // Skip relationships that cannot be generated
+            }
+        }
+    }
+
+    /// <summary>
+    /// Generates a single GetRelated method implementation.
+    /// </summary>
+    private static void GenerateSingleRelatedDataMethod(
+        StringBuilder sb,
+        Table parentTable,
+        Table childTable,
+        string parentEntityName,
+        string pkType)
+    {
+        // Pluralize child table name (Order → Orders)
+        string childEntityName = GetClassName(childTable.Name);
+        string childrenName = Pluralize(childEntityName);
+        string methodName = $"Get{childrenName}Async";
+        string spName = $"SP_Get{parentEntityName}{childrenName}";
+        string parentIdParamName = ToCamelCase(parentEntityName) + "Id";
+
+        // XML Documentation
+        sb.AppendLine("    /// <inheritdoc/>");
+
+        // Method signature
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"    public async Task<IEnumerable<{childEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+        sb.AppendLine("    {");
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"        _logger.LogDebug(\"Fetching {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+        sb.AppendLine();
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+
+        // Build DynamicParameters
+        sb.AppendLine("            var parameters = new DynamicParameters();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{parentTable.PrimaryKeyColumns[0]}\", {parentIdParamName});");
+        sb.AppendLine("            parameters.Add(\"@Skip\", skip);");
+        sb.AppendLine("            parameters.Add(\"@Take\", take);");
+        sb.AppendLine();
+
+        // Dapper call
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{childEntityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
+        sb.AppendLine("                parameters,");
+        sb.AppendLine("                commandType: CommandType.StoredProcedure);");
+        sb.AppendLine();
+
+        // Logging
+        var logMessage = $"            _logger.LogInformation(\"Retrieved {{Count}} {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", " +
+            $"result.Count(), {parentIdParamName});";
+        sb.AppendLine(logMessage);
+        sb.AppendLine();
+        sb.AppendLine("            return result;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"            _logger.LogError(ex, \"Error fetching {childrenName.ToUpper(CultureInfo.InvariantCulture)} for {parentEntityName} ID: {{{parentEntityName}Id}}\", {parentIdParamName});");
+        sb.AppendLine("            throw;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Pluralizes a singular noun using simple English rules.
+    /// </summary>
+    private static string Pluralize(string singular)
+    {
+        if (string.IsNullOrEmpty(singular))
+        {
+            return singular;
+        }
+
+        // Category → Categories
+        // CA1867: String literals required here because char overload doesn't support StringComparison
+#pragma warning disable CA1867
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+        {
+            return singular[..^1] + "ies";
+        }
+
+        // Address → Addresses, Box → Boxes
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1867
+        {
+            return singular + "es";
+        }
+
+        // Order → Orders, Customer → Customers
+        return singular + "s";
+    }
+
+    /// <summary>
+    /// Converts a string to camelCase.
+    /// </summary>
+    private static string ToCamelCase(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return char.ToLowerInvariant(value[0]) + value[1..];
+    }
+
+    /// <summary>
+    /// Ensures the table has a primary key. For VIEWs, infers an identifier column.
+    /// </summary>
+    /// <param name="table">The table to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when no primary key can be determined.</exception>
+    private static void EnsurePrimaryKey(Table table)
+    {
+        if (table.PrimaryKeyColumns != null && table.PrimaryKeyColumns.Count > 0)
+        {
+            return; // Already has PK
+        }
+
+        if (!table.IsView)
+        {
+            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
+        }
+
+        // For VIEWs: infer identifier column (ID column or first column)
+        var idColumn = FindIdentifierColumn(table);
+        if (idColumn == null)
+        {
+            throw new InvalidOperationException($"VIEW '{table.Name}' has no columns to use as identifier.");
+        }
+
+        table.PrimaryKeyColumns = new List<string> { idColumn.Name };
+        idColumn.IsPrimaryKey = true;
+    }
+
+    /// <summary>
+    /// Finds a suitable identifier column for a VIEW (ID column or first column).
+    /// </summary>
+    private static Column? FindIdentifierColumn(Table table)
+    {
+        if (table.Columns.Count == 0)
+        {
+            return null;
+        }
+
+        // Try to find column named "ID" (case-insensitive)
+        var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Try to find column ending with "ID" (e.g., CustomerID, OrderID)
+        idColumn = table.Columns.Find(c => c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Fallback: use first column
+        return table.Columns[0];
+    }
+
+    /// <summary>
+    /// Gets the class name for an entity from the table name.
+    /// Uses the same PascalCase conversion as API generators for consistency.
+    /// </summary>
+    private static string GetClassName(string tableName)
+    {
+        return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
     }
 
     /// <summary>

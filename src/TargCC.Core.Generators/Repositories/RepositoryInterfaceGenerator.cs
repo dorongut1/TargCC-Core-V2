@@ -69,12 +69,16 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <inheritdoc/>
     public async Task<string> GenerateAsync(Table table, string rootNamespace = "YourApp")
     {
+        return await GenerateAsync(table, null, rootNamespace);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> GenerateAsync(Table table, DatabaseSchema? schema, string rootNamespace = "YourApp")
+    {
         ArgumentNullException.ThrowIfNull(table);
 
-        if (table.PrimaryKeyColumns == null || table.PrimaryKeyColumns.Count == 0)
-        {
-            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
-        }
+        // Ensure table has a primary key (infers identifier for VIEWs)
+        EnsurePrimaryKey(table);
 
         LogGeneratingInterface(_logger, table.Name, null);
 
@@ -97,6 +101,12 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         // Generate aggregate methods if needed
         GenerateAggregateMethods(sb, table);
+
+        // Generate related data methods (Master-Detail Views)
+        if (schema != null)
+        {
+            GenerateRelatedDataMethods(sb, table, schema);
+        }
 
         // Generate helper methods
         GenerateHelperMethods(sb, table);
@@ -141,7 +151,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void StartInterface(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         string interfaceName = $"I{entityName}Repository";
 
         sb.AppendLine("/// <summary>");
@@ -165,7 +175,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateCrudMethods(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -199,35 +209,39 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         // GetFilteredAsync (if indexes exist)
         GenerateGetFilteredAsyncMethod(sb, table);
 
-        // AddAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Adds a new {entityName} entity to the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+        // Only generate Add/Update/Delete for tables, not for views (views are read-only)
+        if (!table.IsView)
+        {
+            // AddAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Adds a new {entityName} entity to the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
 
-        // UpdateAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Updates an existing {entityName} entity in the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+            // UpdateAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Updates an existing {entityName} entity in the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
 
-        // DeleteAsync
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Deletes a {entityName} entity from the database.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
-        sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-        sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
-        sb.AppendLine();
+            // DeleteAsync
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Deletes a {entityName} entity from the database.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
+            sb.AppendLine();
+        }
     }
 
     /// <summary>
@@ -240,7 +254,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
 
         // Process each non-primary key index
         foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
@@ -326,7 +340,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -386,7 +400,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return;
         }
 
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
         // Collect unique indexed columns
@@ -446,7 +460,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateHelperMethods(StringBuilder sb, Table table)
     {
-        string entityName = table.Name;
+        string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -467,11 +481,124 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     }
 
     /// <summary>
+    /// Generates methods for fetching related data (Master-Detail Views) based on FK relationships.
+    /// </summary>
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
+    {
+        if (schema.Relationships == null || schema.Relationships.Count == 0)
+        {
+            return;
+        }
+
+        // Find all relationships where this table is the parent
+        var parentRelationships = schema.Relationships
+            .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+            .ToList();
+
+        if (parentRelationships.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine("    // ======================================");
+        sb.AppendLine("    // Master-Detail Views (Related Data)");
+        sb.AppendLine("    // ======================================");
+        sb.AppendLine();
+
+        foreach (var relationship in parentRelationships)
+        {
+            var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+            if (childTable == null)
+            {
+                continue;
+            }
+
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            if (pkColumn == null)
+            {
+                continue;
+            }
+
+            var pkType = GetCSharpType(pkColumn.DataType);
+            var childrenName = Pluralize(childTable.Name);
+            var methodName = $"Get{childrenName}Async";
+
+            // Generate XML documentation
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Fetches all {childrenName.ToLower(CultureInfo.CurrentCulture)} for the specified {table.Name.ToLower(CultureInfo.CurrentCulture)}.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"{ToCamelCase(table.Name)}Id\">The {table.Name} ID.</param>");
+            sb.AppendLine("    /// <param name=\"skip\">Number of records to skip (for pagination).</param>");
+            sb.AppendLine("    /// <param name=\"take\">Number of records to take (for pagination).</param>");
+            sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {GetClassName(childTable.Name)} entities.</returns>");
+
+            // Generate method signature
+            var methodSignature = $"    Task<IEnumerable<{GetClassName(childTable.Name)}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+                $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);";
+            sb.AppendLine(methodSignature);
+            sb.AppendLine();
+        }
+    }
+
+    /// <summary>
     /// Closes the interface declaration.
     /// </summary>
     private static void CloseInterface(StringBuilder sb)
     {
         sb.AppendLine("}");
+    }
+
+    /// <summary>
+    /// Pluralizes an English singular noun.
+    /// </summary>
+    private static string Pluralize(string singular)
+    {
+        if (string.IsNullOrEmpty(singular))
+        {
+            return singular;
+        }
+
+        // Simple English pluralization rules
+        // CA1867: String literals required here because char overload doesn't support StringComparison
+#pragma warning disable CA1867
+        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+        {
+            // Category → Categories
+            return singular[..^1] + "ies";
+        }
+
+        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1867
+        {
+            // Address → Addresses, Box → Boxes
+            return singular + "es";
+        }
+
+        // Default: just add 's'
+        // Order → Orders, Customer → Customers
+        return singular + "s";
+    }
+
+    /// <summary>
+    /// Converts PascalCase to camelCase.
+    /// </summary>
+    private static string ToCamelCase(string pascalCase)
+    {
+        if (string.IsNullOrEmpty(pascalCase))
+        {
+            return pascalCase;
+        }
+
+        return char.ToLowerInvariant(pascalCase[0]) + pascalCase[1..];
     }
 
     /// <summary>
@@ -497,5 +624,70 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             "VARBINARY" or "BINARY" or "IMAGE" => "byte[]",
             _ => "string"
         };
+    }
+
+    /// <summary>
+    /// Ensures the table has a primary key. For VIEWs, infers an identifier column.
+    /// </summary>
+    /// <param name="table">The table to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when no primary key can be determined.</exception>
+    private static void EnsurePrimaryKey(Table table)
+    {
+        if (table.PrimaryKeyColumns != null && table.PrimaryKeyColumns.Count > 0)
+        {
+            return; // Already has PK
+        }
+
+        if (!table.IsView)
+        {
+            throw new InvalidOperationException($"Table '{table.Name}' must have a primary key defined.");
+        }
+
+        // For VIEWs: infer identifier column (ID column or first column)
+        var idColumn = FindIdentifierColumn(table);
+        if (idColumn == null)
+        {
+            throw new InvalidOperationException($"VIEW '{table.Name}' has no columns to use as identifier.");
+        }
+
+        table.PrimaryKeyColumns = new List<string> { idColumn.Name };
+        idColumn.IsPrimaryKey = true;
+    }
+
+    /// <summary>
+    /// Finds a suitable identifier column for a VIEW (ID column or first column).
+    /// </summary>
+    private static Column? FindIdentifierColumn(Table table)
+    {
+        if (table.Columns.Count == 0)
+        {
+            return null;
+        }
+
+        // Try to find column named "ID" (case-insensitive)
+        var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Try to find column ending with "ID" (e.g., CustomerID, OrderID)
+        idColumn = table.Columns.Find(c => c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null)
+        {
+            return idColumn;
+        }
+
+        // Fallback: use first column
+        return table.Columns[0];
+    }
+
+    /// <summary>
+    /// Gets the class name for an entity from the table name.
+    /// Uses the same PascalCase conversion as API generators for consistency.
+    /// </summary>
+    private static string GetClassName(string tableName)
+    {
+        return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
     }
 }

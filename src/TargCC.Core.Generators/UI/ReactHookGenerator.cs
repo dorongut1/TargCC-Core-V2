@@ -44,7 +44,7 @@ namespace TargCC.Core.Generators.UI
 
             LogGeneratingHooks(Logger, table.Name, null);
 
-            return await Task.Run(() => Generate(table)).ConfigureAwait(false);
+            return await Task.Run(() => Generate(table, schema)).ConfigureAwait(false);
         }
 
         private static string GenerateUseEntityHook(string className, string camelName)
@@ -142,7 +142,130 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private string Generate(Table table)
+        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
+        {
+            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
+
+            // Only import write types for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+
+            // Import child entity types for related data hooks
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        var childClassName = GetClassName(childTable.Name);
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                    }
+                }
+            }
+
+            sb.AppendLine();
+        }
+
+        private static void GenerateRelatedDataHooks(StringBuilder sb, Table table, DatabaseSchema schema)
+        {
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+                .ToList();
+
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+                if (childTable == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    GenerateSingleRelatedDataHook(sb, childTable, className, camelName);
+                }
+                catch
+                {
+                    // Skip relationships that cannot be generated
+                }
+            }
+        }
+
+        private static void GenerateSingleRelatedDataHook(StringBuilder sb, Table childTable, string parentClassName, string parentCamelName)
+        {
+            var childClassName = GetClassName(childTable.Name);
+            var childrenName = Pluralize(childClassName);
+            var childrenCamelCase = GetCamelCaseName(childrenName);
+
+            sb.AppendLine("/**");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch {childrenCamelCase} for a specific {parentClassName.ToUpper(CultureInfo.InvariantCulture)}.");
+            sb.AppendLine(" */");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{parentClassName}{childrenName} = (");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {parentCamelName}Id: number | null,");
+            sb.AppendLine("  skip?: number,");
+            sb.AppendLine("  take?: number");
+            sb.AppendLine(") => {");
+            sb.AppendLine("  return useQuery({");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{parentCamelName}', {parentCamelName}Id, '{childrenCamelCase}', skip, take],");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {parentCamelName}Api.get{childrenName}({parentCamelName}Id!, skip, take),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    enabled: {parentCamelName}Id !== null,");
+            sb.AppendLine("  });");
+            sb.AppendLine("};");
+            sb.AppendLine();
+        }
+
+        private static string Pluralize(string singular)
+        {
+            if (string.IsNullOrEmpty(singular))
+            {
+                return singular;
+            }
+
+            // Category → Categories
+            // CA1867: String literals required here because char overload doesn't support StringComparison
+#pragma warning disable CA1867
+            if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
+                !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
+            {
+                return singular[..^1] + "ies";
+            }
+
+            // Address → Addresses, Box → Boxes
+            if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1867
+            {
+                return singular + "es";
+            }
+
+            // Order → Orders, Customer → Customers
+            return singular + "s";
+        }
+
+        private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
             var className = GetClassName(table.Name);
@@ -152,24 +275,30 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-            sb.AppendLine();
+            GenerateImports(sb, table, schema, className, camelName);
 
             // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            // VIEWs are read-only - no getById hook
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            }
+
             sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
 
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+            // Related data hooks (Master-Detail Views)
+            if (schema.Relationships != null && schema.Relationships.Count > 0)
+            {
+                GenerateRelatedDataHooks(sb, table, schema);
+            }
+
+            // Mutation hooks - only for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateUseCreateHook(className, camelName));
+                sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+                sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+            }
 
             return sb.ToString();
         }

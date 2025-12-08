@@ -54,8 +54,11 @@ namespace TargCC.Core.Generators.Sql.Templates
                 updateableColumns = updateableColumns.Where(c => c.Name != "ChangedBy").ToList();
             }
 
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
             // Procedure header
-            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Update{table.Name}]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_Update{entityName}]");
 
             // Check if there are any updateable columns
             if (updateableColumns.Count == 0 && !hasChangedBy)

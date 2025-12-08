@@ -113,11 +113,11 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         // Register each table's repository
         if (projectInfo.Tables != null && projectInfo.Tables.Count > 0)
         {
-            foreach (var tableName in from table in projectInfo.Tables
-                                      let tableName = table.Name
-                                      select tableName)
+            foreach (var table in projectInfo.Tables)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        services.AddScoped<I{tableName}Repository, {tableName}Repository>();");
+                // Use PascalCase conversion for consistency with other generators
+                var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        services.AddScoped<I{entityName}Repository, {entityName}Repository>();");
             }
         }
         else

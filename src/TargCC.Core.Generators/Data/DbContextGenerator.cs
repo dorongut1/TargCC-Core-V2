@@ -158,11 +158,12 @@ public class DbContextGenerator : IDbContextGenerator
     {
         sb.AppendLine("    #region DbSets");
         sb.AppendLine();
-        foreach (var (entityName, dbSetName) in from table in schema.Tables.OrderBy(t => t.Name)
-                                                let entityName = table.Name
-                                                let dbSetName = CodeGenerationHelpers.MakePlural(entityName) // e.g., Customer → Customers
-                                                select (entityName, dbSetName))
+        foreach (var table in schema.Tables.OrderBy(t => t.Name))
         {
+            // Use PascalCase conversion for consistency with other generators
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+            var dbSetName = CodeGenerationHelpers.MakePlural(entityName); // e.g., Customer → Customers
+
             sb.AppendLine("    /// <summary>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Gets or sets the DbSet for {entityName} entities.");
             sb.AppendLine("    /// </summary>");

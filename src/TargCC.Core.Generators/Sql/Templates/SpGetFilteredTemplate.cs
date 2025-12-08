@@ -56,7 +56,10 @@ namespace TargCC.Core.Generators.Sql.Templates
 
         private static void GenerateProcedureHeader(StringBuilder sb, Table table, List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetFiltered{table.Name}s]");
+            // Use PascalCase conversion for procedure name consistency with Repository
+            var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetFiltered{entityName}s]");
 
             // Add parameters for each indexed column
             var parameters = new List<string>();
