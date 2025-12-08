@@ -148,6 +148,9 @@ public class ProjectGenerationService : IProjectGenerationService
             // Generate DI registration
             await GenerateDependencyInjectionAsync(outputDirectory, rootNamespace, tables);
 
+            // Generate Dashboard Controller
+            await GenerateDashboardControllerAsync(outputDirectory, rootNamespace, tables);
+
             _output.Info("  ✓ Support files generated!");
             _output.BlankLine();
 
@@ -827,5 +830,17 @@ export default App;
           index.tsx    - Entry point
         ```
         """;
+    }
+
+    private async Task GenerateDashboardControllerAsync(
+        string outputDirectory,
+        string rootNamespace,
+        List<Table> tables)
+    {
+        var dashboardGen = new DashboardControllerGenerator(_loggerFactory.CreateLogger<DashboardControllerGenerator>());
+        var dashboardCode = dashboardGen.Generate(tables, rootNamespace);
+        var dashboardPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", "DashboardController.cs");
+        await SaveFileAsync(dashboardPath, dashboardCode);
+        _output.Info("  ✓ DashboardController.cs");
     }
 }
