@@ -190,6 +190,7 @@ namespace TargCC.Core.Generators.UI.Components
                 var propertyName = ToCamelCase(GetPropertyName(column.Name));
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          item.{propertyName}?.toString().toLowerCase().includes(searchLower) ||");
             }
+
             sb.AppendLine("          false");
             sb.AppendLine("        );");
             sb.AppendLine("      } else {");
@@ -403,12 +404,14 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("            onChange={(e) => setSearchColumn(e.target.value)}");
             sb.AppendLine("          >");
             sb.AppendLine("            <MenuItem value=\"all\">All Columns</MenuItem>");
-            foreach (var column in dataColumns)
+            foreach (var (propertyName, displayName) in from column in dataColumns
+                                                        let propertyName = ToCamelCase(GetPropertyName(column.Name))
+                                                        let displayName = GetPropertyName(column.Name)
+                                                        select (propertyName, displayName))
             {
-                var propertyName = ToCamelCase(GetPropertyName(column.Name));
-                var displayName = GetPropertyName(column.Name);
                 sb.AppendLine(CultureInfo.InvariantCulture, $"            <MenuItem value=\"{propertyName}\">{displayName}</MenuItem>");
             }
+
             sb.AppendLine("          </TextField>");
             sb.AppendLine("          <TextField");
             sb.AppendLine("            label=\"Quick Search\"");
@@ -450,7 +453,6 @@ namespace TargCC.Core.Generators.UI.Components
             AppendClearFiltersButton(sb);
 
             // Add row count display
-            var className = GetClassName(table.Name);
             var pluralName = ToCamelCase(GetClassName(table.Name)) + "s";
             sb.AppendLine("          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>");
             sb.AppendLine("            <Typography variant=\"body2\" color=\"text.secondary\">");
