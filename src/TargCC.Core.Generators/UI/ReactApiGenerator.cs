@@ -277,12 +277,8 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
 
             // CRUD methods
-            // VIEWs are read-only - only generate Get methods
-            if (!table.IsView)
-            {
-                sb.AppendLine(GenerateGetById(className, apiPath));
-            }
-
+            // Generate GetById for all entities (VIEWs are read-only but can fetch by ID)
+            sb.AppendLine(GenerateGetById(className, apiPath));
             sb.AppendLine(GenerateGetAll(className, apiPath));
 
             // Write methods only for tables, not for VIEWs

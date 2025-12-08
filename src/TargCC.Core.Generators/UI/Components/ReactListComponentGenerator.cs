@@ -41,7 +41,7 @@ namespace TargCC.Core.Generators.UI.Components
             return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
         }
 
-        private static string GenerateImports(string className, UIFramework framework)
+        private static string GenerateImports(Table table, string className, UIFramework framework)
         {
             var sb = new StringBuilder();
 
@@ -53,10 +53,28 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon } from '@mui/icons-material';");
+
+                // Only import Edit/Delete/Add icons for tables, not for VIEWs
+                if (!table.IsView)
+                {
+                    sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon, Clear as ClearIcon } from '@mui/icons-material';");
+                }
+                else
+                {
+                    sb.AppendLine("import { FileDownload as FileDownloadIcon, Clear as ClearIcon } from '@mui/icons-material';");
+                }
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
+            // Only import useDelete hook for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s, useDelete{className} }} from '../../hooks/use{className}';");
+            }
+            else
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s }} from '../../hooks/use{className}';");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
 
             return sb.ToString();
@@ -146,7 +164,13 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine("  const [filterModel, setFilterModel] = React.useState<any>({ items: [] });");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s(filters);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+
+            // Only add useDelete hook for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+            }
+
             sb.AppendLine();
             sb.AppendLine("  const handleApplyFilters = () => {");
             sb.AppendLine("    setFilters(localFilters);");
@@ -576,7 +600,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.Append(GenerateComponentHeader(table.Name));
 
             // Imports
-            sb.AppendLine(GenerateImports(className, config.Framework));
+            sb.AppendLine(GenerateImports(table, className, config.Framework));
             sb.AppendLine();
 
             // Component

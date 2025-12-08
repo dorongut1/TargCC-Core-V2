@@ -278,12 +278,8 @@ namespace TargCC.Core.Generators.UI
             GenerateImports(sb, table, schema, className, camelName);
 
             // Query hooks
-            // VIEWs are read-only - no getById hook
-            if (!table.IsView)
-            {
-                sb.AppendLine(GenerateUseEntityHook(className, camelName));
-            }
-
+            // Generate use{ClassName} for all entities (VIEWs are read-only but can fetch by ID)
+            sb.AppendLine(GenerateUseEntityHook(className, camelName));
             sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
 
             // Related data hooks (Master-Detail Views)
