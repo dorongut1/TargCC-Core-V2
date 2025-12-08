@@ -717,6 +717,7 @@ function App() {{
 
 export default App;
 ";
+    }
     private static string GenerateDashboardTsx(List<Table> tables)
     {
         var tableTables = tables.Where(t => !t.IsView).ToList();
@@ -982,7 +983,6 @@ export const Dashboard: React.FC = () => {{
   );
 }};
 ";
-    }
     }
 
     private static string GenerateApiClient()
