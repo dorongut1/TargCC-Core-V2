@@ -49,7 +49,18 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
 
             GenerateFrameworkImports(sb, table, schema, framework);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
+
+            // VIEWs are read-only - no getById or delete hooks
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
+            }
+            else
+            {
+                // VIEWs only have getAll hook, but Detail page doesn't need it
+                // We'll handle this in the component body
+            }
+
             GenerateRelatedDataImports(sb, table, schema, className);
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
             GenerateChildEntityTypeImports(sb, table, schema);
@@ -303,12 +314,26 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Detail: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine("  const { id } = useParams<{ id: string }>();");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: entity, isLoading, error }} = use{className}(id ? parseInt(id, 10) : null);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
 
-            GenerateRelatedDataHooksDeclarations(sb, table, schema, className);
-            sb.AppendLine();
-            GenerateDeleteHandler(sb, camelName);
+            // VIEWs don't have getById hook - they're read-only and Detail page is not applicable
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: entity, isLoading, error }} = use{className}(id ? parseInt(id, 10) : null);");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
+
+                GenerateRelatedDataHooksDeclarations(sb, table, schema, className);
+                sb.AppendLine();
+                GenerateDeleteHandler(sb, camelName);
+            }
+            else
+            {
+                // VIEWs are read-only - no entity fetching or delete capability
+                sb.AppendLine("  // VIEWs are read-only - Detail page not applicable");
+                sb.AppendLine("  const isLoading = false;");
+                sb.AppendLine("  const error = null;");
+                sb.AppendLine("  const entity = null;");
+            }
+
             sb.AppendLine();
             GenerateLoadingState(sb, framework);
             sb.AppendLine();

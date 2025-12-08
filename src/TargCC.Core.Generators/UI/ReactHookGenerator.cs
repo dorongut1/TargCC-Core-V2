@@ -148,8 +148,14 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+
+            // Only import write types for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
 
@@ -272,7 +278,12 @@ namespace TargCC.Core.Generators.UI
             GenerateImports(sb, table, schema, className, camelName);
 
             // Query hooks
-            sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            // VIEWs are read-only - no getById hook
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateUseEntityHook(className, camelName));
+            }
+
             sb.AppendLine(GenerateUseEntitiesHook(className, camelName));
 
             // Related data hooks (Master-Detail Views)
@@ -281,10 +292,13 @@ namespace TargCC.Core.Generators.UI
                 GenerateRelatedDataHooks(sb, table, schema);
             }
 
-            // Mutation hooks
-            sb.AppendLine(GenerateUseCreateHook(className, camelName));
-            sb.AppendLine(GenerateUseUpdateHook(className, camelName));
-            sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+            // Mutation hooks - only for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateUseCreateHook(className, camelName));
+                sb.AppendLine(GenerateUseUpdateHook(className, camelName));
+                sb.AppendLine(GenerateUseDeleteHook(className, camelName));
+            }
 
             return sb.ToString();
         }
