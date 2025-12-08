@@ -14,7 +14,7 @@ namespace TestApp.Domain.Entities
 {
     /// <summary>
     /// Entity class for vw_CustomerOrderSummary table.
-    /// Generated: 2025-12-07 22:03:02
+    /// Generated: 2025-12-08 07:56:58
     /// </summary>
     [Table("vw_CustomerOrderSummary")]
     public partial class VwCustomerOrderSummary
