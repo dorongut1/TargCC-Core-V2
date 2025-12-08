@@ -185,11 +185,18 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      return activeFilters.every(([column, filterValue]) => {");
             sb.AppendLine("        let itemValue = item[column as keyof typeof item];");
             sb.AppendLine("        ");
-            sb.AppendLine("        // Convert Date objects and ISO date strings to display format");
+            sb.AppendLine("        // Convert Date objects and ISO date strings to consistent MM/DD/YY format");
             sb.AppendLine("        if (itemValue instanceof Date) {");
-            sb.AppendLine("          itemValue = itemValue.toLocaleDateString();");
+            sb.AppendLine("          const d = itemValue;");
+            sb.AppendLine("          itemValue = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear().toString().slice(-2)}`;");
             sb.AppendLine("        } else if (typeof itemValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}/.test(itemValue)) {");
-            sb.AppendLine("          itemValue = new Date(itemValue).toLocaleDateString();");
+            sb.AppendLine("          const d = new Date(itemValue);");
+            sb.AppendLine("          itemValue = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear().toString().slice(-2)}`;");
+            sb.AppendLine("        }");
+            sb.AppendLine("        ");
+            sb.AppendLine("        // Convert boolean values to readable text");
+            sb.AppendLine("        if (typeof itemValue === 'boolean') {");
+            sb.AppendLine("          itemValue = itemValue ? 'true' : 'false';");
             sb.AppendLine("        }");
             sb.AppendLine("        ");
             sb.AppendLine("        return itemValue?.toString().toLowerCase().includes(filterValue.toLowerCase());");
@@ -399,10 +406,39 @@ namespace TargCC.Core.Generators.UI.Components
                 var propertyName = ToCamelCase(GetPropertyName(column.Name));
                 var displayName = GetPropertyName(column.Name);
                 var (prefix, _) = SplitPrefix(column.Name);
-                var isDateColumn = column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
-                var isLookupColumn = prefix == "LKP";
+                var columnNameUpper = column.Name.ToUpperInvariant();
+                var dataTypeUpper = column.DataType.ToUpperInvariant();
 
-                if (isDateColumn)
+                // Detect column types for smart filtering
+                var isDateColumn = dataTypeUpper.Contains("DATE", StringComparison.Ordinal);
+                var isBooleanColumn = dataTypeUpper.Contains("BIT", StringComparison.Ordinal) ||
+                                     dataTypeUpper.Contains("BOOL", StringComparison.Ordinal);
+                var isEnumColumn = prefix == "LKP" ||
+                                  columnNameUpper.EndsWith("STATUS", StringComparison.Ordinal) ||
+                                  columnNameUpper.EndsWith("TYPE", StringComparison.Ordinal) ||
+                                  columnNameUpper.EndsWith("CATEGORY", StringComparison.Ordinal) ||
+                                  dataTypeUpper.Contains("ENUM", StringComparison.Ordinal);
+
+                if (isBooleanColumn)
+                {
+                    // Dropdown for Boolean columns
+                    sb.AppendLine("          <TextField");
+                    sb.AppendLine("            select");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
+                    sb.AppendLine("            size=\"small\"");
+                    sb.AppendLine("            sx={{ minWidth: 120 }}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
+                    sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
+                    sb.AppendLine("              ...prev,");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
+                    sb.AppendLine("            }))}");
+                    sb.AppendLine("          >");
+                    sb.AppendLine("            <MenuItem value=\"\">All</MenuItem>");
+                    sb.AppendLine("            <MenuItem value=\"true\">Yes</MenuItem>");
+                    sb.AppendLine("            <MenuItem value=\"false\">No</MenuItem>");
+                    sb.AppendLine("          </TextField>");
+                }
+                else if (isDateColumn)
                 {
                     // Date picker for DATE columns
                     sb.AppendLine("          <TextField");
@@ -418,9 +454,9 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("            }))}");
                     sb.AppendLine("          />");
                 }
-                else if (isLookupColumn)
+                else if (isEnumColumn)
                 {
-                    // Dropdown for LKP columns
+                    // Dropdown for ENUM/Status/Type columns
                     sb.AppendLine("          <TextField");
                     sb.AppendLine("            select");
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
