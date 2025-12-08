@@ -315,6 +315,24 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine("  const { id } = useParams<{ id: string }>();");
 
+            GenerateHooksSection(sb, table, schema, className, camelName);
+            sb.AppendLine();
+            GenerateLoadingState(sb, framework);
+            sb.AppendLine();
+            GenerateErrorState(sb, framework, camelName);
+            sb.AppendLine();
+
+            // Render
+            sb.AppendLine("  return (");
+            GenerateRenderSection(sb, table, schema, className, camelName, framework);
+            sb.AppendLine("  );");
+            sb.AppendLine("};");
+
+            return sb.ToString();
+        }
+
+        private static void GenerateHooksSection(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
+        {
             // VIEWs don't have getById hook - they're read-only and Detail page is not applicable
             if (!table.IsView)
             {
@@ -333,77 +351,17 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("  const error = null;");
                 sb.AppendLine("  const entity = null;");
             }
+        }
 
-            sb.AppendLine();
-            GenerateLoadingState(sb, framework);
-            sb.AppendLine();
-            GenerateErrorState(sb, framework, camelName);
-            sb.AppendLine();
-
-            // Render
-            sb.AppendLine("  return (");
+        private static void GenerateRenderSection(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
+        {
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("    <Box sx={{ maxWidth: 800 }}>");
-                sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
-                sb.AppendLine("        <Button");
-                sb.AppendLine("          variant=\"outlined\"");
-                sb.AppendLine("          startIcon={<ArrowBackIcon />}");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{camelName}s')}}");
-                sb.AppendLine("        >");
-                sb.AppendLine("          Back");
-                sb.AppendLine("        </Button>");
-
-                // Only show Edit/Delete buttons for tables, not for views (views are read-only)
-                if (!table.IsView)
-                {
-                    sb.AppendLine("        <Button");
-                    sb.AppendLine("          variant=\"contained\"");
-                    sb.AppendLine("          startIcon={<EditIcon />}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{camelName}s/${{id}}/edit`)}}");
-                    sb.AppendLine("        >");
-                    sb.AppendLine("          Edit");
-                    sb.AppendLine("        </Button>");
-                    sb.AppendLine("        <Button");
-                    sb.AppendLine("          variant=\"outlined\"");
-                    sb.AppendLine("          color=\"error\"");
-                    sb.AppendLine("          startIcon={<DeleteIcon />}");
-                    sb.AppendLine("          onClick={handleDelete}");
-                    sb.AppendLine("        >");
-                    sb.AppendLine("          Delete");
-                    sb.AppendLine("        </Button>");
-                }
-
-                sb.AppendLine("      </Box>");
+                GenerateActionButtons(sb, table, camelName);
                 sb.AppendLine();
-                sb.AppendLine("      <Card>");
-                sb.AppendLine("        <CardContent>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h5\" component=\"h2\" gutterBottom>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"            {className} Details");
-                sb.AppendLine("          </Typography>");
-                sb.AppendLine(GenerateDetailFields(table, framework));
-                sb.AppendLine("        </CardContent>");
-                sb.AppendLine("      </Card>");
-
-                // Add related data grids (Master-Detail Views)
-                if (schema.Relationships != null)
-                {
-                    var parentRelationships = schema.Relationships
-                        .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                        .ToList();
-
-                    foreach (var relationship in parentRelationships)
-                    {
-                        var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                        if (childTable != null)
-                        {
-                            sb.AppendLine();
-                            var relatedGrid = GenerateRelatedDataGrid(childTable, framework);
-                            sb.Append(relatedGrid);
-                        }
-                    }
-                }
-
+                GenerateDetailCard(sb, table, className, framework);
+                GenerateRelatedDataGridsSection(sb, table, schema);
                 sb.AppendLine("    </Box>");
             }
             else
@@ -414,11 +372,74 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("      <button onClick={handleDelete}>Delete</button>");
                 sb.AppendLine("    </div>");
             }
+        }
 
-            sb.AppendLine("  );");
-            sb.AppendLine("};");
+        private static void GenerateActionButtons(StringBuilder sb, Table table, string camelName)
+        {
+            sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
+            sb.AppendLine("        <Button");
+            sb.AppendLine("          variant=\"outlined\"");
+            sb.AppendLine("          startIcon={<ArrowBackIcon />}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{camelName}s')}}");
+            sb.AppendLine("        >");
+            sb.AppendLine("          Back");
+            sb.AppendLine("        </Button>");
 
-            return sb.ToString();
+            // Only show Edit/Delete buttons for tables, not for views (views are read-only)
+            if (!table.IsView)
+            {
+                sb.AppendLine("        <Button");
+                sb.AppendLine("          variant=\"contained\"");
+                sb.AppendLine("          startIcon={<EditIcon />}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate(`/{camelName}s/${{id}}/edit`)}}");
+                sb.AppendLine("        >");
+                sb.AppendLine("          Edit");
+                sb.AppendLine("        </Button>");
+                sb.AppendLine("        <Button");
+                sb.AppendLine("          variant=\"outlined\"");
+                sb.AppendLine("          color=\"error\"");
+                sb.AppendLine("          startIcon={<DeleteIcon />}");
+                sb.AppendLine("          onClick={handleDelete}");
+                sb.AppendLine("        >");
+                sb.AppendLine("          Delete");
+                sb.AppendLine("        </Button>");
+            }
+
+            sb.AppendLine("      </Box>");
+        }
+
+        private static void GenerateDetailCard(StringBuilder sb, Table table, string className, UIFramework framework)
+        {
+            sb.AppendLine("      <Card>");
+            sb.AppendLine("        <CardContent>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h5\" component=\"h2\" gutterBottom>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            {className} Details");
+            sb.AppendLine("          </Typography>");
+            sb.AppendLine(GenerateDetailFields(table, framework));
+            sb.AppendLine("        </CardContent>");
+            sb.AppendLine("      </Card>");
+        }
+
+        private static void GenerateRelatedDataGridsSection(StringBuilder sb, Table table, DatabaseSchema schema)
+        {
+            // Add related data grids (Master-Detail Views)
+            if (schema.Relationships != null)
+            {
+                var parentRelationships = schema.Relationships
+                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+                    .ToList();
+
+                foreach (var relationship in parentRelationships)
+                {
+                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+                    if (childTable != null)
+                    {
+                        sb.AppendLine();
+                        var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
+                        sb.Append(relatedGrid);
+                    }
+                }
+            }
         }
 
         private static string GenerateRelatedDataGrid(Table childTable, UIFramework framework)
