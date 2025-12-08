@@ -47,7 +47,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine("import React from 'react';");
             sb.AppendLine("import { useNavigate } from 'react-router-dom';");
-            sb.AppendLine("import * as XLSX from 'xlsx';");
+            sb.AppendLine("import * as XLSX from 'xlsx-js-style';");
 
             if (framework == UIFramework.MaterialUI)
             {
@@ -94,7 +94,7 @@ namespace TargCC.Core.Generators.UI.Components
                 var displayName = GetPropertyName(column.Name);
                 var width = GetColumnWidth(column);
 
-                sb.Append(CultureInfo.InvariantCulture, $"    {{ field: '{propertyName}', headerName: '{displayName}', width: {width}");
+                sb.Append(CultureInfo.InvariantCulture, $"    {{ field: '{propertyName}', headerName: '{displayName}', width: {width}, filterable: true");
 
                 // Add valueGetter for special types
                 var (prefix, _) = SplitPrefix(column.Name);
@@ -159,6 +159,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
+            sb.AppendLine("  // apiRef is used to access filtered/sorted rows for Excel export");
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [filters, setFilters] = React.useState<{className}Filters>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [localFilters, setLocalFilters] = React.useState<{className}Filters>({{}});");
@@ -208,12 +209,17 @@ namespace TargCC.Core.Generators.UI.Components
 
             // Export to Excel handler
             sb.AppendLine("  const handleExportToExcel = () => {");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName} || {pluralName}.length === 0) {{");
+            sb.AppendLine("    // Get filtered and sorted rows from DataGrid (respects user's view)");
+            sb.AppendLine("    const visibleRows = apiRef.current");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      ? Array.from(apiRef.current.getRowModels().values())");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"      : {pluralName} || [];");
+            sb.AppendLine();
+            sb.AppendLine("    if (!visibleRows || visibleRows.length === 0) {");
             sb.AppendLine("      alert('No data to export');");
             sb.AppendLine("      return;");
             sb.AppendLine("    }");
             sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    const ws = XLSX.utils.json_to_sheet({pluralName});");
+            sb.AppendLine("    const ws = XLSX.utils.json_to_sheet(visibleRows);");
             sb.AppendLine();
             sb.AppendLine("    // Get the range of the worksheet");
             sb.AppendLine("    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');");
