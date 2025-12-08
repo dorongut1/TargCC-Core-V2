@@ -14,7 +14,7 @@ namespace TargCC.Core.Generators.API
     /// <summary>
     /// Generates ASP.NET Core Dashboard API Controller with statistics and activity endpoints.
     /// </summary>
-    public class DashboardControllerGenerator
+    public static class DashboardControllerGenerator
     {
         /// <summary>
         /// Generates the Dashboard controller code.
