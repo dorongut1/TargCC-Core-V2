@@ -370,11 +370,11 @@ namespace TargCC.Core.Generators.UI.Components
 
             // Add a text field for each column
             var dataColumns = GetDataColumns(table).Take(10).ToList();
-            foreach (var column in dataColumns)
+            foreach (var (propertyName, displayName) in from column in dataColumns
+                                                        let propertyName = ToCamelCase(GetPropertyName(column.Name))
+                                                        let displayName = GetPropertyName(column.Name)
+                                                        select (propertyName, displayName))
             {
-                var propertyName = ToCamelCase(GetPropertyName(column.Name));
-                var displayName = GetPropertyName(column.Name);
-
                 sb.AppendLine("          <TextField");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                 sb.AppendLine("            size=\"small\"");
@@ -408,156 +408,6 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      </Paper>");
 
             return sb.ToString();
-        }
-
-        private static List<TargCC.Core.Interfaces.Models.Index> GetFilterableIndexes(Table table)
-        {
-            if (table.Indexes == null)
-            {
-                return new List<TargCC.Core.Interfaces.Models.Index>();
-            }
-
-            return table.Indexes
-                .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
-                .ToList();
-        }
-
-        private static List<Column> GetFilterableColumnsForViewsOrTablesWithoutIndexes(Table table)
-        {
-            // For VIEWs or tables without indexes, generate filters for commonly filterable columns
-            // Prioritize: non-primary key columns that are numeric, string, or date types
-            var filterableColumns = table.Columns
-                .Where(c => !c.IsPrimaryKey) // Skip primary key
-                .Where(c => IsFilterableType(c.DataType)) // Only filterable types
-                .Take(5) // Limit to 5 columns to avoid cluttering the UI
-                .ToList();
-
-            return filterableColumns;
-        }
-
-        private static bool IsFilterableType(string dataType)
-        {
-            var upperType = dataType.ToUpperInvariant();
-
-            // Allow numeric, string, and date types for filtering
-            return upperType.Contains("INT", StringComparison.Ordinal) ||
-                   upperType.Contains("DECIMAL", StringComparison.Ordinal) ||
-                   upperType.Contains("NUMERIC", StringComparison.Ordinal) ||
-                   upperType.Contains("FLOAT", StringComparison.Ordinal) ||
-                   upperType.Contains("DOUBLE", StringComparison.Ordinal) ||
-                   upperType.Contains("MONEY", StringComparison.Ordinal) ||
-                   upperType.Contains("VARCHAR", StringComparison.Ordinal) ||
-                   upperType.Contains("NVARCHAR", StringComparison.Ordinal) ||
-                   upperType.Contains("CHAR", StringComparison.Ordinal) ||
-                   upperType.Contains("TEXT", StringComparison.Ordinal) ||
-                   upperType.Contains("DATE", StringComparison.Ordinal);
-        }
-
-        private static void AppendFilterFieldsForIndex(StringBuilder sb, Table table, TargCC.Core.Interfaces.Models.Index index, System.Collections.Generic.HashSet<string> processedColumns)
-        {
-            var columns = index.ColumnNames
-                .Where(columnName => processedColumns.Add(columnName))
-                .Select(columnName => table.Columns.Find(c => c.Name == columnName))
-                .Where(column => column != null);
-
-            foreach (var column in columns)
-            {
-                AppendFilterField(sb, column!);
-            }
-        }
-
-        private static void AppendFilterField(StringBuilder sb, Column column)
-        {
-            var propertyName = ToCamelCase(GetPropertyName(column.Name));
-            var displayName = GetPropertyName(column.Name);
-            var isNumeric = IsNumericType(column.DataType);
-            var isDate = IsDateType(column.DataType);
-
-            var inputType = GetInputType(isDate, isNumeric);
-            var valueConversion = GetValueConversion(isNumeric);
-
-            sb.AppendLine("          <TextField");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            type=\"{inputType}\"");
-            sb.AppendLine("            size=\"small\"");
-            sb.AppendLine("            sx={{ minWidth: 200 }}");
-
-            if (isDate)
-            {
-                sb.AppendLine("            InputLabelProps={{ shrink: true }}");
-            }
-
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{(localFilters as any).{propertyName} ?? ''}}");
-            sb.AppendLine("            onChange={(e) => setLocalFilters(prev => ({");
-            sb.AppendLine("              ...prev,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: {valueConversion}");
-            sb.AppendLine("            }))}");
-            sb.AppendLine("            onKeyDown={(e) => {");
-            sb.AppendLine("              if (e.key === 'Enter') {");
-            sb.AppendLine("                handleApplyFilters();");
-            sb.AppendLine("              }");
-            sb.AppendLine("            }}");
-            sb.AppendLine("          />");
-        }
-
-        private static string GetInputType(bool isDate, bool isNumeric)
-        {
-            if (isDate)
-            {
-                return "date";
-            }
-
-            if (isNumeric)
-            {
-                return "number";
-            }
-
-            return "text";
-        }
-
-        private static string GetValueConversion(bool isNumeric)
-        {
-            if (isNumeric)
-            {
-                return "e.target.value ? Number(e.target.value) : undefined";
-            }
-
-            return "e.target.value || undefined";
-        }
-
-        private static void AppendClearFiltersButton(StringBuilder sb)
-        {
-            sb.AppendLine("          <Button");
-            sb.AppendLine("            variant=\"contained\"");
-            sb.AppendLine("            color=\"primary\"");
-            sb.AppendLine("            onClick={handleApplyFilters}");
-            sb.AppendLine("            size=\"small\"");
-            sb.AppendLine("          >");
-            sb.AppendLine("            Apply Filters");
-            sb.AppendLine("          </Button>");
-            sb.AppendLine("          <Button");
-            sb.AppendLine("            variant=\"outlined\"");
-            sb.AppendLine("            onClick={handleClearFilters}");
-            sb.AppendLine("            size=\"small\"");
-            sb.AppendLine("          >");
-            sb.AppendLine("            Clear");
-            sb.AppendLine("          </Button>");
-        }
-
-        private static bool IsNumericType(string dataType)
-        {
-            var upperType = dataType.ToUpperInvariant();
-            return upperType.Contains("INT", StringComparison.Ordinal) ||
-                   upperType.Contains("DECIMAL", StringComparison.Ordinal) ||
-                   upperType.Contains("NUMERIC", StringComparison.Ordinal) ||
-                   upperType.Contains("FLOAT", StringComparison.Ordinal) ||
-                   upperType.Contains("DOUBLE", StringComparison.Ordinal) ||
-                   upperType.Contains("MONEY", StringComparison.Ordinal);
-        }
-
-        private static bool IsDateType(string dataType)
-        {
-            return dataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
         }
 
         private static int GetColumnWidth(Column column)
