@@ -251,7 +251,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    ws['!cols'] = colWidths;");
             sb.AppendLine();
             sb.AppendLine("    // Freeze the header row");
-            sb.AppendLine("    ws['!freeze'] = { xSplit: 0, ySplit: 1 };");
+            sb.AppendLine("    ws['!freeze'] = { xSplit: 0, ySplit: 1, state: 'frozen' };");
             sb.AppendLine();
             sb.AppendLine("    const wb = XLSX.utils.book_new();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    XLSX.utils.book_append_sheet(wb, ws, '{className}s');");
@@ -331,6 +331,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("          filterMode=\"client\"");
                 sb.AppendLine("          filterModel={filterModel}");
                 sb.AppendLine("          onFilterModelChange={setFilterModel}");
+                sb.AppendLine("          disableMultipleColumnsFiltering={false}");
                 sb.AppendLine("          slots={{");
                 sb.AppendLine("            toolbar: CustomToolbar,");
                 sb.AppendLine("          }}");
