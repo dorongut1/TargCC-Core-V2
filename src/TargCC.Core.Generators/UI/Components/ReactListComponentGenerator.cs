@@ -252,7 +252,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    worksheet.columns = columnNames.map(name => ({ header: name, key: name, width: 15 }));");
             sb.AppendLine();
             sb.AppendLine("    // Add data rows");
-            sb.AppendLine("    exportData.forEach(row => worksheet.addRow(row));");");
+            sb.AppendLine("    exportData.forEach(row => worksheet.addRow(row));");
             sb.AppendLine();
             sb.AppendLine("    // Style header row");
             sb.AppendLine("    const headerRow = worksheet.getRow(1);");
