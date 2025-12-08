@@ -384,7 +384,7 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 var propertyName = ToCamelCase(GetPropertyName(column.Name));
                 var displayName = GetPropertyName(column.Name);
-                var (prefix, baseName) = SplitPrefix(column.Name);
+                var (prefix, _) = SplitPrefix(column.Name);
                 var isDateColumn = column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal);
                 var isLookupColumn = prefix == "LKP";
 
