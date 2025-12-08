@@ -1117,8 +1117,7 @@ export const Dashboard: React.FC = () => {{
         string rootNamespace,
         List<Table> tables)
     {
-        var dashboardGen = new DashboardControllerGenerator(_loggerFactory.CreateLogger<DashboardControllerGenerator>());
-        var dashboardCode = dashboardGen.Generate(tables, rootNamespace);
+        var dashboardCode = DashboardControllerGenerator.Generate(tables, rootNamespace);
         var dashboardPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", "DashboardController.cs");
         await SaveFileAsync(dashboardPath, dashboardCode);
         _output.Info("  ✓ DashboardController.cs");
