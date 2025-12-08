@@ -482,7 +482,7 @@ public class ProjectGenerationService : IProjectGenerationService
             "react-dom": "^18.3.1",
             "react-hook-form": "^7.54.0",
             "react-router-dom": "^7.1.1",
-            "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+            "xlsx": "^0.18.5"
           },
           "devDependencies": {
             "@types/node": "^22.10.2",
