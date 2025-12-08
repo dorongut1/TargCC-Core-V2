@@ -109,7 +109,7 @@ namespace TargCC.Core.Generators.UI.Components
                 }
                 else if (column.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal))
                 {
-                    sb.Append(CultureInfo.InvariantCulture, $", valueFormatter: (value) => value ? new Date(value).toLocaleDateString() : ''");
+                    sb.Append(CultureInfo.InvariantCulture, $", valueFormatter: (value) => formatDate(value)");
                 }
 
                 sb.AppendLine(" },");
@@ -160,6 +160,18 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine("  const apiRef = useGridApiRef();");
+            sb.AppendLine("  ");
+            sb.AppendLine("  // Helper function to format dates as DD/MM/YYYY");
+            sb.AppendLine("  const formatDate = (date: any): string => {");
+            sb.AppendLine("    if (!date) return '';");
+            sb.AppendLine("    const d = new Date(date);");
+            sb.AppendLine("    if (isNaN(d.getTime())) return '';");
+            sb.AppendLine("    const day = d.getDate().toString().padStart(2, '0');");
+            sb.AppendLine("    const month = (d.getMonth() + 1).toString().padStart(2, '0');");
+            sb.AppendLine("    const year = d.getFullYear();");
+            sb.AppendLine("    return `${day}/${month}/${year}`;");
+            sb.AppendLine("  };");
+            sb.AppendLine("  ");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [columnFilters, setColumnFilters] = React.useState<Record<string, string>>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s({{}});");
 
