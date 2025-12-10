@@ -79,7 +79,7 @@ public class JobGenerator
         };
 
         var outputFileName = string.IsNullOrEmpty(jobName)
-            ? (templateType == JobTemplateType.Manual ? "SampleManualJob.cs" : "SampleDailyJob.cs")
+            ? GetDefaultJobFileName(templateType)
             : $"{jobName}.cs";
 
         await GenerateFileFromTemplateAsync(
@@ -133,12 +133,19 @@ public class JobGenerator
         }
 
         var content = await File.ReadAllTextAsync(templatePath);
-        content = content.Replace("{{Namespace}}", namespaceName);
+        content = content.Replace("{{Namespace}}", namespaceName, StringComparison.Ordinal);
 
         await _fileWriter.WriteFileAsync(outputPath, content);
     }
 
-    private string GenerateCustomJobContent(
+    private static string GetDefaultJobFileName(JobTemplateType templateType)
+    {
+        return templateType == JobTemplateType.Manual
+            ? "SampleManualJob.cs"
+            : "SampleDailyJob.cs";
+    }
+
+    private static string GenerateCustomJobContent(
         string namespaceName,
         string jobName,
         string cronExpression,
@@ -202,11 +209,22 @@ public class {jobName} : ITargCCJob
 }
 
 /// <summary>
-/// Types of job templates available
+/// Types of job templates available.
 /// </summary>
 public enum JobTemplateType
 {
+    /// <summary>
+    /// Daily recurring job template.
+    /// </summary>
     Daily,
+
+    /// <summary>
+    /// Manual trigger job template.
+    /// </summary>
     Manual,
+
+    /// <summary>
+    /// Custom job template.
+    /// </summary>
     Custom
 }

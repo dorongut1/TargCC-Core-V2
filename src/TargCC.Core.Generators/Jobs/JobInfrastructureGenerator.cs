@@ -8,13 +8,17 @@ using TargCC.Core.Writers;
 namespace TargCC.Core.Generators.Jobs;
 
 /// <summary>
-/// Generates complete job infrastructure for a TargCC project
+/// Generates complete job infrastructure for a TargCC project.
 /// </summary>
 public class JobInfrastructureGenerator
 {
     private readonly IFileWriter _fileWriter;
     private readonly string _templatePath;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobInfrastructureGenerator"/> class.
+    /// </summary>
+    /// <param name="fileWriter">The file writer service for writing generated files.</param>
     public JobInfrastructureGenerator(IFileWriter fileWriter)
     {
         _fileWriter = fileWriter ?? throw new ArgumentNullException(nameof(fileWriter));
@@ -22,8 +26,13 @@ public class JobInfrastructureGenerator
     }
 
     /// <summary>
-    /// Generates complete job infrastructure including all base classes and configuration
+    /// Generates complete job infrastructure including all base classes and configuration.
     /// </summary>
+    /// <param name="projectPath">The root path of the project.</param>
+    /// <param name="namespaceName">The namespace for generated files.</param>
+    /// <param name="projectName">The name of the project.</param>
+    /// <param name="includeSampleJobs">Whether to include sample job files (default: true).</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task GenerateCompleteInfrastructureAsync(
         string projectPath,
         string namespaceName,
