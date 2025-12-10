@@ -1158,6 +1158,7 @@ export const Dashboard: React.FC = () => {{
         _output.Info("  ✓ Infrastructure/Jobs/JobExecutor.cs");
         _output.Info("  ✓ Infrastructure/Jobs/JobLogger.cs");
         _output.Info("  ✓ Infrastructure/Jobs/HangfireAuthorizationFilter.cs");
+        _output.Info("  ✓ API/Controllers/JobsController.cs");
         _output.Info("  ✓ API/Program.Hangfire.snippet.cs");
         _output.Info("  ✓ API/appsettings.Hangfire.snippet.json");
         _output.Info("  ✓ HANGFIRE_PACKAGES.txt");

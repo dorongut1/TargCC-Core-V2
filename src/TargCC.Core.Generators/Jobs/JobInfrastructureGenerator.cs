@@ -38,13 +38,16 @@ public class JobInfrastructureGenerator
         // 3. Generate API configuration
         await GenerateApiConfigurationAsync(projectPath, namespaceName, projectName);
 
-        // 4. Generate sample jobs (optional)
+        // 4. Generate API controllers
+        await GenerateApiControllersAsync(projectPath, namespaceName);
+
+        // 5. Generate sample jobs (optional)
         if (includeSampleJobs)
         {
             await GenerateSampleJobsAsync(projectPath, namespaceName);
         }
 
-        // 5. Generate package references
+        // 6. Generate package references
         await GeneratePackageReferencesAsync(projectPath);
     }
 
@@ -121,6 +124,14 @@ public class JobInfrastructureGenerator
 
         var packagesPath = Path.Combine(projectPath, "HANGFIRE_PACKAGES.txt");
         await _fileWriter.WriteFileAsync(packagesPath, packagesContent);
+    }
+
+    private async Task GenerateApiControllersAsync(string projectPath, string namespaceName)
+    {
+        var apiControllersPath = Path.Combine(projectPath, "src", $"{namespaceName}.API", "Controllers");
+        Directory.CreateDirectory(apiControllersPath);
+
+        await GenerateFromTemplateAsync("JobsController.cs.template", Path.Combine(apiControllersPath, "JobsController.cs"), namespaceName);
     }
 
     private async Task GenerateFromTemplateAsync(string templateFileName, string outputPath, string namespaceName)
