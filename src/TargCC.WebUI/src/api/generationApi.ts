@@ -190,3 +190,32 @@ export async function generate(request: GenerateRequest): Promise<GenerateRespon
 
   return await response.json();
 }
+
+/**
+ * Interface for generated file content
+ */
+export interface GeneratedFileContent {
+  fileName: string;
+  content: string;
+  language: string;
+  path: string;
+}
+
+/**
+ * Fetches the generated file contents for a specific table
+ */
+export async function fetchGeneratedFiles(tableName: string): Promise<GeneratedFileContent[]> {
+  const url = `${API_CONFIG.BASE_URL}/api/generation/files/${encodeURIComponent(tableName)}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: API_CONFIG.DEFAULT_HEADERS,
+    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch generated files: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
