@@ -28,6 +28,7 @@
 🟡 Phase 3C: Local Web UI (95%) .................... IN PROGRESS
 📋 Phase 3F: AI Code Editor (100%) ................. COMPLETE
 📋 Phase 3D: Metadata & Incremental Generation (10%) SPECIFICATION
+📋 Phase 3E: Job Scheduler & Background Services (10%) SPECIFICATION
 
 **סה"כ התקדמות: ~95%**
 ```
@@ -78,6 +79,23 @@
   - טבלאות c_Table, c_Column, c_Index, c_Relationship, c_GenerationHistory
   - CLI Commands מפורטים
   - תכנית יישום 5-7 ימים
+- **עדכון:** לא נדרש - מוכן להתחיל פיתוח
+
+#### PHASE_3E_JOB_SCHEDULER_AND_BACKGROUND_SERVICES.md ✅
+- **תוכן:** אפיון מלא Phase 3E - Job Scheduler & Background Services
+- **סטטוס:** חדש! מעודכן ומוכן לביצוע (10/12/2025)
+- **גודל:** 85KB
+- **איכות:** מצוין - אפיון חדשני עם Convention-Based approach
+- **תכונות:**
+  - Hangfire Integration עם Dashboard מובנה
+  - Convention-Based Job Discovery (attributes)
+  - תמיכה ב-CRON expressions
+  - Automatic retries + distributed execution
+  - c_LoggedJob + c_JobAlert tables
+  - CLI Commands: job list/run/history
+  - Auto-generate job templates
+  - מיגרציה מ-Legacy c_Job (אופציונלי)
+  - תכנית יישום 4-6 ימים
 - **עדכון:** לא נדרש - מוכן להתחיל פיתוח
 
 #### SPEC_BROWNFIELD_GREENFIELD.md ✅
@@ -279,11 +297,12 @@ Total Lines of Code:     ~60,000+
 
 ### מסמכים
 ```
-מסמכים מעודכנים:        16
+מסמכים מעודכנים:        17
 מסמכים טעוני עדכון:     5
-מסמכי SPEC מפורטים:     5
+מסמכי SPEC מפורטים:     6
 טבלאות מערכת:           9
 מסמך אפיון Phase 3D:    ✅ חדש
+מסמך אפיון Phase 3E:    ✅ חדש
 ```
 
 ### רכיבים
@@ -340,6 +359,6 @@ Database Prefixes:       12 types
 ---
 
 **מסמך זה נוצר ב-09/12/2025 ועודכן ב-10/12/2025.**
-**עדכון אחרון:** תוספת אפיון Phase 3D - Metadata & Incremental Generation
+**עדכון אחרון:** תוספת אפיון Phase 3E - Job Scheduler & Background Services
 
 **מצב כללי: 🟢 מצוין**
