@@ -120,24 +120,6 @@ public class JobGenerator
         await _fileWriter.WriteFileAsync(outputPath, jobContent);
     }
 
-    private async Task GenerateFileFromTemplateAsync(
-        string templateFileName,
-        string outputPath,
-        string namespaceName)
-    {
-        var templatePath = Path.Combine(_templatePath, templateFileName);
-
-        if (!File.Exists(templatePath))
-        {
-            throw new FileNotFoundException($"Template file not found: {templatePath}");
-        }
-
-        var content = await File.ReadAllTextAsync(templatePath);
-        content = content.Replace("{{Namespace}}", namespaceName, StringComparison.Ordinal);
-
-        await _fileWriter.WriteFileAsync(outputPath, content);
-    }
-
     private static string GetDefaultJobFileName(JobTemplateType templateType)
     {
         return templateType == JobTemplateType.Manual
@@ -205,6 +187,24 @@ public class {jobName} : ITargCCJob
         }}
     }}
 }}";
+    }
+
+    private async Task GenerateFileFromTemplateAsync(
+        string templateFileName,
+        string outputPath,
+        string namespaceName)
+    {
+        var templatePath = Path.Combine(_templatePath, templateFileName);
+
+        if (!File.Exists(templatePath))
+        {
+            throw new FileNotFoundException($"Template file not found: {templatePath}");
+        }
+
+        var content = await File.ReadAllTextAsync(templatePath);
+        content = content.Replace("{{Namespace}}", namespaceName, StringComparison.Ordinal);
+
+        await _fileWriter.WriteFileAsync(outputPath, content);
     }
 }
 

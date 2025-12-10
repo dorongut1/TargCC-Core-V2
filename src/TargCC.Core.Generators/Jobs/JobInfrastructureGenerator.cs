@@ -95,14 +95,14 @@ public class JobInfrastructureGenerator
         // Generate Program.cs snippet (to be manually added)
         var programSnippetPath = Path.Combine(apiPath, "Program.Hangfire.snippet.cs");
         var programContent = await File.ReadAllTextAsync(Path.Combine(_templatePath, "Program.Hangfire.cs.snippet"));
-        programContent = programContent.Replace("{{Namespace}}", namespaceName)
-                                       .Replace("{{ProjectName}}", projectName);
+        programContent = programContent.Replace("{{Namespace}}", namespaceName, StringComparison.Ordinal)
+                                       .Replace("{{ProjectName}}", projectName, StringComparison.Ordinal);
         await _fileWriter.WriteFileAsync(programSnippetPath, programContent);
 
         // Generate appsettings snippet
         var settingsSnippetPath = Path.Combine(apiPath, "appsettings.Hangfire.snippet.json");
         var settingsContent = await File.ReadAllTextAsync(Path.Combine(_templatePath, "appsettings.Hangfire.json.snippet"));
-        settingsContent = settingsContent.Replace("{{ProjectName}}", projectName);
+        settingsContent = settingsContent.Replace("{{ProjectName}}", projectName, StringComparison.Ordinal);
         await _fileWriter.WriteFileAsync(settingsSnippetPath, settingsContent);
     }
 
@@ -154,7 +154,7 @@ public class JobInfrastructureGenerator
         }
 
         var content = await File.ReadAllTextAsync(templatePath);
-        content = content.Replace("{{Namespace}}", namespaceName);
+        content = content.Replace("{{Namespace}}", namespaceName, StringComparison.Ordinal);
 
         await _fileWriter.WriteFileAsync(outputPath, content);
     }
