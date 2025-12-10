@@ -66,6 +66,7 @@ export const Tables: React.FC = () => {
   const [tables, setTables] = useState<TableModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'name', direction: 'asc' });
   const [page, setPage] = useState(1);
@@ -261,12 +262,15 @@ export const Tables: React.FC = () => {
 
     try {
       setError(null);
+      setSuccess(null);
       await apiService.generateCode({
         tableNames: selectedTableForGeneration,
         connectionString: selectedConnection.connectionString,
         options,
       });
       await loadTables();
+      setOptionsDialogOpen(false);
+      setSuccess(`Successfully generated code for ${selectedTableForGeneration.length} table(s)`);
     } catch (err) {
       console.error('Generate failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate code');
@@ -292,16 +296,25 @@ export const Tables: React.FC = () => {
 
     try {
       setError(null);
-      for (const tableKey of selectedTableForGeneration) {
-        const tableName = tableKey.split('.')[1];
-        await apiService.generateCode({
-          tableNames: [tableName],
-          connectionString: selectedConnection.connectionString,
-          options,
-        });
-      }
+      setSuccess(null);
+
+      // Extract table names from table keys (schema.tableName)
+      const tableNames = selectedTableForGeneration.map(tableKey => {
+        const parts = tableKey.split('.');
+        return parts.length > 1 ? parts[1] : tableKey;
+      });
+
+      // Make a single API call with all table names for better performance
+      await apiService.generateCode({
+        tableNames: tableNames,
+        connectionString: selectedConnection.connectionString,
+        options,
+      });
+
       await loadTables();
       setSelectedRows(new Set());
+      setOptionsDialogOpen(false);
+      setSuccess(`Successfully generated code for ${tableNames.length} table(s)`);
     } catch (err) {
       console.error('Bulk generate failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate code');
@@ -407,6 +420,26 @@ export const Tables: React.FC = () => {
             )}
           </Box>
         </FadeIn>
+
+        {/* Success and Error Messages */}
+        {success && (
+          <FadeIn delay={150}>
+            <Box mb={2}>
+              <Alert severity="success" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
+            </Box>
+          </FadeIn>
+        )}
+        {error && !loading && (
+          <FadeIn delay={150}>
+            <Box mb={2}>
+              <Alert severity="error" onClose={() => setError(null)}>
+                {error}
+              </Alert>
+            </Box>
+          </FadeIn>
+        )}
 
         {/* Search and Filters */}
         <FadeIn delay={100}>
