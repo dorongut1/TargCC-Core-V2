@@ -62,7 +62,7 @@ public class ChangeDetectionService
         var tableData = new
         {
             TableName = table.Name,
-            SchemaName = table.Schema,
+            SchemaName = table.SchemaName,
             Columns = table.Columns.Select(c => new
             {
                 c.Name,

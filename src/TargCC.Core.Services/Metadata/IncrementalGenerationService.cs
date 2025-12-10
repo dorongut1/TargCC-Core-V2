@@ -74,7 +74,7 @@ public class IncrementalGenerationService
         var plan = new TableGenerationPlan
         {
             TableName = table.Name,
-            SchemaName = table.Schema
+            SchemaName = table.SchemaName
         };
 
         // Check if metadata exists

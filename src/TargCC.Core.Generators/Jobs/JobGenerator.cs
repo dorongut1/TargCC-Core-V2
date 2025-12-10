@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using TargCC.Core.Interfaces;
+using TargCC.Core.Writers;
 
 namespace TargCC.Core.Generators.Jobs;
 

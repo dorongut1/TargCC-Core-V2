@@ -307,7 +307,7 @@ public sealed class ChangeDetectionServiceTests
         var table = new Table
         {
             Name = tableName,
-            Schema = "dbo",
+            SchemaName = "dbo",
             Columns = new List<Column>
             {
                 new Column
