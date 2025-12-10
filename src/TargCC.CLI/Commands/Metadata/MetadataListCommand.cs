@@ -35,8 +35,12 @@ public class MetadataListCommand : Command
     {
         try
         {
+            // Create logger factory
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Warning));
+
             // Load configuration
-            var configService = new ConfigurationService();
+            var configLogger = loggerFactory.CreateLogger<ConfigurationService>();
+            var configService = new ConfigurationService(configLogger);
             var config = await configService.LoadAsync();
 
             if (config == null || string.IsNullOrWhiteSpace(config.ConnectionString))
@@ -46,7 +50,6 @@ public class MetadataListCommand : Command
             }
 
             // Create services
-            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Warning));
             var logger = loggerFactory.CreateLogger<MetadataService>();
             var metadataService = new MetadataService(config.ConnectionString, logger);
 

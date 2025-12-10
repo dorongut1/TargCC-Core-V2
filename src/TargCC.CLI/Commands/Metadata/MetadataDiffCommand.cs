@@ -39,8 +39,12 @@ public class MetadataDiffCommand : Command
             Console.WriteLine("🔍 Analyzing schema changes...");
             Console.WriteLine();
 
+            // Create logger factory
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Warning));
+
             // Load configuration
-            var configService = new ConfigurationService();
+            var configLogger = loggerFactory.CreateLogger<ConfigurationService>();
+            var configService = new ConfigurationService(configLogger);
             var config = await configService.LoadAsync();
 
             if (config == null || string.IsNullOrWhiteSpace(config.ConnectionString))
@@ -50,7 +54,6 @@ public class MetadataDiffCommand : Command
             }
 
             // Create services
-            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Warning));
             var metadataLogger = loggerFactory.CreateLogger<MetadataService>();
             var changeLogger = loggerFactory.CreateLogger<ChangeDetectionService>();
             var incrementalLogger = loggerFactory.CreateLogger<IncrementalGenerationService>();
