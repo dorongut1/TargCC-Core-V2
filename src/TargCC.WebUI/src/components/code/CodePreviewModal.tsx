@@ -18,8 +18,10 @@ import {
   Close as CloseIcon,
   Download as DownloadIcon,
   ContentCopy as CopyIcon,
+  Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import CodePreview from './CodePreview';
+import { downloadGeneratedFilesAsZip } from '../../api/generationApi';
 
 export interface GeneratedFile {
   fileName: string;
@@ -58,6 +60,7 @@ const CodePreviewModal = ({
 }: CodePreviewModalProps) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
@@ -87,6 +90,18 @@ const CodePreviewModal = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    try {
+      setDownloading(true);
+      await downloadGeneratedFilesAsZip(tableName);
+    } catch (err) {
+      console.error('Failed to download ZIP:', err);
+      alert(err instanceof Error ? err.message : 'Failed to download files');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -211,6 +226,19 @@ const CodePreviewModal = ({
 
       <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
+          {files.length > 0 && (
+            <Tooltip title="Download all files as ZIP archive">
+              <Button
+                startIcon={downloading ? <CircularProgress size={16} /> : <ArchiveIcon />}
+                onClick={handleDownloadAll}
+                variant="contained"
+                color="secondary"
+                disabled={loading || downloading}
+              >
+                {downloading ? 'Downloading...' : 'Download All as ZIP'}
+              </Button>
+            </Tooltip>
+          )}
           {currentFile && (
             <>
               <Tooltip title={copySuccess ? 'Copied!' : 'Copy to clipboard'}>
