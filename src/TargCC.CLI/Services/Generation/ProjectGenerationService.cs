@@ -10,6 +10,8 @@ using TargCC.Core.Generators.API;
 using TargCC.Core.Generators.Common;
 using TargCC.Core.Generators.UI;
 using TargCC.Core.Generators.UI.Components;
+using TargCC.Core.Generators.Jobs;
+using TargCC.Core.Interfaces;
 using TargCC.Core.Interfaces.Models;
 
 namespace TargCC.CLI.Services.Generation;
@@ -28,6 +30,7 @@ public class ProjectGenerationService : IProjectGenerationService
     private readonly IProgramCsGenerator _programCsGenerator;
     private readonly IAppSettingsGenerator _appSettingsGenerator;
     private readonly IDependencyInjectionGenerator _diGenerator;
+    private readonly JobInfrastructureGenerator _jobInfrastructureGenerator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProjectGenerationService"/> class.
@@ -41,7 +44,8 @@ public class ProjectGenerationService : IProjectGenerationService
         IProjectFileGenerator projectFileGenerator,
         IProgramCsGenerator programCsGenerator,
         IAppSettingsGenerator appSettingsGenerator,
-        IDependencyInjectionGenerator diGenerator)
+        IDependencyInjectionGenerator diGenerator,
+        IFileWriter fileWriter)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _output = output ?? throw new ArgumentNullException(nameof(output));
@@ -52,6 +56,7 @@ public class ProjectGenerationService : IProjectGenerationService
         _programCsGenerator = programCsGenerator ?? throw new ArgumentNullException(nameof(programCsGenerator));
         _appSettingsGenerator = appSettingsGenerator ?? throw new ArgumentNullException(nameof(appSettingsGenerator));
         _diGenerator = diGenerator ?? throw new ArgumentNullException(nameof(diGenerator));
+        _jobInfrastructureGenerator = new JobInfrastructureGenerator(fileWriter ?? throw new ArgumentNullException(nameof(fileWriter)));
     }
 
     /// <inheritdoc/>
@@ -162,11 +167,20 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("  ✓ React setup files generated!");
             _output.BlankLine();
 
+            _output.Info("Step 6: Generating Job Scheduler Infrastructure...");
+
+            // Generate job infrastructure
+            await GenerateJobInfrastructureAsync(outputDirectory, rootNamespace, databaseName);
+
+            _output.Info("  ✓ Job infrastructure generated!");
+            _output.BlankLine();
+
             _output.Info($"✓ Complete project generated successfully!");
             _output.Info($"  Project: {rootNamespace}");
             _output.Info($"  Tables: {tables.Count}");
             _output.Info($"  Backend: {outputDirectory}/src");
             _output.Info($"  Frontend: {outputDirectory}/client");
+            _output.Info($"  Jobs: {outputDirectory}/src/{rootNamespace}.Application/Jobs");
             _output.Info($"  Location: {outputDirectory}");
         }
         catch (Exception ex)
@@ -1121,5 +1135,31 @@ export const Dashboard: React.FC = () => {{
         var dashboardPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", "DashboardController.cs");
         await SaveFileAsync(dashboardPath, dashboardCode);
         _output.Info("  ✓ DashboardController.cs");
+    }
+
+    private async Task GenerateJobInfrastructureAsync(
+        string outputDirectory,
+        string rootNamespace,
+        string projectName)
+    {
+        await _jobInfrastructureGenerator.GenerateCompleteInfrastructureAsync(
+            outputDirectory,
+            rootNamespace,
+            projectName,
+            includeSampleJobs: true);
+
+        _output.Info("  ✓ Application/Jobs/ITargCCJob.cs");
+        _output.Info("  ✓ Application/Jobs/JobResult.cs");
+        _output.Info("  ✓ Application/Jobs/TargCCJobAttribute.cs");
+        _output.Info("  ✓ Application/Jobs/SampleDailyJob.cs");
+        _output.Info("  ✓ Application/Jobs/SampleManualJob.cs");
+        _output.Info("  ✓ Infrastructure/Jobs/HangfireSetup.cs");
+        _output.Info("  ✓ Infrastructure/Jobs/HangfireJobDiscoveryService.cs");
+        _output.Info("  ✓ Infrastructure/Jobs/JobExecutor.cs");
+        _output.Info("  ✓ Infrastructure/Jobs/JobLogger.cs");
+        _output.Info("  ✓ Infrastructure/Jobs/HangfireAuthorizationFilter.cs");
+        _output.Info("  ✓ API/Program.Hangfire.snippet.cs");
+        _output.Info("  ✓ API/appsettings.Hangfire.snippet.json");
+        _output.Info("  ✓ HANGFIRE_PACKAGES.txt");
     }
 }
