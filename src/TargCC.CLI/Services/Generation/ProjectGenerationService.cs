@@ -13,6 +13,7 @@ using TargCC.Core.Generators.UI.Components;
 using TargCC.Core.Generators.Jobs;
 using TargCC.Core.Interfaces;
 using TargCC.Core.Interfaces.Models;
+using TargCC.Core.Writers;
 
 namespace TargCC.CLI.Services.Generation;
 
