@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using TargCC.AI.Services;
 using TargCC.CLI.Commands.Analyze;
 using TargCC.CLI.Commands.Generate;
+using TargCC.CLI.Commands.Job;
 using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
 using TargCC.CLI.Services.Analysis;
@@ -98,6 +99,7 @@ public class RootCommand : Command
         AddCommand(new AnalyzeCommand(_loggerFactory, _configService, _output, _analysisService));
         AddCommand(new SuggestCommand(_aiService,_databaseAnalyzer, _configService, _output, _loggerFactory));
         AddCommand(new WatchCommand(_configService, _schemaChangeDetector, _generationService, _generationTracker, _output, _loggerFactory));
+        AddCommand(new JobCommand());
 
         // Set default handler
         this.SetHandler(() =>
