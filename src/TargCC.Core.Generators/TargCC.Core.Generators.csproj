@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\TargCC.Core.Writers\TargCC.Core.Writers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

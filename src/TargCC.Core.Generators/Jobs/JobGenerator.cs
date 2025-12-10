@@ -7,13 +7,17 @@ using TargCC.Core.Writers;
 namespace TargCC.Core.Generators.Jobs;
 
 /// <summary>
-/// Generator for TargCC background jobs infrastructure
+/// Generator for TargCC background jobs infrastructure.
 /// </summary>
 public class JobGenerator
 {
     private readonly IFileWriter _fileWriter;
     private readonly string _templatePath;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobGenerator"/> class.
+    /// </summary>
+    /// <param name="fileWriter">The file writer service for writing generated files.</param>
     public JobGenerator(IFileWriter fileWriter)
     {
         _fileWriter = fileWriter ?? throw new ArgumentNullException(nameof(fileWriter));
@@ -21,8 +25,11 @@ public class JobGenerator
     }
 
     /// <summary>
-    /// Generates all job infrastructure files (interfaces, attributes, base classes)
+    /// Generates all job infrastructure files (interfaces, attributes, base classes).
     /// </summary>
+    /// <param name="projectPath">The root path of the project.</param>
+    /// <param name="namespaceName">The namespace for generated files.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task GenerateJobInfrastructureAsync(string projectPath, string namespaceName)
     {
         var applicationPath = Path.Combine(projectPath, "Application", "Jobs");
@@ -48,8 +55,13 @@ public class JobGenerator
     }
 
     /// <summary>
-    /// Generates a sample job file
+    /// Generates a sample job file.
     /// </summary>
+    /// <param name="projectPath">The root path of the project.</param>
+    /// <param name="namespaceName">The namespace for the generated job.</param>
+    /// <param name="jobName">The name of the job class.</param>
+    /// <param name="templateType">The type of job template to use (default: Daily).</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task GenerateSampleJobAsync(
         string projectPath,
         string namespaceName,
@@ -77,8 +89,15 @@ public class JobGenerator
     }
 
     /// <summary>
-    /// Generates a custom job from template
+    /// Generates a custom job from template.
     /// </summary>
+    /// <param name="projectPath">The root path of the project.</param>
+    /// <param name="namespaceName">The namespace for the generated job.</param>
+    /// <param name="jobName">The name of the job class.</param>
+    /// <param name="cronExpression">The CRON expression for scheduling (default: "0 2 * * *").</param>
+    /// <param name="displayName">The display name for the job.</param>
+    /// <param name="description">The description of the job.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task GenerateCustomJobAsync(
         string projectPath,
         string namespaceName,
