@@ -471,13 +471,13 @@ public sealed class IncrementalGenerationServiceTests
                     IsNullable = false
                 }
             },
-            Indexes = new List<Index>
+            Indexes = new List<TargCC.Core.Interfaces.Models.Index>
             {
                 new()
                 {
                     Name = $"PK_{tableName}",
                     IsPrimaryKey = true,
-                    Columns = new List<IndexColumn>
+                    Columns = new List<TargCC.Core.Interfaces.Models.IndexColumn>
                     {
                         new() { ColumnName = "ID", IsDescending = false }
                     }

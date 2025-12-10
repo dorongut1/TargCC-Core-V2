@@ -177,24 +177,22 @@ public sealed class MetadataServiceTests
     }
 
     [Fact]
-    public void ColumnMetadata_LegacyUIFields_CanBeSet()
+    public void ColumnMetadata_PrefixFields_CanBeSet()
     {
         // Arrange & Act
         var metadata = new ColumnMetadata
         {
-            CcShowInWinF = true,
-            CcOrdinalOnScreen = 5,
-            CcGroupName = "Personal Info",
-            CcWidthOnWinF = 200,
-            CcLabelOverride = "Full Name"
+            Prefix = "eno_",
+            PrefixType = "Encrypted",
+            UIControlType = "PasswordBox",
+            ValidationRules = "Required"
         };
 
         // Assert
-        Assert.True(metadata.CcShowInWinF);
-        Assert.Equal(5, metadata.CcOrdinalOnScreen);
-        Assert.Equal("Personal Info", metadata.CcGroupName);
-        Assert.Equal(200, metadata.CcWidthOnWinF);
-        Assert.Equal("Full Name", metadata.CcLabelOverride);
+        Assert.Equal("eno_", metadata.Prefix);
+        Assert.Equal("Encrypted", metadata.PrefixType);
+        Assert.Equal("PasswordBox", metadata.UIControlType);
+        Assert.Equal("Required", metadata.ValidationRules);
     }
 
     #endregion
@@ -213,7 +211,10 @@ public sealed class MetadataServiceTests
             IsUnique = true,
             IsPrimaryKey = false,
             IsClustered = false,
-            Columns = "Email"
+            Columns = new List<IndexColumnMetadata>
+            {
+                new() { ColumnName = "Email", KeyOrdinal = 1 }
+            }
         };
 
         // Assert
@@ -223,7 +224,8 @@ public sealed class MetadataServiceTests
         Assert.True(metadata.IsUnique);
         Assert.False(metadata.IsPrimaryKey);
         Assert.False(metadata.IsClustered);
-        Assert.Equal("Email", metadata.Columns);
+        Assert.Single(metadata.Columns);
+        Assert.Equal("Email", metadata.Columns[0].ColumnName);
     }
 
     [Fact]
@@ -232,12 +234,19 @@ public sealed class MetadataServiceTests
         // Arrange & Act
         var metadata = new IndexMetadata
         {
-            Columns = "LastName, FirstName, MiddleName"
+            Columns = new List<IndexColumnMetadata>
+            {
+                new() { ColumnName = "LastName", KeyOrdinal = 1 },
+                new() { ColumnName = "FirstName", KeyOrdinal = 2 },
+                new() { ColumnName = "MiddleName", KeyOrdinal = 3 }
+            }
         };
 
         // Assert
-        Assert.Contains(",", metadata.Columns);
-        Assert.Equal("LastName, FirstName, MiddleName", metadata.Columns);
+        Assert.Equal(3, metadata.Columns.Count);
+        Assert.Equal("LastName", metadata.Columns[0].ColumnName);
+        Assert.Equal("FirstName", metadata.Columns[1].ColumnName);
+        Assert.Equal("MiddleName", metadata.Columns[2].ColumnName);
     }
 
     #endregion
@@ -253,22 +262,22 @@ public sealed class MetadataServiceTests
             ID = 1,
             ParentTableID = 5,
             ChildTableID = 10,
-            ParentTableName = "Customer",
-            ChildTableName = "Order",
-            ParentColumnName = "CustomerID",
-            ChildColumnName = "CustomerID",
-            ConstraintName = "FK_Order_Customer"
+            ParentTable = "Customer",
+            ChildTable = "Order",
+            ParentColumn = "CustomerID",
+            ChildColumn = "CustomerID",
+            ForeignKeyName = "FK_Order_Customer"
         };
 
         // Assert
         Assert.Equal(1, metadata.ID);
         Assert.Equal(5, metadata.ParentTableID);
         Assert.Equal(10, metadata.ChildTableID);
-        Assert.Equal("Customer", metadata.ParentTableName);
-        Assert.Equal("Order", metadata.ChildTableName);
-        Assert.Equal("CustomerID", metadata.ParentColumnName);
-        Assert.Equal("CustomerID", metadata.ChildColumnName);
-        Assert.Equal("FK_Order_Customer", metadata.ConstraintName);
+        Assert.Equal("Customer", metadata.ParentTable);
+        Assert.Equal("Order", metadata.ChildTable);
+        Assert.Equal("CustomerID", metadata.ParentColumn);
+        Assert.Equal("CustomerID", metadata.ChildColumn);
+        Assert.Equal("FK_Order_Customer", metadata.ForeignKeyName);
     }
 
     #endregion
@@ -287,24 +296,28 @@ public sealed class MetadataServiceTests
             ID = 1,
             TableID = 10,
             TableName = "Customer",
-            GeneratedOn = timestamp,
+            GeneratedAt = timestamp,
             GeneratedBy = "admin",
             GenerationType = "Full",
-            FilesGenerated = 6,
+            DurationMs = 1500,
             Success = true,
-            ErrorMessage = null
+            ErrorMessage = null,
+            SchemaHash = "abc123",
+            ToolVersion = "2.0.0"
         };
 
         // Assert
         Assert.Equal(1, metadata.ID);
         Assert.Equal(10, metadata.TableID);
         Assert.Equal("Customer", metadata.TableName);
-        Assert.Equal(timestamp, metadata.GeneratedOn);
+        Assert.Equal(timestamp, metadata.GeneratedAt);
         Assert.Equal("admin", metadata.GeneratedBy);
         Assert.Equal("Full", metadata.GenerationType);
-        Assert.Equal(6, metadata.FilesGenerated);
+        Assert.Equal(1500, metadata.DurationMs);
         Assert.True(metadata.Success);
         Assert.Null(metadata.ErrorMessage);
+        Assert.Equal("abc123", metadata.SchemaHash);
+        Assert.Equal("2.0.0", metadata.ToolVersion);
     }
 
     [Fact]
@@ -316,14 +329,16 @@ public sealed class MetadataServiceTests
             TableName = "Customer",
             Success = false,
             ErrorMessage = "Database connection failed",
-            FilesGenerated = 0
+            DurationMs = 500,
+            StackTrace = "at System..."
         };
 
         // Assert
         Assert.False(metadata.Success);
         Assert.NotNull(metadata.ErrorMessage);
         Assert.Equal("Database connection failed", metadata.ErrorMessage);
-        Assert.Equal(0, metadata.FilesGenerated);
+        Assert.Equal(500, metadata.DurationMs);
+        Assert.NotNull(metadata.StackTrace);
     }
 
     #endregion
