@@ -5,6 +5,7 @@ using TargCC.AI.Services;
 using TargCC.CLI.Commands.Analyze;
 using TargCC.CLI.Commands.Generate;
 using TargCC.CLI.Commands.Job;
+using TargCC.CLI.Commands.Metadata;
 using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
 using TargCC.CLI.Services.Analysis;
@@ -100,6 +101,7 @@ public class RootCommand : Command
         AddCommand(new SuggestCommand(_aiService,_databaseAnalyzer, _configService, _output, _loggerFactory));
         AddCommand(new WatchCommand(_configService, _schemaChangeDetector, _generationService, _generationTracker, _output, _loggerFactory));
         AddCommand(new JobCommand());
+        AddCommand(new MetadataCommand());
 
         // Set default handler
         this.SetHandler(() =>
