@@ -477,10 +477,9 @@ public sealed class IncrementalGenerationServiceTests
                 {
                     Name = $"PK_{tableName}",
                     IsPrimaryKey = true,
-                    Columns = new List<TargCC.Core.Interfaces.Models.IndexColumn>
-                    {
-                        new() { ColumnName = "ID", IsDescending = false }
-                    }
+                    IsUnique = true,
+                    IsClustered = true,
+                    ColumnNames = new List<string> { "ID" }
                 }
             }
         };
