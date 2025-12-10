@@ -403,6 +403,7 @@ try
         HttpContext context,
         [FromBody] GenerateRequest request,
         [FromServices] IGenerationService generationService,
+        [FromServices] IGenerationHistoryService historyService,
         [FromServices] IConfiguration configuration,
         ILogger<Program> logger) =>
     {
@@ -444,6 +445,9 @@ try
 
             foreach (var tableName in request.TableNames)
             {
+                var tableFiles = new List<string>();
+                var tableErrors = new List<string>();
+
                 try
                 {
                     // Generate based on selected options
@@ -513,23 +517,58 @@ try
                         tableResults.Add(reactResult);
                     }
 
-                    // Collect all generated files and errors
+                    // Collect all generated files and errors for this table
                     foreach (var result in tableResults)
                     {
                         if (result.Success)
                         {
-                            generatedFiles.AddRange(result.GeneratedFiles.Select(f => f.FilePath));
+                            var files = result.GeneratedFiles.Select(f => f.FilePath).ToList();
+                            tableFiles.AddRange(files);
+                            generatedFiles.AddRange(files);
                         }
                         else
                         {
-                            errors.Add($"{tableName}: {result.ErrorMessage ?? "Unknown error"}");
+                            var error = $"{tableName}: {result.ErrorMessage ?? "Unknown error"}";
+                            tableErrors.Add(error);
+                            errors.Add(error);
                         }
                     }
+
+                    // Save generation history for this table
+                    await historyService.AddHistoryAsync(new GenerationHistory
+                    {
+                        TableName = tableName,
+                        SchemaName = "dbo",
+                        GeneratedAt = DateTime.UtcNow,
+                        FilesGenerated = tableFiles.ToArray(),
+                        Success = tableErrors.Count == 0,
+                        Errors = tableErrors.ToArray(),
+                        Options = new GenerationOptions
+                        {
+                            GenerateEntity = request.GenerateEntity,
+                            GenerateRepository = request.GenerateRepository,
+                            GenerateService = request.GenerateService,
+                            GenerateController = request.GenerateController,
+                            OverwriteExisting = request.Force
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Error generating code for table {TableName}", tableName);
-                    errors.Add($"{tableName}: {ex.Message}");
+                    var error = $"{tableName}: {ex.Message}";
+                    errors.Add(error);
+
+                    // Save error in history
+                    await historyService.AddHistoryAsync(new GenerationHistory
+                    {
+                        TableName = tableName,
+                        SchemaName = "dbo",
+                        GeneratedAt = DateTime.UtcNow,
+                        FilesGenerated = Array.Empty<string>(),
+                        Success = false,
+                        Errors = new[] { ex.Message }
+                    });
                 }
             }
 
@@ -1215,6 +1254,88 @@ try
         }
     })
     .WithName("ClearGenerationHistory")
+    .WithOpenApi();
+
+    // Get generated file contents for a specific table
+    app.MapGet("/api/generation/files/{tableName}", async (
+        string tableName,
+        [FromServices] IGenerationHistoryService historyService,
+        ILogger<Program> logger) =>
+    {
+        try
+        {
+            // Get the last generation record for this table
+            var lastGeneration = await historyService.GetLastGenerationAsync(tableName);
+
+            if (lastGeneration == null || !lastGeneration.Success)
+            {
+                return Results.Ok(new List<object>());
+            }
+
+            var files = new List<object>();
+
+            foreach (var filePath in lastGeneration.FilesGenerated)
+            {
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(filePath);
+                        var content = await File.ReadAllTextAsync(filePath);
+
+                        // Determine language based on file extension
+                        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+                        var language = extension switch
+                        {
+                            ".cs" => "csharp",
+                            ".ts" => "typescript",
+                            ".tsx" => "typescript",
+                            ".js" => "javascript",
+                            ".jsx" => "javascript",
+                            ".sql" => "sql",
+                            ".json" => "json",
+                            ".xml" => "xml",
+                            ".html" => "html",
+                            ".css" => "css",
+                            _ => "plaintext"
+                        };
+
+                        // Create relative path for display
+                        var relativePath = filePath;
+                        var generatedIndex = filePath.IndexOf("Generated", StringComparison.OrdinalIgnoreCase);
+                        if (generatedIndex >= 0)
+                        {
+                            relativePath = filePath.Substring(generatedIndex);
+                        }
+
+                        files.Add(new
+                        {
+                            fileName = fileName,
+                            content = content,
+                            language = language,
+                            path = relativePath
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Error reading file {FilePath}", filePath);
+                    }
+                }
+                else
+                {
+                    logger.LogWarning("File not found: {FilePath}", filePath);
+                }
+            }
+
+            return Results.Ok(files);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting generated files for table {TableName}", tableName);
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("GetGeneratedFileContents")
     .WithOpenApi();
 
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
