@@ -123,21 +123,23 @@ public class JobInfrastructureGenerator
         // Add Hangfire packages to API project
         if (apiCsprojFiles.Length > 0)
         {
-            await AddPackagesToCsprojAsync(apiCsprojFiles[0], new[]
+            var apiPackages = new[]
             {
                 ("Hangfire.Core", "1.8.9"),
                 ("Hangfire.SqlServer", "1.8.9"),
                 ("Hangfire.AspNetCore", "1.8.9")
-            });
+            };
+            await AddPackagesToCsprojAsync(apiCsprojFiles[0], apiPackages);
         }
 
         // Add Hangfire packages to Infrastructure project
         if (infraCsprojFiles.Length > 0)
         {
-            await AddPackagesToCsprojAsync(infraCsprojFiles[0], new[]
+            var infraPackages = new[]
             {
                 ("Hangfire.Core", "1.8.9")
-            });
+            };
+            await AddPackagesToCsprojAsync(infraCsprojFiles[0], infraPackages);
         }
     }
 
