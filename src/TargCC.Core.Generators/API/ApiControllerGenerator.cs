@@ -161,7 +161,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -197,7 +197,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -226,7 +226,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -262,7 +262,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -339,7 +339,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             var filterableIndexes = table.Indexes?
