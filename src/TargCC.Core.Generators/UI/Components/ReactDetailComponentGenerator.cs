@@ -370,6 +370,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine();
                 GenerateDeleteHandler(sb, camelName);
             }
+
             // VIEWs don't need any hooks - they just show an info message
         }
 
