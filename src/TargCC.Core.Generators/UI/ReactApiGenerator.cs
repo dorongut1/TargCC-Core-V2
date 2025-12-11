@@ -270,13 +270,39 @@ namespace TargCC.Core.Generators.UI
             GenerateImports(sb, table, schema, className);
 
             // API object
+            GenerateApiObjectHeader(sb, className, camelName, apiPath);
+
+            // CRUD methods
+            GenerateCrudMethods(sb, table, className, apiPath);
+
+            // GetByXXX from indexes
+            GenerateIndexMethods(sb, table, className, apiPath);
+
+            // Related data methods (Master-Detail Views)
+            GenerateRelatedDataMethods(sb, table, schema, className, apiPath);
+
+            sb.AppendLine("};");
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates the API object header with documentation.
+        /// </summary>
+        private static void GenerateApiObjectHeader(StringBuilder sb, string className, string camelName, string apiPath)
+        {
             sb.AppendLine("/**");
             sb.AppendLine(CultureInfo.InvariantCulture, $" * API client for {className} operations.");
             sb.AppendLine(CultureInfo.InvariantCulture, $" * Base URL: {apiPath}");
             sb.AppendLine(" */");
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
+        }
 
-            // CRUD methods
+        /// <summary>
+        /// Generates CRUD methods (Create, Read, Update, Delete).
+        /// </summary>
+        private static void GenerateCrudMethods(StringBuilder sb, Table table, string className, string apiPath)
+        {
             // VIEWs are read-only - only generate Get methods
             if (!table.IsView)
             {
@@ -292,8 +318,13 @@ namespace TargCC.Core.Generators.UI
                 sb.AppendLine(GenerateUpdate(className, apiPath));
                 sb.AppendLine(GenerateDelete(className, apiPath));
             }
+        }
 
-            // GetByXXX from indexes
+        /// <summary>
+        /// Generates GetByXXX methods from table indexes.
+        /// </summary>
+        private static void GenerateIndexMethods(StringBuilder sb, Table table, string className, string apiPath)
+        {
             foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
             {
                 var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
@@ -302,27 +333,30 @@ namespace TargCC.Core.Generators.UI
                     sb.AppendLine(GenerateGetByIndex(className, apiPath, column, index.IsUnique));
                 }
             }
+        }
 
-            // Related data methods (Master-Detail Views)
-            if (schema.Relationships != null)
+        /// <summary>
+        /// Generates methods for related data (Master-Detail Views).
+        /// </summary>
+        private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string className, string apiPath)
+        {
+            if (schema.Relationships == null)
             {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
-                    }
-                }
+                return;
             }
 
-            sb.AppendLine("};");
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+                .ToList();
 
-            return sb.ToString();
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+                if (childTable != null)
+                {
+                    sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
+                }
+            }
         }
     }
 }
