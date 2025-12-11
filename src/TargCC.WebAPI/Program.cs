@@ -1318,7 +1318,7 @@ try
             }
 
             logger.LogInformation("Found {Count} generated files for {TableName}",
-                lastGeneration.FilesGenerated.Count, tableName);
+                lastGeneration.FilesGenerated.Length, tableName);
 
             var files = new List<object>();
 
