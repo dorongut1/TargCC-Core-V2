@@ -192,7 +192,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"id\">The primary key value.</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>The {entityName} entity if found; otherwise, null.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default);");
         sb.AppendLine();
 
         // GetAllAsync
@@ -203,7 +203,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"take\">Number of entities to take (for paging).</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>Collection of {entityName} entities.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
         sb.AppendLine();
 
         // GetFilteredAsync (if indexes exist)
@@ -219,7 +219,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
             sb.AppendLine();
 
             // UpdateAsync
@@ -229,7 +229,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
             sb.AppendLine();
 
             // DeleteAsync
@@ -239,7 +239,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
             sb.AppendLine();
         }
     }
@@ -297,7 +297,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
                 sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>The {entityName} entity if found; otherwise, null.</returns>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
             }
             else
             {
@@ -318,7 +318,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
                 sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>Collection of {entityName} entities matching the criteria.</returns>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
             }
 
             sb.AppendLine();
@@ -381,7 +381,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default);");
         sb.AppendLine();
     }
 
@@ -451,7 +451,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             parameters.Select(p => $"{p.paramType} {p.paramName} = null")
             .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList});");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList});");
         sb.AppendLine();
     }
 
@@ -477,7 +477,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"id\">The primary key value to check.</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine("    /// <returns>True if the entity exists; otherwise, false.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<bool> ExistsAsync({pkType} id, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<bool> ExistsAsync({pkType} id, CancellationToken cancellationToken = default);");
     }
 
     /// <summary>
@@ -545,7 +545,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {GetClassName(childTable.Name)} entities.</returns>");
 
             // Generate method signature
-            var methodSignature = $"    Task<IEnumerable<{GetClassName(childTable.Name)}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+            var methodSignature = $"    System.Threading.Tasks.Task<IEnumerable<{GetClassName(childTable.Name)}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
                 $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);";
             sb.AppendLine(methodSignature);
             sb.AppendLine();
