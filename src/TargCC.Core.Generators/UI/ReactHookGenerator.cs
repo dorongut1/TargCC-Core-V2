@@ -167,7 +167,8 @@ namespace TargCC.Core.Generators.UI
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
 
-                var importedTypes = new HashSet<string>();
+                // Initialize with className to prevent importing the main entity again (e.g., self-references)
+                var importedTypes = new HashSet<string> { className };
 
                 foreach (var relationship in parentRelationships)
                 {

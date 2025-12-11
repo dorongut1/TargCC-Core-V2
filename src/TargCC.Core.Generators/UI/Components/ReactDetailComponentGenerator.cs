@@ -65,7 +65,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
                 GenerateRelatedDataImports(sb, table, schema, className);
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
-                GenerateChildEntityTypeImports(sb, table, schema);
+                GenerateChildEntityTypeImports(sb, table, schema, className);
             }
 
             return sb.ToString();
@@ -127,7 +127,7 @@ namespace TargCC.Core.Generators.UI.Components
             }
         }
 
-        private static void GenerateChildEntityTypeImports(StringBuilder sb, Table table, DatabaseSchema schema)
+        private static void GenerateChildEntityTypeImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
         {
             if (schema.Relationships == null)
             {
@@ -138,8 +138,8 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
-            // Use HashSet to avoid duplicate imports when multiple relationships point to same table
-            var importedTypes = new HashSet<string>();
+            // Initialize with className to prevent importing the main entity again (e.g., self-references)
+            var importedTypes = new HashSet<string> { className };
 
             foreach (var relationship in parentRelationships)
             {
