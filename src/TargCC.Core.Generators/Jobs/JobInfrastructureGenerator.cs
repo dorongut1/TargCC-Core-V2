@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -116,24 +117,85 @@ public class JobInfrastructureGenerator
 
     private async Task GeneratePackageReferencesAsync(string projectPath)
     {
-        var packagesContent = @"<!-- Hangfire Packages - Add these to your .csproj files -->
+        // Get the namespace by finding any .csproj file
+        var apiCsprojFiles = Directory.GetFiles(Path.Combine(projectPath, "src"), "*.API.csproj", SearchOption.AllDirectories);
+        var infraCsprojFiles = Directory.GetFiles(Path.Combine(projectPath, "src"), "*.Infrastructure.csproj", SearchOption.AllDirectories);
 
-<!-- API Project -->
-<ItemGroup>
-  <PackageReference Include=""Hangfire.Core"" Version=""1.8.9"" />
-  <PackageReference Include=""Hangfire.SqlServer"" Version=""1.8.9"" />
-  <PackageReference Include=""Hangfire.AspNetCore"" Version=""1.8.9"" />
-</ItemGroup>
+        // Add Hangfire packages to API project
+        if (apiCsprojFiles.Length > 0)
+        {
+            var apiPackages = new[]
+            {
+                ("Hangfire.Core", "1.8.9"),
+                ("Hangfire.SqlServer", "1.8.9"),
+                ("Hangfire.AspNetCore", "1.8.9")
+            };
+            await AddPackagesToCsprojAsync(apiCsprojFiles[0], apiPackages);
+        }
 
-<!-- Infrastructure Project -->
-<ItemGroup>
-  <PackageReference Include=""Hangfire.Core"" Version=""1.8.9"" />
-  <PackageReference Include=""Dapper"" Version=""2.1.28"" />
-  <PackageReference Include=""Microsoft.Data.SqlClient"" Version=""5.1.5"" />
-</ItemGroup>";
+        // Add Hangfire packages to Infrastructure project
+        if (infraCsprojFiles.Length > 0)
+        {
+            var infraPackages = new[]
+            {
+                ("Hangfire.Core", "1.8.9")
+            };
+            await AddPackagesToCsprojAsync(infraCsprojFiles[0], infraPackages);
+        }
+    }
 
-        var packagesPath = Path.Combine(projectPath, "HANGFIRE_PACKAGES.txt");
-        await _fileWriter.WriteFileAsync(packagesPath, packagesContent);
+    private async Task AddPackagesToCsprojAsync(string csprojPath, (string packageName, string version)[] packages)
+    {
+        if (!File.Exists(csprojPath))
+        {
+            return;
+        }
+
+        var content = await File.ReadAllTextAsync(csprojPath);
+
+        // Check if packages already exist to avoid duplicates
+        var newPackages = new StringBuilder();
+        foreach (var (packageName, version) in packages)
+        {
+            if (!content.Contains($"Include=\"{packageName}\"", StringComparison.OrdinalIgnoreCase))
+            {
+                newPackages.AppendLine(CultureInfo.InvariantCulture, $"    <PackageReference Include=\"{packageName}\" Version=\"{version}\" />");
+            }
+        }
+
+        if (newPackages.Length == 0)
+        {
+            return; // All packages already exist
+        }
+
+        // Find the last </ItemGroup> that contains PackageReference
+        var lastItemGroupIndex = content.LastIndexOf("</ItemGroup>", StringComparison.Ordinal);
+        if (lastItemGroupIndex > 0)
+        {
+            // Check if this ItemGroup contains PackageReference
+            var itemGroupStart = content.LastIndexOf("<ItemGroup>", lastItemGroupIndex, StringComparison.Ordinal);
+            if (itemGroupStart > 0)
+            {
+                var itemGroupContent = content.Substring(itemGroupStart, lastItemGroupIndex - itemGroupStart);
+                if (itemGroupContent.Contains("PackageReference", StringComparison.Ordinal))
+                {
+                    // Insert before the closing </ItemGroup>
+                    content = content.Insert(lastItemGroupIndex, newPackages.ToString());
+                }
+                else
+                {
+                    // No PackageReference ItemGroup found, add a new one before the last </Project>
+                    var projectEndIndex = content.LastIndexOf("</Project>", StringComparison.Ordinal);
+                    if (projectEndIndex > 0)
+                    {
+                        var newItemGroup = $"\n  <ItemGroup>\n{newPackages}  </ItemGroup>\n\n";
+                        content = content.Insert(projectEndIndex, newItemGroup);
+                    }
+                }
+            }
+        }
+
+        await _fileWriter.WriteFileAsync(csprojPath, content);
     }
 
     private async Task GenerateApiControllersAsync(string projectPath, string namespaceName)

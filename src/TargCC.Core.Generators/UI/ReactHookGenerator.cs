@@ -166,13 +166,21 @@ namespace TargCC.Core.Generators.UI
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
 
+                // Use HashSet to prevent duplicate imports
+                var importedTypes = new HashSet<string>();
+
                 foreach (var relationship in parentRelationships)
                 {
                     var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+
+                        // Only add import if not already added
+                        if (importedTypes.Add(childClassName))
+                        {
+                            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                        }
                     }
                 }
             }
@@ -189,6 +197,9 @@ namespace TargCC.Core.Generators.UI
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to prevent duplicate hooks (happens with multiple FKs to same table)
+            var generatedHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -197,13 +208,21 @@ namespace TargCC.Core.Generators.UI
                     continue;
                 }
 
-                try
+                var childClassName = GetClassName(childTable.Name);
+                var childrenName = Pluralize(childClassName);
+                var hookName = $"use{className}{childrenName}";
+
+                // Only generate hook if not already generated
+                if (generatedHooks.Add(hookName))
                 {
-                    GenerateSingleRelatedDataHook(sb, childTable, className, camelName);
-                }
-                catch
-                {
-                    // Skip relationships that cannot be generated
+                    try
+                    {
+                        GenerateSingleRelatedDataHook(sb, childTable, className, camelName);
+                    }
+                    catch
+                    {
+                        // Skip relationships that cannot be generated
+                    }
                 }
             }
         }
