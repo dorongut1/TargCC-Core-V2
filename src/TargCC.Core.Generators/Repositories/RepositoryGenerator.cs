@@ -531,6 +531,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateDeleteAsync(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - DeleteAsync doesn't reference entity types in parameters
         string entityName = GetClassName(table.Name);
         string spName = $"SP_Delete{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
@@ -603,7 +604,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         // Generate method signature and body
         string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
-        GenerateIndexMethodImplementation(sb, qualifiedEntityName, methodName, spName, index, paramList, paramDictStr, entityName);
+        GenerateIndexMethodImplementation(sb, qualifiedEntityName, methodName, spName, index, paramList, paramDictStr);
     }
 
     /// <summary>
@@ -644,9 +645,13 @@ public class RepositoryGenerator : IRepositoryGenerator
      string spName,
      Index index,
      string paramList,
-     string paramDictStr,
-     string entityName)
+     string paramDictStr)
     {
+        // Extract simple entity name from qualified name for logging (e.g., "Task" from "App.Domain.Entities.Task")
+        string entityNameForLogging = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+            ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+            : qualifiedEntityName;
+
         sb.AppendLine("    /// <inheritdoc/>");
 
         // Method signature
@@ -660,7 +665,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         sb.AppendLine("    {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {entityName} by {string.Join(", ", index.ColumnNames)}\");");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {entityNameForLogging} by {string.Join(", ", index.ColumnNames)}\");");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
@@ -683,18 +688,18 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Logging
         if (index.IsUnique)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"{entityName} found: {{Found}}\", result != null);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"{entityNameForLogging} found: {{Found}}\", result != null);");
         }
         else
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Retrieved {{Count}} {entityName} entities\", result.Count());");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Retrieved {{Count}} {entityNameForLogging} entities\", result.Count());");
         }
 
         sb.AppendLine("            return result;");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error getting {entityName} by {string.Join(", ", index.ColumnNames)}\");");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error getting {entityNameForLogging} by {string.Join(", ", index.ColumnNames)}\");");
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
@@ -706,6 +711,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateUpdateAggregatesAsync(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - UpdateAggregatesAsync only uses primitive types in parameters
         // Find aggregate columns using LINQ
         var aggColumns = table.Columns
             .Where(c => c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase))

@@ -332,6 +332,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateAggregateMethods(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - UpdateAggregatesAsync only uses primitive types in parameters
         // Find aggregate columns (agg_ prefix)
         var aggColumns = table.Columns
             .Where(c => c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase))
@@ -463,6 +464,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// </summary>
     private static void GenerateHelperMethods(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - ExistsAsync only returns bool, not entity types
         string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
