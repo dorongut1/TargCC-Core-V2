@@ -119,13 +119,19 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate imports when multiple relationships point to same table
+            var importedTypes = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable != null)
                 {
                     var childClassName = GetClassName(childTable.Name);
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
+                    if (importedTypes.Add(childClassName))
+                    {
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
+                    }
                 }
             }
         }
@@ -355,6 +361,28 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static void GenerateRenderSection(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
         {
+            // VIEWs are read-only - Detail page not applicable, just show message
+            if (table.IsView)
+            {
+                if (framework == UIFramework.MaterialUI)
+                {
+                    sb.AppendLine("    <Box sx={{ maxWidth: 800 }}>");
+                    sb.AppendLine("      <Alert severity=\"info\">");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"        {className} is a VIEW (read-only). Detail view is not applicable.");
+                    sb.AppendLine("        Please use the List view to see the data.");
+                    sb.AppendLine("      </Alert>");
+                    sb.AppendLine("    </Box>");
+                }
+                else
+                {
+                    sb.AppendLine("    <div>");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"      <p>{className} is a VIEW (read-only). Detail view is not applicable.</p>");
+                    sb.AppendLine("    </div>");
+                }
+
+                return;
+            }
+
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("    <Box sx={{ maxWidth: 800 }}>");

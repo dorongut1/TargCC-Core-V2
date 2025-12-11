@@ -225,12 +225,12 @@ namespace TargCC.Core.Generators.UI.Components
         {
             if (sqlType.Contains("DATE", StringComparison.Ordinal))
             {
-                return $"new Date({value}).toLocaleDateString()";
+                return $"({value} ? ({value} instanceof Date ? {value}.toLocaleDateString() : new Date({value}).toLocaleDateString()) : 'N/A')";
             }
 
             if (sqlType.Contains("TIME", StringComparison.Ordinal))
             {
-                return $"new Date({value}).toLocaleString()";
+                return $"({value} ? ({value} instanceof Date ? {value}.toLocaleString() : new Date({value}).toLocaleString()) : 'N/A')";
             }
 
             if (sqlType.Contains("MONEY", StringComparison.Ordinal))

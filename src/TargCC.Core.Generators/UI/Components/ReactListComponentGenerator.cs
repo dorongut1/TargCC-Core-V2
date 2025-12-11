@@ -268,8 +268,9 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Filter data to only include visible columns");
             sb.AppendLine("    const exportData = visibleRows.map(row => {");
             sb.AppendLine("      const filteredRow: any = {};");
+            sb.AppendLine("      const rowAny = row as any;");
             sb.AppendLine("      visibleColumns.forEach(col => {");
-            sb.AppendLine("        if (col in row) filteredRow[col] = row[col];");
+            sb.AppendLine("        if (col in rowAny) filteredRow[col] = rowAny[col];");
             sb.AppendLine("      });");
             sb.AppendLine("      return filteredRow;");
             sb.AppendLine("    });");
