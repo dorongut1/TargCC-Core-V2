@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\TargCC.Core.Engine\TargCC.Core.Engine.csproj" />
     <ProjectReference Include="..\..\TargCC.Core.Generators\TargCC.Core.Generators.csproj" />
     <ProjectReference Include="..\..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\..\TargCC.Core.Services\TargCC.Core.Services.csproj" />
     <ProjectReference Include="..\..\TargCC.Core.Writers\TargCC.Core.Writers.csproj" />
   </ItemGroup>
 

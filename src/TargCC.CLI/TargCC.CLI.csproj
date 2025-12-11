@@ -43,6 +43,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Spectre.Console" Version="0.48.0" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +53,7 @@
     <ProjectReference Include="..\TargCC.Core.Generators\TargCC.Core.Generators.csproj" />
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
     <ProjectReference Include="..\TargCC.Core.Services\TargCC.Core.Services.csproj" />
+    <ProjectReference Include="..\TargCC.Core.Writers\TargCC.Core.Writers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

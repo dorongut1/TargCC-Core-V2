@@ -31,6 +31,7 @@ import {
   Visibility as ViewIcon,
   Edit as EditIcon,
   MoreVert as MoreIcon,
+  Code as CodeIcon,
 } from '@mui/icons-material';
 import { apiService } from '../services/api';
 import type { Table as TableModel } from '../types/models';
@@ -44,9 +45,11 @@ import AutoRefreshControl from '../components/AutoRefreshControl';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useGenerationHistory } from '../hooks/useGenerationHistory';
 import type { GenerationStatus } from '../api/generationApi';
+import { fetchGeneratedFiles, type GeneratedFileContent } from '../api/generationApi';
 import { useConnection } from '../hooks/useConnection';
 import GenerationOptionsDialog from '../components/generation/GenerationOptionsDialog';
 import type { GenerationOptions } from '../types/models';
+import CodePreviewModal from '../components/code/CodePreviewModal';
 
 type SortField = 'name' | 'schema' | 'rowCount' | 'lastGenerated';
 type SortDirection = 'asc' | 'desc';
@@ -63,6 +66,7 @@ export const Tables: React.FC = () => {
   const [tables, setTables] = useState<TableModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'name', direction: 'asc' });
   const [page, setPage] = useState(1);
@@ -75,6 +79,12 @@ export const Tables: React.FC = () => {
   const [optionsDialogOpen, setOptionsDialogOpen] = useState(false);
   const [selectedTableForGeneration, setSelectedTableForGeneration] = useState<string[]>([]);
   const [isBulkGeneration, setIsBulkGeneration] = useState(false);
+
+  // Code Preview Modal state
+  const [codePreviewOpen, setCodePreviewOpen] = useState(false);
+  const [previewTableName, setPreviewTableName] = useState('');
+  const [previewFiles, setPreviewFiles] = useState<GeneratedFileContent[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Use connection context
   const { selectedConnection, connections, setSelectedConnection} = useConnection();
@@ -252,12 +262,15 @@ export const Tables: React.FC = () => {
 
     try {
       setError(null);
+      setSuccess(null);
       await apiService.generateCode({
         tableNames: selectedTableForGeneration,
         connectionString: selectedConnection.connectionString,
         options,
       });
       await loadTables();
+      setOptionsDialogOpen(false);
+      setSuccess(`Successfully generated code for ${selectedTableForGeneration.length} table(s)`);
     } catch (err) {
       console.error('Generate failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate code');
@@ -283,20 +296,53 @@ export const Tables: React.FC = () => {
 
     try {
       setError(null);
-      for (const tableKey of selectedTableForGeneration) {
-        const tableName = tableKey.split('.')[1];
-        await apiService.generateCode({
-          tableNames: [tableName],
-          connectionString: selectedConnection.connectionString,
-          options,
-        });
-      }
+      setSuccess(null);
+
+      // Extract table names from table keys (schema.tableName)
+      const tableNames = selectedTableForGeneration.map(tableKey => {
+        const parts = tableKey.split('.');
+        return parts.length > 1 ? parts[1] : tableKey;
+      });
+
+      // Make a single API call with all table names for better performance
+      await apiService.generateCode({
+        tableNames: tableNames,
+        connectionString: selectedConnection.connectionString,
+        options,
+      });
+
       await loadTables();
       setSelectedRows(new Set());
+      setOptionsDialogOpen(false);
+      setSuccess(`Successfully generated code for ${tableNames.length} table(s)`);
     } catch (err) {
       console.error('Bulk generate failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate code');
     }
+  };
+
+  const handleViewCode = async (tableName: string) => {
+    try {
+      setPreviewTableName(tableName);
+      setCodePreviewOpen(true);
+      setPreviewLoading(true);
+      setPreviewFiles([]);
+
+      const files = await fetchGeneratedFiles(tableName);
+      setPreviewFiles(files);
+    } catch (err) {
+      console.error('Failed to fetch generated files:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load generated files');
+      setCodePreviewOpen(false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleCloseCodePreview = () => {
+    setCodePreviewOpen(false);
+    setPreviewTableName('');
+    setPreviewFiles([]);
   };
 
   const getStatusColor = (status: string): 'success' | 'warning' | 'error' | 'default' => {
@@ -374,6 +420,26 @@ export const Tables: React.FC = () => {
             )}
           </Box>
         </FadeIn>
+
+        {/* Success and Error Messages */}
+        {success && (
+          <FadeIn delay={150}>
+            <Box mb={2}>
+              <Alert severity="success" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
+            </Box>
+          </FadeIn>
+        )}
+        {error && !loading && (
+          <FadeIn delay={150}>
+            <Box mb={2}>
+              <Alert severity="error" onClose={() => setError(null)}>
+                {error}
+              </Alert>
+            </Box>
+          </FadeIn>
+        )}
 
         {/* Search and Filters */}
         <FadeIn delay={100}>
@@ -566,6 +632,15 @@ export const Tables: React.FC = () => {
                               </IconButton>
                             </span>
                           </Tooltip>
+                          <Tooltip title="View Generated Code">
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={() => handleViewCode(table.name)}
+                            >
+                              <CodeIcon />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip title="View Details">
                             <IconButton size="small" color="default">
                               <ViewIcon />
@@ -621,6 +696,15 @@ export const Tables: React.FC = () => {
           onGenerate={isBulkGeneration ? handleBulkGenerate : handleGenerate}
           tableNames={selectedTableForGeneration}
           isBulk={isBulkGeneration}
+        />
+
+        {/* Code Preview Modal */}
+        <CodePreviewModal
+          open={codePreviewOpen}
+          onClose={handleCloseCodePreview}
+          files={previewFiles}
+          tableName={previewTableName}
+          loading={previewLoading}
         />
       </Box>
     </ErrorBoundary>

@@ -1,0 +1,18 @@
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace {{Namespace}}.Application.Jobs;
+
+/// <summary>
+/// Base interface for all TargCC background jobs.
+/// Jobs implementing this interface are automatically discovered and registered at startup.
+/// </summary>
+public interface ITargCCJob
+{
+    /// <summary>
+    /// Executes the job logic.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for graceful shutdown</param>
+    /// <returns>Job execution result containing success status and optional message</returns>
+    Task<JobResult> ExecuteAsync(CancellationToken cancellationToken);
+}

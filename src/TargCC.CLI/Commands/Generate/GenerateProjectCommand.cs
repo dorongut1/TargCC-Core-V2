@@ -43,6 +43,10 @@ public class GenerateProjectCommand : Command
             IsRequired = true
         };
 
+        var connectionStringOption = new Option<string?>(
+            aliases: new[] { "--connection-string", "-c" },
+            description: "SQL Server connection string (overrides config file)");
+
         var outputOption = new Option<string>(
             aliases: new[] { "--output", "-o" },
             description: "Output directory (default: current directory)",
@@ -63,6 +67,7 @@ public class GenerateProjectCommand : Command
             getDefaultValue: () => false);
 
         AddOption(databaseOption);
+        AddOption(connectionStringOption);
         AddOption(outputOption);
         AddOption(namespaceOption);
         AddOption(forceOption);
@@ -71,6 +76,7 @@ public class GenerateProjectCommand : Command
         this.SetHandler(
             ExecuteAsync,
             databaseOption,
+            connectionStringOption,
             outputOption,
             namespaceOption,
             forceOption,
@@ -79,6 +85,7 @@ public class GenerateProjectCommand : Command
 
     public async Task<int> ExecuteAsync(
         string database,
+        string? connectionStringParam,
         string outputDir,
         string? rootNamespace,
         bool force,
@@ -88,13 +95,19 @@ public class GenerateProjectCommand : Command
         {
             _output.Heading("Generating Clean Architecture Project");
 
-            // Get configuration
-            var config = await _configService.LoadAsync();
-            var connectionString = config?.ConnectionString;
+            // Get connection string from parameter or config
+            string? connectionString = connectionStringParam;
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                _output.Error("Connection string not found. Run 'targcc init' first.");
+                var config = await _configService.LoadAsync();
+                connectionString = config?.ConnectionString;
+            }
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                _output.Error("Connection string not found.");
+                _output.Error("Either provide --connection-string or run 'targcc init' first.");
                 return 1;
             }
 

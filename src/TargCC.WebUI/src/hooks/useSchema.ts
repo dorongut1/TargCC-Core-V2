@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchSchemaDetails, refreshSchema } from '../api/schemaApi';
 import { schemaCache } from './useSchemaCache';
+import { connectionStore } from '../services/connectionStore';
 import type { DatabaseSchema } from '../types/schema';
 
 /**
@@ -108,12 +109,22 @@ export function useSchema(
 
   /**
    * Auto-load effect
+   * Re-runs when connection changes to load new schema
    */
   useEffect(() => {
+    const currentConnection = connectionStore.getConnectionString();
+
     if (schemaName && autoLoad) {
+      // Reset state when connection changes
+      setSchema(null);
+      setError(null);
+      setIsConnected(false);
+
+      // Load new schema
       loadSchema(schemaName);
     }
-  }, [schemaName, autoLoad, loadSchema]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaName, autoLoad, loadSchema, connectionStore.getConnectionString()]);
 
   return {
     schema,

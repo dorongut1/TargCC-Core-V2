@@ -1,0 +1,146 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Hangfire;
+using Microsoft.Extensions.Logging;
+using UpayCard.RiskManagement.Application.Jobs;
+
+namespace UpayCard.RiskManagement.Infrastructure.Jobs;
+
+/// <summary>
+/// Service that discovers jobs marked with [TargCCJob] attribute and registers them with Hangfire
+/// </summary>
+public class HangfireJobDiscoveryService : IJobDiscoveryService
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IJobExecutor _jobExecutor;
+    private readonly ILogger<HangfireJobDiscoveryService> _logger;
+    private readonly List<JobMetadata> _discoveredJobs = new();
+
+    public HangfireJobDiscoveryService(
+        IServiceProvider serviceProvider,
+        IJobExecutor jobExecutor,
+        ILogger<HangfireJobDiscoveryService> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _jobExecutor = jobExecutor;
+        _logger = logger;
+    }
+
+    public void RegisterAllJobs()
+    {
+        _logger.LogInformation("Starting job discovery...");
+
+        try
+        {
+            // Get all types implementing ITargCCJob with [TargCCJob] attribute
+            var jobTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .SelectMany(a =>
+                {
+                    try
+                    {
+                        return a.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException)
+                    {
+                        return Array.Empty<Type>();
+                    }
+                })
+                .Where(t => typeof(ITargCCJob).IsAssignableFrom(t)
+                         && !t.IsInterface
+                         && !t.IsAbstract
+                         && t.GetCustomAttribute<TargCCJobAttribute>() != null)
+                .ToList();
+
+            _logger.LogInformation("Found {Count} jobs to register", jobTypes.Count);
+
+            foreach (var jobType in jobTypes)
+            {
+                RegisterJob(jobType);
+            }
+
+            _logger.LogInformation("Job discovery complete. Registered {Count} jobs", _discoveredJobs.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during job discovery");
+            throw;
+        }
+    }
+
+    private void RegisterJob(Type jobType)
+    {
+        var attribute = jobType.GetCustomAttribute<TargCCJobAttribute>();
+        if (attribute == null) return;
+
+        var displayNameAttr = jobType.GetCustomAttribute<JobDisplayNameAttribute>();
+        var descriptionAttr = jobType.GetCustomAttribute<JobDescriptionAttribute>();
+
+        var displayName = displayNameAttr?.DisplayName ?? jobType.Name;
+        var description = descriptionAttr?.Description;
+
+        var metadata = new JobMetadata
+        {
+            JobTypeReference = jobType,
+            JobName = jobType.Name,
+            DisplayName = displayName,
+            Description = description,
+            JobType = attribute.JobType.ToString(),
+            CronExpression = attribute.CronExpression,
+            Queue = attribute.Queue,
+            RetryAttempts = attribute.RetryAttempts
+        };
+
+        _discoveredJobs.Add(metadata);
+
+        // Register with Hangfire based on job type
+        switch (attribute.JobType)
+        {
+            case JobType.Recurring:
+                if (string.IsNullOrEmpty(attribute.CronExpression))
+                {
+                    _logger.LogWarning("Job {JobName} is marked as Recurring but has no CRON expression. Skipping registration.", displayName);
+                    return;
+                }
+
+                RecurringJob.AddOrUpdate(
+                    displayName,
+                    () => _jobExecutor.ExecuteJobAsync(jobType, CancellationToken.None),
+                    attribute.CronExpression,
+                    new RecurringJobOptions
+                    {
+                        TimeZone = TimeZoneInfo.FindSystemTimeZoneById(attribute.TimeZone)
+                    });
+
+                _logger.LogInformation("Registered recurring job: {JobName} with CRON: {Cron}",
+                    displayName, attribute.CronExpression);
+                break;
+
+            case JobType.Manual:
+                // Manual jobs are not auto-scheduled, just tracked
+                _logger.LogInformation("Registered manual job: {JobName}", displayName);
+                break;
+
+            case JobType.FireAndForget:
+                // Fire-and-forget jobs are not auto-scheduled
+                _logger.LogInformation("Registered fire-and-forget job: {JobName}", displayName);
+                break;
+        }
+    }
+
+    public IEnumerable<JobMetadata> GetAllJobs()
+    {
+        return _discoveredJobs.AsReadOnly();
+    }
+
+    public JobMetadata? GetJobByName(string jobName)
+    {
+        return _discoveredJobs.FirstOrDefault(j =>
+            j.JobName.Equals(jobName, StringComparison.OrdinalIgnoreCase) ||
+            (j.DisplayName != null && j.DisplayName.Equals(jobName, StringComparison.OrdinalIgnoreCase)));
+    }
+}

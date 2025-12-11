@@ -39,7 +39,7 @@ public class SchemaService : ISchemaService
             WHERE TABLE_TYPE = 'BASE TABLE'
             ORDER BY TABLE_SCHEMA";
 
-        var schemas = await connection.QueryAsync<string>(sql);
+        var schemas = await connection.QueryAsync<string>(sql, commandTimeout: 120);
         return schemas.ToList();
     }
 
@@ -81,7 +81,7 @@ public class SchemaService : ISchemaService
                 AND t.TABLE_SCHEMA = @SchemaName
             ORDER BY t.TABLE_NAME";
 
-        var tables = (await connection.QueryAsync<TableDto>(sql, new { SchemaName = schemaName })).ToList();
+        var tables = (await connection.QueryAsync<TableDto>(sql, new { SchemaName = schemaName }, commandTimeout: 120)).ToList();
 
         // Add generation status if history service is available
         if (historyService != null)
@@ -139,7 +139,7 @@ public class SchemaService : ISchemaService
                 AND c.TABLE_NAME = @TableName
             ORDER BY c.ORDINAL_POSITION";
 
-        var columns = await connection.QueryAsync<ColumnDto>(sql, new { SchemaName = schemaName, TableName = tableName });
+        var columns = await connection.QueryAsync<ColumnDto>(sql, new { SchemaName = schemaName, TableName = tableName }, commandTimeout: 120);
         return columns.ToList();
     }
 
@@ -163,7 +163,7 @@ public class SchemaService : ISchemaService
                 AND fk_cols.referenced_object_id = pk_col.object_id
             WHERE fk_schema.name = @SchemaName";
 
-        var relationships = await connection.QueryAsync<RelationshipDto>(sql, new { SchemaName = schemaName });
+        var relationships = await connection.QueryAsync<RelationshipDto>(sql, new { SchemaName = schemaName }, commandTimeout: 120);
         return relationships.ToList();
     }
 
@@ -187,14 +187,14 @@ public class SchemaService : ISchemaService
             WHERE TABLE_SCHEMA = @SchemaName AND TABLE_NAME = @TableName
             ORDER BY ORDINAL_POSITION";
 
-        var columns = (await connection.QueryAsync<string>(columnsSql, new { SchemaName = schemaName, TableName = tableName })).ToList();
+        var columns = (await connection.QueryAsync<string>(columnsSql, new { SchemaName = schemaName, TableName = tableName }, commandTimeout: 120)).ToList();
 
         // Get preview data
         var dataSql = $@"
             SELECT TOP {rowCount} *
             FROM [{schemaName}].[{tableName}]";
 
-        var data = (await connection.QueryAsync(dataSql)).Select(row =>
+        var data = (await connection.QueryAsync(dataSql, commandTimeout: 120)).Select(row =>
         {
             var dict = new Dictionary<string, object?>();
             var rowDict = (IDictionary<string, object?>)row;
@@ -207,7 +207,7 @@ public class SchemaService : ISchemaService
 
         // Get total row count
         var countSql = $"SELECT COUNT(*) FROM [{schemaName}].[{tableName}]";
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, commandTimeout: 120);
 
         return new TablePreviewDto
         {

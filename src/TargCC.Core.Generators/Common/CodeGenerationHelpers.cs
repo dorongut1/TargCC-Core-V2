@@ -1,5 +1,6 @@
 namespace TargCC.Core.Generators.Common;
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -20,6 +21,22 @@ using System.Linq;
 /// </remarks>
 public static class CodeGenerationHelpers
 {
+    /// <summary>
+    /// C# keywords that need to be escaped when used as identifiers.
+    /// </summary>
+    private static readonly HashSet<string> CSharpKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked",
+        "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else",
+        "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for",
+        "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock",
+        "long", "namespace", "new", "null", "object", "operator", "out", "override", "params",
+        "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed",
+        "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw",
+        "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using",
+        "virtual", "void", "volatile", "while"
+    };
+
     /// <summary>
     /// Maps SQL data types to C# types.
     /// </summary>
@@ -65,14 +82,30 @@ public static class CodeGenerationHelpers
     }
 
     /// <summary>
+    /// Escapes C# keywords by prefixing with @ symbol.
+    /// </summary>
+    /// <param name="identifier">The identifier to escape if it's a keyword.</param>
+    /// <returns>The identifier with @ prefix if it's a keyword, otherwise unchanged.</returns>
+    public static string EscapeCSharpKeyword(string identifier)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            return identifier;
+        }
+
+        return CSharpKeywords.Contains(identifier) ? "@" + identifier : identifier;
+    }
+
+    /// <summary>
     /// Converts a string to camelCase for parameter names.
     /// </summary>
     /// <param name="value">String to convert (typically PascalCase).</param>
-    /// <returns>String in camelCase format.</returns>
+    /// <returns>String in camelCase format, with C# keywords escaped.</returns>
     /// <remarks>
     /// Handles special cases:
     /// - All uppercase strings (like "ID", "URL") are converted entirely to lowercase.
     /// - Standard PascalCase strings have only the first letter lowercased.
+    /// - C# keywords are prefixed with @ to avoid compilation errors.
     /// </remarks>
     [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "CamelCase requires lowercase for parameter names in code generation.")]
     public static string ToCamelCase(string value)
@@ -82,13 +115,20 @@ public static class CodeGenerationHelpers
             return value;
         }
 
+        string camelCased;
+
         // If the entire string is uppercase (like "ID", "URL"), convert to all lowercase
         if (value.All(char.IsUpper))
         {
-            return value.ToLowerInvariant();
+            camelCased = value.ToLowerInvariant();
+        }
+        else
+        {
+            camelCased = char.ToLowerInvariant(value[0]) + value.Substring(1);
         }
 
-        return char.ToLowerInvariant(value[0]) + value.Substring(1);
+        // Escape C# keywords
+        return EscapeCSharpKeyword(camelCased);
     }
 
     /// <summary>

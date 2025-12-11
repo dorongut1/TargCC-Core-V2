@@ -1,0 +1,9 @@
+﻿{
+  "connectionStrings": {
+    "UpayCard_RiskManagement": "Server=localhost;Database=UpayCard_RiskManagement;Trusted_Connection=True;TrustServerCertificate=True"
+  },
+  "defaultDatabase": "UpayCard_RiskManagement",
+  "generation": {
+    "outputDirectory": "C:\\Generated"
+  }
+}

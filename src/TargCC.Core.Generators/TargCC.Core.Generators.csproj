@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TargCC.Core.Interfaces\TargCC.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\TargCC.Core.Writers\TargCC.Core.Writers.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +45,15 @@
 
   <ItemGroup>
     <None Update="UI\Templates\*.hbs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Jobs\Templates\*.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Jobs\Templates\*.snippet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Sql\Templates\*.template">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

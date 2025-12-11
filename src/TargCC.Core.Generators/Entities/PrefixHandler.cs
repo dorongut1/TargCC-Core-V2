@@ -93,6 +93,12 @@ namespace TargCC.Core.Generators.Entities
                 return null;
             }
 
+            // Only generate backing field for string types (encryption only works with strings)
+            if (!csharpType.Contains("string", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             var propertyName = GetPropertyName(column);
             return string.Format(CultureInfo.InvariantCulture, "private string _{0}Encrypted;", CodeGenerationHelpers.ToCamelCase(propertyName));
         }
@@ -124,8 +130,31 @@ namespace TargCC.Core.Generators.Entities
         private static string GenerateTwoWayEncryptionProperty(Column column, string csharpType)
         {
             var propertyName = GetPropertyName(column);
-            var backingField = string.Format(CultureInfo.InvariantCulture, "_{0}Encrypted", CodeGenerationHelpers.ToCamelCase(propertyName));
             var sb = new StringBuilder();
+
+            // Encryption only works with string types - for other types, generate a regular property with a warning
+            if (!csharpType.Contains("string", StringComparison.OrdinalIgnoreCase))
+            {
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets or sets the {propertyName}.");
+                sb.AppendLine("        /// WARNING: Column has 'ent_' prefix but is not a string type. Encryption not applied.");
+                sb.AppendLine("        /// </summary>");
+                sb.Append(CultureInfo.InvariantCulture, $"        [Column(\"{column.Name}\")]");
+                sb.AppendLine();
+
+                if (!column.IsNullable)
+                {
+                    sb.AppendLine("        [Required]");
+                }
+
+                sb.Append(CultureInfo.InvariantCulture, $"        public {csharpType} {propertyName} {{ get; set; }}");
+                sb.AppendLine();
+
+                return sb.ToString();
+            }
+
+            // For string types, generate encryption property with backing field
+            var backingField = string.Format(CultureInfo.InvariantCulture, "_{0}Encrypted", CodeGenerationHelpers.ToCamelCase(propertyName));
 
             sb.AppendLine("        /// <summary>");
             sb.AppendLine("        /// Encrypted value (two-way encryption).");

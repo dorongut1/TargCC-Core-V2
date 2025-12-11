@@ -12,6 +12,7 @@ using TargCC.Core.Analyzers;
 using TargCC.Core.Services;
 using TargCC.Core.Services.AI;
 using TargCC.Core.Generators.Project;
+using TargCC.Core.Writers;
 
 namespace TargCC.WebAPI.Extensions;
 
@@ -40,6 +41,9 @@ public static class ServiceCollectionExtensions
             return new ConfigurationService(logger);
         });
         
+        // File Writer (required by ProjectGenerationService)
+        services.AddSingleton<IFileWriter, FileWriter>();
+
         // CLI Core Services
         services.AddSingleton<IOutputService, OutputService>();
         services.AddSingleton<IGenerationService, GenerationService>();

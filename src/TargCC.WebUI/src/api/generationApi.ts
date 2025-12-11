@@ -176,10 +176,14 @@ export async function generate(request: GenerateRequest): Promise<GenerateRespon
     generateReactUI: request.options.generateReactUI ?? false,
   };
 
+  // Dynamic timeout based on number of tables (30 seconds per table, minimum 60 seconds)
+  const tableCount = request.tableNames.length;
+  const dynamicTimeout = Math.max(60000, tableCount * 30000);
+
   const response = await fetch(url, {
     method: 'POST',
     headers: API_CONFIG.DEFAULT_HEADERS,
-    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+    signal: AbortSignal.timeout(dynamicTimeout),
     body: JSON.stringify(backendRequest),
   });
 
@@ -189,4 +193,75 @@ export async function generate(request: GenerateRequest): Promise<GenerateRespon
   }
 
   return await response.json();
+}
+
+/**
+ * Interface for generated file content
+ */
+export interface GeneratedFileContent {
+  fileName: string;
+  content: string;
+  language: string;
+  path: string;
+}
+
+/**
+ * Fetches the generated file contents for a specific table
+ */
+export async function fetchGeneratedFiles(tableName: string): Promise<GeneratedFileContent[]> {
+  const url = `${API_CONFIG.BASE_URL}/api/generation/files/${encodeURIComponent(tableName)}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: API_CONFIG.DEFAULT_HEADERS,
+    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch generated files: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Downloads generated files as a ZIP archive
+ * @param tableName - The table name to download files for
+ * @returns Promise that resolves when download starts
+ */
+export async function downloadGeneratedFilesAsZip(tableName: string): Promise<void> {
+  // First, get the generation history to find file paths
+  const history = await fetchLastGeneration(tableName);
+
+  if (!history || history.filesGenerated.length === 0) {
+    throw new Error('No generated files found for this table');
+  }
+
+  const url = `${API_CONFIG.BASE_URL}/api/generate/download`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: API_CONFIG.DEFAULT_HEADERS,
+    signal: AbortSignal.timeout(120000), // 2 minute timeout for ZIP creation
+    body: JSON.stringify({
+      filePaths: history.filesGenerated
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download files: ${response.statusText}`);
+  }
+
+  // Get the blob from response
+  const blob = await response.blob();
+
+  // Create a download link and trigger it
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = downloadUrl;
+  a.download = `${tableName}-generated-code.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(downloadUrl);
 }

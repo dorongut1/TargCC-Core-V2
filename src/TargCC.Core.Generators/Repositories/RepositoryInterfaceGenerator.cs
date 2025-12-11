@@ -94,22 +94,22 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         StartInterface(sb, table);
 
         // Generate CRUD methods
-        GenerateCrudMethods(sb, table);
+        GenerateCrudMethods(sb, table, rootNamespace);
 
         // Generate index-based query methods
-        GenerateIndexBasedMethods(sb, table);
+        GenerateIndexBasedMethods(sb, table, rootNamespace);
 
         // Generate aggregate methods if needed
-        GenerateAggregateMethods(sb, table);
+        GenerateAggregateMethods(sb, table, rootNamespace);
 
         // Generate related data methods (Master-Detail Views)
         if (schema != null)
         {
-            GenerateRelatedDataMethods(sb, table, schema);
+            GenerateRelatedDataMethods(sb, table, schema, rootNamespace);
         }
 
         // Generate helper methods
-        GenerateHelperMethods(sb, table);
+        GenerateHelperMethods(sb, table, rootNamespace);
 
         // Close interface
         CloseInterface(sb);
@@ -173,9 +173,10 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <summary>
     /// Generates CRUD methods (Create, Read, Update, Delete).
     /// </summary>
-    private static void GenerateCrudMethods(StringBuilder sb, Table table)
+    private static void GenerateCrudMethods(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -192,7 +193,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"id\">The primary key value.</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>The {entityName} entity if found; otherwise, null.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<{qualifiedEntityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default);");
         sb.AppendLine();
 
         // GetAllAsync
@@ -203,11 +204,11 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"take\">Number of entities to take (for paging).</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>Collection of {entityName} entities.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default);");
         sb.AppendLine();
 
         // GetFilteredAsync (if indexes exist)
-        GenerateGetFilteredAsyncMethod(sb, table);
+        GenerateGetFilteredAsyncMethod(sb, table, rootNamespace);
 
         // Only generate Add/Update/Delete for tables, not for views (views are read-only)
         if (!table.IsView)
@@ -219,7 +220,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to add.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task AddAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task AddAsync({qualifiedEntityName} entity, CancellationToken cancellationToken = default);");
             sb.AppendLine();
 
             // UpdateAsync
@@ -229,7 +230,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <param name=\"entity\">The {entityName} entity to update.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task UpdateAsync({qualifiedEntityName} entity, CancellationToken cancellationToken = default);");
             sb.AppendLine();
 
             // DeleteAsync
@@ -239,7 +240,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine("    /// <param name=\"id\">The primary key value of the entity to delete.</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
             sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default);");
             sb.AppendLine();
         }
     }
@@ -247,7 +248,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <summary>
     /// Generates index-based query methods.
     /// </summary>
-    private static void GenerateIndexBasedMethods(StringBuilder sb, Table table)
+    private static void GenerateIndexBasedMethods(StringBuilder sb, Table table, string rootNamespace)
     {
         if (table.Indexes == null || table.Indexes.Count == 0)
         {
@@ -255,6 +256,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         }
 
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
 
         // Process each non-primary key index
         foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
@@ -297,7 +299,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
                 sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>The {entityName} entity if found; otherwise, null.</returns>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<{qualifiedEntityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
             }
             else
             {
@@ -318,7 +320,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
                 sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>Collection of {entityName} entities matching the criteria.</returns>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default);");
             }
 
             sb.AppendLine();
@@ -328,8 +330,10 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     /// <summary>
     /// Generates aggregate update methods for tables with agg_ columns.
     /// </summary>
-    private static void GenerateAggregateMethods(StringBuilder sb, Table table)
+    private static void GenerateAggregateMethods(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - UpdateAggregatesAsync only uses primitive types in parameters
+
         // Find aggregate columns (agg_ prefix)
         var aggColumns = table.Columns
             .Where(c => c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase))
@@ -381,14 +385,14 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
 
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine("    /// <returns>A task representing the asynchronous operation.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default);");
         sb.AppendLine();
     }
 
     /// <summary>
     /// Generates GetFilteredAsync method based on table indexes.
     /// </summary>
-    private static void GenerateGetFilteredAsyncMethod(StringBuilder sb, Table table)
+    private static void GenerateGetFilteredAsyncMethod(StringBuilder sb, Table table, string rootNamespace)
     {
         var filterableIndexes = table.Indexes?
             .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
@@ -401,6 +405,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         }
 
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
         // Collect unique indexed columns
@@ -451,15 +456,16 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             parameters.Select(p => $"{p.paramType} {p.paramName} = null")
             .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList});");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> GetFilteredAsync({paramList});");
         sb.AppendLine();
     }
 
     /// <summary>
     /// Generates helper methods like ExistsAsync.
     /// </summary>
-    private static void GenerateHelperMethods(StringBuilder sb, Table table)
+    private static void GenerateHelperMethods(StringBuilder sb, Table table, string rootNamespace)
     {
+        _ = rootNamespace; // Not used - ExistsAsync only returns bool, not entity types
         string entityName = GetClassName(table.Name);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -477,13 +483,13 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    /// <param name=\"id\">The primary key value to check.</param>");
         sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
         sb.AppendLine("    /// <returns>True if the entity exists; otherwise, false.</returns>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    Task<bool> ExistsAsync({pkType} id, CancellationToken cancellationToken = default);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    System.Threading.Tasks.Task<bool> ExistsAsync({pkType} id, CancellationToken cancellationToken = default);");
     }
 
     /// <summary>
     /// Generates methods for fetching related data (Master-Detail Views) based on FK relationships.
     /// </summary>
-    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string rootNamespace)
     {
         if (schema.Relationships == null || schema.Relationships.Count == 0)
         {
@@ -505,6 +511,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    // ======================================");
         sb.AppendLine();
 
+        // Track generated methods to avoid duplicates when multiple FKs point to same child table
+        var generatedMethods = new HashSet<string>();
+
         foreach (var relationship in parentRelationships)
         {
             var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -523,6 +532,17 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             var childrenName = Pluralize(childTable.Name);
             var methodName = $"Get{childrenName}Async";
 
+            // Skip if we've already generated this method (happens with multiple FKs to same table)
+            if (generatedMethods.Contains(methodName))
+            {
+                continue;
+            }
+
+            generatedMethods.Add(methodName);
+
+            string childEntityName = GetClassName(childTable.Name);
+            string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
+
             // Generate XML documentation
             sb.AppendLine("    /// <summary>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Fetches all {childrenName.ToLower(CultureInfo.CurrentCulture)} for the specified {table.Name.ToLower(CultureInfo.CurrentCulture)}.");
@@ -531,10 +551,10 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             sb.AppendLine("    /// <param name=\"skip\">Number of records to skip (for pagination).</param>");
             sb.AppendLine("    /// <param name=\"take\">Number of records to take (for pagination).</param>");
             sb.AppendLine("    /// <param name=\"cancellationToken\">Cancellation token.</param>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {GetClassName(childTable.Name)} entities.</returns>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// <returns>A collection of {childEntityName} entities.</returns>");
 
             // Generate method signature
-            var methodSignature = $"    Task<IEnumerable<{GetClassName(childTable.Name)}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
+            var methodSignature = $"    System.Threading.Tasks.Task<IEnumerable<{qualifiedChildEntityName}>> {methodName}({pkType} {ToCamelCase(table.Name)}Id, " +
                 $"int? skip = null, int? take = null, CancellationToken cancellationToken = default);";
             sb.AppendLine(methodSignature);
             sb.AppendLine();
@@ -689,5 +709,38 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     private static string GetClassName(string tableName)
     {
         return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
+    }
+
+    /// <summary>
+    /// Gets a qualified entity name that avoids naming conflicts with system types.
+    /// </summary>
+    /// <param name="entityName">The entity class name.</param>
+    /// <param name="rootNamespace">The root namespace of the project.</param>
+    /// <returns>Fully qualified entity name if there's a conflict, otherwise just the entity name.</returns>
+    private static string GetQualifiedEntityName(string entityName, string rootNamespace)
+    {
+        // Check if entity name conflicts with common .NET types
+        var conflictingTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Task",      // System.Threading.Tasks.Task
+            "Action",    // System.Action
+            "Func",      // System.Func
+            "Exception", // System.Exception
+            "Attribute", // System.Attribute
+            "Object",    // System.Object
+            "String",    // System.String
+            "Thread",    // System.Threading.Thread
+            "Timer",     // System.Threading.Timer
+            "File",      // System.IO.File
+            "Directory", // System.IO.Directory
+            "Stream",    // System.IO.Stream
+        };
+
+        if (conflictingTypes.Contains(entityName))
+        {
+            return $"{rootNamespace}.Domain.Entities.{entityName}";
+        }
+
+        return entityName;
     }
 }
