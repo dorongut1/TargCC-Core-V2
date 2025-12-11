@@ -238,7 +238,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string spName = $"SP_Get{entityName}ByID";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {entityName} by ID: {{Id}}\", id);");
         sb.AppendLine();
@@ -270,7 +270,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string spName = $"SP_GetAll{entityName}s";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture,  $"        _logger.LogDebug(\"Getting all {entityName} entities. Skip: {{Skip}}, Take: {{Take}}\", skip, take);");
         sb.AppendLine();
@@ -346,7 +346,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList})");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting filtered {entityName} entities\");");
         sb.AppendLine();
@@ -391,7 +391,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string spName = $"SP_Add{entityName}";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task AddAsync({entityName} entity, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task AddAsync({entityName} entity, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (entity == null)");
         sb.AppendLine("        {");
@@ -464,7 +464,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string pkPropertyName = PrefixHandler.GetPropertyName(pkColumn);
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (entity == null)");
         sb.AppendLine("        {");
@@ -538,7 +538,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task DeleteAsync({pkType} id, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Deleting {entityName} with ID: {{Id}}\", id);");
         sb.AppendLine();
@@ -645,11 +645,11 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Method signature
         if (index.IsUnique)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
         }
         else
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
         }
 
         sb.AppendLine("    {");
@@ -903,7 +903,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Method signature
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"    public async Task<IEnumerable<{childEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+            $"    public async System.Threading.Tasks.Task<IEnumerable<{childEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(
             CultureInfo.InvariantCulture,
