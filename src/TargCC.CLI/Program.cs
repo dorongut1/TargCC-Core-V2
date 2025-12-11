@@ -6,6 +6,7 @@ using TargCC.CLI.Commands;
 using TargCC.CLI.Configuration;
 using TargCC.CLI.Services;
 using TargCC.CLI.Services.Generation;
+using TargCC.Core.Writers;
 
 namespace TargCC.CLI;
 
@@ -77,6 +78,9 @@ public class Program
         services.AddSingleton<Services.Analysis.IAnalysisService, Services.Analysis.AnalysisService>();
         services.AddSingleton<Documentation.IDocumentationGenerator, Documentation.DocumentationGenerator>();
         services.AddSingleton<IProjectGenerationService, ProjectGenerationService>();
+
+        // File Writer (required by ProjectGenerationService)
+        services.AddSingleton<IFileWriter, FileWriter>();
 
         // Database Analyzer (connection string will be provided at runtime)
         services.AddSingleton<Core.Interfaces.IDatabaseAnalyzer>(sp =>
