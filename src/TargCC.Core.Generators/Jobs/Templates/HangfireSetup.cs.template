@@ -1,0 +1,45 @@
+using Hangfire;
+using Hangfire.SqlServer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace {{Namespace}}.Infrastructure.Jobs;
+
+/// <summary>
+/// Hangfire configuration and setup
+/// </summary>
+public static class HangfireSetup
+{
+    /// <summary>
+    /// Add Hangfire services to the DI container
+    /// </summary>
+    public static IServiceCollection AddHangfireServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found");
+
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+            {
+                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                QueuePollInterval = TimeSpan.Zero,
+                UseRecommendedIsolationLevel = true,
+                DisableGlobalLocks = true
+            }));
+
+        services.AddHangfireServer();
+
+        // Job infrastructure
+        services.AddSingleton<IJobDiscoveryService, HangfireJobDiscoveryService>();
+        services.AddSingleton<IJobExecutor, JobExecutor>();
+        services.AddSingleton<IJobLogger, JobLogger>();
+
+        return services;
+    }
+}
