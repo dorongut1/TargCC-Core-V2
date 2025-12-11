@@ -611,6 +611,9 @@ namespace TargCC.Core.Generators.API
             string childrenName = MakePlural(childEntityName);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
+            // For repository method calls, preserve table name with prefix
+            string repositoryMethodChildrenName = MakePlural(childTable.Name);
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
@@ -641,7 +644,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var {childrenLowerCase} = await _repository.Get{childrenName}Async(id, skip, take).ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var {childrenLowerCase} = await _repository.Get{repositoryMethodChildrenName}Async(id, skip, take).ConfigureAwait(false);");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok({childrenLowerCase});");
             sb.AppendLine("        }");
         }
