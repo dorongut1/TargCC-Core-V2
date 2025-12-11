@@ -352,6 +352,24 @@ namespace TargCC.Core.Generators.API
                 return;
             }
 
+            var parameters = CollectFilterParameters(table, filterableIndexes);
+            if (parameters.Count == 0)
+            {
+                return;
+            }
+
+            GenerateGetFilteredDocumentation(sb, entityNameForDocs, parameters, config);
+            GenerateGetFilteredAttributes(sb, qualifiedEntityName, config);
+            GenerateGetFilteredMethodSignature(sb, qualifiedEntityName, parameters);
+        }
+
+        /// <summary>
+        /// Collects filter parameters from table indexes.
+        /// </summary>
+        private static List<(string paramName, string paramType, string columnName)> CollectFilterParameters(
+            Table table,
+            List<Index> filterableIndexes)
+        {
             var parameters = new List<(string paramName, string paramType, string columnName)>();
             var processedColumns = new HashSet<string>();
 
@@ -376,31 +394,58 @@ namespace TargCC.Core.Generators.API
                 }
             }
 
-            if (parameters.Count == 0)
+            return parameters;
+        }
+
+        /// <summary>
+        /// Generates XML documentation for GetFiltered method.
+        /// </summary>
+        private static void GenerateGetFilteredDocumentation(
+            StringBuilder sb,
+            string entityNameForDocs,
+            List<(string paramName, string paramType, string columnName)> parameters,
+            ApiGeneratorConfig config)
+        {
+            if (!config.GenerateXmlDocumentation)
             {
                 return;
             }
 
-            if (config.GenerateXmlDocumentation)
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityNameForDocs)} based on indexed columns.");
+            sb.AppendLine("        /// </summary>");
+            foreach (var (paramName, _, columnName) in parameters)
             {
-                sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityNameForDocs)} based on indexed columns.");
-                sb.AppendLine("        /// </summary>");
-                foreach (var (paramName, _, columnName) in parameters)
-                {
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
-                }
-
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityNameForDocs} entities.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
             }
 
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityNameForDocs} entities.</returns>");
+        }
+
+        /// <summary>
+        /// Generates attributes for GetFiltered method.
+        /// </summary>
+        private static void GenerateGetFilteredAttributes(
+            StringBuilder sb,
+            string qualifiedEntityName,
+            ApiGeneratorConfig config)
+        {
             sb.AppendLine("        [HttpGet(\"filter\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{qualifiedEntityName}>), 200)]");
             }
+        }
 
+        /// <summary>
+        /// Generates method signature and body for GetFiltered method.
+        /// </summary>
+        private static void GenerateGetFilteredMethodSignature(
+            StringBuilder sb,
+            string qualifiedEntityName,
+            List<(string paramName, string paramType, string columnName)> parameters)
+        {
             var queryParams = string.Join(", ", parameters.Select(p => $"[FromQuery] {p.paramType}? {p.paramName} = null"));
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetFiltered({queryParams})");
             sb.AppendLine("        {");
