@@ -237,7 +237,10 @@ public class ProjectFileGenerator : IProjectFileGenerator
                 new() { Name = "AutoMapper", Version = "12.0.1" },
                 new() { Name = "AutoMapper.Extensions.Microsoft.DependencyInjection", Version = "12.0.1" },
                 new() { Name = "Microsoft.EntityFrameworkCore.SqlServer", Version = "8.0.10" },
-                new() { Name = "Microsoft.AspNetCore.OpenApi", Version = "8.0.10" }
+                new() { Name = "Microsoft.AspNetCore.OpenApi", Version = "8.0.10" },
+                new() { Name = "Hangfire.Core", Version = "1.8.14" },
+                new() { Name = "Hangfire.AspNetCore", Version = "1.8.14" },
+                new() { Name = "Hangfire.SqlServer", Version = "1.8.14" }
             },
             ProjectType.Tests => new List<PackageReference>
             {
