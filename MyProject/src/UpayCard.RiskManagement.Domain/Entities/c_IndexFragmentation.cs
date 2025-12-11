@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_IndexFragmentation table.
-    /// Generated: 2025-12-11 14:19:32
+    /// Generated: 2025-12-11 20:26:12
     /// </summary>
     [Table("c_IndexFragmentation")]
     public partial class IndexFragmentation

@@ -15,7 +15,7 @@ builder.Services.AddHangfireServices(builder.Configuration);
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new HangfireAuthorizationFilter() },
-    DashboardTitle = "UpayCard_RiskManagement - Job Scheduler",
+    DashboardTitle = "UpayCard_RiskManagement_CCV2 - Job Scheduler",
     StatsPollingInterval = 2000
 });
 

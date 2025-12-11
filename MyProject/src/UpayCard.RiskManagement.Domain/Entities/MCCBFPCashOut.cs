@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for MCCBFPCashOut table.
-    /// Generated: 2025-12-11 14:19:36
+    /// Generated: 2025-12-11 20:26:16
     /// </summary>
     [Table("MCCBFPCashOut")]
     public partial class MCCBFPCashOut
