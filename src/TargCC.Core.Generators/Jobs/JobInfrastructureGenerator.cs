@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -158,7 +159,7 @@ public class JobInfrastructureGenerator
         {
             if (!content.Contains($"Include=\"{packageName}\"", StringComparison.OrdinalIgnoreCase))
             {
-                newPackages.AppendLine($"    <PackageReference Include=\"{packageName}\" Version=\"{version}\" />");
+                newPackages.AppendLine(CultureInfo.InvariantCulture, $"    <PackageReference Include=\"{packageName}\" Version=\"{version}\" />");
             }
         }
 
