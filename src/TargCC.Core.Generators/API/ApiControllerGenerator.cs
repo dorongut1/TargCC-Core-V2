@@ -255,7 +255,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            await _repository.AddAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.ID }, entity);");
+            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);");
             sb.AppendLine("        }");
         }
 
