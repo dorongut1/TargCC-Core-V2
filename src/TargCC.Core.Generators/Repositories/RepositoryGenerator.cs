@@ -459,6 +459,8 @@ public class RepositoryGenerator : IRepositoryGenerator
             return;
         }
 
+        string pkPropertyName = PrefixHandler.GetPropertyName(pkColumn);
+
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
@@ -467,12 +469,12 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("            throw new ArgumentNullException(nameof(entity));");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Updating {entityName} with ID: {{Id}}\", entity.ID);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Updating {entityName} with ID: {{Id}}\", entity.{pkPropertyName});");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
         sb.AppendLine("            var parameters = new DynamicParameters();");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.ID);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumn.Name}\", entity.{pkPropertyName});");
 
         // Add only updateable columns (exclude audit columns and ChangedBy - which is added separately)
         var updateableColumns = table.Columns
@@ -506,11 +508,11 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} updated successfully. ID: {{Id}}\", entity.ID);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{entityName} updated successfully. ID: {{Id}}\", entity.{pkPropertyName});");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error updating {entityName} with ID: {{Id}}\", entity.ID);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogError(ex, \"Error updating {entityName} with ID: {{Id}}\", entity.{pkPropertyName});");
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
