@@ -118,10 +118,10 @@ namespace TargCC.Core.Generators.API
             // Only generate Create/Update/Delete for tables, not for views (views are read-only)
             if (!table.IsView)
             {
-                GenerateCreateMethod(sb, qualifiedEntityName, config);
+                GenerateCreateMethod(sb, table, qualifiedEntityName, config);
                 sb.AppendLine();
 
-                GenerateUpdateMethod(sb, qualifiedEntityName, config);
+                GenerateUpdateMethod(sb, table, qualifiedEntityName, config);
                 sb.AppendLine();
 
                 GenerateDeleteMethod(sb, entityName, config);
@@ -222,12 +222,16 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateCreateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateCreateMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
+
+            // Get the primary key property name
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkPropertyName = pkColumn != null ? PrefixHandler.GetPropertyName(pkColumn) : "ID";
 
             if (config.GenerateXmlDocumentation)
             {
@@ -254,16 +258,20 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            await _repository.AddAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.ID }, entity);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            return CreatedAtAction(nameof(GetById), new {{ id = entity.{pkPropertyName} }}, entity);");
             sb.AppendLine("        }");
         }
 
-        private static void GenerateUpdateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateUpdateMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
+
+            // Get the primary key property name
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkPropertyName = pkColumn != null ? PrefixHandler.GetPropertyName(pkColumn) : "ID";
 
             if (config.GenerateXmlDocumentation)
             {
@@ -297,7 +305,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine("            entity.ID = id; // Ensure ID matches route");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            entity.{pkPropertyName} = id; // Ensure ID matches route");
             sb.AppendLine("            await _repository.UpdateAsync(entity).ConfigureAwait(false);");
             sb.AppendLine("            return Ok(entity);");
             sb.AppendLine("        }");
@@ -570,8 +578,8 @@ namespace TargCC.Core.Generators.API
                 }
 
                 // Generate method name to check for duplicates
-                string childEntityName = GetClassName(childTable.Name);
-                string childrenName = MakePlural(childEntityName);
+                // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
+                string childrenName = MakePlural(childTable.Name);
                 string methodName = $"Get{childrenName}";
 
                 // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -606,7 +614,8 @@ namespace TargCC.Core.Generators.API
         {
             string childEntityName = GetClassName(childTable.Name);
             string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
-            string childrenName = MakePlural(childEntityName);
+            // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
+            string childrenName = MakePlural(childTable.Name);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)
