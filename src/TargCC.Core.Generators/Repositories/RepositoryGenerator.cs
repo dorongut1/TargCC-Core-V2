@@ -741,7 +741,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string paramDictStr = string.Join(", ", paramDict);
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task UpdateAggregatesAsync({paramList}, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Updating {entityName} aggregates for ID: {{Id}}\", id);");
         sb.AppendLine();
