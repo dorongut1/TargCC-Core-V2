@@ -341,7 +341,8 @@ namespace TargCC.Core.Generators.API
                     var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
-                        string paramName = GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture);
+                        string paramName = Common.CodeGenerationHelpers.EscapeCSharpKeyword(
+                            GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture));
                         string paramType = GetCSharpTypeName(column.DataType);
                         parameters.Add((paramName, paramType, columnName));
                     }
