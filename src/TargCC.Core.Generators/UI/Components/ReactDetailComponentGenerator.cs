@@ -107,6 +107,9 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hook imports when multiple relationships point to same table
+            var importedHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -114,7 +117,12 @@ namespace TargCC.Core.Generators.UI.Components
                 {
                     var childClassName = GetClassName(childTable.Name);
                     var childrenName = Pluralize(childClassName);
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}{childrenName} }} from '../../hooks/use{className}';");
+                    var hookName = $"use{className}{childrenName}";
+
+                    if (importedHooks.Add(hookName))
+                    {
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {hookName} }} from '../../hooks/use{className}';");
+                    }
                 }
             }
         }
@@ -268,6 +276,9 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hook declarations when multiple relationships point to same table
+            var declaredHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -275,10 +286,15 @@ namespace TargCC.Core.Generators.UI.Components
                 {
                     var childClassName = GetClassName(childTable.Name);
                     var childrenName = Pluralize(childClassName);
-                    var childrenCamelCase = ToCamelCase(childrenName);
-                    sb.AppendLine(
-                        CultureInfo.InvariantCulture,
-                        $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
+                    var hookName = $"use{className}{childrenName}";
+
+                    if (declaredHooks.Add(hookName))
+                    {
+                        var childrenCamelCase = ToCamelCase(childrenName);
+                        sb.AppendLine(
+                            CultureInfo.InvariantCulture,
+                            $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = {hookName}(id ? parseInt(id, 10) : null);");
+                    }
                 }
             }
         }
@@ -472,14 +488,21 @@ namespace TargCC.Core.Generators.UI.Components
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
 
+                // Use HashSet to avoid duplicate grids when multiple relationships point to same table
+                var generatedGrids = new HashSet<string>();
+
                 foreach (var relationship in parentRelationships)
                 {
                     var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                     if (childTable != null)
                     {
-                        sb.AppendLine();
-                        var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
-                        sb.Append(relatedGrid);
+                        // Use child table full name as unique key
+                        if (generatedGrids.Add(childTable.FullName))
+                        {
+                            sb.AppendLine();
+                            var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
+                            sb.Append(relatedGrid);
+                        }
                     }
                 }
             }
