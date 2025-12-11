@@ -238,7 +238,7 @@ export async function downloadGeneratedFilesAsZip(tableName: string): Promise<vo
   const response = await fetch(url, {
     method: 'POST',
     headers: API_CONFIG.DEFAULT_HEADERS,
-    signal: AbortSignal.timeout(30000), // 30 second timeout for ZIP creation
+    signal: AbortSignal.timeout(300000), // 5 minute timeout for ZIP creation (large databases)
     body: JSON.stringify({
       filePaths: history.filesGenerated
     }),
