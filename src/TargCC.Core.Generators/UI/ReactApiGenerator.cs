@@ -253,39 +253,6 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine();
         }
 
-        private string Generate(Table table, DatabaseSchema schema)
-        {
-            var sb = new StringBuilder();
-            var className = GetClassName(table.Name);
-            var camelName = GetCamelCaseName(table.Name);
-
-            // Use PascalCase for API path to match ASP.NET Core controller routing
-            // Controller: VwCustomerOrderSummariesController → /api/VwCustomerOrderSummaries
-            var apiPath = $"/{Pluralize(className)}";
-
-            // File header
-            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
-
-            // Imports
-            GenerateImports(sb, table, schema, className);
-
-            // API object
-            GenerateApiObjectHeader(sb, className, camelName, apiPath);
-
-            // CRUD methods
-            GenerateCrudMethods(sb, table, className, apiPath);
-
-            // GetByXXX from indexes
-            GenerateIndexMethods(sb, table, className, apiPath);
-
-            // Related data methods (Master-Detail Views)
-            GenerateRelatedDataMethods(sb, table, schema, className, apiPath);
-
-            sb.AppendLine("};");
-
-            return sb.ToString();
-        }
-
         /// <summary>
         /// Generates the API object header with documentation.
         /// </summary>
@@ -357,6 +324,39 @@ namespace TargCC.Core.Generators.UI
                     sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
                 }
             }
+        }
+
+        private string Generate(Table table, DatabaseSchema schema)
+        {
+            var sb = new StringBuilder();
+            var className = GetClassName(table.Name);
+            var camelName = GetCamelCaseName(table.Name);
+
+            // Use PascalCase for API path to match ASP.NET Core controller routing
+            // Controller: VwCustomerOrderSummariesController → /api/VwCustomerOrderSummaries
+            var apiPath = $"/{Pluralize(className)}";
+
+            // File header
+            sb.Append(GenerateFileHeader(table.Name, GeneratorType));
+
+            // Imports
+            GenerateImports(sb, table, schema, className);
+
+            // API object
+            GenerateApiObjectHeader(sb, className, camelName, apiPath);
+
+            // CRUD methods
+            GenerateCrudMethods(sb, table, className, apiPath);
+
+            // GetByXXX from indexes
+            GenerateIndexMethods(sb, table, className, apiPath);
+
+            // Related data methods (Master-Detail Views)
+            GenerateRelatedDataMethods(sb, table, schema, className, apiPath);
+
+            sb.AppendLine("};");
+
+            return sb.ToString();
         }
     }
 }
