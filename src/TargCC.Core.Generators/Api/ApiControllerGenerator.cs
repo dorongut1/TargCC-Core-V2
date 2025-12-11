@@ -9,7 +9,6 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
-    using TargCC.Core.Generators.Entities;
 
     // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
@@ -636,7 +635,6 @@ namespace TargCC.Core.Generators.API
         {
             string childEntityName = GetClassName(childTable.Name);
             string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
-
             // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
             string childrenName = MakePlural(childTable.Name);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
