@@ -12,6 +12,7 @@ namespace TargCC.Core.Generators.API
 
     // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
+    using IndexModel = TargCC.Core.Interfaces.Models.Index;
 
     /// <summary>
     /// Generates ASP.NET Core API Controllers with CRUD endpoints.
@@ -161,7 +162,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -197,7 +198,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -226,7 +227,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -262,7 +263,7 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
             if (config.GenerateXmlDocumentation)
@@ -339,10 +340,10 @@ namespace TargCC.Core.Generators.API
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
-            var filterableIndexes = table.Indexes?
+            List<IndexModel>? filterableIndexes = table.Indexes?
                 .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
                 .ToList();
 
@@ -368,7 +369,7 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         private static List<(string paramName, string paramType, string columnName)> CollectFilterParameters(
             Table table,
-            List<Index> filterableIndexes)
+            List<IndexModel> filterableIndexes)
         {
             var parameters = new List<(string paramName, string paramType, string columnName)>();
             var processedColumns = new HashSet<string>();
@@ -389,7 +390,8 @@ namespace TargCC.Core.Generators.API
                         string paramName = Common.CodeGenerationHelpers.EscapeCSharpKeyword(
                             GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture));
                         string paramType = GetCSharpTypeName(column.DataType);
-                        parameters.Add((paramName, paramType, columnName));
+                        string columnNameStr = columnName;
+                        parameters.Add((paramName, paramType, columnNameStr));
                     }
                 }
             }

@@ -253,6 +253,79 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine();
         }
 
+        /// <summary>
+        /// Generates the API object header with documentation.
+        /// </summary>
+        private static void GenerateApiObjectHeader(StringBuilder sb, string className, string camelName, string apiPath)
+        {
+            sb.AppendLine("/**");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * API client for {className} operations.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Base URL: {apiPath}");
+            sb.AppendLine(" */");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
+        }
+
+        /// <summary>
+        /// Generates CRUD methods (Create, Read, Update, Delete).
+        /// </summary>
+        private static void GenerateCrudMethods(StringBuilder sb, Table table, string className, string apiPath)
+        {
+            // VIEWs are read-only - only generate Get methods
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateGetById(className, apiPath));
+            }
+
+            sb.AppendLine(GenerateGetAll(className, apiPath));
+
+            // Write methods only for tables, not for VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine(GenerateCreate(className, apiPath));
+                sb.AppendLine(GenerateUpdate(className, apiPath));
+                sb.AppendLine(GenerateDelete(className, apiPath));
+            }
+        }
+
+        /// <summary>
+        /// Generates GetByXXX methods from table indexes.
+        /// </summary>
+        private static void GenerateIndexMethods(StringBuilder sb, Table table, string className, string apiPath)
+        {
+            foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
+            {
+                var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
+                if (column != null)
+                {
+                    sb.AppendLine(GenerateGetByIndex(className, apiPath, column, index.IsUnique));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates methods for related data (Master-Detail Views).
+        /// </summary>
+        private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string className, string apiPath)
+        {
+            if (schema.Relationships == null)
+            {
+                return;
+            }
+
+            var parentRelationships = schema.Relationships
+                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
+                .ToList();
+
+            foreach (var relationship in parentRelationships)
+            {
+                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
+                if (childTable != null)
+                {
+                    sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
+                }
+            }
+        }
+
         private string Generate(Table table, DatabaseSchema schema)
         {
             var sb = new StringBuilder();
@@ -270,55 +343,16 @@ namespace TargCC.Core.Generators.UI
             GenerateImports(sb, table, schema, className);
 
             // API object
-            sb.AppendLine("/**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $" * API client for {className} operations.");
-            sb.AppendLine(CultureInfo.InvariantCulture, $" * Base URL: {apiPath}");
-            sb.AppendLine(" */");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {camelName}Api = {{");
+            GenerateApiObjectHeader(sb, className, camelName, apiPath);
 
             // CRUD methods
-            // VIEWs are read-only - only generate Get methods
-            if (!table.IsView)
-            {
-                sb.AppendLine(GenerateGetById(className, apiPath));
-            }
-
-            sb.AppendLine(GenerateGetAll(className, apiPath));
-
-            // Write methods only for tables, not for VIEWs
-            if (!table.IsView)
-            {
-                sb.AppendLine(GenerateCreate(className, apiPath));
-                sb.AppendLine(GenerateUpdate(className, apiPath));
-                sb.AppendLine(GenerateDelete(className, apiPath));
-            }
+            GenerateCrudMethods(sb, table, className, apiPath);
 
             // GetByXXX from indexes
-            foreach (var index in table.Indexes.Where(i => i.ColumnNames.Count == 1 && !i.IsPrimaryKey))
-            {
-                var column = table.Columns.Find(c => c.Name == index.ColumnNames[0]);
-                if (column != null)
-                {
-                    sb.AppendLine(GenerateGetByIndex(className, apiPath, column, index.IsUnique));
-                }
-            }
+            GenerateIndexMethods(sb, table, className, apiPath);
 
             // Related data methods (Master-Detail Views)
-            if (schema.Relationships != null)
-            {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
-                    }
-                }
-            }
+            GenerateRelatedDataMethods(sb, table, schema, className, apiPath);
 
             sb.AppendLine("};");
 
