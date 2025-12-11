@@ -368,7 +368,7 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         private static List<(string paramName, string paramType, string columnName)> CollectFilterParameters(
             Table table,
-            List<Index> filterableIndexes)
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
         {
             var parameters = new List<(string paramName, string paramType, string columnName)>();
             var processedColumns = new HashSet<string>();
