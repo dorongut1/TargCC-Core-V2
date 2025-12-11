@@ -157,6 +157,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Infrastructure.Repositories;");
         sb.AppendLine();
         sb.AppendLine("using System.Data;");
+        sb.AppendLine("using System.Threading;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine("using Dapper;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
