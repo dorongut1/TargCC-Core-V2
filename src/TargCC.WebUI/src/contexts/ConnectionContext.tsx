@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback } from 'react';
 import type { Connection } from '../api/connectionApi';
 import { fetchConnections } from '../api/connectionApi';
 import { connectionStore } from '../services/connectionStore';
+import { schemaCache } from '../hooks/useSchemaCache';
 
 const SELECTED_CONNECTION_KEY = 'targcc_selected_connection';
 
@@ -71,6 +72,10 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
       localStorage.removeItem(SELECTED_CONNECTION_KEY);
       connectionStore.setConnectionString(null);
     }
+
+    // IMPORTANT: Clear all cached data when changing connection
+    schemaCache.clear();
+    console.log('Connection changed, cache cleared');
   }, []);
 
   const value: ConnectionContextType = {
