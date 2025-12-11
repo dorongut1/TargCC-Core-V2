@@ -100,7 +100,7 @@ namespace TargCC.Core.Generators.API
             GenerateConstructor(sb, entityName, controllerName, config);
             sb.AppendLine();
 
-            GenerateGetByIdMethod(sb, qualifiedEntityName, config);
+            GenerateGetByIdMethod(sb, table, qualifiedEntityName, config);
             sb.AppendLine();
 
             GenerateGetAllMethod(sb, qualifiedEntityName, config);
@@ -124,7 +124,7 @@ namespace TargCC.Core.Generators.API
                 GenerateUpdateMethod(sb, table, qualifiedEntityName, config);
                 sb.AppendLine();
 
-                GenerateDeleteMethod(sb, entityName, config);
+                GenerateDeleteMethod(sb, table, entityName, config);
             }
 
             sb.AppendLine("    }");
@@ -157,8 +157,12 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateGetByIdMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateGetByIdMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Get the primary key type
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkType = pkColumn != null ? Common.CodeGenerationHelpers.GetCSharpType(pkColumn.DataType) : "int";
+
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
@@ -181,7 +185,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> GetById(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> GetById({pkType} id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (entity == null)");
@@ -292,7 +296,8 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Update(int id, [FromBody] {qualifiedEntityName} entity)");
+            // Use the PK type (already extracted earlier in this method)
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Update({pkType} id, [FromBody] {qualifiedEntityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
@@ -311,8 +316,12 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateDeleteMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateDeleteMethod(StringBuilder sb, Table table, string entityName, ApiGeneratorConfig config)
         {
+            // Get the primary key type
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkType = pkColumn != null ? Common.CodeGenerationHelpers.GetCSharpType(pkColumn.DataType) : "int";
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
@@ -330,7 +339,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine("        public async Task<IActionResult> Delete(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<IActionResult> Delete({pkType} id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var existing = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (existing == null)");
