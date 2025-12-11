@@ -46,7 +46,16 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine("import React from 'react';");
-            sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
+
+            // VIEWs don't use useParams
+            if (table.IsView)
+            {
+                // VIEWs only show an info message, no navigation needed
+            }
+            else
+            {
+                sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
+            }
 
             GenerateFrameworkImports(sb, table, schema, framework);
 
@@ -54,16 +63,10 @@ namespace TargCC.Core.Generators.UI.Components
             if (!table.IsView)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
+                GenerateRelatedDataImports(sb, table, schema, className);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
+                GenerateChildEntityTypeImports(sb, table, schema);
             }
-            else
-            {
-                // VIEWs only have getAll hook, but Detail page doesn't need it
-                // We'll handle this in the component body
-            }
-
-            GenerateRelatedDataImports(sb, table, schema, className);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
-            GenerateChildEntityTypeImports(sb, table, schema);
 
             return sb.ToString();
         }
@@ -72,15 +75,23 @@ namespace TargCC.Core.Generators.UI.Components
         {
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
-
-                var hasRelatedData = schema.Relationships != null &&
-                    schema.Relationships.Exists(r => r.ParentTable == table.FullName && r.IsEnabled);
-
-                if (hasRelatedData)
+                // VIEWs only need Box and Alert for the info message
+                if (table.IsView)
                 {
-                    sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
+                    sb.AppendLine("import { Box, Alert } from '@mui/material';");
+                }
+                else
+                {
+                    sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
+                    sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
+
+                    var hasRelatedData = schema.Relationships != null &&
+                        schema.Relationships.Exists(r => r.ParentTable == table.FullName && r.IsEnabled);
+
+                    if (hasRelatedData)
+                    {
+                        sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
+                    }
                 }
             }
         }
@@ -318,15 +329,25 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Detail: React.FC = () => {{");
-            sb.AppendLine("  const navigate = useNavigate();");
-            sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+
+            // VIEWs don't need navigate or id
+            if (!table.IsView)
+            {
+                sb.AppendLine("  const navigate = useNavigate();");
+                sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+            }
 
             GenerateHooksSection(sb, table, schema, className, camelName);
-            sb.AppendLine();
-            GenerateLoadingState(sb, framework);
-            sb.AppendLine();
-            GenerateErrorState(sb, framework, camelName);
-            sb.AppendLine();
+
+            // VIEWs don't need loading/error states
+            if (!table.IsView)
+            {
+                sb.AppendLine();
+                GenerateLoadingState(sb, framework);
+                sb.AppendLine();
+                GenerateErrorState(sb, framework, camelName);
+                sb.AppendLine();
+            }
 
             // Render
             sb.AppendLine("  return (");
@@ -349,14 +370,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine();
                 GenerateDeleteHandler(sb, camelName);
             }
-            else
-            {
-                // VIEWs are read-only - no entity fetching or delete capability
-                sb.AppendLine("  // VIEWs are read-only - Detail page not applicable");
-                sb.AppendLine("  const isLoading = false;");
-                sb.AppendLine("  const error = null;");
-                sb.AppendLine("  const entity = null;");
-            }
+            // VIEWs don't need any hooks - they just show an info message
         }
 
         private static void GenerateRenderSection(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
