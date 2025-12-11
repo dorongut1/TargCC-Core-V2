@@ -1260,22 +1260,72 @@ try
     app.MapGet("/api/generation/files/{tableName}", async (
         string tableName,
         [FromServices] IGenerationHistoryService historyService,
+        [FromServices] IConfiguration configuration,
         ILogger<Program> logger) =>
     {
         try
         {
+            logger.LogInformation("Fetching generated files for table: {TableName}", tableName);
+
             // Get the last generation record for this table
             var lastGeneration = await historyService.GetLastGenerationAsync(tableName);
 
-            if (lastGeneration == null || !lastGeneration.Success)
+            if (lastGeneration == null)
             {
+                logger.LogWarning("No generation history found for table: {TableName}", tableName);
+
+                // Fallback: Try to find files in the default output directory
+                var outputDir = configuration["Generation:OutputDirectory"] ?? Path.Combine(Directory.GetCurrentDirectory(), "Generated");
+                var tableFolders = new[] {
+                    Path.Combine(outputDir, "Entities"),
+                    Path.Combine(outputDir, "Repositories"),
+                    Path.Combine(outputDir, "Controllers"),
+                    Path.Combine(outputDir, "SQL"),
+                    Path.Combine(outputDir, "React")
+                };
+
+                var foundFiles = new List<string>();
+                foreach (var folder in tableFolders)
+                {
+                    if (Directory.Exists(folder))
+                    {
+                        var filesInFolder = Directory.GetFiles(folder, $"*{tableName}*", SearchOption.AllDirectories);
+                        foundFiles.AddRange(filesInFolder);
+                    }
+                }
+
+                if (foundFiles.Any())
+                {
+                    logger.LogInformation("Found {Count} files via fallback search", foundFiles.Count);
+                    lastGeneration = new GenerationHistory
+                    {
+                        TableName = tableName,
+                        FilesGenerated = foundFiles.ToArray(),
+                        Success = true,
+                        GeneratedAt = DateTime.Now
+                    };
+                }
+                else
+                {
+                    return Results.Ok(new List<object>());
+                }
+            }
+
+            if (!lastGeneration.Success)
+            {
+                logger.LogWarning("Last generation for {TableName} was not successful", tableName);
                 return Results.Ok(new List<object>());
             }
+
+            logger.LogInformation("Found {Count} generated files for {TableName}",
+                lastGeneration.FilesGenerated.Count, tableName);
 
             var files = new List<object>();
 
             foreach (var filePath in lastGeneration.FilesGenerated)
             {
+                logger.LogDebug("Processing file: {FilePath}", filePath);
+
                 if (File.Exists(filePath))
                 {
                     try
@@ -1315,6 +1365,8 @@ try
                             language = language,
                             path = relativePath
                         });
+
+                        logger.LogDebug("Successfully read file: {FileName}", fileName);
                     }
                     catch (Exception ex)
                     {
@@ -1327,6 +1379,7 @@ try
                 }
             }
 
+            logger.LogInformation("Returning {Count} files for {TableName}", files.Count, tableName);
             return Results.Ok(files);
         }
         catch (Exception ex)
