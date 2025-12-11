@@ -333,6 +333,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     private static void GenerateAggregateMethods(StringBuilder sb, Table table, string rootNamespace)
     {
         _ = rootNamespace; // Not used - UpdateAggregatesAsync only uses primitive types in parameters
+
         // Find aggregate columns (agg_ prefix)
         var aggColumns = table.Columns
             .Where(c => c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase))

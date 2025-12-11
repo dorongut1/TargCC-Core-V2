@@ -53,7 +53,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
 
-            GenerateControllerClass(sb, entityName, controllerName, table, schema, config);
+            GenerateControllerClass(sb, entityName, controllerName, table, schema, config, rootNamespace);
 
             sb.AppendLine("}");
 
@@ -72,8 +72,10 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine();
         }
 
-        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, DatabaseSchema? schema, ApiGeneratorConfig config)
+        private static void GenerateControllerClass(StringBuilder sb, string entityName, string controllerName, Table table, DatabaseSchema? schema, ApiGeneratorConfig config, string rootNamespace)
         {
+            string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("    /// <summary>");
@@ -98,28 +100,28 @@ namespace TargCC.Core.Generators.API
             GenerateConstructor(sb, entityName, controllerName, config);
             sb.AppendLine();
 
-            GenerateGetByIdMethod(sb, entityName, config);
+            GenerateGetByIdMethod(sb, qualifiedEntityName, config);
             sb.AppendLine();
 
-            GenerateGetAllMethod(sb, entityName, config);
+            GenerateGetAllMethod(sb, qualifiedEntityName, config);
             sb.AppendLine();
 
-            GenerateGetFilteredMethod(sb, entityName, table, config);
+            GenerateGetFilteredMethod(sb, qualifiedEntityName, table, config);
             sb.AppendLine();
 
             // Generate related data endpoints (Master-Detail Views)
             if (schema != null)
             {
-                GenerateRelatedDataEndpoints(sb, table, schema, config);
+                GenerateRelatedDataEndpoints(sb, table, schema, config, rootNamespace);
             }
 
             // Only generate Create/Update/Delete for tables, not for views (views are read-only)
             if (!table.IsView)
             {
-                GenerateCreateMethod(sb, entityName, config);
+                GenerateCreateMethod(sb, qualifiedEntityName, config);
                 sb.AppendLine();
 
-                GenerateUpdateMethod(sb, entityName, config);
+                GenerateUpdateMethod(sb, qualifiedEntityName, config);
                 sb.AppendLine();
 
                 GenerateDeleteMethod(sb, entityName, config);
@@ -155,26 +157,31 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateGetByIdMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateGetByIdMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Extract simple name for documentation
+            string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
+                : qualifiedEntityName;
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets a {entityName} by ID.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets a {entityNameForDocs} by ID.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The {entityName} entity.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The {entityNameForDocs} entity.</returns>");
             }
 
             sb.AppendLine("        [HttpGet(\"{id}\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({qualifiedEntityName}), 200)]");
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> GetById(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> GetById(int id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (entity == null)");
@@ -186,50 +193,60 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateGetAllMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateGetAllMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Extract simple name for documentation
+            string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
+                : qualifiedEntityName;
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityName)}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityNameForDocs)}.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityName} entities.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityNameForDocs} entities.</returns>");
             }
 
             sb.AppendLine("        [HttpGet]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}>), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{qualifiedEntityName}>), 200)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}>>> GetAll()");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetAll()");
             sb.AppendLine("        {");
             sb.AppendLine("            var entities = await _repository.GetAllAsync().ConfigureAwait(false);");
             sb.AppendLine("            return Ok(entities);");
             sb.AppendLine("        }");
         }
 
-        private static void GenerateCreateMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateCreateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Extract simple name for documentation
+            string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
+                : qualifiedEntityName;
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Creates a new {entityName}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Creates a new {entityNameForDocs}.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine("        /// <param name=\"entity\">The {entityName} to create.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The created {entityName}.</returns>");
+                sb.AppendLine("        /// <param name=\"entity\">The {entityNameForDocs} to create.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The created {entityNameForDocs}.</returns>");
             }
 
             sb.AppendLine("        [HttpPost]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 201)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({qualifiedEntityName}), 201)]");
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> Create([FromBody] {entityName} entity)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Create([FromBody] {qualifiedEntityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
@@ -241,28 +258,33 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateUpdateMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateUpdateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Extract simple name for documentation
+            string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
+                : qualifiedEntityName;
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Updates an existing {entityName}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Updates an existing {entityNameForDocs}.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The entity ID.</param>");
-                sb.AppendLine("        /// <param name=\"entity\">The updated {entityName}.</param>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The updated {entityName}.</returns>");
+                sb.AppendLine("        /// <param name=\"entity\">The updated {entityNameForDocs}.</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>The updated {entityNameForDocs}.</returns>");
             }
 
             sb.AppendLine("        [HttpPut(\"{id}\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({entityName}), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof({qualifiedEntityName}), 200)]");
                 sb.AppendLine("        [ProducesResponseType(404)]");
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<{entityName}>> Update(int id, [FromBody] {entityName} entity)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Update(int id, [FromBody] {qualifiedEntityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
@@ -313,8 +335,13 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateGetFilteredMethod(StringBuilder sb, string entityName, Table table, ApiGeneratorConfig config)
+        private static void GenerateGetFilteredMethod(StringBuilder sb, string qualifiedEntityName, Table table, ApiGeneratorConfig config)
         {
+            // Extract simple name for documentation
+            string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
+                ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
+                : qualifiedEntityName;
+
             var filterableIndexes = table.Indexes?
                 .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
                 .ToList();
@@ -341,7 +368,8 @@ namespace TargCC.Core.Generators.API
                     var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
-                        string paramName = GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture);
+                        string paramName = Common.CodeGenerationHelpers.EscapeCSharpKeyword(
+                            GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture));
                         string paramType = GetCSharpTypeName(column.DataType);
                         parameters.Add((paramName, paramType, columnName));
                     }
@@ -356,25 +384,25 @@ namespace TargCC.Core.Generators.API
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityName)} based on indexed columns.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityNameForDocs)} based on indexed columns.");
                 sb.AppendLine("        /// </summary>");
                 foreach (var (paramName, _, columnName) in parameters)
                 {
                     sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
                 }
 
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityName} entities.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityNameForDocs} entities.</returns>");
             }
 
             sb.AppendLine("        [HttpGet(\"filter\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{entityName}>), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{qualifiedEntityName}>), 200)]");
             }
 
             var queryParams = string.Join(", ", parameters.Select(p => $"[FromQuery] {p.paramType}? {p.paramName} = null"));
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<ActionResult<IEnumerable<{entityName}>>> GetFiltered({queryParams})");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetFiltered({queryParams})");
             sb.AppendLine("        {");
 
             var repoParams = string.Join(", ", parameters.Select(p => p.paramName));
@@ -431,9 +459,42 @@ namespace TargCC.Core.Generators.API
         }
 
         /// <summary>
+        /// Gets a qualified entity name that avoids naming conflicts with system types.
+        /// </summary>
+        /// <param name="entityName">The entity class name.</param>
+        /// <param name="rootNamespace">The root namespace of the project.</param>
+        /// <returns>Fully qualified entity name if there's a conflict, otherwise just the entity name.</returns>
+        private static string GetQualifiedEntityName(string entityName, string rootNamespace)
+        {
+            // Check if entity name conflicts with common .NET types
+            var conflictingTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Task",      // System.Threading.Tasks.Task
+                "Action",    // System.Action
+                "Func",      // System.Func
+                "Exception", // System.Exception
+                "Attribute", // System.Attribute
+                "Object",    // System.Object
+                "String",    // System.String
+                "Thread",    // System.Threading.Thread
+                "Timer",     // System.Threading.Timer
+                "File",      // System.IO.File
+                "Directory", // System.IO.Directory
+                "Stream",    // System.IO.Stream
+            };
+
+            if (conflictingTypes.Contains(entityName))
+            {
+                return $"{rootNamespace}.Domain.Entities.{entityName}";
+            }
+
+            return entityName;
+        }
+
+        /// <summary>
         /// Generates related data endpoints for Master-Detail views.
         /// </summary>
-        private static void GenerateRelatedDataEndpoints(StringBuilder sb, Table table, DatabaseSchema schema, ApiGeneratorConfig config)
+        private static void GenerateRelatedDataEndpoints(StringBuilder sb, Table table, DatabaseSchema schema, ApiGeneratorConfig config, string rootNamespace)
         {
             if (schema.Relationships == null || schema.Relationships.Count == 0)
             {
@@ -452,6 +513,9 @@ namespace TargCC.Core.Generators.API
                 return;
             }
 
+            // Track generated methods to avoid duplicates when multiple FKs point to same child table
+            var generatedMethods = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -460,9 +524,22 @@ namespace TargCC.Core.Generators.API
                     continue;
                 }
 
+                // Generate method name to check for duplicates
+                string childEntityName = GetClassName(childTable.Name);
+                string childrenName = MakePlural(childEntityName);
+                string methodName = $"Get{childrenName}";
+
+                // Skip if we've already generated this method (happens with multiple FKs to same table)
+                if (generatedMethods.Contains(methodName))
+                {
+                    continue;
+                }
+
+                generatedMethods.Add(methodName);
+
                 try
                 {
-                    GenerateSingleRelatedDataEndpoint(sb, childTable, entityName, config);
+                    GenerateSingleRelatedDataEndpoint(sb, childTable, entityName, config, rootNamespace);
                     sb.AppendLine();
                 }
                 catch
@@ -479,9 +556,11 @@ namespace TargCC.Core.Generators.API
             StringBuilder sb,
             Table childTable,
             string parentEntityName,
-            ApiGeneratorConfig config)
+            ApiGeneratorConfig config,
+            string rootNamespace)
         {
             string childEntityName = GetClassName(childTable.Name);
+            string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
             string childrenName = MakePlural(childEntityName);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
@@ -500,13 +579,13 @@ namespace TargCC.Core.Generators.API
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{childEntityName}>), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{qualifiedChildEntityName}>), 200)]");
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
             sb.AppendLine(
                 CultureInfo.InvariantCulture,
-                $"        public async Task<ActionResult<IEnumerable<{childEntityName}>>> Get{childrenName}(int id, [FromQuery] int? skip = null, [FromQuery] int? take = null)");
+                $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedChildEntityName}>>> Get{childrenName}(int id, [FromQuery] int? skip = null, [FromQuery] int? take = null)");
             sb.AppendLine("        {");
             sb.AppendLine("            // Verify parent exists");
             sb.AppendLine("            var parent = await _repository.GetByIdAsync(id).ConfigureAwait(false);");

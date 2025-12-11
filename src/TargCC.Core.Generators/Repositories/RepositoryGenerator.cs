@@ -649,7 +649,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     {
         // Extract simple entity name from qualified name for logging (e.g., "Task" from "App.Domain.Entities.Task")
         string entityNameForLogging = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
-            ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1)..]
+            ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
             : qualifiedEntityName;
 
         sb.AppendLine("    /// <inheritdoc/>");
@@ -712,6 +712,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     private static void GenerateUpdateAggregatesAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         _ = rootNamespace; // Not used - UpdateAggregatesAsync only uses primitive types in parameters
+
         // Find aggregate columns using LINQ
         var aggColumns = table.Columns
             .Where(c => c.Name.StartsWith("agg_", StringComparison.OrdinalIgnoreCase))
