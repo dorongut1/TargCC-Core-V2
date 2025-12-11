@@ -300,9 +300,17 @@ namespace TargCC.Core.Generators.Entities
                     sb.Append(CultureInfo.InvariantCulture, $"            return this.{propertyName} > 0 ? this.{propertyName}.GetHashCode() : 0;");
                     sb.AppendLine();
                 }
+                else if (csharpType.Contains("string", StringComparison.OrdinalIgnoreCase) ||
+                         csharpType.Contains("?", StringComparison.Ordinal))
+                {
+                    // Reference types (string) or nullable value types can use ?.
+                    sb.Append(CultureInfo.InvariantCulture, $"            return this.{propertyName}?.GetHashCode() ?? 0;");
+                    sb.AppendLine();
+                }
                 else
                 {
-                    sb.Append(CultureInfo.InvariantCulture, $"            return this.{propertyName}?.GetHashCode() ?? 0;");
+                    // Non-nullable value types (bool, DateTime, decimal, etc.) - use GetHashCode directly
+                    sb.Append(CultureInfo.InvariantCulture, $"            return this.{propertyName}.GetHashCode();");
                     sb.AppendLine();
                 }
             }

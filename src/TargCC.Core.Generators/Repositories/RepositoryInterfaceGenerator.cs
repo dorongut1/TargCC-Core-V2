@@ -505,6 +505,9 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
         sb.AppendLine("    // ======================================");
         sb.AppendLine();
 
+        // Track generated methods to avoid duplicates when multiple FKs point to same child table
+        var generatedMethods = new HashSet<string>();
+
         foreach (var relationship in parentRelationships)
         {
             var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -522,6 +525,14 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             var pkType = GetCSharpType(pkColumn.DataType);
             var childrenName = Pluralize(childTable.Name);
             var methodName = $"Get{childrenName}Async";
+
+            // Skip if we've already generated this method (happens with multiple FKs to same table)
+            if (generatedMethods.Contains(methodName))
+            {
+                continue;
+            }
+
+            generatedMethods.Add(methodName);
 
             // Generate XML documentation
             sb.AppendLine("    /// <summary>");
