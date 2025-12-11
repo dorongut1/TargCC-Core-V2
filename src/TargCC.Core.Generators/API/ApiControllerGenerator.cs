@@ -37,8 +37,12 @@ namespace TargCC.Core.Generators.API
             var entityName = className;
             var controllerName = MakePlural(className);
 
-            // Extract root namespace from config.Namespace (e.g., "TestApp.API" -> "TestApp")
-            var rootNamespace = config.Namespace.Split('.')[0];
+            // Extract root namespace from config.Namespace (e.g., "TestApp.API" -> "TestApp", or "UpayCard.RiskManagement.API" -> "UpayCard.RiskManagement")
+            // Remove the last segment (typically "API" or "Controllers") to get the root namespace
+            var namespaceParts = config.Namespace.Split('.');
+            var rootNamespace = namespaceParts.Length > 1
+                ? string.Join(".", namespaceParts.Take(namespaceParts.Length - 1))
+                : namespaceParts[0];
 
             var sb = new StringBuilder();
 
