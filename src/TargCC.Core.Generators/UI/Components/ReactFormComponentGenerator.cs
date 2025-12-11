@@ -43,7 +43,7 @@ namespace TargCC.Core.Generators.UI.Components
             return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
         }
 
-        private static string GenerateImports(string className, UIFramework framework, FormValidationLibrary validationLibrary)
+        private static string GenerateImports(string className, UIFramework framework, FormValidationLibrary validationLibrary, Table table)
         {
             var sb = new StringBuilder();
 
@@ -57,7 +57,19 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from '@mui/material';");
+                // Check if table has ENM or LKP columns that require Select/MenuItem
+                var hasEnumOrLookupFields = table.Columns.Exists(c =>
+                    c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase) ||
+                    c.Name.StartsWith("lkp_", StringComparison.OrdinalIgnoreCase));
+
+                if (hasEnumOrLookupFields)
+                {
+                    sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from '@mui/material';");
+                }
+                else
+                {
+                    sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';");
+                }
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useCreate{className}, useUpdate{className} }} from '../../hooks/use{className}';");
@@ -462,7 +474,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.Append(GenerateComponentHeader(table.Name));
 
             // Imports
-            sb.AppendLine(GenerateImports(className, config.Framework, config.ValidationLibrary));
+            sb.AppendLine(GenerateImports(className, config.Framework, config.ValidationLibrary, table));
             sb.AppendLine();
 
             // Component

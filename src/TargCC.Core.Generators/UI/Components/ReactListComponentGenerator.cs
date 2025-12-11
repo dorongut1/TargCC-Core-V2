@@ -61,7 +61,7 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("import { DataGrid, GridColDef, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
                 }
 
-                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, MenuItem, Typography } from '@mui/material';");
+                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, Typography } from '@mui/material';");
 
                 // Only import Edit/Delete/Add icons for tables, not for VIEWs
                 if (!table.IsView)
