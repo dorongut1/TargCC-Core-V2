@@ -95,35 +95,35 @@ public class RepositoryGenerator : IRepositoryGenerator
         GenerateConstructor(sb, table);
 
         // Generate CRUD methods
-        GenerateGetByIdAsync(sb, table);
-        GenerateGetAllAsync(sb, table);
-        GenerateGetFilteredAsync(sb, table);
+        GenerateGetByIdAsync(sb, table, rootNamespace);
+        GenerateGetAllAsync(sb, table, rootNamespace);
+        GenerateGetFilteredAsync(sb, table, rootNamespace);
 
         // Only generate Add/Update/Delete for tables, not for views (views are read-only)
         if (!table.IsView)
         {
-            GenerateAddAsync(sb, table);
-            GenerateUpdateAsync(sb, table);
-            GenerateDeleteAsync(sb, table);
+            GenerateAddAsync(sb, table, rootNamespace);
+            GenerateUpdateAsync(sb, table, rootNamespace);
+            GenerateDeleteAsync(sb, table, rootNamespace);
         }
 
         // Generate index-based query methods
-        GenerateIndexBasedMethods(sb, table);
+        GenerateIndexBasedMethods(sb, table, rootNamespace);
 
         // Only generate aggregate updates for tables, not for views (views are read-only)
         if (!table.IsView)
         {
-            GenerateUpdateAggregatesAsync(sb, table);
+            GenerateUpdateAggregatesAsync(sb, table, rootNamespace);
         }
 
         // Generate related data methods (Master-Detail Views)
         if (schema != null)
         {
-            GenerateRelatedDataMethods(sb, table, schema);
+            GenerateRelatedDataMethods(sb, table, schema, rootNamespace);
         }
 
         // Generate helper methods
-        GenerateExistsAsync(sb, table);
+        GenerateExistsAsync(sb, table, rootNamespace);
 
         // Close class
         CloseClass(sb);
@@ -224,9 +224,10 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates GetByIdAsync method.
     /// </summary>
-    private static void GenerateGetByIdAsync(StringBuilder sb, Table table)
+    private static void GenerateGetByIdAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -238,13 +239,13 @@ public class RepositoryGenerator : IRepositoryGenerator
         string spName = $"SP_Get{entityName}ByID";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{entityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{qualifiedEntityName}?> GetByIdAsync({pkType} id, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {entityName} by ID: {{Id}}\", id);");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{entityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{qualifiedEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                new { ID = id },");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -264,19 +265,20 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates GetAllAsync method.
     /// </summary>
-    private static void GenerateGetAllAsync(StringBuilder sb, Table table)
+    private static void GenerateGetAllAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         string spName = $"SP_GetAll{entityName}s";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> GetAllAsync(int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture,  $"        _logger.LogDebug(\"Getting all {entityName} entities. Skip: {{Skip}}, Take: {{Take}}\", skip, take);");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{entityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{qualifiedEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                new { Skip = skip, Take = take },");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -296,7 +298,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates GetFilteredAsync method based on table indexes.
     /// </summary>
-    private static void GenerateGetFilteredAsync(StringBuilder sb, Table table)
+    private static void GenerateGetFilteredAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         var filterableIndexes = table.Indexes?
             .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
@@ -309,6 +311,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         }
 
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         string spName = $"SP_GetFiltered{entityName}s";
         var parameters = new List<(string paramName, string paramType, string columnName)>();
 
@@ -346,7 +349,7 @@ public class RepositoryGenerator : IRepositoryGenerator
             .Concat(["int? skip = null", "int? take = null", "CancellationToken cancellationToken = default"]));
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> GetFilteredAsync({paramList})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> GetFilteredAsync({paramList})");
         sb.AppendLine("    {");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting filtered {entityName} entities\");");
         sb.AppendLine();
@@ -365,7 +368,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("            };");
         sb.AppendLine();
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{entityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{qualifiedEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -385,13 +388,14 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates AddAsync method.
     /// </summary>
-    private static void GenerateAddAsync(StringBuilder sb, Table table)
+    private static void GenerateAddAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         string spName = $"SP_Add{entityName}";
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task AddAsync({entityName} entity, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task AddAsync({qualifiedEntityName} entity, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (entity == null)");
         sb.AppendLine("        {");
@@ -450,9 +454,10 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates UpdateAsync method.
     /// </summary>
-    private static void GenerateUpdateAsync(StringBuilder sb, Table table)
+    private static void GenerateUpdateAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         string spName = $"SP_Update{entityName}";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
@@ -464,7 +469,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string pkPropertyName = PrefixHandler.GetPropertyName(pkColumn);
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task UpdateAsync({entityName} entity, CancellationToken cancellationToken = default)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task UpdateAsync({qualifiedEntityName} entity, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (entity == null)");
         sb.AppendLine("        {");
@@ -524,7 +529,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates DeleteAsync method.
     /// </summary>
-    private static void GenerateDeleteAsync(StringBuilder sb, Table table)
+    private static void GenerateDeleteAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
         string spName = $"SP_Delete{entityName}";
@@ -563,7 +568,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates index-based query methods.
     /// </summary>
-    private static void GenerateIndexBasedMethods(StringBuilder sb, Table table)
+    private static void GenerateIndexBasedMethods(StringBuilder sb, Table table, string rootNamespace)
     {
         if (table.Indexes == null || table.Indexes.Count == 0)
         {
@@ -580,14 +585,14 @@ public class RepositoryGenerator : IRepositoryGenerator
                 continue;
             }
 
-            GenerateSingleIndexMethod(sb, table, index, entityName);
+            GenerateSingleIndexMethod(sb, table, index, entityName, rootNamespace);
         }
     }
 
     /// <summary>
     /// Generates a single index-based query method.
     /// </summary>
-    private static void GenerateSingleIndexMethod(StringBuilder sb, Table table, Index index, string entityName)
+    private static void GenerateSingleIndexMethod(StringBuilder sb, Table table, Index index, string entityName, string rootNamespace)
     {
         // Build method name and SP name
         string methodName = CodeGenerationHelpers.BuildMethodName("GetBy", index.ColumnNames);
@@ -597,7 +602,8 @@ public class RepositoryGenerator : IRepositoryGenerator
         var (paramList, paramDictStr) = BuildIndexMethodParameters(table, index);
 
         // Generate method signature and body
-        GenerateIndexMethodImplementation(sb, entityName, methodName, spName, index, paramList, paramDictStr);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
+        GenerateIndexMethodImplementation(sb, qualifiedEntityName, methodName, spName, index, paramList, paramDictStr, entityName);
     }
 
     /// <summary>
@@ -633,23 +639,24 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// </summary>
     private static void GenerateIndexMethodImplementation(
      StringBuilder sb,
-     string entityName,
+     string qualifiedEntityName,
      string methodName,
      string spName,
      Index index,
      string paramList,
-     string paramDictStr)
+     string paramDictStr,
+     string entityName)
     {
         sb.AppendLine("    /// <inheritdoc/>");
 
         // Method signature
         if (index.IsUnique)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{entityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<{qualifiedEntityName}?> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
         }
         else
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{entityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public async System.Threading.Tasks.Task<IEnumerable<{qualifiedEntityName}>> {methodName}Async({paramList}, CancellationToken cancellationToken = default)");
         }
 
         sb.AppendLine("    {");
@@ -661,11 +668,11 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Dapper call
         if (index.IsUnique)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{entityName}>(");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{qualifiedEntityName}>(");
         }
         else
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{entityName}>(");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{qualifiedEntityName}>(");
         }
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
@@ -697,7 +704,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates UpdateAggregatesAsync method for tables with agg_ columns.
     /// </summary>
-    private static void GenerateUpdateAggregatesAsync(StringBuilder sb, Table table)
+    private static void GenerateUpdateAggregatesAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         // Find aggregate columns using LINQ
         var aggColumns = table.Columns
@@ -766,9 +773,10 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates ExistsAsync method.
     /// </summary>
-    private static void GenerateExistsAsync(StringBuilder sb, Table table)
+    private static void GenerateExistsAsync(StringBuilder sb, Table table, string rootNamespace)
     {
         string entityName = GetClassName(table.Name);
+        string qualifiedEntityName = GetQualifiedEntityName(entityName, rootNamespace);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
 
         if (pkColumn == null)
@@ -786,7 +794,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{entityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryFirstOrDefaultAsync<{qualifiedEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                new { ID = id },");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -817,7 +825,7 @@ public class RepositoryGenerator : IRepositoryGenerator
     /// <summary>
     /// Generates related data methods (Master-Detail Views) based on FK relationships.
     /// </summary>
-    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema)
+    private static void GenerateRelatedDataMethods(StringBuilder sb, Table table, DatabaseSchema schema, string rootNamespace)
     {
         if (schema.Relationships == null || schema.Relationships.Count == 0)
         {
@@ -871,7 +879,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
             try
             {
-                GenerateSingleRelatedDataMethod(sb, childTable, entityName, pkType, pkColumn.Name);
+                GenerateSingleRelatedDataMethod(sb, childTable, entityName, pkType, pkColumn.Name, rootNamespace);
             }
             catch
             {
@@ -888,11 +896,13 @@ public class RepositoryGenerator : IRepositoryGenerator
         Table childTable,
         string parentEntityName,
         string pkType,
-        string pkColumnName)
+        string pkColumnName,
+        string rootNamespace)
     {
         // IMPORTANT: Use childTable.Name directly (not GetClassName) to match interface generator
         string childrenName = Pluralize(childTable.Name);
         string childEntityName = GetClassName(childTable.Name);
+        string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
         string methodName = $"Get{childrenName}Async";
         string spName = $"SP_Get{parentEntityName}{childrenName}";
         string parentIdParamName = ToCamelCase(parentEntityName) + "Id";
@@ -903,7 +913,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         // Method signature
         sb.AppendLine(
             CultureInfo.InvariantCulture,
-            $"    public async System.Threading.Tasks.Task<IEnumerable<{childEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
+            $"    public async System.Threading.Tasks.Task<IEnumerable<{qualifiedChildEntityName}>> {methodName}({pkType} {parentIdParamName}, int? skip = null, int? take = null, CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
         sb.AppendLine(
             CultureInfo.InvariantCulture,
@@ -920,7 +930,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine();
 
         // Dapper call
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{childEntityName}>(");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = await _connection.QueryAsync<{qualifiedChildEntityName}>(");
         sb.AppendLine(CultureInfo.InvariantCulture, $"                \"{spName}\",");
         sb.AppendLine("                parameters,");
         sb.AppendLine("                commandType: CommandType.StoredProcedure);");
@@ -1057,6 +1067,39 @@ public class RepositoryGenerator : IRepositoryGenerator
     private static string GetClassName(string tableName)
     {
         return TargCC.Core.Generators.API.BaseApiGenerator.GetClassName(tableName);
+    }
+
+    /// <summary>
+    /// Gets a qualified entity name that avoids naming conflicts with system types.
+    /// </summary>
+    /// <param name="entityName">The entity class name.</param>
+    /// <param name="rootNamespace">The root namespace of the project.</param>
+    /// <returns>Fully qualified entity name if there's a conflict, otherwise just the entity name.</returns>
+    private static string GetQualifiedEntityName(string entityName, string rootNamespace)
+    {
+        // Check if entity name conflicts with common .NET types
+        var conflictingTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Task",      // System.Threading.Tasks.Task
+            "Action",    // System.Action
+            "Func",      // System.Func
+            "Exception", // System.Exception
+            "Attribute", // System.Attribute
+            "Object",    // System.Object
+            "String",    // System.String
+            "Thread",    // System.Threading.Thread
+            "Timer",     // System.Threading.Timer
+            "File",      // System.IO.File
+            "Directory", // System.IO.Directory
+            "Stream",    // System.IO.Stream
+        };
+
+        if (conflictingTypes.Contains(entityName))
+        {
+            return $"{rootNamespace}.Domain.Entities.{entityName}";
+        }
+
+        return entityName;
     }
 
     /// <summary>
