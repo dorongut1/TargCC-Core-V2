@@ -301,7 +301,7 @@ namespace TargCC.Core.Generators.Entities
                     sb.AppendLine();
                 }
                 else if (csharpType.Contains("string", StringComparison.OrdinalIgnoreCase) ||
-                         csharpType.Contains('?'))
+                         csharpType.Contains("?", StringComparison.Ordinal))
                 {
                     // Reference types (string) or nullable value types can use ?.
                     sb.Append(CultureInfo.InvariantCulture, $"            return this.{propertyName}?.GetHashCode() ?? 0;");
