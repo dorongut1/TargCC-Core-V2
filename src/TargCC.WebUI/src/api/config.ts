@@ -5,7 +5,7 @@
 
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-  TIMEOUT: 300000, // 5 minutes - increased for large databases
+  TIMEOUT: 90000, // 90 seconds - reasonable timeout for single operations
   DEFAULT_HEADERS: {
     'Content-Type': 'application/json',
   },

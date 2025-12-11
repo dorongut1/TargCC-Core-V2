@@ -27,7 +27,7 @@ export class TargccApiService {
   constructor(baseURL: string = 'http://localhost:5000/api') {
     this.client = axios.create({
       baseURL,
-      timeout: 300000, // 5 minutes - increased for large databases
+      timeout: 90000, // 90 seconds - reasonable timeout
       headers: {
         'Content-Type': 'application/json',
       },

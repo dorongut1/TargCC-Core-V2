@@ -176,10 +176,14 @@ export async function generate(request: GenerateRequest): Promise<GenerateRespon
     generateReactUI: request.options.generateReactUI ?? false,
   };
 
+  // Dynamic timeout based on number of tables (30 seconds per table, minimum 60 seconds)
+  const tableCount = request.tableNames.length;
+  const dynamicTimeout = Math.max(60000, tableCount * 30000);
+
   const response = await fetch(url, {
     method: 'POST',
     headers: API_CONFIG.DEFAULT_HEADERS,
-    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+    signal: AbortSignal.timeout(dynamicTimeout),
     body: JSON.stringify(backendRequest),
   });
 
@@ -238,7 +242,7 @@ export async function downloadGeneratedFilesAsZip(tableName: string): Promise<vo
   const response = await fetch(url, {
     method: 'POST',
     headers: API_CONFIG.DEFAULT_HEADERS,
-    signal: AbortSignal.timeout(300000), // 5 minute timeout for ZIP creation (large databases)
+    signal: AbortSignal.timeout(120000), // 2 minute timeout for ZIP creation
     body: JSON.stringify({
       filePaths: history.filesGenerated
     }),
