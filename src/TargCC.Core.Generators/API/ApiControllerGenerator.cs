@@ -394,8 +394,9 @@ namespace TargCC.Core.Generators.API
                     var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
-                        string paramName = Common.CodeGenerationHelpers.EscapeCSharpKeyword(
-                            GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture));
+                        // Use same parameter naming as Repository to ensure consistency
+                        string paramName = Common.CodeGenerationHelpers.ToCamelCase(
+                            Common.CodeGenerationHelpers.SanitizeColumnName(columnName));
                         string paramType = GetCSharpTypeName(column.DataType);
                         parameters.Add((paramName, paramType, columnName));
                     }
@@ -427,6 +428,12 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
             }
 
+            if (parameters.Count > 0)
+            {
+                sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");
+                sb.AppendLine("        /// <param name=\"take\">Number of records to take for pagination.</param>");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityNameForDocs} entities.</returns>");
         }
 
@@ -455,10 +462,24 @@ namespace TargCC.Core.Generators.API
             List<(string paramName, string paramType, string columnName)> parameters)
         {
             var queryParams = string.Join(", ", parameters.Select(p => $"[FromQuery] {p.paramType}? {p.paramName} = null"));
+
+            // Add skip and take parameters if there are filter parameters
+            if (parameters.Count > 0)
+            {
+                queryParams += ", [FromQuery] int? skip = null, [FromQuery] int? take = null";
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetFiltered({queryParams})");
             sb.AppendLine("        {");
 
             var repoParams = string.Join(", ", parameters.Select(p => p.paramName));
+
+            // Add skip, take, and cancellationToken to repository call
+            if (parameters.Count > 0)
+            {
+                repoParams += ", skip, take, CancellationToken.None";
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"            var entities = await _repository.GetFilteredAsync({repoParams}).ConfigureAwait(false);");
             sb.AppendLine("            return Ok(entities);");
             sb.AppendLine("        }");
