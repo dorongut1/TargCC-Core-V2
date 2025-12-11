@@ -1,0 +1,104 @@
+﻿using System;
+
+namespace UpayCard.RiskManagement.Application.Jobs;
+
+/// <summary>
+/// Marks a class as a TargCC job for automatic discovery and registration
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+public class TargCCJobAttribute : Attribute
+{
+    /// <summary>
+    /// Job type
+    /// </summary>
+    public JobType JobType { get; set; } = JobType.Recurring;
+
+    /// <summary>
+    /// CRON expression for recurring jobs (e.g., "0 2 * * *" for 2 AM daily)
+    /// See https://crontab.guru for CRON expression reference
+    /// </summary>
+    public string? CronExpression { get; set; }
+
+    /// <summary>
+    /// Time zone for CRON expression (default: UTC)
+    /// </summary>
+    public string TimeZone { get; set; } = "UTC";
+
+    /// <summary>
+    /// Queue name for job execution (default: "default")
+    /// </summary>
+    public string Queue { get; set; } = "default";
+
+    /// <summary>
+    /// Number of retry attempts on failure (default: 3)
+    /// </summary>
+    public int RetryAttempts { get; set; } = 3;
+
+    /// <summary>
+    /// Creates a recurring job attribute with CRON schedule
+    /// </summary>
+    /// <param name="cronExpression">CRON expression (e.g., "0 2 * * *")</param>
+    public TargCCJobAttribute(string cronExpression)
+    {
+        JobType = JobType.Recurring;
+        CronExpression = cronExpression;
+    }
+
+    /// <summary>
+    /// Creates a manual or fire-and-forget job attribute
+    /// </summary>
+    /// <param name="jobType">Type of job</param>
+    public TargCCJobAttribute(JobType jobType)
+    {
+        JobType = jobType;
+    }
+}
+
+/// <summary>
+/// Job execution type
+/// </summary>
+public enum JobType
+{
+    /// <summary>
+    /// Recurring job with CRON schedule (e.g., daily, weekly)
+    /// </summary>
+    Recurring,
+
+    /// <summary>
+    /// Fire-and-forget job (runs once when enqueued)
+    /// </summary>
+    FireAndForget,
+
+    /// <summary>
+    /// Manual trigger only (no automatic scheduling)
+    /// </summary>
+    Manual
+}
+
+/// <summary>
+/// Display name for the job in dashboard and logs
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class JobDisplayNameAttribute : Attribute
+{
+    public string DisplayName { get; }
+
+    public JobDisplayNameAttribute(string displayName)
+    {
+        DisplayName = displayName;
+    }
+}
+
+/// <summary>
+/// Description of what the job does
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class JobDescriptionAttribute : Attribute
+{
+    public string Description { get; }
+
+    public JobDescriptionAttribute(string description)
+    {
+        Description = description;
+    }
+}
