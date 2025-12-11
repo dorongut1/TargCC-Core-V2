@@ -853,8 +853,9 @@ public class RepositoryGenerator : IRepositoryGenerator
             }
 
             // Generate method name to check for duplicates
+            // IMPORTANT: Use childTable.Name directly (not GetClassName) to match interface generator
+            string childrenName = Pluralize(childTable.Name);
             string childEntityName = GetClassName(childTable.Name);
-            string childrenName = Pluralize(childEntityName);
             string methodName = $"Get{childrenName}Async";
 
             // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -867,7 +868,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
             try
             {
-                GenerateSingleRelatedDataMethod(sb, table, childTable, entityName, pkType);
+                GenerateSingleRelatedDataMethod(sb, table, childTable, entityName, pkType, pkColumn.Name);
             }
             catch
             {
@@ -884,11 +885,12 @@ public class RepositoryGenerator : IRepositoryGenerator
         Table parentTable,
         Table childTable,
         string parentEntityName,
-        string pkType)
+        string pkType,
+        string pkColumnName)
     {
-        // Pluralize child table name (Order → Orders)
+        // IMPORTANT: Use childTable.Name directly (not GetClassName) to match interface generator
+        string childrenName = Pluralize(childTable.Name);
         string childEntityName = GetClassName(childTable.Name);
-        string childrenName = Pluralize(childEntityName);
         string methodName = $"Get{childrenName}Async";
         string spName = $"SP_Get{parentEntityName}{childrenName}";
         string parentIdParamName = ToCamelCase(parentEntityName) + "Id";
@@ -910,7 +912,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         // Build DynamicParameters
         sb.AppendLine("            var parameters = new DynamicParameters();");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{parentTable.PrimaryKeyColumns[0]}\", {parentIdParamName});");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            parameters.Add(\"@{pkColumnName}\", {parentIdParamName});");
         sb.AppendLine("            parameters.Add(\"@Skip\", skip);");
         sb.AppendLine("            parameters.Add(\"@Take\", take);");
         sb.AppendLine();
