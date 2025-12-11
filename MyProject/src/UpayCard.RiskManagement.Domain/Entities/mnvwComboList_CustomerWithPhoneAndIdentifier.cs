@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for mnvwComboList_CustomerWithPhoneAndIdentifier table.
-    /// Generated: 2025-12-11 11:52:13
+    /// Generated: 2025-12-11 13:48:47
     /// </summary>
     [Table("mnvwComboList_CustomerWithPhoneAndIdentifier")]
     public partial class MnvwComboListCustomerWithPhoneAndIdentifier

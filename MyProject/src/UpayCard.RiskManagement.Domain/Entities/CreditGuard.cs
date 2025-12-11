@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CreditGuard table.
-    /// Generated: 2025-12-11 11:52:12
+    /// Generated: 2025-12-11 13:48:46
     /// </summary>
     [Table("CreditGuard")]
     public partial class CreditGuard
@@ -240,7 +240,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         public override int GetHashCode()
         {
-            return this.TableName_CreditGuard?.GetHashCode() ?? 0;
+            return this.TableName_CreditGuard.GetHashCode();
         }
 
         #endregion

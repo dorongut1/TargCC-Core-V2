@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for SAP table.
-    /// Generated: 2025-12-11 11:52:14
+    /// Generated: 2025-12-11 13:48:48
     /// </summary>
     [Table("SAP")]
     public partial class Sap
@@ -320,7 +320,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         public override int GetHashCode()
         {
-            return this.TableName_SAP?.GetHashCode() ?? 0;
+            return this.TableName_SAP.GetHashCode();
         }
 
         #endregion

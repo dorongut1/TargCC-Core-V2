@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CardIssuer table.
-    /// Generated: 2025-12-11 11:52:10
+    /// Generated: 2025-12-11 13:48:44
     /// </summary>
     [Table("CardIssuer")]
     public partial class CardIssuer
@@ -429,7 +429,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         public override int GetHashCode()
         {
-            return this.TableName_CardIssuer?.GetHashCode() ?? 0;
+            return this.TableName_CardIssuer.GetHashCode();
         }
 
         #endregion

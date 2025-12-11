@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for GovtReportDefinition table.
-    /// Generated: 2025-12-11 11:52:13
+    /// Generated: 2025-12-11 13:48:47
     /// </summary>
     [Table("GovtReportDefinition")]
     public partial class GovtReportDefinition
@@ -243,7 +243,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         public override int GetHashCode()
         {
-            return this.TableName_GovtReportDefinition?.GetHashCode() ?? 0;
+            return this.TableName_GovtReportDefinition.GetHashCode();
         }
 
         #endregion

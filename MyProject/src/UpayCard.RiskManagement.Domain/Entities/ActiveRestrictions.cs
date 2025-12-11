@@ -14,16 +14,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ActiveRestrictions table.
-    /// Generated: 2025-12-11 11:52:10
+    /// Generated: 2025-12-11 13:48:43
     /// </summary>
     [Table("ActiveRestrictions")]
     public partial class ActiveRestrictions
     {
-        #region Backing Fields
-
-        private string _entityIDEncrypted;
-        #endregion
-
         #region Properties
 
         // Primary Key(s)
@@ -52,16 +47,12 @@ namespace UpayCard.RiskManagement.Domain.Entities
         [NotMapped]
         public int enmEntityTypeEnum { get; set; }
         /// <summary>
-        /// Encrypted value (two-way encryption).
-        /// Automatically encrypted/decrypted by the application.
+        /// Gets or sets the EntityID.
+        /// WARNING: Column has 'ent_' prefix but is not a string type. Encryption not applied.
         /// </summary>
         [Column("EntityID")]
-        [JsonIgnore]
-        public long EntityID
-        {
-            get => DecryptValue(_entityIDEncrypted);
-            set => _entityIDEncrypted = EncryptValue(value);
-        }
+        [Required]
+        public long EntityID { get; set; }
         /// <summary>
         /// Enum value for enmBlockedActionType.
         /// </summary>

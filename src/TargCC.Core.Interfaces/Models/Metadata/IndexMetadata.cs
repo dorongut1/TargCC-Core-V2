@@ -96,7 +96,7 @@ public class IndexMetadata
     /// <summary>
     /// Gets or sets the collection of columns that make up this index.
     /// </summary>
-    public List<IndexColumnMetadata> Columns { get; set; } = new();
+    public List<IndexColumnMetadata> Columns { get; set; } = new ();
 }
 
 /// <summary>

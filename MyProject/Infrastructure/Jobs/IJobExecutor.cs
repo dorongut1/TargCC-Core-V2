@@ -1,0 +1,22 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using UpayCard.RiskManagement.Application.Jobs;
+
+namespace UpayCard.RiskManagement.Infrastructure.Jobs;
+
+/// <summary>
+/// Service for executing jobs with logging and error handling
+/// </summary>
+public interface IJobExecutor
+{
+    /// <summary>
+    /// Executes a job by type
+    /// </summary>
+    Task<JobResult> ExecuteJobAsync(Type jobType, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Executes a job by name
+    /// </summary>
+    Task<JobResult> ExecuteJobByNameAsync(string jobName, CancellationToken cancellationToken);
+}
