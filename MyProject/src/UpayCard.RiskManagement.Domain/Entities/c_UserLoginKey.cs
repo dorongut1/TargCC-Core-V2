@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_UserLoginKey table.
-    /// Generated: 2025-12-11 21:35:44
+    /// Generated: 2025-12-11 21:58:09
     /// </summary>
     [Table("c_UserLoginKey")]
     public partial class UserLoginKey

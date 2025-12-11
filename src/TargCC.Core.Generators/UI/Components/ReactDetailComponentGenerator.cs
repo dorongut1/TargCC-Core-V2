@@ -494,15 +494,11 @@ namespace TargCC.Core.Generators.UI.Components
                 foreach (var relationship in parentRelationships)
                 {
                     var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
+                    if (childTable != null && generatedGrids.Add(childTable.FullName))
                     {
-                        // Use child table full name as unique key
-                        if (generatedGrids.Add(childTable.FullName))
-                        {
-                            sb.AppendLine();
-                            var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
-                            sb.Append(relatedGrid);
-                        }
+                        sb.AppendLine();
+                        var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
+                        sb.Append(relatedGrid);
                     }
                 }
             }
