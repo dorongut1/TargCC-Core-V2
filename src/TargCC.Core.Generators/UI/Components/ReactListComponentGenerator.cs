@@ -214,7 +214,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"    return {pluralName}.filter(item => {{");
             sb.AppendLine("      return activeFilters.every(([column, filterValue]) => {");
             sb.AppendLine("        // Cast to any to avoid TypeScript union type issues with instanceof");
-            sb.AppendLine("        const itemValue = item[column as keyof typeof item] as any;");
+            sb.AppendLine("        let itemValue = item[column as keyof typeof item] as any;");
             sb.AppendLine("        ");
             sb.AppendLine("        // Special handling for date filtering - compare as Date objects");
             sb.AppendLine("        if (typeof filterValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(filterValue)) {");
