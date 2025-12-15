@@ -31,7 +31,8 @@ TargCC is a **next-generation code generation platform** that creates complete, 
 - ⏱️ **Watch Mode** - Auto-regenerate on schema changes
 - 📊 **Impact Analysis** - Know what will break before it breaks
 - 🔒 **Security Scanning** - Find unencrypted sensitive data
-- 🎨 **React UI Generator** - Auto-generate forms, grids, types, hooks ✅ **NEW!**
+- 🎨 **React UI Generator** - Auto-generate forms, grids, types, hooks ✅
+- 📄 **Server-Side Pagination** - Efficient filtering, sorting, and pagination ✅ **NEW!**
 - 🌐 **Web Dashboard** - Modern React-based management interface (95%)
 - 🤖 **AI Code Editor** - Modify generated code with natural language 🚧 **COMING SOON!**
 
@@ -516,6 +517,7 @@ dotnet test --filter "Category=Integration"
 - [**Quickstart Guide**](docs/current/QUICKSTART.md) - 5 minutes from zero to running app
 - [**CLI Reference**](docs/current/CLI-REFERENCE.md) - Complete command reference
 - [**Usage Examples**](docs/current/USAGE-EXAMPLES.md) - Common scenarios
+- [**Server-Side Filtering Guide**](docs/SERVER_SIDE_FILTERING_GUIDE.md) - Pagination, sorting, and filtering ✨ **NEW!**
 
 ### Architecture & Design
 - [Architecture Decision](docs/current/ARCHITECTURE_DECISION.md) - Why Clean Architecture?
