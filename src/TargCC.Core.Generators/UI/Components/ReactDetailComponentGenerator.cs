@@ -65,7 +65,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
                 GenerateRelatedDataImports(sb, table, schema, className);
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
-                GenerateChildEntityTypeImports(sb, table, schema, className);
+                // Child entity type imports removed - TypeScript infers types from hooks
             }
 
             return sb.ToString();
@@ -90,7 +90,7 @@ namespace TargCC.Core.Generators.UI.Components
 
                     if (hasRelatedData)
                     {
-                        sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
+                        sb.AppendLine("import { DataGrid } from '@mui/x-data-grid';");
                     }
                 }
             }

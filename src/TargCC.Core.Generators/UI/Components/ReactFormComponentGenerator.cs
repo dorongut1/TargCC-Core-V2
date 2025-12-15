@@ -62,14 +62,23 @@ namespace TargCC.Core.Generators.UI.Components
                     c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase) ||
                     c.Name.StartsWith("lkp_", StringComparison.OrdinalIgnoreCase));
 
+                // Check if table has BIT columns that require Checkbox/FormControlLabel
+                var hasBooleanFields = table.Columns.Exists(c =>
+                    c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase));
+
+                var imports = new List<string> { "TextField", "Button", "Box", "CircularProgress" };
+
                 if (hasEnumOrLookupFields)
                 {
-                    sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from '@mui/material';");
+                    imports.AddRange(new[] { "Select", "MenuItem", "FormControl", "InputLabel" });
                 }
-                else
+
+                if (hasBooleanFields)
                 {
-                    sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';");
+                    imports.AddRange(new[] { "Checkbox", "FormControlLabel" });
                 }
+
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {string.Join(", ", imports)} }} from '@mui/material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useCreate{className}, useUpdate{className} }} from '../../hooks/use{className}';");
