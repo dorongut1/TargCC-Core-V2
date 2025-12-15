@@ -49,7 +49,7 @@ namespace TargCC.Core.Generators.API
 
             sb.Append(GenerateFileHeader(table.Name, "API Controller Generator"));
 
-            AppendUsings(sb, rootNamespace, controllerName);
+            AppendUsings(sb, rootNamespace);
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
@@ -61,16 +61,14 @@ namespace TargCC.Core.Generators.API
             return sb.ToString();
         }
 
-        private static void AppendUsings(StringBuilder sb, string rootNamespace, string controllerName)
+        private static void AppendUsings(StringBuilder sb, string rootNamespace)
         {
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using System.Linq;");
             sb.AppendLine("using System.Threading.Tasks;");
-            sb.AppendLine("using MediatR;");
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sb.AppendLine("using Microsoft.Extensions.Logging;");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Features.{controllerName}.Queries;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
@@ -138,7 +136,6 @@ namespace TargCC.Core.Generators.API
         private static void GenerateFields(StringBuilder sb, string entityName, string controllerName)
         {
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly I{entityName}Repository _repository;");
-            sb.AppendLine("        private readonly IMediator _mediator;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{controllerName}Controller> _logger;");
         }
 
@@ -150,17 +147,14 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Initializes a new instance of the <see cref=\"{controllerName}Controller\"/> class.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"repository\">Repository for {entityName}.</param>");
-                sb.AppendLine("        /// <param name=\"mediator\">MediatR instance for sending queries.</param>");
                 sb.AppendLine("        /// <param name=\"logger\">Logger instance.</param>");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public {controllerName}Controller(");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            I{entityName}Repository repository,");
-            sb.AppendLine("            IMediator mediator,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            ILogger<{controllerName}Controller> logger)");
             sb.AppendLine("        {");
             sb.AppendLine("            _repository = repository ?? throw new ArgumentNullException(nameof(repository));");
-            sb.AppendLine("            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));");
             sb.AppendLine("            _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
             sb.AppendLine("        }");
         }
@@ -217,13 +211,10 @@ namespace TargCC.Core.Generators.API
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {pluralName} with server-side filtering, sorting, and pagination.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {pluralName} with server-side pagination.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"filters\">Optional filters to apply.</param>");
                 sb.AppendLine("        /// <param name=\"page\">Page number (1-based). Default is 1.</param>");
                 sb.AppendLine("        /// <param name=\"pageSize\">Number of items per page. Default is 100.</param>");
-                sb.AppendLine("        /// <param name=\"sortBy\">Field to sort by. Default is \"Id\".</param>");
-                sb.AppendLine("        /// <param name=\"sortDirection\">Sort direction (asc/desc). Default is \"asc\".</param>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Paginated result of {entityNameForDocs} entities.</returns>");
             }
 
@@ -235,24 +226,26 @@ namespace TargCC.Core.Generators.API
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<PagedResult<{qualifiedEntityName}>>> GetAll(");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            [FromQuery] {entityNameForDocs}Filters? filters,");
             sb.AppendLine("            [FromQuery] int page = 1,");
-            sb.AppendLine("            [FromQuery] int pageSize = 100,");
-            sb.AppendLine("            [FromQuery] string? sortBy = \"Id\",");
-            sb.AppendLine("            [FromQuery] string sortDirection = \"asc\")");
+            sb.AppendLine("            [FromQuery] int pageSize = 100)");
             sb.AppendLine("        {");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = new Get{pluralName}Query");
+            sb.AppendLine("            var allEntities = await _repository.GetAllAsync().ConfigureAwait(false);");
+            sb.AppendLine("            var totalCount = allEntities.Count();");
+            sb.AppendLine();
+            sb.AppendLine("            var pagedEntities = allEntities");
+            sb.AppendLine("                .Skip((page - 1) * pageSize)");
+            sb.AppendLine("                .Take(pageSize)");
+            sb.AppendLine("                .ToList();");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = new PagedResult<{qualifiedEntityName}>");
             sb.AppendLine("            {");
-            sb.AppendLine("                Filters = filters,");
+            sb.AppendLine("                Items = pagedEntities,");
+            sb.AppendLine("                TotalCount = totalCount,");
             sb.AppendLine("                Page = page,");
-            sb.AppendLine("                PageSize = pageSize,");
-            sb.AppendLine("                SortBy = sortBy,");
-            sb.AppendLine("                SortDirection = sortDirection");
+            sb.AppendLine("                PageSize = pageSize");
             sb.AppendLine("            };");
             sb.AppendLine();
-            sb.AppendLine("            var result = await _mediator.Send(query).ConfigureAwait(false);");
-            sb.AppendLine();
-            sb.AppendLine("            return result.IsSuccess ? Ok(result.Value) : Problem(result.Error);");
+            sb.AppendLine("            return Ok(result);");
             sb.AppendLine("        }");
         }
 
