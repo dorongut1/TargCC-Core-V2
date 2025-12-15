@@ -69,9 +69,10 @@ namespace TargCC.Core.Generators.UI.Components
                 // Only BIT columns without special prefixes and not excluded from create forms
                 var hasBooleanFields = GetDataColumns(table)
                     .Where(c => !c.IsPrimaryKey && !c.IsIdentity)
-                    .Where(c =>
+                    .Any(c =>
                     {
                         var (prefix, _) = SplitPrefix(c.Name);
+
                         // Exclude read-only prefixes that are skipped in create mode
                         if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
                         {
@@ -86,8 +87,7 @@ namespace TargCC.Core.Generators.UI.Components
                         }
 
                         return c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase);
-                    })
-                    .Any();
+                    });
 
                 var imports = new List<string> { "TextField", "Button", "Box", "CircularProgress" };
 
