@@ -512,7 +512,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("          apiRef={apiRef}");
             sb.AppendLine("          rows={filteredData || []}");
             sb.AppendLine("          columns={columns}");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName} ?? 0}}");
             sb.AppendLine("          slots={{");
             sb.AppendLine("            toolbar: CustomToolbar,");
             sb.AppendLine("          }}");
