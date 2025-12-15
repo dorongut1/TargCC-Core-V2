@@ -199,7 +199,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.Append(GenerateComponentSetup(table, className, pluralName));
-            sb.Append(GenerateFilterLogic(pluralName));
+            sb.Append(GenerateFilterLogic());
             sb.Append(GenerateHandlersAndToolbar());
             sb.Append(GenerateExportToExcelHandler(className));
             sb.AppendLine(GenerateColumns(table));
@@ -312,7 +312,7 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateFilterLogic(string pluralName)
+        private static string GenerateFilterLogic()
         {
             var sb = new StringBuilder();
             sb.AppendLine("  // URL update handlers");
@@ -349,32 +349,6 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    setSearchParams(newParams);");
             sb.AppendLine("  };");
             sb.AppendLine();
-            return sb.ToString();
-        }
-
-        private static string GenerateDateFilterLogic()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("        // Special handling for date filtering - compare as Date objects");
-            sb.AppendLine("        if (typeof filterValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(filterValue)) {");
-            sb.AppendLine("          // Filter value is from date picker (YYYY-MM-DD)");
-            sb.AppendLine("          const filterDate = new Date(filterValue);");
-            sb.AppendLine("          let itemDate: Date | null = null;");
-            sb.AppendLine("          ");
-            sb.AppendLine("          if (itemValue instanceof Date) {");
-            sb.AppendLine("            itemDate = itemValue;");
-            sb.AppendLine("          } else if (typeof itemValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}/.test(itemValue)) {");
-            sb.AppendLine("            itemDate = new Date(itemValue);");
-            sb.AppendLine("          }");
-            sb.AppendLine("          ");
-            sb.AppendLine("          if (itemDate) {");
-            sb.AppendLine("            // Compare dates (ignore time) - same year, month, and day");
-            sb.AppendLine("            return itemDate.getFullYear() === filterDate.getFullYear() &&");
-            sb.AppendLine("                   itemDate.getMonth() === filterDate.getMonth() &&");
-            sb.AppendLine("                   itemDate.getDate() === filterDate.getDate();");
-            sb.AppendLine("          }");
-            sb.AppendLine("          return false;");
-            sb.AppendLine("        }");
             return sb.ToString();
         }
 
