@@ -19,6 +19,9 @@ namespace TargCC.Core.Generators.UI.Components
     /// </summary>
     public class ReactFormComponentGenerator : BaseComponentGenerator
     {
+        private static readonly string[] EnumLookupImports = { "Select", "MenuItem", "FormControl", "InputLabel" };
+        private static readonly string[] BooleanFieldImports = { "Checkbox", "FormControlLabel" };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReactFormComponentGenerator"/> class.
         /// </summary>
@@ -43,7 +46,7 @@ namespace TargCC.Core.Generators.UI.Components
             return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
         }
 
-        private static string GenerateImports(string className, UIFramework framework, FormValidationLibrary validationLibrary)
+        private static string GenerateImports(string className, UIFramework framework, FormValidationLibrary validationLibrary, Table table)
         {
             var sb = new StringBuilder();
 
@@ -57,7 +60,48 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { TextField, Button, Box, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from '@mui/material';");
+                // Check if table has ENM or LKP columns that require Select/MenuItem
+                var hasEnumOrLookupFields = table.Columns.Exists(c =>
+                    c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase) ||
+                    c.Name.StartsWith("lkp_", StringComparison.OrdinalIgnoreCase));
+
+                // Check if table has BIT columns that will actually render as Checkbox
+                // Only BIT columns without special prefixes and not excluded from create forms
+                var hasBooleanFields = GetDataColumns(table)
+                    .Where(c => !c.IsPrimaryKey && !c.IsIdentity)
+                    .Where(c =>
+                    {
+                        var (prefix, _) = SplitPrefix(c.Name);
+                        // Exclude read-only prefixes that are skipped in create mode
+                        if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
+                        {
+                            return false;
+                        }
+
+                        // Only columns without special prefixes render as Checkbox for BIT type
+                        // Columns with prefixes ENO, LKP, LOC, ENM, SPL, UPL, SPT, ENT use other components
+                        if (!string.IsNullOrEmpty(prefix))
+                        {
+                            return false;
+                        }
+
+                        return c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase);
+                    })
+                    .Any();
+
+                var imports = new List<string> { "TextField", "Button", "Box", "CircularProgress" };
+
+                if (hasEnumOrLookupFields)
+                {
+                    imports.AddRange(EnumLookupImports);
+                }
+
+                if (hasBooleanFields)
+                {
+                    imports.AddRange(BooleanFieldImports);
+                }
+
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {string.Join(", ", imports)} }} from '@mui/material';");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useCreate{className}, useUpdate{className} }} from '../../hooks/use{className}';");
@@ -462,7 +506,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.Append(GenerateComponentHeader(table.Name));
 
             // Imports
-            sb.AppendLine(GenerateImports(className, config.Framework, config.ValidationLibrary));
+            sb.AppendLine(GenerateImports(className, config.Framework, config.ValidationLibrary, table));
             sb.AppendLine();
 
             // Component

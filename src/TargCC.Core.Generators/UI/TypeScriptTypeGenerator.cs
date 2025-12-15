@@ -146,9 +146,13 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(" */");
             sb.AppendLine(CultureInfo.InvariantCulture, $"export interface {className}Filters {{");
 
+            // Reserved pagination property names - skip columns with these names to avoid conflicts
+            var reservedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "page", "pageSize", "sortBy", "sortDirection" };
+
             // Add common filters
             var searchableColumns = GetDataColumns(table)
                 .Where(c => IsSearchableType(c.DataType))
+                .Where(c => !reservedNames.Contains(GetPropertyName(c.Name))) // Skip reserved names
                 .Take(5); // Limit to first 5 searchable columns
 
             foreach (var column in searchableColumns)
@@ -161,6 +165,7 @@ namespace TargCC.Core.Generators.UI
             // Add date range filters if date columns exist
             var dateColumns = GetDataColumns(table)
                 .Where(c => c.DataType.Contains("date", StringComparison.OrdinalIgnoreCase))
+                .Where(c => !reservedNames.Contains(GetPropertyName(c.Name))) // Skip reserved names
                 .Take(2);
 
             foreach (var column in dateColumns)
@@ -170,7 +175,7 @@ namespace TargCC.Core.Generators.UI
                 sb.AppendLine(CultureInfo.InvariantCulture, $"  {baseName}To?: Date;");
             }
 
-            // Pagination
+            // Pagination properties (reserved names - columns with these names are filtered out above)
             sb.AppendLine("  page?: number;");
             sb.AppendLine("  pageSize?: number;");
             sb.AppendLine("  sortBy?: string;");

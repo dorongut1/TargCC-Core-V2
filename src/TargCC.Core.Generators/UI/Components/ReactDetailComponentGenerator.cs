@@ -46,7 +46,16 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine("import React from 'react';");
-            sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
+
+            // VIEWs don't use useParams
+            if (table.IsView)
+            {
+                // VIEWs only show an info message, no navigation needed
+            }
+            else
+            {
+                sb.AppendLine("import { useNavigate, useParams } from 'react-router-dom';");
+            }
 
             GenerateFrameworkImports(sb, table, schema, framework);
 
@@ -54,16 +63,10 @@ namespace TargCC.Core.Generators.UI.Components
             if (!table.IsView)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
-            }
-            else
-            {
-                // VIEWs only have getAll hook, but Detail page doesn't need it
-                // We'll handle this in the component body
-            }
+                GenerateRelatedDataImports(sb, table, schema, className);
 
-            GenerateRelatedDataImports(sb, table, schema, className);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
-            GenerateChildEntityTypeImports(sb, table, schema);
+                // Entity type imports removed - TypeScript infers all types from hooks
+            }
 
             return sb.ToString();
         }
@@ -72,15 +75,23 @@ namespace TargCC.Core.Generators.UI.Components
         {
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
-                sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
-
-                var hasRelatedData = schema.Relationships != null &&
-                    schema.Relationships.Exists(r => r.ParentTable == table.FullName && r.IsEnabled);
-
-                if (hasRelatedData)
+                // VIEWs only need Box and Alert for the info message
+                if (table.IsView)
                 {
-                    sb.AppendLine("import { DataGrid, GridColDef } from '@mui/x-data-grid';");
+                    sb.AppendLine("import { Box, Alert } from '@mui/material';");
+                }
+                else
+                {
+                    sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card as MuiCard, CardContent, Grid } from '@mui/material';");
+                    sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
+
+                    var hasRelatedData = schema.Relationships != null &&
+                        schema.Relationships.Exists(r => r.ParentTable == table.FullName && r.IsEnabled);
+
+                    if (hasRelatedData)
+                    {
+                        sb.AppendLine("import { DataGrid } from '@mui/x-data-grid';");
+                    }
                 }
             }
         }
@@ -96,6 +107,9 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hook imports when multiple relationships point to same table
+            var importedHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -103,29 +117,12 @@ namespace TargCC.Core.Generators.UI.Components
                 {
                     var childClassName = GetClassName(childTable.Name);
                     var childrenName = Pluralize(childClassName);
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}{childrenName} }} from '../../hooks/use{className}';");
-                }
-            }
-        }
+                    var hookName = $"use{className}{childrenName}";
 
-        private static void GenerateChildEntityTypeImports(StringBuilder sb, Table table, DatabaseSchema schema)
-        {
-            if (schema.Relationships == null)
-            {
-                return;
-            }
-
-            var parentRelationships = schema.Relationships
-                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                .ToList();
-
-            foreach (var relationship in parentRelationships)
-            {
-                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                if (childTable != null)
-                {
-                    var childClassName = GetClassName(childTable.Name);
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
+                    if (importedHooks.Add(hookName))
+                    {
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {hookName} }} from '../../hooks/use{className}';");
+                    }
                 }
             }
         }
@@ -251,6 +248,9 @@ namespace TargCC.Core.Generators.UI.Components
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hook declarations when multiple relationships point to same table
+            var declaredHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
@@ -258,10 +258,15 @@ namespace TargCC.Core.Generators.UI.Components
                 {
                     var childClassName = GetClassName(childTable.Name);
                     var childrenName = Pluralize(childClassName);
-                    var childrenCamelCase = ToCamelCase(childrenName);
-                    sb.AppendLine(
-                        CultureInfo.InvariantCulture,
-                        $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = use{className}{childrenName}(id ? parseInt(id, 10) : null);");
+                    var hookName = $"use{className}{childrenName}";
+
+                    if (declaredHooks.Add(hookName))
+                    {
+                        var childrenCamelCase = ToCamelCase(childrenName);
+                        sb.AppendLine(
+                            CultureInfo.InvariantCulture,
+                            $"  const {{ data: {childrenCamelCase}, isLoading: {childrenCamelCase}Loading }} = {hookName}(id ? parseInt(id, 10) : null);");
+                    }
                 }
             }
         }
@@ -312,15 +317,25 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}Detail: React.FC = () => {{");
-            sb.AppendLine("  const navigate = useNavigate();");
-            sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+
+            // VIEWs don't need navigate or id
+            if (!table.IsView)
+            {
+                sb.AppendLine("  const navigate = useNavigate();");
+                sb.AppendLine("  const { id } = useParams<{ id: string }>();");
+            }
 
             GenerateHooksSection(sb, table, schema, className, camelName);
-            sb.AppendLine();
-            GenerateLoadingState(sb, framework);
-            sb.AppendLine();
-            GenerateErrorState(sb, framework, camelName);
-            sb.AppendLine();
+
+            // VIEWs don't need loading/error states
+            if (!table.IsView)
+            {
+                sb.AppendLine();
+                GenerateLoadingState(sb, framework);
+                sb.AppendLine();
+                GenerateErrorState(sb, framework, camelName);
+                sb.AppendLine();
+            }
 
             // Render
             sb.AppendLine("  return (");
@@ -343,18 +358,34 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine();
                 GenerateDeleteHandler(sb, camelName);
             }
-            else
-            {
-                // VIEWs are read-only - no entity fetching or delete capability
-                sb.AppendLine("  // VIEWs are read-only - Detail page not applicable");
-                sb.AppendLine("  const isLoading = false;");
-                sb.AppendLine("  const error = null;");
-                sb.AppendLine("  const entity = null;");
-            }
+
+            // VIEWs don't need any hooks - they just show an info message
         }
 
         private static void GenerateRenderSection(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName, UIFramework framework)
         {
+            // VIEWs are read-only - Detail page not applicable, just show message
+            if (table.IsView)
+            {
+                if (framework == UIFramework.MaterialUI)
+                {
+                    sb.AppendLine("    <Box sx={{ maxWidth: 800 }}>");
+                    sb.AppendLine("      <Alert severity=\"info\">");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"        {className} is a VIEW (read-only). Detail view is not applicable.");
+                    sb.AppendLine("        Please use the List view to see the data.");
+                    sb.AppendLine("      </Alert>");
+                    sb.AppendLine("    </Box>");
+                }
+                else
+                {
+                    sb.AppendLine("    <div>");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"      <p>{className} is a VIEW (read-only). Detail view is not applicable.</p>");
+                    sb.AppendLine("    </div>");
+                }
+
+                return;
+            }
+
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("    <Box sx={{ maxWidth: 800 }}>");
@@ -410,14 +441,14 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static void GenerateDetailCard(StringBuilder sb, Table table, string className, UIFramework framework)
         {
-            sb.AppendLine("      <Card>");
+            sb.AppendLine("      <MuiCard>");
             sb.AppendLine("        <CardContent>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h5\" component=\"h2\" gutterBottom>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            {className} Details");
             sb.AppendLine("          </Typography>");
             sb.AppendLine(GenerateDetailFields(table, framework));
             sb.AppendLine("        </CardContent>");
-            sb.AppendLine("      </Card>");
+            sb.AppendLine("      </MuiCard>");
         }
 
         private static void GenerateRelatedDataGridsSection(StringBuilder sb, Table table, DatabaseSchema schema)
@@ -429,10 +460,13 @@ namespace TargCC.Core.Generators.UI.Components
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
 
+                // Use HashSet to avoid duplicate grids when multiple relationships point to same table
+                var generatedGrids = new HashSet<string>();
+
                 foreach (var relationship in parentRelationships)
                 {
                     var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
+                    if (childTable != null && generatedGrids.Add(childTable.FullName))
                     {
                         sb.AppendLine();
                         var relatedGrid = GenerateRelatedDataGrid(childTable, UIFramework.MaterialUI);
@@ -451,7 +485,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("      <Card sx={{ mt: 2 }}>");
+                sb.AppendLine("      <MuiCard sx={{ mt: 2 }}>");
                 sb.AppendLine("        <CardContent>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h6\" gutterBottom>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"            {childrenName}");
@@ -489,7 +523,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("            />");
                 sb.AppendLine("          </Box>");
                 sb.AppendLine("        </CardContent>");
-                sb.AppendLine("      </Card>");
+                sb.AppendLine("      </MuiCard>");
             }
 
             return sb.ToString();

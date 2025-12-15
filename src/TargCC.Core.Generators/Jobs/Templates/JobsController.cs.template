@@ -87,7 +87,7 @@ public class JobsController : ControllerBase
                 lastJobState = job.LastJobState,
                 createdAt = job.CreatedAt,
                 queue = job.Queue,
-                timeZone = job.TimeZone
+                timeZone = job.TimeZoneId
             });
         }
         catch (Exception ex)

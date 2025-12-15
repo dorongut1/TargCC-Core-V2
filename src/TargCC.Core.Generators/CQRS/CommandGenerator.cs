@@ -461,9 +461,9 @@ public class CommandGenerator : ICommandGenerator
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await {repoFieldName}.AddAsync(entity, cancellationToken);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.ID);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.Id);");
         sb.AppendLine();
-        sb.AppendLine("            return Result<int>.Success(entity.ID);");
+        sb.AppendLine("            return Result<int>.Success(entity.Id);");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");

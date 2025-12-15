@@ -142,41 +142,34 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
+        private static void GenerateImports(StringBuilder sb, Table table, string className, string camelName)
         {
-            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            // VIEWs only use useQuery (read-only), tables use all three
+            if (table.IsView)
+            {
+                sb.AppendLine("import { useQuery } from '@tanstack/react-query';");
+            }
+            else
+            {
+                sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
 
-            // Only import write types for tables, not for VIEWs
-            if (!table.IsView)
+            // Import necessary types based on table type
+            if (table.IsView)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+                // VIEWs only need Filters for the list hook
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}Filters }} from '../types/{className}.types';");
+            }
+            else
+            {
+                // Tables need Create/Update/Filters types
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ Create{className}Request, Update{className}Request, {className}Filters }} from '../types/{className}.types';");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-
-            // Import child entity types for related data hooks
-            if (schema.Relationships != null)
-            {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                    .ToList();
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
-                    }
-                }
-            }
-
+            // Entity type removed - TypeScript infers it from API responses
+            // Child entity type imports removed - TypeScript infers them from hooks
             sb.AppendLine();
         }
 
@@ -189,10 +182,19 @@ namespace TargCC.Core.Generators.UI
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hooks when multiple relationships point to same table
+            var generatedHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable == null)
+                {
+                    continue;
+                }
+
+                var childTableName = childTable.FullName;
+                if (!generatedHooks.Add(childTableName))
                 {
                     continue;
                 }
@@ -275,7 +277,7 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            GenerateImports(sb, table, schema, className, camelName);
+            GenerateImports(sb, table, className, camelName);
 
             // Query hooks
             // VIEWs are read-only - no getById hook

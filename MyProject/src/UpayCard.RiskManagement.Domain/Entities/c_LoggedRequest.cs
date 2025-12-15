@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_LoggedRequest table.
-    /// Generated: 2025-12-11 14:19:33
+    /// Generated: 2025-12-15 13:53:26
     /// </summary>
     [Table("c_LoggedRequest")]
     public partial class LoggedRequest

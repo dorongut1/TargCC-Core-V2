@@ -9,10 +9,10 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
+    using TargCC.Core.Generators.Entities;
 
     // Note: Domain.Interfaces using added by generator based on config.Namespace
     using TargCC.Core.Interfaces.Models;
-    using IndexModel = TargCC.Core.Interfaces.Models.Index;
 
     /// <summary>
     /// Generates ASP.NET Core API Controllers with CRUD endpoints.
@@ -101,7 +101,7 @@ namespace TargCC.Core.Generators.API
             GenerateConstructor(sb, entityName, controllerName, config);
             sb.AppendLine();
 
-            GenerateGetByIdMethod(sb, qualifiedEntityName, config);
+            GenerateGetByIdMethod(sb, table, qualifiedEntityName, config);
             sb.AppendLine();
 
             GenerateGetAllMethod(sb, qualifiedEntityName, config);
@@ -119,13 +119,13 @@ namespace TargCC.Core.Generators.API
             // Only generate Create/Update/Delete for tables, not for views (views are read-only)
             if (!table.IsView)
             {
-                GenerateCreateMethod(sb, qualifiedEntityName, config);
+                GenerateCreateMethod(sb, table, qualifiedEntityName, config);
                 sb.AppendLine();
 
-                GenerateUpdateMethod(sb, qualifiedEntityName, config);
+                GenerateUpdateMethod(sb, table, qualifiedEntityName, config);
                 sb.AppendLine();
 
-                GenerateDeleteMethod(sb, entityName, config);
+                GenerateDeleteMethod(sb, table, entityName, config);
             }
 
             sb.AppendLine("    }");
@@ -158,8 +158,12 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateGetByIdMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateGetByIdMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
+            // Get the primary key type
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkType = pkColumn != null ? Common.CodeGenerationHelpers.GetCSharpType(pkColumn.DataType) : "int";
+
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
@@ -182,7 +186,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> GetById(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> GetById({pkType} id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (entity == null)");
@@ -223,12 +227,16 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("        }");
         }
 
-        private static void GenerateCreateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateCreateMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
+
+            // Get the primary key property name
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkPropertyName = pkColumn != null ? PrefixHandler.GetPropertyName(pkColumn) : "ID";
 
             if (config.GenerateXmlDocumentation)
             {
@@ -255,16 +263,21 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            await _repository.AddAsync(entity).ConfigureAwait(false);");
-            sb.AppendLine("            return CreatedAtAction(nameof(GetById), new { id = entity.ID }, entity);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            return CreatedAtAction(nameof(GetById), new {{ id = entity.{pkPropertyName} }}, entity);");
             sb.AppendLine("        }");
         }
 
-        private static void GenerateUpdateMethod(StringBuilder sb, string qualifiedEntityName, ApiGeneratorConfig config)
+        private static void GenerateUpdateMethod(StringBuilder sb, Table table, string qualifiedEntityName, ApiGeneratorConfig config)
         {
             // Extract simple name for documentation
             string entityNameForDocs = qualifiedEntityName.Contains('.', StringComparison.Ordinal)
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
+
+            // Get the primary key property name and type
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkPropertyName = pkColumn != null ? PrefixHandler.GetPropertyName(pkColumn) : "ID";
+            string pkType = pkColumn != null ? Common.CodeGenerationHelpers.GetCSharpType(pkColumn.DataType) : "int";
 
             if (config.GenerateXmlDocumentation)
             {
@@ -285,7 +298,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(400)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Update(int id, [FromBody] {qualifiedEntityName} entity)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<{qualifiedEntityName}>> Update({pkType} id, [FromBody] {qualifiedEntityName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (!ModelState.IsValid)");
             sb.AppendLine("            {");
@@ -298,14 +311,18 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine("            entity.ID = id; // Ensure ID matches route");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            entity.{pkPropertyName} = id; // Ensure ID matches route");
             sb.AppendLine("            await _repository.UpdateAsync(entity).ConfigureAwait(false);");
             sb.AppendLine("            return Ok(entity);");
             sb.AppendLine("        }");
         }
 
-        private static void GenerateDeleteMethod(StringBuilder sb, string entityName, ApiGeneratorConfig config)
+        private static void GenerateDeleteMethod(StringBuilder sb, Table table, string entityName, ApiGeneratorConfig config)
         {
+            // Get the primary key type
+            var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
+            string pkType = pkColumn != null ? Common.CodeGenerationHelpers.GetCSharpType(pkColumn.DataType) : "int";
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
@@ -323,7 +340,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine("        [ProducesResponseType(404)]");
             }
 
-            sb.AppendLine("        public async Task<IActionResult> Delete(int id)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async Task<IActionResult> Delete({pkType} id)");
             sb.AppendLine("        {");
             sb.AppendLine("            var existing = await _repository.GetByIdAsync(id).ConfigureAwait(false);");
             sb.AppendLine("            if (existing == null)");
@@ -343,7 +360,7 @@ namespace TargCC.Core.Generators.API
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
-            List<IndexModel>? filterableIndexes = table.Indexes?
+            var filterableIndexes = table.Indexes?
                 .Where(i => !i.IsPrimaryKey && i.ColumnNames != null && i.ColumnNames.Count > 0)
                 .ToList();
 
@@ -369,7 +386,7 @@ namespace TargCC.Core.Generators.API
         /// </summary>
         private static List<(string paramName, string paramType, string columnName)> CollectFilterParameters(
             Table table,
-            List<IndexModel> filterableIndexes)
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
         {
             var parameters = new List<(string paramName, string paramType, string columnName)>();
             var processedColumns = new HashSet<string>();
@@ -387,11 +404,11 @@ namespace TargCC.Core.Generators.API
                     var column = table.Columns.Find(c => c.Name == columnName);
                     if (column != null)
                     {
-                        string paramName = Common.CodeGenerationHelpers.EscapeCSharpKeyword(
-                            GetPropertyName(columnName).ToLower(CultureInfo.CurrentCulture));
+                        // Use same parameter naming as Repository to ensure consistency
+                        string paramName = Common.CodeGenerationHelpers.ToCamelCase(
+                            Common.CodeGenerationHelpers.SanitizeColumnName(columnName));
                         string paramType = GetCSharpTypeName(column.DataType);
-                        string columnNameStr = columnName;
-                        parameters.Add((paramName, paramType, columnNameStr));
+                        parameters.Add((paramName, paramType, columnName));
                     }
                 }
             }
@@ -419,6 +436,12 @@ namespace TargCC.Core.Generators.API
             foreach (var (paramName, _, columnName) in parameters)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"{paramName}\">Filter by {columnName}.</param>");
+            }
+
+            if (parameters.Count > 0)
+            {
+                sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");
+                sb.AppendLine("        /// <param name=\"take\">Number of records to take for pagination.</param>");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of filtered {entityNameForDocs} entities.</returns>");
@@ -449,10 +472,24 @@ namespace TargCC.Core.Generators.API
             List<(string paramName, string paramType, string columnName)> parameters)
         {
             var queryParams = string.Join(", ", parameters.Select(p => $"[FromQuery] {p.paramType}? {p.paramName} = null"));
+
+            // Add skip and take parameters if there are filter parameters
+            if (parameters.Count > 0)
+            {
+                queryParams += ", [FromQuery] int? skip = null, [FromQuery] int? take = null";
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetFiltered({queryParams})");
             sb.AppendLine("        {");
 
             var repoParams = string.Join(", ", parameters.Select(p => p.paramName));
+
+            // Add skip, take, and cancellationToken to repository call
+            if (parameters.Count > 0)
+            {
+                repoParams += ", skip, take, CancellationToken.None";
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"            var entities = await _repository.GetFilteredAsync({repoParams}).ConfigureAwait(false);");
             sb.AppendLine("            return Ok(entities);");
             sb.AppendLine("        }");
@@ -572,8 +609,8 @@ namespace TargCC.Core.Generators.API
                 }
 
                 // Generate method name to check for duplicates
-                string childEntityName = GetClassName(childTable.Name);
-                string childrenName = MakePlural(childEntityName);
+                // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
+                string childrenName = MakePlural(childTable.Name);
                 string methodName = $"Get{childrenName}";
 
                 // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -608,7 +645,9 @@ namespace TargCC.Core.Generators.API
         {
             string childEntityName = GetClassName(childTable.Name);
             string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
-            string childrenName = MakePlural(childEntityName);
+
+            // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
+            string childrenName = MakePlural(childTable.Name);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)

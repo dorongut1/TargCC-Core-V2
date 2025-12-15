@@ -239,13 +239,18 @@ namespace TargCC.Core.Generators.UI
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
 
+                // Use HashSet to prevent duplicate imports when multiple FKs point to same table
+                var importedTypes = new HashSet<string> { className };
                 foreach (var relationship in parentRelationships)
                 {
                     var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                        if (importedTypes.Add(childClassName))
+                        {
+                            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                        }
                     }
                 }
             }
@@ -316,12 +321,21 @@ namespace TargCC.Core.Generators.UI
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to prevent duplicate methods when multiple FKs point to same table
+            var generatedMethods = new HashSet<string>();
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable != null)
                 {
-                    sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
+                    var childClassName = GetClassName(childTable.Name);
+                    var methodName = $"get{Pluralize(childClassName)}";
+
+                    // Only generate each method once
+                    if (generatedMethods.Add(methodName))
+                    {
+                        sb.AppendLine(GenerateGetRelatedData(className, apiPath, childTable));
+                    }
                 }
             }
         }

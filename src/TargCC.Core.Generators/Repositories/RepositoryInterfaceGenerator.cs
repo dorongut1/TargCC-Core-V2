@@ -684,22 +684,54 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             return null;
         }
 
-        // Try to find column named "ID" (case-insensitive)
-        var idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase));
+        // Try to find column named exactly "ID" or "Id" (case-insensitive)
+        var idColumn = table.Columns.Find(c =>
+            c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+            c.Name.Equals("Id", StringComparison.OrdinalIgnoreCase));
+        if (idColumn != null && IsIntegerType(idColumn.DataType))
+        {
+            return idColumn;
+        }
+
+        // Try to find column ending with "ID" or "Id" that is an integer type (e.g., CustomerID, OrderID)
+        idColumn = table.Columns.Find(c =>
+            c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase) &&
+            IsIntegerType(c.DataType));
         if (idColumn != null)
         {
             return idColumn;
         }
 
-        // Try to find column ending with "ID" (e.g., CustomerID, OrderID)
-        idColumn = table.Columns.Find(c => c.Name.EndsWith("ID", StringComparison.OrdinalIgnoreCase));
+        // Try to find any column named "ID" even if not integer type
+        idColumn = table.Columns.Find(c => c.Name.Equals("ID", StringComparison.OrdinalIgnoreCase));
         if (idColumn != null)
         {
             return idColumn;
         }
 
-        // Fallback: use first column
+        // Fallback: use first integer column
+        var firstIntColumn = table.Columns.Find(c => IsIntegerType(c.DataType));
+        if (firstIntColumn != null)
+        {
+            return firstIntColumn;
+        }
+
+        // Last resort: use first column
         return table.Columns[0];
+    }
+
+    /// <summary>
+    /// Checks if a SQL data type is an integer type.
+    /// </summary>
+    private static bool IsIntegerType(string dataType)
+    {
+        if (string.IsNullOrEmpty(dataType))
+        {
+            return false;
+        }
+
+        var upper = dataType.ToUpperInvariant();
+        return upper.Contains("INT", StringComparison.Ordinal) && !upper.Contains("POINT", StringComparison.Ordinal);
     }
 
     /// <summary>
