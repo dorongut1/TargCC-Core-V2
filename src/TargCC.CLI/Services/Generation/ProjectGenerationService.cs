@@ -334,7 +334,7 @@ public class ProjectGenerationService : IProjectGenerationService
 
         // Command Generator - Commands, Handlers, Validators
         var commandGen = new CommandGenerator(_loggerFactory.CreateLogger<CommandGenerator>());
-        var commandResults = await commandGen.GenerateAllAsync(table, rootNamespace);
+        var commandResults = await commandGen.GenerateAllAsync(table);
 
         var commandsDir = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Features", pluralName, "Commands");
         Directory.CreateDirectory(commandsDir);
@@ -366,7 +366,7 @@ public class ProjectGenerationService : IProjectGenerationService
             GenerateSwaggerAttributes = true
         };
         var apiCode = await apiGen.GenerateAsync(table, schema, apiConfig);
-        var className = BaseApiGenerator.GetClassName(table.Name);
+        className = BaseApiGenerator.GetClassName(table.Name);
         var controllerName = $"{CodeGenerationHelpers.MakePlural(className)}Controller";
         var apiPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", $"{controllerName}.cs");
         await SaveFileAsync(apiPath, apiCode);
