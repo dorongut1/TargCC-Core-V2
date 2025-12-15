@@ -907,7 +907,6 @@ import {{
   Typography,
   Button,
   CircularProgress,
-  Alert,
   Avatar,
   List,
   ListItem,
@@ -920,7 +919,6 @@ import {{
   Inventory as InventoryIcon,
   Add as AddIcon,
   BarChart as BarChartIcon,
-  Settings as SettingsIcon,
   AccessTime as AccessTimeIcon,
 }} from '@mui/icons-material';
 import {{ LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer }} from 'recharts';
@@ -1043,7 +1041,7 @@ export const Dashboard: React.FC = () => {{
                     fill=""#8884d8""
                     dataKey=""value""
                   >
-                    {{statusData.map((entry, index) => (
+                    {{statusData.map((_, index) => (
                       <Cell key={{`cell-${{index}}`}} fill={{COLORS[index % COLORS.length]}} />
                     ))}}
                   </Pie>

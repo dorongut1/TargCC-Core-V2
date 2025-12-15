@@ -64,9 +64,8 @@ namespace TargCC.Core.Generators.UI.Components
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
                 GenerateRelatedDataImports(sb, table, schema, className);
-                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
 
-                // Child entity type imports removed - TypeScript infers types from hooks
+                // Entity type imports removed - TypeScript infers all types from hooks
             }
 
             return sb.ToString();
