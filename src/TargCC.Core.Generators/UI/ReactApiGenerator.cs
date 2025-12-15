@@ -66,14 +66,27 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("  /**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get all {className}s with optional filters.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"   * Get all {className}s with server-side filtering, sorting, and pagination.");
             sb.AppendLine("   */");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  getAll: async (filters?: {className}Filters): Promise<{className}[]> => {{");
-            sb.AppendLine("    // Use /filter endpoint when filters are provided");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    const endpoint = filters && Object.keys(filters).length > 0 ? '{apiPath}/filter' : '{apiPath}';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<{className}[]>(endpoint, {{");
-            sb.AppendLine("      params: filters,");
-            sb.AppendLine("    });");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  getAll: async (options?: Use{className}Options): Promise<PagedResult<{className}>> => {{");
+            sb.AppendLine("    const params = new URLSearchParams();");
+            sb.AppendLine();
+            sb.AppendLine("    // Add pagination params");
+            sb.AppendLine("    if (options?.page) params.append('page', options.page.toString());");
+            sb.AppendLine("    if (options?.pageSize) params.append('pageSize', options.pageSize.toString());");
+            sb.AppendLine("    if (options?.sortBy) params.append('sortBy', options.sortBy);");
+            sb.AppendLine("    if (options?.sortDirection) params.append('sortDirection', options.sortDirection);");
+            sb.AppendLine();
+            sb.AppendLine("    // Add filter params");
+            sb.AppendLine("    if (options?.filters) {");
+            sb.AppendLine("      Object.entries(options.filters).forEach(([key, value]) => {");
+            sb.AppendLine("        if (value !== undefined && value !== null && value !== '') {");
+            sb.AppendLine("          params.append(key, value.toString());");
+            sb.AppendLine("        }");
+            sb.AppendLine("      });");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const response = await api.get<PagedResult<{className}>>(`{apiPath}?${{params.toString()}}`);");
             sb.AppendLine("    return response.data;");
             sb.AppendLine("  },");
             sb.AppendLine();
@@ -219,6 +232,7 @@ namespace TargCC.Core.Generators.UI
         private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
         {
             sb.AppendLine("import { api } from './client';");
+            sb.AppendLine("import type { PagedResult, UseEntityOptions } from '../types/common.types';");
             sb.AppendLine("import type {");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
 
@@ -231,6 +245,8 @@ namespace TargCC.Core.Generators.UI
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"type Use{className}Options = UseEntityOptions<{className}Filters>;");
 
             // Import child entity types for related data methods
             if (schema.Relationships != null)
