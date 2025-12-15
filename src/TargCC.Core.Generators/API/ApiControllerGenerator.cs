@@ -49,7 +49,7 @@ namespace TargCC.Core.Generators.API
 
             sb.Append(GenerateFileHeader(table.Name, "API Controller Generator"));
 
-            AppendUsings(sb, rootNamespace);
+            AppendUsings(sb, rootNamespace, controllerName);
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {config.Namespace}.Controllers");
             sb.AppendLine("{");
@@ -61,13 +61,16 @@ namespace TargCC.Core.Generators.API
             return sb.ToString();
         }
 
-        private static void AppendUsings(StringBuilder sb, string rootNamespace)
+        private static void AppendUsings(StringBuilder sb, string rootNamespace, string controllerName)
         {
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using System.Threading.Tasks;");
+            sb.AppendLine("using MediatR;");
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sb.AppendLine("using Microsoft.Extensions.Logging;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Features.{controllerName}.Queries;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
@@ -96,7 +99,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine(CultureInfo.InvariantCulture, $"    public class {controllerName}Controller : ControllerBase");
             sb.AppendLine("    {");
 
-            GenerateFields(sb, entityName);
+            GenerateFields(sb, entityName, controllerName);
             sb.AppendLine();
 
             GenerateConstructor(sb, entityName, controllerName, config);
@@ -132,11 +135,11 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("    }");
         }
 
-        private static void GenerateFields(StringBuilder sb, string entityName)
+        private static void GenerateFields(StringBuilder sb, string entityName, string controllerName)
         {
             sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly I{entityName}Repository _repository;");
-            sb.AppendLine("        ");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{MakePlural(entityName)}Controller> _logger;");
+            sb.AppendLine("        private readonly IMediator _mediator;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        private readonly ILogger<{controllerName}Controller> _logger;");
         }
 
         private static void GenerateConstructor(StringBuilder sb, string entityName, string controllerName, ApiGeneratorConfig config)
@@ -147,14 +150,17 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Initializes a new instance of the <see cref=\"{controllerName}Controller\"/> class.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"repository\">Repository for {entityName}.</param>");
+                sb.AppendLine("        /// <param name=\"mediator\">MediatR instance for sending queries.</param>");
                 sb.AppendLine("        /// <param name=\"logger\">Logger instance.</param>");
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"        public {controllerName}Controller(");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            I{entityName}Repository repository,");
+            sb.AppendLine("            IMediator mediator,");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            ILogger<{controllerName}Controller> logger)");
             sb.AppendLine("        {");
             sb.AppendLine("            _repository = repository ?? throw new ArgumentNullException(nameof(repository));");
+            sb.AppendLine("            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));");
             sb.AppendLine("            _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
             sb.AppendLine("        }");
         }
