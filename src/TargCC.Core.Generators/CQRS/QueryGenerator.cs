@@ -853,6 +853,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("using MediatR;");
         sb.AppendLine("using TargCC.Application.Common.Models;");
         sb.AppendLine("using TargCC.Application.DTOs;");
+        sb.AppendLine("using TargCC.Domain.Common;");
         sb.AppendLine();
     }
 
@@ -860,9 +861,11 @@ public class QueryGenerator : IQueryGenerator
     {
         sb.AppendLine("using AutoMapper;");
         sb.AppendLine("using MediatR;");
+        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
         sb.AppendLine("using TargCC.Application.Common.Models;");
         sb.AppendLine("using TargCC.Application.DTOs;");
+        sb.AppendLine("using TargCC.Domain.Common;");
         sb.AppendLine("using TargCC.Domain.Interfaces;");
         sb.AppendLine();
     }
