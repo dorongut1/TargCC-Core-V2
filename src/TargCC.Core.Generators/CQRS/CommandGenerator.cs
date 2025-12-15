@@ -70,7 +70,7 @@ public class CommandGenerator : ICommandGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType)
+    public async Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -84,9 +84,9 @@ public class CommandGenerator : ICommandGenerator
 
         var result = commandType switch
         {
-            CommandType.Create => GenerateCreateCommand(table),
-            CommandType.Update => GenerateUpdateCommand(table),
-            CommandType.Delete => GenerateDeleteCommand(table),
+            CommandType.Create => GenerateCreateCommand(table, rootNamespace),
+            CommandType.Update => GenerateUpdateCommand(table, rootNamespace),
+            CommandType.Delete => GenerateDeleteCommand(table, rootNamespace),
             _ => throw new ArgumentOutOfRangeException(nameof(commandType), commandType, "Unknown command type.")
         };
 
@@ -96,7 +96,7 @@ public class CommandGenerator : ICommandGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table)
+    public async Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -104,13 +104,13 @@ public class CommandGenerator : ICommandGenerator
 
         var results = new List<CommandGenerationResult>
         {
-            GenerateCreateCommand(table),
+            GenerateCreateCommand(table, rootNamespace),
         };
 
         if (table.PrimaryKey != null)
         {
-            results.Add(GenerateUpdateCommand(table));
-            results.Add(GenerateDeleteCommand(table));
+            results.Add(GenerateUpdateCommand(table, rootNamespace));
+            results.Add(GenerateDeleteCommand(table, rootNamespace));
         }
 
         return await Task.FromResult(results);

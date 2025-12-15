@@ -839,9 +839,7 @@ public class QueryGenerator : IQueryGenerator
             // Skip duplicate property names (common in tables with multiple FK relationships to same table)
             if (seenProperties.Contains(propName))
             {
-                _logger.LogWarning(
-                    "Skipping duplicate property '{PropertyName}' for column '{ColumnName}' in table '{TableName}'",
-                    propName, column.Name, table.Name);
+                // Silently skip duplicate properties
                 continue;
             }
 
