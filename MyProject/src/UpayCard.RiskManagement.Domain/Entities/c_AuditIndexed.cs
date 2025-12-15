@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_AuditIndexed table.
-    /// Generated: 2025-12-15 09:25:36
+    /// Generated: 2025-12-15 13:48:29
     /// </summary>
     [Table("c_AuditIndexed")]
     public partial class AuditIndexed

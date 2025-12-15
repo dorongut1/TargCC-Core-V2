@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { Dashboard } from './components/Dashboard/Dashboard';

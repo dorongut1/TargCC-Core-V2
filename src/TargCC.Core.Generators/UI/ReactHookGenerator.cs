@@ -142,7 +142,7 @@ namespace TargCC.Core.Generators.UI
             return sb.ToString();
         }
 
-        private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
+        private static void GenerateImports(StringBuilder sb, Table table, string className, string camelName)
         {
             // VIEWs only use useQuery (read-only), tables use all three
             if (table.IsView)
@@ -163,8 +163,8 @@ namespace TargCC.Core.Generators.UI
             }
 
             // Entity type and Filters type removed - TypeScript infers them from API responses
-            // Child entity type imports removed - TypeScript infers them from hooks
 
+            // Child entity type imports removed - TypeScript infers them from hooks
             sb.AppendLine();
         }
 
@@ -272,7 +272,7 @@ namespace TargCC.Core.Generators.UI
             sb.Append(GenerateFileHeader(table.Name, GeneratorType));
 
             // Imports
-            GenerateImports(sb, table, schema, className, camelName);
+            GenerateImports(sb, table, className, camelName);
 
             // Query hooks
             // VIEWs are read-only - no getById hook

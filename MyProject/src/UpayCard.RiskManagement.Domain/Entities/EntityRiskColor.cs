@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for EntityRiskColor table.
-    /// Generated: 2025-12-15 09:25:39
+    /// Generated: 2025-12-15 13:48:32
     /// </summary>
     [Table("EntityRiskColor")]
     public partial class EntityRiskColor
