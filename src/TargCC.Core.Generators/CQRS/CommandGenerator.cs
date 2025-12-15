@@ -218,7 +218,7 @@ public class CommandGenerator : ICommandGenerator
         {
             CommandCode = GenerateCreateCommandRecord(table, commandClassName, rootNamespace),
             HandlerCode = GenerateCreateHandler(table, commandClassName, handlerClassName, rootNamespace),
-            ValidatorCode = GenerateCreateValidator(table, commandClassName, validatorClassName),
+            ValidatorCode = GenerateCreateValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -239,7 +239,7 @@ public class CommandGenerator : ICommandGenerator
         {
             CommandCode = GenerateUpdateCommandRecord(table, commandClassName, rootNamespace),
             HandlerCode = GenerateUpdateHandler(table, commandClassName, handlerClassName, rootNamespace),
-            ValidatorCode = GenerateUpdateValidator(table, commandClassName, validatorClassName),
+            ValidatorCode = GenerateUpdateValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -260,7 +260,7 @@ public class CommandGenerator : ICommandGenerator
         {
             CommandCode = GenerateDeleteCommandRecord(table, commandClassName, rootNamespace),
             HandlerCode = GenerateDeleteHandler(table, commandClassName, handlerClassName, rootNamespace),
-            ValidatorCode = GenerateDeleteValidator(table, commandClassName, validatorClassName),
+            ValidatorCode = GenerateDeleteValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -649,7 +649,7 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateCreateValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateCreateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
@@ -690,7 +690,7 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateUpdateValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateUpdateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
@@ -749,7 +749,7 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateDeleteValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateDeleteValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
