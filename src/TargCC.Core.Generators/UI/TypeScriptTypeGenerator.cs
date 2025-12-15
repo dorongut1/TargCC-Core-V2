@@ -36,6 +36,16 @@ namespace TargCC.Core.Generators.UI
         /// <inheritdoc/>
         public override UIGeneratorType GeneratorType => UIGeneratorType.TypeScriptTypes;
 
+        /// <summary>
+        /// Generates common TypeScript types used across all entities (PagedResult, UseEntityOptions, etc.).
+        /// This should be called once per project to create the common.types.ts file.
+        /// </summary>
+        /// <returns>The content of the common.types.ts file.</returns>
+        public static async Task<string> GenerateCommonTypesAsync()
+        {
+            return await Task.Run(GenerateCommonTypes).ConfigureAwait(false);
+        }
+
         /// <inheritdoc/>
         public override async Task<string> GenerateAsync(Table table, DatabaseSchema schema, UIGeneratorConfig config)
         {
@@ -46,16 +56,6 @@ namespace TargCC.Core.Generators.UI
             LogGeneratingTypes(Logger, table.Name, null);
 
             return await Task.Run(() => Generate(table)).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Generates common TypeScript types used across all entities (PagedResult, UseEntityOptions, etc.).
-        /// This should be called once per project to create the common.types.ts file.
-        /// </summary>
-        /// <returns>The content of the common.types.ts file.</returns>
-        public static async Task<string> GenerateCommonTypesAsync()
-        {
-            return await Task.Run(GenerateCommonTypes).ConfigureAwait(false);
         }
 
         private static string GenerateMainInterface(Table table)
