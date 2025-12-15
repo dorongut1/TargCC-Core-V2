@@ -170,7 +170,6 @@ namespace TargCC.Core.Generators.UI
 
             // Entity type removed - TypeScript infers it from API responses
             // Child entity type imports removed - TypeScript infers them from hooks
-
             sb.AppendLine();
         }
 
