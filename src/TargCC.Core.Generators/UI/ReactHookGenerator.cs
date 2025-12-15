@@ -144,45 +144,26 @@ namespace TargCC.Core.Generators.UI
 
         private static void GenerateImports(StringBuilder sb, Table table, DatabaseSchema schema, string className, string camelName)
         {
-            sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            // VIEWs only use useQuery (read-only), tables use all three
+            if (table.IsView)
+            {
+                sb.AppendLine("import { useQuery } from '@tanstack/react-query';");
+            }
+            else
+            {
+                sb.AppendLine("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+            }
+
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className},");
 
             // Only import write types for tables, not for VIEWs
             if (!table.IsView)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"  Create{className}Request,");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"  Update{className}Request,");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ Create{className}Request, Update{className}Request }} from '../types/{className}.types';");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {className}Filters,");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
-
-            // Import child entity types for related data hooks
-            // Use HashSet to avoid duplicate imports when multiple relationships point to same table
-            if (schema.Relationships != null)
-            {
-                var parentRelationships = schema.Relationships
-                    .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                    .ToList();
-
-                // Initialize with className to prevent importing the main entity again (e.g., self-references)
-                var importedTypes = new HashSet<string> { className };
-
-                foreach (var relationship in parentRelationships)
-                {
-                    var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                    if (childTable != null)
-                    {
-                        var childClassName = GetClassName(childTable.Name);
-                        if (importedTypes.Add(childClassName))
-                        {
-                            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
-                        }
-                    }
-                }
-            }
+            // Entity type and Filters type removed - TypeScript infers them from API responses
+            // Child entity type imports removed - TypeScript infers them from hooks
 
             sb.AppendLine();
         }
