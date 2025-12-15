@@ -156,15 +156,21 @@ namespace TargCC.Core.Generators.UI
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
 
-            // Only import write types for tables, not for VIEWs
-            if (!table.IsView)
+            // Import necessary types based on table type
+            if (table.IsView)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ Create{className}Request, Update{className}Request }} from '../types/{className}.types';");
+                // VIEWs only need Filters for the list hook
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}Filters }} from '../types/{className}.types';");
+            }
+            else
+            {
+                // Tables need Create/Update/Filters types
+                sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ Create{className}Request, Update{className}Request, {className}Filters }} from '../types/{className}.types';");
             }
 
-            // Entity type and Filters type removed - TypeScript infers them from API responses
-
+            // Entity type removed - TypeScript infers it from API responses
             // Child entity type imports removed - TypeScript infers them from hooks
+
             sb.AppendLine();
         }
 
