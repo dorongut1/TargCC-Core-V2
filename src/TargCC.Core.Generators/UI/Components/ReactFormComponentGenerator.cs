@@ -65,9 +65,29 @@ namespace TargCC.Core.Generators.UI.Components
                     c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase) ||
                     c.Name.StartsWith("lkp_", StringComparison.OrdinalIgnoreCase));
 
-                // Check if table has BIT columns that require Checkbox/FormControlLabel
-                var hasBooleanFields = table.Columns.Exists(c =>
-                    c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase));
+                // Check if table has BIT columns that will actually render as Checkbox
+                // Only BIT columns without special prefixes and not excluded from create forms
+                var hasBooleanFields = GetDataColumns(table)
+                    .Where(c => !c.IsPrimaryKey && !c.IsIdentity)
+                    .Where(c =>
+                    {
+                        var (prefix, _) = SplitPrefix(c.Name);
+                        // Exclude read-only prefixes that are skipped in create mode
+                        if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
+                        {
+                            return false;
+                        }
+
+                        // Only columns without special prefixes render as Checkbox for BIT type
+                        // Columns with prefixes ENO, LKP, LOC, ENM, SPL, UPL, SPT, ENT use other components
+                        if (!string.IsNullOrEmpty(prefix))
+                        {
+                            return false;
+                        }
+
+                        return c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase);
+                    })
+                    .Any();
 
                 var imports = new List<string> { "TextField", "Button", "Box", "CircularProgress" };
 
