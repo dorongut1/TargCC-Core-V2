@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Permission table.
-    /// Generated: 2025-12-11 14:19:33
+    /// Generated: 2025-12-15 09:25:37
     /// </summary>
     [Table("c_Permission")]
     public partial class Permission

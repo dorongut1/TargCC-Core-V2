@@ -51,7 +51,16 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
+                // GridActionsCellItem is only used for tables with edit/delete actions
+                if (!table.IsView)
+                {
+                    sb.AppendLine("import { DataGrid, GridColDef, GridActionsCellItem, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
+                }
+                else
+                {
+                    sb.AppendLine("import { DataGrid, GridColDef, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
+                }
+
                 sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, MenuItem, Typography } from '@mui/material';");
 
                 // Only import Edit/Delete/Add icons for tables, not for VIEWs

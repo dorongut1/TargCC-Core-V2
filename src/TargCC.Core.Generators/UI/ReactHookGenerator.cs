@@ -160,11 +160,15 @@ namespace TargCC.Core.Generators.UI
             sb.AppendLine(CultureInfo.InvariantCulture, $"}} from '../types/{className}.types';");
 
             // Import child entity types for related data hooks
+            // Use HashSet to avoid duplicate imports when multiple relationships point to same table
             if (schema.Relationships != null)
             {
                 var parentRelationships = schema.Relationships
                     .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                     .ToList();
+
+                // Initialize with className to prevent importing the main entity again (e.g., self-references)
+                var importedTypes = new HashSet<string> { className };
 
                 foreach (var relationship in parentRelationships)
                 {
@@ -172,7 +176,10 @@ namespace TargCC.Core.Generators.UI
                     if (childTable != null)
                     {
                         var childClassName = GetClassName(childTable.Name);
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                        if (importedTypes.Add(childClassName))
+                        {
+                            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../types/{childClassName}.types';");
+                        }
                     }
                 }
             }
@@ -189,10 +196,19 @@ namespace TargCC.Core.Generators.UI
                 .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
                 .ToList();
 
+            // Use HashSet to avoid duplicate hooks when multiple relationships point to same table
+            var generatedHooks = new HashSet<string>();
+
             foreach (var relationship in parentRelationships)
             {
                 var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
                 if (childTable == null)
+                {
+                    continue;
+                }
+
+                var childTableName = childTable.FullName;
+                if (!generatedHooks.Add(childTableName))
                 {
                     continue;
                 }
