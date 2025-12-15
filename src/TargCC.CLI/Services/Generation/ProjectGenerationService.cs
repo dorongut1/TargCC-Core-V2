@@ -334,7 +334,7 @@ public class ProjectGenerationService : IProjectGenerationService
 
         // Command Generator - Commands, Handlers, Validators
         var commandGen = new CommandGenerator(_loggerFactory.CreateLogger<CommandGenerator>());
-        var commandResults = await commandGen.GenerateAllAsync(table);
+        var commandResults = await commandGen.GenerateAllAsync(table, rootNamespace);
 
         var commandsDir = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Features", pluralName, "Commands");
         Directory.CreateDirectory(commandsDir);

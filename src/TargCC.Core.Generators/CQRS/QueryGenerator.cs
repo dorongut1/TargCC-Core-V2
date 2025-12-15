@@ -434,8 +434,15 @@ public class QueryGenerator : IQueryGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
 
+        // Check if entity name conflicts with System types (e.g., Lookup, Task, etc.)
+        string? entityAliasName = entityName switch
+        {
+            "Lookup" or "Task" or "Action" or "Exception" or "Environment" => entityName,
+            _ => null
+        };
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
@@ -514,8 +521,11 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("    }");
         sb.AppendLine();
 
+        // Use entity alias if there's a name conflict
+        var entityTypeName = entityAliasName != null ? $"{entityAliasName}Entity" : entityName;
+
         // Add ApplyFilters method
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityName}> ApplyFilters(IQueryable<{entityName}> query, {entityName}Filters? filters)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityTypeName}> ApplyFilters(IQueryable<{entityTypeName}> query, {entityName}Filters? filters)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (filters == null)");
         sb.AppendLine("        {");
@@ -534,7 +544,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
 
         // Add ApplySorting method
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityName}> ApplySorting(IQueryable<{entityName}> query, string? sortBy, string? sortDirection)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityTypeName}> ApplySorting(IQueryable<{entityTypeName}> query, string? sortBy, string? sortDirection)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (string.IsNullOrEmpty(sortBy))");
         sb.AppendLine("        {");
@@ -814,6 +824,8 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"public class {dtoClassName}");
         sb.AppendLine("{");
 
+        var seenProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var column in table.Columns)
         {
             if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
@@ -823,6 +835,18 @@ public class QueryGenerator : IQueryGenerator
             }
 
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names (common in tables with multiple FK relationships to same table)
+            if (seenProperties.Contains(propName))
+            {
+                _logger.LogWarning(
+                    "Skipping duplicate property '{PropertyName}' for column '{ColumnName}' in table '{TableName}'",
+                    propName, column.Name, table.Name);
+                continue;
+            }
+
+            seenProperties.Add(propName);
+
             var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
 
             // Primary keys are never nullable in DTOs
@@ -864,7 +888,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace)
+    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace, string? entityAliasName = null)
     {
         sb.AppendLine("using AutoMapper;");
         sb.AppendLine("using MediatR;");
@@ -873,7 +897,15 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.DTOs;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
+
+        // Add alias for entity names that conflict with System types (e.g., Lookup)
+        if (!string.IsNullOrEmpty(entityAliasName))
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {entityAliasName}Entity = {rootNamespace}.Domain.Entities.{entityAliasName};");
+        }
+
         sb.AppendLine();
     }
 
