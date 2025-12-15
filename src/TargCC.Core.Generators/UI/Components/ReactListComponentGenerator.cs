@@ -46,7 +46,13 @@ namespace TargCC.Core.Generators.UI.Components
             var sb = new StringBuilder();
 
             sb.AppendLine("import React from 'react';");
-            sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+
+            // Only import useNavigate for tables (edit/delete actions), not for read-only VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+            }
+
             sb.AppendLine("import ExcelJS from 'exceljs';");
 
             if (framework == UIFramework.MaterialUI)
@@ -61,7 +67,31 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("import { DataGrid, GridColDef, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarDensitySelector, useGridApiRef } from '@mui/x-data-grid';");
                 }
 
-                sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, MenuItem, Typography } from '@mui/material';");
+                // Check if MenuItem is needed for boolean/enum filters
+                var dataColumns = GetDataColumns(table).Take(10).ToList();
+                var needsMenuItem = dataColumns.Exists(c =>
+                {
+                    var dataTypeUpper = c.DataType.ToUpperInvariant();
+                    var (prefix, _) = SplitPrefix(c.Name);
+                    var columnNameUpper = c.Name.ToUpperInvariant();
+
+                    return dataTypeUpper.Contains("BIT", StringComparison.Ordinal) ||
+                           dataTypeUpper.Contains("BOOL", StringComparison.Ordinal) ||
+                           prefix == "LKP" ||
+                           columnNameUpper.EndsWith("STATUS", StringComparison.Ordinal) ||
+                           columnNameUpper.EndsWith("TYPE", StringComparison.Ordinal) ||
+                           columnNameUpper.EndsWith("CATEGORY", StringComparison.Ordinal) ||
+                           dataTypeUpper.Contains("ENUM", StringComparison.Ordinal);
+                });
+
+                if (needsMenuItem)
+                {
+                    sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, MenuItem, Typography } from '@mui/material';");
+                }
+                else
+                {
+                    sb.AppendLine("import { Button, Box, CircularProgress, Alert, TextField, Paper, Typography } from '@mui/material';");
+                }
 
                 // Only import Edit/Delete/Add icons for tables, not for VIEWs
                 if (!table.IsView)
@@ -84,7 +114,8 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}s }} from '../../hooks/use{className}';");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className}, {className}Filters }} from '../../types/{className}.types';");
+            // Only import the entity type, not Filters (Filters type is never used)
+            sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
 
             return sb.ToString();
         }
@@ -199,11 +230,19 @@ namespace TargCC.Core.Generators.UI.Components
         private static string GenerateComponentSetup(Table table, string className, string pluralName)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("  const navigate = useNavigate();");
+
+            // Only declare navigate for tables (edit/delete actions), not for read-only VIEWs
+            if (!table.IsView)
+            {
+                sb.AppendLine("  const navigate = useNavigate();");
+            }
+
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine("  ");
 
-            var hasDateColumns = table.Columns.Exists(c =>
+            // Only generate formatDate if the first 10 displayed columns contain DATE fields
+            var dataColumns = GetDataColumns(table).Take(10).ToList();
+            var hasDateColumns = dataColumns.Exists(c =>
                 c.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal));
 
             if (hasDateColumns)
