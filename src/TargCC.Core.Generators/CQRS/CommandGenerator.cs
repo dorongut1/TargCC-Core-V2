@@ -274,7 +274,7 @@ public class CommandGenerator : ICommandGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -325,7 +325,7 @@ public class CommandGenerator : ICommandGenerator
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -383,7 +383,7 @@ public class CommandGenerator : ICommandGenerator
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -406,7 +406,7 @@ public class CommandGenerator : ICommandGenerator
         const string repoFieldName = "_repository";
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -505,7 +505,7 @@ public class CommandGenerator : ICommandGenerator
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -587,7 +587,7 @@ public class CommandGenerator : ICommandGenerator
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -883,20 +883,20 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateCommandUsings(StringBuilder sb)
+    private static void GenerateCommandUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using MediatR;");
-        sb.AppendLine($"using {rootNamespace}.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
         sb.AppendLine();
     }
 
-    private static void GenerateHandlerUsings(StringBuilder sb)
+    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using MediatR;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
-        sb.AppendLine($"using {rootNamespace}.Application.Common.Models;");
-        sb.AppendLine($"using {rootNamespace}.Domain.Entities;");
-        sb.AppendLine($"using {rootNamespace}.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
         sb.AppendLine();
     }
 
