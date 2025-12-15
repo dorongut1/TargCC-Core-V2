@@ -501,8 +501,7 @@ public class ProjectGenerationService : IProjectGenerationService
         _output.Info("  ✓ README.md");
 
         // src/types/common.types.ts - Shared TypeScript types for pagination and filtering
-        var typeGen = new TypeScriptTypeGenerator(_loggerFactory.CreateLogger<TypeScriptTypeGenerator>());
-        var commonTypes = await typeGen.GenerateCommonTypesAsync();
+        var commonTypes = await TypeScriptTypeGenerator.GenerateCommonTypesAsync();
         await SaveFileAsync(Path.Combine(clientDir, "src", "types", "common.types.ts"), commonTypes);
         _output.Info("  ✓ src/types/common.types.ts");
     }

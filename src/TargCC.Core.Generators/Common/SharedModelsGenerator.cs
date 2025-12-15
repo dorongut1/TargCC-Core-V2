@@ -17,6 +17,12 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public class SharedModelsGenerator
 {
+    private static readonly Action<ILogger, int, Exception?> LogGeneratedSharedModels =
+        LoggerMessage.Define<int>(
+            LogLevel.Information,
+            new EventId(1, nameof(LogGeneratedSharedModels)),
+            "Generated {Count} shared model files");
+
     private readonly ILogger<SharedModelsGenerator> _logger;
 
     /// <summary>
@@ -48,7 +54,7 @@ public class SharedModelsGenerator
                 ["FilterCriteria.cs"] = GenerateFilterCriteria(@namespace)
             };
 
-            _logger.LogInformation("Generated {Count} shared model files", files.Count);
+            LogGeneratedSharedModels(_logger, files.Count, null);
 
             return files;
         }).ConfigureAwait(false);

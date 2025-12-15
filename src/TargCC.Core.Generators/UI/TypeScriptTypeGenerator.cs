@@ -53,7 +53,7 @@ namespace TargCC.Core.Generators.UI
         /// This should be called once per project to create the common.types.ts file.
         /// </summary>
         /// <returns>The content of the common.types.ts file.</returns>
-        public async Task<string> GenerateCommonTypesAsync()
+        public static async Task<string> GenerateCommonTypesAsync()
         {
             return await Task.Run(GenerateCommonTypes).ConfigureAwait(false);
         }
