@@ -65,11 +65,13 @@ public interface IGenerationService
     /// <param name="connectionString">Database connection string.</param>
     /// <param name="tableName">Table name.</param>
     /// <param name="outputDirectory">Output directory.</param>
+    /// <param name="namespace">Root namespace for generated code (default: "TargCC").</param>
     /// <returns>Generation result.</returns>
     Task<GenerationResult> GenerateCqrsAsync(
         string connectionString,
         string tableName,
-        string outputDirectory);
+        string outputDirectory,
+        string @namespace = "TargCC");
 
     /// <summary>
     /// Generates REST API controller for a table.

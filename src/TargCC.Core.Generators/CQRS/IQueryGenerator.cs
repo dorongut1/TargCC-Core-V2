@@ -163,6 +163,7 @@ public interface IQueryGenerator
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
     /// <param name="queryType">The type of query to generate (GetById, GetAll, GetByIndex).</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (default: "TargCC").</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains a
     /// <see cref="QueryGenerationResult"/> with all generated code components.
@@ -181,19 +182,20 @@ public interface IQueryGenerator
     ///     .WithColumn("Name", "nvarchar", maxLength: 100)
     ///     .Build();
     ///
-    /// var result = await generator.GenerateAsync(table, QueryType.GetById);
+    /// var result = await generator.GenerateAsync(table, QueryType.GetById, "MyApp");
     ///
     /// await File.WriteAllTextAsync("GetCustomerQuery.cs", result.QueryCode);
     /// await File.WriteAllTextAsync("GetCustomerHandler.cs", result.HandlerCode);
     /// </code>
     /// </example>
-    Task<QueryGenerationResult> GenerateAsync(Table table, QueryType queryType);
+    Task<QueryGenerationResult> GenerateAsync(Table table, QueryType queryType, string rootNamespace = "TargCC");
 
     /// <summary>
     /// Generates a GetByIndex query for a specific index on the table.
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
     /// <param name="index">The index to generate the query for.</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (default: "TargCC").</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains a
     /// <see cref="QueryGenerationResult"/> with all generated code components.
@@ -204,18 +206,19 @@ public interface IQueryGenerator
     /// <example>
     /// <code>
     /// var emailIndex = table.Indexes.First(i => i.Name == "IX_Customer_Email");
-    /// var result = await generator.GenerateByIndexAsync(table, emailIndex);
+    /// var result = await generator.GenerateByIndexAsync(table, emailIndex, "MyApp");
     ///
     /// // Generates GetCustomerByEmailQuery if index is unique
     /// // Generates GetCustomersByEmailQuery if index is non-unique
     /// </code>
     /// </example>
-    Task<QueryGenerationResult> GenerateByIndexAsync(Table table, Index index);
+    Task<QueryGenerationResult> GenerateByIndexAsync(Table table, Index index, string rootNamespace = "TargCC");
 
     /// <summary>
     /// Generates only the DTO class for a table.
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (default: "TargCC").</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains
     /// the generated DTO class code as a string.
@@ -229,16 +232,17 @@ public interface IQueryGenerator
     /// </remarks>
     /// <example>
     /// <code>
-    /// var dtoCode = await generator.GenerateDtoAsync(customerTable);
+    /// var dtoCode = await generator.GenerateDtoAsync(customerTable, "MyApp");
     /// // Generates CustomerDto without Password or CreditCard fields
     /// </code>
     /// </example>
-    Task<string> GenerateDtoAsync(Table table);
+    Task<string> GenerateDtoAsync(Table table, string rootNamespace = "TargCC");
 
     /// <summary>
     /// Generates all standard queries for a table (GetById, GetAll).
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
+    /// <param name="rootNamespace">The root namespace for the generated code (default: "TargCC").</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains
     /// a collection of <see cref="QueryGenerationResult"/> for all generated queries.
@@ -248,9 +252,9 @@ public interface IQueryGenerator
     /// </exception>
     /// <example>
     /// <code>
-    /// var results = await generator.GenerateAllAsync(customerTable);
+    /// var results = await generator.GenerateAllAsync(customerTable, "MyApp");
     /// // Returns results for GetCustomerQuery and GetCustomersQuery
     /// </code>
     /// </example>
-    Task<IEnumerable<QueryGenerationResult>> GenerateAllAsync(Table table);
+    Task<IEnumerable<QueryGenerationResult>> GenerateAllAsync(Table table, string rootNamespace = "TargCC");
 }
