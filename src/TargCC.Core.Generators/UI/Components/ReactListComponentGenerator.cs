@@ -160,15 +160,30 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
             var pluralName = camelName + "s";
+            var pkCamelName = GetPrimaryKeyPropertyName(table);
 
-            // Get primary key column name for DataGrid getRowId
-            // Primary key should be numeric or string, not boolean
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
+            sb.Append(GenerateComponentSetup(table, className, pluralName));
+            sb.Append(GenerateFilterLogic(pluralName));
+            sb.Append(GenerateHandlersAndToolbar());
+            sb.Append(GenerateExportToExcelHandler(className));
+            sb.AppendLine(GenerateColumns(table));
+            sb.AppendLine();
+            sb.Append(GenerateLoadingAndErrorStates(framework, pluralName));
+            sb.Append(GenerateMainRender(table, framework, className, pluralName, pkCamelName));
+            sb.AppendLine("  );");
+            sb.AppendLine("};");
+
+            return sb.ToString();
+        }
+
+        private static string GetPrimaryKeyPropertyName(Table table)
+        {
             var pkColumn = table.Columns.Find(c => c.IsPrimaryKey &&
                 (c.DataType.Contains("INT", StringComparison.OrdinalIgnoreCase) ||
                  c.DataType.Contains("CHAR", StringComparison.OrdinalIgnoreCase) ||
                  c.DataType.Contains("GUID", StringComparison.OrdinalIgnoreCase)));
 
-            // Fallback: look for column named "id" if no valid PK found
             if (pkColumn == null)
             {
                 pkColumn = table.Columns.Find(c =>
@@ -178,44 +193,56 @@ namespace TargCC.Core.Generators.UI.Components
             }
 
             var pkPropertyName = pkColumn != null ? GetPropertyName(pkColumn.Name) : "id";
-            var pkCamelName = pkPropertyName.Length > 0 ? char.ToLowerInvariant(pkPropertyName[0]) + pkPropertyName.Substring(1) : "id";
+            return pkPropertyName.Length > 0 ? char.ToLowerInvariant(pkPropertyName[0]) + pkPropertyName.Substring(1) : "id";
+        }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
+        private static string GenerateComponentSetup(Table table, string className, string pluralName)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  const navigate = useNavigate();");
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine("  ");
 
-            // Only define formatDate if there are date columns
             var hasDateColumns = table.Columns.Exists(c =>
                 c.DataType.ToUpperInvariant().Contains("DATE", StringComparison.Ordinal));
 
             if (hasDateColumns)
             {
-                sb.AppendLine("  // Helper function to format dates as DD/MM/YYYY");
-                sb.AppendLine("  const formatDate = (date: any): string => {");
-                sb.AppendLine("    if (!date) return '';");
-                sb.AppendLine("    const d = new Date(date);");
-                sb.AppendLine("    if (isNaN(d.getTime())) return '';");
-                sb.AppendLine("    const day = d.getDate().toString().padStart(2, '0');");
-                sb.AppendLine("    const month = (d.getMonth() + 1).toString().padStart(2, '0');");
-                sb.AppendLine("    const year = d.getFullYear();");
-                sb.AppendLine("    return `${day}/${month}/${year}`;");
-                sb.AppendLine("  };");
-                sb.AppendLine("  ");
+                sb.Append(GenerateDateFormatter());
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const [columnFilters, setColumnFilters] = React.useState<Record<string, string>>({{}});");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s({{}});");
 
-            // Only add useDelete hook for tables, not for VIEWs
             if (!table.IsView)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ mutate: deleteEntity }} = useDelete{className}();");
             }
 
             sb.AppendLine();
+            return sb.ToString();
+        }
 
-            // Generate filtered data logic
+        private static string GenerateDateFormatter()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("  // Helper function to format dates as DD/MM/YYYY");
+            sb.AppendLine("  const formatDate = (date: any): string => {");
+            sb.AppendLine("    if (!date) return '';");
+            sb.AppendLine("    const d = new Date(date);");
+            sb.AppendLine("    if (isNaN(d.getTime())) return '';");
+            sb.AppendLine("    const day = d.getDate().toString().padStart(2, '0');");
+            sb.AppendLine("    const month = (d.getMonth() + 1).toString().padStart(2, '0');");
+            sb.AppendLine("    const year = d.getFullYear();");
+            sb.AppendLine("    return `${day}/${month}/${year}`;");
+            sb.AppendLine("  };");
+            sb.AppendLine("  ");
+            return sb.ToString();
+        }
+
+        private static string GenerateFilterLogic(string pluralName)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  // Client-side column filters");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const filteredData = React.useMemo(() => {{");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName}) return {pluralName};");
@@ -230,6 +257,24 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("        // Cast to any to avoid TypeScript union type issues with instanceof");
             sb.AppendLine("        let itemValue = item[column as keyof typeof item] as any;");
             sb.AppendLine("        ");
+            sb.Append(GenerateDateFilterLogic());
+            sb.AppendLine("        ");
+            sb.AppendLine("        // Convert boolean values to readable text");
+            sb.AppendLine("        if (typeof itemValue === 'boolean') {");
+            sb.AppendLine("          itemValue = itemValue ? 'true' : 'false';");
+            sb.AppendLine("        }");
+            sb.AppendLine("        ");
+            sb.AppendLine("        return itemValue?.toString().toLowerCase().includes(filterValue.toLowerCase());");
+            sb.AppendLine("      });");
+            sb.AppendLine("    });");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, columnFilters]);");
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
+        private static string GenerateDateFilterLogic()
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("        // Special handling for date filtering - compare as Date objects");
             sb.AppendLine("        if (typeof filterValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(filterValue)) {");
             sb.AppendLine("          // Filter value is from date picker (YYYY-MM-DD)");
@@ -250,18 +295,12 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("          }");
             sb.AppendLine("          return false;");
             sb.AppendLine("        }");
-            sb.AppendLine("        ");
-            sb.AppendLine("        // Convert boolean values to readable text");
-            sb.AppendLine("        if (typeof itemValue === 'boolean') {");
-            sb.AppendLine("          itemValue = itemValue ? 'true' : 'false';");
-            sb.AppendLine("        }");
-            sb.AppendLine("        ");
-            sb.AppendLine("        return itemValue?.toString().toLowerCase().includes(filterValue.toLowerCase());");
-            sb.AppendLine("      });");
-            sb.AppendLine("    });");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, columnFilters]);");
-            sb.AppendLine();
+            return sb.ToString();
+        }
 
+        private static string GenerateHandlersAndToolbar()
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  const handleClearAllFilters = () => {");
             sb.AppendLine("    setColumnFilters({});");
             sb.AppendLine("  };");
@@ -282,8 +321,12 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    );");
             sb.AppendLine("  }");
             sb.AppendLine();
+            return sb.ToString();
+        }
 
-            // Export to Excel handler
+        private static string GenerateExportToExcelHandler(string className)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  const handleExportToExcel = async () => {");
             sb.AppendLine("    // Export only the filtered data visible on screen");
             sb.AppendLine("    const visibleRows = filteredData || [];");
@@ -308,6 +351,15 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("      return filteredRow;");
             sb.AppendLine("    });");
             sb.AppendLine();
+            sb.Append(GenerateExcelWorkbookCreation(className));
+            sb.AppendLine("  };");
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
+        private static string GenerateExcelWorkbookCreation(string className)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("    // Create workbook and worksheet");
             sb.AppendLine("    const workbook = new ExcelJS.Workbook();");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    const worksheet = workbook.addWorksheet('{className}s');");
@@ -319,6 +371,14 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Add data rows");
             sb.AppendLine("    exportData.forEach(row => worksheet.addRow(row));");
             sb.AppendLine();
+            sb.Append(GenerateExcelStyling());
+            sb.Append(GenerateExcelDownload(className));
+            return sb.ToString();
+        }
+
+        private static string GenerateExcelStyling()
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("    // Style header row");
             sb.AppendLine("    const headerRow = worksheet.getRow(1);");
             sb.AppendLine("    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };");
@@ -339,6 +399,12 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    // Freeze header row");
             sb.AppendLine("    worksheet.views = [{ state: 'frozen', ySplit: 1 }];");
             sb.AppendLine();
+            return sb.ToString();
+        }
+
+        private static string GenerateExcelDownload(string className)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("    // Generate Excel file and download");
             sb.AppendLine("    const buffer = await workbook.xlsx.writeBuffer();");
             sb.AppendLine("    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });");
@@ -348,15 +414,14 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine(CultureInfo.InvariantCulture, $"    link.download = `{className}s_${{new Date().toISOString().split('T')[0]}}.xlsx`;");
             sb.AppendLine("    link.click();");
             sb.AppendLine("    window.URL.revokeObjectURL(url);");
-            sb.AppendLine("  };");
-            sb.AppendLine();
+            return sb.ToString();
+        }
 
-            // Columns definition
-            sb.AppendLine(GenerateColumns(table));
-            sb.AppendLine();
-
-            // Loading state
+        private static string GenerateLoadingAndErrorStates(UIFramework framework, string pluralName)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  if (isLoading) {");
+
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine("    return <CircularProgress />;");
@@ -368,9 +433,8 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine("  }");
             sb.AppendLine();
-
-            // Error state
             sb.AppendLine("  if (error) {");
+
             if (framework == UIFramework.MaterialUI)
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    return <Alert severity=\"error\">Failed to load {pluralName}</Alert>;");
@@ -382,72 +446,98 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine("  }");
             sb.AppendLine();
+            return sb.ToString();
+        }
 
-            // Main render
+        private static string GenerateMainRender(Table table, UIFramework framework, string className, string pluralName, string pkCamelName)
+        {
+            var sb = new StringBuilder();
             sb.AppendLine("  return (");
+
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("    <Box sx={{ height: 'calc(100vh - 200px)', width: '100%', display: 'flex', flexDirection: 'column' }}>");
-                sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
-
-                // Only show Create button for tables, not for views (views are read-only)
-                if (!table.IsView)
-                {
-                    sb.AppendLine("        <Button");
-                    sb.AppendLine("          variant=\"contained\"");
-                    sb.AppendLine("          startIcon={<AddIcon />}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
-                    sb.AppendLine("        >");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
-                    sb.AppendLine("        </Button>");
-                }
-
-                sb.AppendLine("        <Button");
-                sb.AppendLine("          variant=\"outlined\"");
-                sb.AppendLine("          startIcon={<FileDownloadIcon />}");
-                sb.AppendLine("          onClick={handleExportToExcel}");
-                sb.AppendLine("        >");
-                sb.AppendLine("          Export to Excel");
-                sb.AppendLine("        </Button>");
-                sb.AppendLine("      </Box>");
-
-                // Add Filter UI
-                sb.AppendLine(GenerateFilterUI(table));
-
-                sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
-                sb.AppendLine("        <DataGrid");
-                sb.AppendLine("          apiRef={apiRef}");
-                sb.AppendLine("          rows={filteredData || []}");
-                sb.AppendLine("          columns={columns}");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
-                sb.AppendLine("          slots={{");
-                sb.AppendLine("            toolbar: CustomToolbar,");
-                sb.AppendLine("          }}");
-                sb.AppendLine("          initialState={{");
-                sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
-                sb.AppendLine("          }}");
-                sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
-                sb.AppendLine("          checkboxSelection");
-                sb.AppendLine("          disableRowSelectionOnClick");
-                sb.AppendLine("        />");
-                sb.AppendLine("      </Box>");
-                sb.AppendLine("    </Box>");
+                sb.Append(GenerateMaterialUIRender(table, className, pluralName, pkCamelName));
             }
             else
             {
-                sb.AppendLine("    <div className=\"p-4\">");
-                sb.AppendLine("      <div className=\"mb-4\">");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        <button onClick={{() => navigate('/{pluralName}/new')}} className=\"bg-blue-500 text-white px-4 py-2 rounded\">");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
-                sb.AppendLine("        </button>");
-                sb.AppendLine("      </div>");
-                sb.AppendLine("      {/* Table implementation */}");
-                sb.AppendLine("    </div>");
+                sb.Append(GenerateTailwindRender(className, pluralName));
             }
 
-            sb.AppendLine("  );");
-            sb.AppendLine("};");
+            return sb.ToString();
+        }
 
+        private static string GenerateMaterialUIRender(Table table, string className, string pluralName, string pkCamelName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("    <Box sx={{ height: 'calc(100vh - 200px)', width: '100%', display: 'flex', flexDirection: 'column' }}>");
+            sb.Append(GenerateActionButtons(table, className, pluralName));
+            sb.AppendLine(GenerateFilterUI(table));
+            sb.Append(GenerateDataGrid(pkCamelName));
+            sb.AppendLine("    </Box>");
+            return sb.ToString();
+        }
+
+        private static string GenerateActionButtons(Table table, string className, string pluralName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>");
+
+            if (!table.IsView)
+            {
+                sb.AppendLine("        <Button");
+                sb.AppendLine("          variant=\"contained\"");
+                sb.AppendLine("          startIcon={<AddIcon />}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          onClick={{() => navigate('/{pluralName}/new')}}");
+                sb.AppendLine("        >");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+                sb.AppendLine("        </Button>");
+            }
+
+            sb.AppendLine("        <Button");
+            sb.AppendLine("          variant=\"outlined\"");
+            sb.AppendLine("          startIcon={<FileDownloadIcon />}");
+            sb.AppendLine("          onClick={handleExportToExcel}");
+            sb.AppendLine("        >");
+            sb.AppendLine("          Export to Excel");
+            sb.AppendLine("        </Button>");
+            sb.AppendLine("      </Box>");
+            return sb.ToString();
+        }
+
+        private static string GenerateDataGrid(string pkCamelName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
+            sb.AppendLine("        <DataGrid");
+            sb.AppendLine("          apiRef={apiRef}");
+            sb.AppendLine("          rows={filteredData || []}");
+            sb.AppendLine("          columns={columns}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName}}}");
+            sb.AppendLine("          slots={{");
+            sb.AppendLine("            toolbar: CustomToolbar,");
+            sb.AppendLine("          }}");
+            sb.AppendLine("          initialState={{");
+            sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
+            sb.AppendLine("          }}");
+            sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
+            sb.AppendLine("          checkboxSelection");
+            sb.AppendLine("          disableRowSelectionOnClick");
+            sb.AppendLine("        />");
+            sb.AppendLine("      </Box>");
+            return sb.ToString();
+        }
+
+        private static string GenerateTailwindRender(string className, string pluralName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("    <div className=\"p-4\">");
+            sb.AppendLine("      <div className=\"mb-4\">");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        <button onClick={{() => navigate('/{pluralName}/new')}} className=\"bg-blue-500 text-white px-4 py-2 rounded\">");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          Create {className}");
+            sb.AppendLine("        </button>");
+            sb.AppendLine("      </div>");
+            sb.AppendLine("      {/* Table implementation */}");
+            sb.AppendLine("    </div>");
             return sb.ToString();
         }
 
