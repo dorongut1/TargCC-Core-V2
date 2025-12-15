@@ -82,7 +82,7 @@ namespace TargCC.Core.Generators.UI.Components
                 }
                 else
                 {
-                    sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card, CardContent, Grid } from '@mui/material';");
+                    sb.AppendLine("import { Box, Typography, Button, CircularProgress, Alert, Card as MuiCard, CardContent, Grid } from '@mui/material';");
                     sb.AppendLine("import { Edit as EditIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';");
 
                     var hasRelatedData = schema.Relationships != null &&
@@ -469,14 +469,14 @@ namespace TargCC.Core.Generators.UI.Components
 
         private static void GenerateDetailCard(StringBuilder sb, Table table, string className, UIFramework framework)
         {
-            sb.AppendLine("      <Card>");
+            sb.AppendLine("      <MuiCard>");
             sb.AppendLine("        <CardContent>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h5\" component=\"h2\" gutterBottom>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"            {className} Details");
             sb.AppendLine("          </Typography>");
             sb.AppendLine(GenerateDetailFields(table, framework));
             sb.AppendLine("        </CardContent>");
-            sb.AppendLine("      </Card>");
+            sb.AppendLine("      </MuiCard>");
         }
 
         private static void GenerateRelatedDataGridsSection(StringBuilder sb, Table table, DatabaseSchema schema)
@@ -513,7 +513,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             if (framework == UIFramework.MaterialUI)
             {
-                sb.AppendLine("      <Card sx={{ mt: 2 }}>");
+                sb.AppendLine("      <MuiCard sx={{ mt: 2 }}>");
                 sb.AppendLine("        <CardContent>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          <Typography variant=\"h6\" gutterBottom>");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"            {childrenName}");
@@ -551,7 +551,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("            />");
                 sb.AppendLine("          </Box>");
                 sb.AppendLine("        </CardContent>");
-                sb.AppendLine("      </Card>");
+                sb.AppendLine("      </MuiCard>");
             }
 
             return sb.ToString();
