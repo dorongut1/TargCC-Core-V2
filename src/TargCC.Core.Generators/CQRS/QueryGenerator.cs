@@ -235,6 +235,7 @@ public class QueryGenerator : IQueryGenerator
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
 
         GenerateFileHeader(sb, table.Name, "Query");
         GenerateQueryUsings(sb);
@@ -243,16 +244,44 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Query to retrieve all {pluralName} with pagination support.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Query to retrieve all {pluralName} with server-side filtering, sorting, and pagination.");
         sb.AppendLine("/// </summary>");
-        sb.AppendLine("/// <param name=\"PageNumber\">The page number (1-based).</param>");
-        sb.AppendLine("/// <param name=\"PageSize\">The number of items per page.</param>");
-        sb.AppendLine("/// <param name=\"SearchTerm\">Optional search term for filtering.</param>");
-
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName}(");
-        sb.AppendLine("    int PageNumber = 1,");
-        sb.AppendLine("    int PageSize = 10,");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    string? SearchTerm = null) : IRequest<Result<PaginatedList<{dtoClassName}>>>;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName} : IRequest<Result<PagedResult<{dtoClassName}>>>");
+        sb.AppendLine("{");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the filters to apply.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public {entityName}Filters? Filters {{ get; init; }}");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the page number (1-based). Default is 1.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public int Page { get; init; } = 1;");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the page size. Default is 100.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public int PageSize { get; init; } = 100;");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the field to sort by. Default is \"Id\".");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public string? SortBy { get; init; } = \"Id\";");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the sort direction. Default is \"asc\".");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public string SortDirection { get; init; } = \"asc\";");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// <summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// {entityName} filters class for filtering queries.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// </summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {entityName}Filters");
+        sb.AppendLine("{");
+        sb.AppendLine("    // TODO: Add filter properties based on table columns");
+        sb.AppendLine("    // Example: public string? Name { get; set; }");
+        sb.AppendLine("}");
 
         return sb.ToString();
     }
@@ -399,8 +428,7 @@ public class QueryGenerator : IQueryGenerator
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
-        const string repoFieldName = "_repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
 
         GenerateFileHeader(sb, table.Name, "Handler");
         GenerateHandlerUsings(sb);
@@ -409,13 +437,13 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {queryClassName} request.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {queryClassName} request with server-side filtering, sorting, and pagination.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{queryClassName}, Result<PaginatedList<{dtoClassName}>>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{queryClassName}, Result<PagedResult<{dtoClassName}>>>");
         sb.AppendLine("{");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly {repoInterfaceName} {repoFieldName};");
+        sb.AppendLine("    private readonly IApplicationDbContext _context;");
         sb.AppendLine("    private readonly IMapper _mapper;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly ILogger<{handlerClassName}> _logger;");
         sb.AppendLine();
@@ -424,37 +452,55 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Initializes a new instance of the <see cref=\"{handlerClassName}\"/> class.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public {handlerClassName}(");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        {repoInterfaceName} repository,");
+        sb.AppendLine("        IApplicationDbContext context,");
         sb.AppendLine("        IMapper mapper,");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        ILogger<{handlerClassName}> logger)");
         sb.AppendLine("    {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        {repoFieldName} = repository ?? throw new ArgumentNullException(nameof(repository));");
+        sb.AppendLine("        _context = context ?? throw new ArgumentNullException(nameof(context));");
         sb.AppendLine("        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));");
         sb.AppendLine("        _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<PaginatedList<{dtoClassName}>>> Handle({queryClassName} request, CancellationToken cancellationToken)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<PagedResult<{dtoClassName}>>> Handle({queryClassName} request, CancellationToken cancellationToken)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(request);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {pluralName} - Page: {{Page}}, Size: {{Size}}\", request.PageNumber, request.PageSize);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {pluralName} - Page: {{Page}}, Size: {{Size}}, SortBy: {{SortBy}}\", request.Page, request.PageSize, request.SortBy);");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine("            var skip = (request.PageNumber - 1) * request.PageSize;");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entities = await {repoFieldName}.GetAllAsync(skip: skip, take: request.PageSize, cancellationToken: cancellationToken);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralName}.AsQueryable();");
         sb.AppendLine();
+        sb.AppendLine("            // Apply filters");
+        sb.AppendLine("            query = ApplyFilters(query, request.Filters);");
+        sb.AppendLine();
+        sb.AppendLine("            // Get total count BEFORE pagination");
+        sb.AppendLine("            var totalCount = await query.CountAsync(cancellationToken);");
+        sb.AppendLine();
+        sb.AppendLine("            // Apply sorting");
+        sb.AppendLine("            query = ApplySorting(query, request.SortBy, request.SortDirection);");
+        sb.AppendLine();
+        sb.AppendLine("            // Apply pagination");
+        sb.AppendLine("            query = query");
+        sb.AppendLine("                .Skip((request.Page - 1) * request.PageSize)");
+        sb.AppendLine("                .Take(request.PageSize);");
+        sb.AppendLine();
+        sb.AppendLine("            var entities = await query.ToListAsync(cancellationToken);");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var dtos = _mapper.Map<List<{dtoClassName}>>(entities);");
         sb.AppendLine();
-        sb.AppendLine("            // Note: For production, implement proper count query in repository");
-        sb.AppendLine("            var totalCount = dtos.Count; // Placeholder - should be from repository");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = new PaginatedList<{dtoClassName}>(dtos, totalCount, request.PageNumber, request.PageSize);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = new PagedResult<{dtoClassName}>");
+        sb.AppendLine("            {");
+        sb.AppendLine("                Items = dtos,");
+        sb.AppendLine("                TotalCount = totalCount,");
+        sb.AppendLine("                Page = request.Page,");
+        sb.AppendLine("                PageSize = request.PageSize");
+        sb.AppendLine("            };");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Successfully retrieved {{Count}} {pluralName}\", dtos.Count);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Successfully retrieved {{Count}} of {{Total}} {pluralName}\", dtos.Count, totalCount);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<PaginatedList<{dtoClassName}>>.Success(result);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<PagedResult<{dtoClassName}>>.Success(result);");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
@@ -462,6 +508,46 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Add ApplyFilters method
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityName}> ApplyFilters(IQueryable<{entityName}> query, {entityName}Filters? filters)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (filters == null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return query;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        // TODO: Add filter logic based on table columns");
+        sb.AppendLine("        // Example:");
+        sb.AppendLine("        // if (!string.IsNullOrEmpty(filters.Name))");
+        sb.AppendLine("        // {");
+        sb.AppendLine("        //     query = query.Where(e => e.Name.Contains(filters.Name));");
+        sb.AppendLine("        // }");
+        sb.AppendLine();
+        sb.AppendLine("        return query;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Add ApplySorting method
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityName}> ApplySorting(IQueryable<{entityName}> query, string? sortBy, string? sortDirection)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (string.IsNullOrEmpty(sortBy))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return query.OrderBy(e => e.Id); // Default sort");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        var isDescending = sortDirection?.ToLower() == \"desc\";");
+        sb.AppendLine();
+        sb.AppendLine("        // TODO: Add sorting logic based on table columns");
+        sb.AppendLine("        return sortBy.ToLower() switch");
+        sb.AppendLine("        {");
+        sb.AppendLine("            \"id\" => isDescending ? query.OrderByDescending(e => e.Id) : query.OrderBy(e => e.Id),");
+        sb.AppendLine("            // Add more sortable columns here");
+        sb.AppendLine("            _ => query.OrderBy(e => e.Id) // Default to Id if unknown field");
+        sb.AppendLine("        };");
+        sb.AppendLine("    }");
+
         sb.AppendLine("}");
 
         return sb.ToString();

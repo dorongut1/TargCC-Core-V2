@@ -205,25 +205,47 @@ namespace TargCC.Core.Generators.API
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
+            var pluralName = MakePlural(entityNameForDocs);
+
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {MakePlural(entityNameForDocs)}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {pluralName} with server-side filtering, sorting, and pagination.");
                 sb.AppendLine("        /// </summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {entityNameForDocs} entities.</returns>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <param name=\"filters\">Optional filters to apply.</param>");
+                sb.AppendLine("        /// <param name=\"page\">Page number (1-based). Default is 1.</param>");
+                sb.AppendLine("        /// <param name=\"pageSize\">Number of items per page. Default is 100.</param>");
+                sb.AppendLine("        /// <param name=\"sortBy\">Field to sort by. Default is \"Id\".</param>");
+                sb.AppendLine("        /// <param name=\"sortDirection\">Sort direction (asc/desc). Default is \"asc\".</param>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Paginated result of {entityNameForDocs} entities.</returns>");
             }
 
             sb.AppendLine("        [HttpGet]");
 
             if (config.GenerateSwaggerAttributes)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(IEnumerable<{qualifiedEntityName}>), 200)]");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        [ProducesResponseType(typeof(PagedResult<{qualifiedEntityName}>), 200)]");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<IEnumerable<{qualifiedEntityName}>>> GetAll()");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        public async System.Threading.Tasks.Task<ActionResult<PagedResult<{qualifiedEntityName}>>> GetAll(");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            [FromQuery] {entityNameForDocs}Filters? filters,");
+            sb.AppendLine("            [FromQuery] int page = 1,");
+            sb.AppendLine("            [FromQuery] int pageSize = 100,");
+            sb.AppendLine("            [FromQuery] string? sortBy = \"Id\",");
+            sb.AppendLine("            [FromQuery] string sortDirection = \"asc\")");
             sb.AppendLine("        {");
-            sb.AppendLine("            var entities = await _repository.GetAllAsync().ConfigureAwait(false);");
-            sb.AppendLine("            return Ok(entities);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = new Get{pluralName}Query");
+            sb.AppendLine("            {");
+            sb.AppendLine("                Filters = filters,");
+            sb.AppendLine("                Page = page,");
+            sb.AppendLine("                PageSize = pageSize,");
+            sb.AppendLine("                SortBy = sortBy,");
+            sb.AppendLine("                SortDirection = sortDirection");
+            sb.AppendLine("            };");
+            sb.AppendLine();
+            sb.AppendLine("            var result = await _mediator.Send(query).ConfigureAwait(false);");
+            sb.AppendLine();
+            sb.AppendLine("            return result.IsSuccess ? Ok(result.Value) : Problem(result.Error);");
             sb.AppendLine("        }");
         }
 
