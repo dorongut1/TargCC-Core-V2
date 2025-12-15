@@ -105,6 +105,21 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("  ✓ Solution structure created!");
             _output.BlankLine();
 
+            _output.Info("Step 2.5: Generating shared models...");
+
+            // Generate shared C# models (PagedResult, PaginationParams, FilterOperator, FilterCriteria)
+            var sharedModelsGen = new SharedModelsGenerator(_loggerFactory.CreateLogger<SharedModelsGenerator>());
+            var sharedModels = await sharedModelsGen.GenerateAllAsync(rootNamespace);
+            foreach (var (fileName, content) in sharedModels)
+            {
+                var sharedModelPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Common", fileName);
+                await SaveFileAsync(sharedModelPath, content);
+                _output.Info($"  ✓ {fileName}");
+            }
+
+            _output.Info($"  ✓ Generated {sharedModels.Count} shared model files!");
+            _output.BlankLine();
+
             _output.Info($"Step 3: Generating from {tables.Count} tables...");
 
             // Generate for each table
@@ -484,6 +499,12 @@ public class ProjectGenerationService : IProjectGenerationService
         var readme = GenerateReactReadme(rootNamespace);
         await SaveFileAsync(Path.Combine(clientDir, "README.md"), readme);
         _output.Info("  ✓ README.md");
+
+        // src/types/common.types.ts - Shared TypeScript types for pagination and filtering
+        var typeGen = new TypeScriptTypeGenerator(_loggerFactory.CreateLogger<TypeScriptTypeGenerator>());
+        var commonTypes = await typeGen.GenerateCommonTypesAsync();
+        await SaveFileAsync(Path.Combine(clientDir, "src", "types", "common.types.ts"), commonTypes);
+        _output.Info("  ✓ src/types/common.types.ts");
     }
 
     private static string GeneratePackageJson(string projectName)
