@@ -557,6 +557,7 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarLint", "S107:MethodsWithTooManyParameters", Justification = "All parameters are necessary for flexible code generation")]
     private static string GenerateGetByIndexHandler(
         Table table,
         List<Column> indexColumns,
