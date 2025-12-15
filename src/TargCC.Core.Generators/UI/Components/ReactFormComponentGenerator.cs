@@ -19,6 +19,9 @@ namespace TargCC.Core.Generators.UI.Components
     /// </summary>
     public class ReactFormComponentGenerator : BaseComponentGenerator
     {
+        private static readonly string[] EnumLookupImports = { "Select", "MenuItem", "FormControl", "InputLabel" };
+        private static readonly string[] BooleanFieldImports = { "Checkbox", "FormControlLabel" };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReactFormComponentGenerator"/> class.
         /// </summary>
@@ -70,12 +73,12 @@ namespace TargCC.Core.Generators.UI.Components
 
                 if (hasEnumOrLookupFields)
                 {
-                    imports.AddRange(new[] { "Select", "MenuItem", "FormControl", "InputLabel" });
+                    imports.AddRange(EnumLookupImports);
                 }
 
                 if (hasBooleanFields)
                 {
-                    imports.AddRange(new[] { "Checkbox", "FormControlLabel" });
+                    imports.AddRange(BooleanFieldImports);
                 }
 
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {string.Join(", ", imports)} }} from '@mui/material';");

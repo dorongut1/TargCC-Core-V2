@@ -65,6 +65,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useDelete{className} }} from '../../hooks/use{className}';");
                 GenerateRelatedDataImports(sb, table, schema, className);
                 sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {className} }} from '../../types/{className}.types';");
+
                 // Child entity type imports removed - TypeScript infers types from hooks
             }
 
@@ -122,34 +123,6 @@ namespace TargCC.Core.Generators.UI.Components
                     if (importedHooks.Add(hookName))
                     {
                         sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {hookName} }} from '../../hooks/use{className}';");
-                    }
-                }
-            }
-        }
-
-        private static void GenerateChildEntityTypeImports(StringBuilder sb, Table table, DatabaseSchema schema, string className)
-        {
-            if (schema.Relationships == null)
-            {
-                return;
-            }
-
-            var parentRelationships = schema.Relationships
-                .Where(r => r.ParentTable == table.FullName && r.IsEnabled)
-                .ToList();
-
-            // Initialize with className to prevent importing the main entity again (e.g., self-references)
-            var importedTypes = new HashSet<string> { className };
-
-            foreach (var relationship in parentRelationships)
-            {
-                var childTable = schema.Tables.Find(t => t.FullName == relationship.ChildTable);
-                if (childTable != null)
-                {
-                    var childClassName = GetClassName(childTable.Name);
-                    if (importedTypes.Add(childClassName))
-                    {
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ {childClassName} }} from '../../types/{childClassName}.types';");
                     }
                 }
             }
