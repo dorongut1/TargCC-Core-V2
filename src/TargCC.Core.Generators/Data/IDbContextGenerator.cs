@@ -49,13 +49,14 @@ public interface IDbContextGenerator
     /// Generates a complete Entity Framework Core DbContext class from database schema metadata.
     /// </summary>
     /// <param name="schema">The database schema containing all tables and relationships.</param>
+    /// <param name="rootNamespace">The root namespace for the project.</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains the generated
     /// DbContext class code as a string, including all DbSet properties, constructor, and
     /// OnModelCreating configuration.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="schema"/> is null.
+    /// Thrown when <paramref name="schema"/> or <paramref name="rootNamespace"/> is null.
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the schema contains no tables or has invalid configuration.
@@ -76,11 +77,11 @@ public interface IDbContextGenerator
     /// </para>
     /// <code>
     /// var generator = new DbContextGenerator(logger);
-    /// var dbContextCode = await generator.GenerateAsync(databaseSchema);
+    /// var dbContextCode = await generator.GenerateAsync(databaseSchema, "MyProject");
     ///
     /// // Write to file
     /// await File.WriteAllTextAsync("ApplicationDbContext.cs", dbContextCode);
     /// </code>
     /// </remarks>
-    Task<string> GenerateAsync(DatabaseSchema schema);
+    Task<string> GenerateAsync(DatabaseSchema schema, string rootNamespace);
 }

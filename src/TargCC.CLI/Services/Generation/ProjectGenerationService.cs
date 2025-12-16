@@ -12,6 +12,7 @@ using TargCC.Core.Generators.UI;
 using TargCC.Core.Generators.UI.Components;
 using TargCC.Core.Generators.Jobs;
 using TargCC.Core.Generators.CQRS;
+using TargCC.Core.Generators.Data;
 using TargCC.Core.Interfaces;
 using TargCC.Core.Interfaces.Models;
 using TargCC.Core.Writers;
@@ -162,6 +163,27 @@ public class ProjectGenerationService : IProjectGenerationService
             {
                 _output.Warning("  ⚠ No relationships found - Master-Detail SPs were NOT generated!");
             }
+            _output.BlankLine();
+
+            _output.Info("Step 3.7: Generating Database Context and Interface...");
+
+            // Generate IApplicationDbContext interface (Application layer)
+            var dbContextInterfaceGen = new TargCC.Core.Generators.Data.ApplicationDbContextInterfaceGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.Data.ApplicationDbContextInterfaceGenerator>());
+            var dbContextInterface = await dbContextInterfaceGen.GenerateAsync(schema, rootNamespace);
+            var dbContextInterfacePath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Common", "Interfaces", "IApplicationDbContext.cs");
+            await SaveFileAsync(dbContextInterfacePath, dbContextInterface);
+            _output.Info("  ✓ IApplicationDbContext.cs");
+
+            // Generate ApplicationDbContext class (Infrastructure layer)
+            var dbContextGen = new TargCC.Core.Generators.Data.DbContextGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.Data.DbContextGenerator>());
+            var dbContextCode = await dbContextGen.GenerateAsync(schema, rootNamespace);
+            var dbContextPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "Data", "ApplicationDbContext.cs");
+            await SaveFileAsync(dbContextPath, dbContextCode);
+            _output.Info("  ✓ ApplicationDbContext.cs");
+
+            _output.Info("  ✓ Database context generated!");
             _output.BlankLine();
 
             _output.Info("Step 4: Generating support files...");

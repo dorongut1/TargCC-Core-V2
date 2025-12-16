@@ -55,9 +55,10 @@ public class DbContextGenerator : IDbContextGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateAsync(DatabaseSchema schema)
+    public async Task<string> GenerateAsync(DatabaseSchema schema, string rootNamespace)
     {
         ArgumentNullException.ThrowIfNull(schema);
+        ArgumentException.ThrowIfNullOrEmpty(rootNamespace);
 
         if (schema.Tables == null || schema.Tables.Count == 0)
         {
@@ -72,17 +73,17 @@ public class DbContextGenerator : IDbContextGenerator
         GenerateFileHeader(sb, schema);
 
         // Add using statements
-        GenerateUsings(sb);
+        GenerateUsings(sb, rootNamespace);
 
         // Start namespace
-        sb.AppendLine("namespace TargCC.Infrastructure.Data;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Infrastructure.Data;");
         sb.AppendLine();
 
         // Add class documentation
         GenerateClassDocumentation(sb, schema);
 
-        // Start class
-        sb.AppendLine("public class ApplicationDbContext : DbContext");
+        // Start class - implement IApplicationDbContext
+        sb.AppendLine("public class ApplicationDbContext : DbContext, IApplicationDbContext");
         sb.AppendLine("{");
 
         // Generate DbSet properties
@@ -121,11 +122,12 @@ public class DbContextGenerator : IDbContextGenerator
     /// <summary>
     /// Generates using statements.
     /// </summary>
-    private static void GenerateUsings(StringBuilder sb)
+    private static void GenerateUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using Microsoft.EntityFrameworkCore;");
-        sb.AppendLine("using TargCC.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine();
     }
 

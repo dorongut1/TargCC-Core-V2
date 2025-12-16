@@ -401,8 +401,9 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateCreateHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
 
         GenerateFileHeader(sb, table.Name, "Handler");
@@ -499,8 +500,9 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateUpdateHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
@@ -581,8 +583,9 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateDeleteHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
