@@ -12,6 +12,19 @@ namespace TargCC.Core.Generators.Data;
 /// </summary>
 public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInterfaceGenerator
 {
+    // LoggerMessage delegates for high performance logging
+    private static readonly Action<ILogger, int, Exception?> LogGeneratingInterface =
+        LoggerMessage.Define<int>(
+            LogLevel.Information,
+            new EventId(1, nameof(GenerateAsync)),
+            "Generating IApplicationDbContext interface with {TableCount} tables");
+
+    private static readonly Action<ILogger, Exception?> LogInterfaceGenerated =
+        LoggerMessage.Define(
+            LogLevel.Information,
+            new EventId(2, nameof(GenerateAsync)),
+            "Successfully generated IApplicationDbContext interface");
+
     private readonly ILogger<ApplicationDbContextInterfaceGenerator> _logger;
 
     /// <summary>
@@ -34,7 +47,7 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
             throw new InvalidOperationException("Schema must contain at least one table.");
         }
 
-        _logger.LogInformation("Generating IApplicationDbContext interface with {TableCount} tables", schema.Tables.Count);
+        LogGeneratingInterface(_logger, schema.Tables.Count, null);
 
         var sb = new StringBuilder();
 
@@ -64,7 +77,7 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
         // Close interface
         sb.AppendLine("}");
 
-        _logger.LogInformation("Successfully generated IApplicationDbContext interface");
+        LogInterfaceGenerated(_logger, null);
 
         return await Task.FromResult(sb.ToString());
     }
