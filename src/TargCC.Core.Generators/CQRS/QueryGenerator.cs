@@ -169,7 +169,7 @@ public class QueryGenerator : IQueryGenerator
         {
             QueryCode = GenerateGetAllQueryRecord(table, queryClassName, dtoClassName, rootNamespace),
             HandlerCode = GenerateGetAllHandler(table, queryClassName, handlerClassName, dtoClassName, rootNamespace),
-            ValidatorCode = GenerateGetAllValidator(queryClassName, validatorClassName, rootNamespace),
+            ValidatorCode = GenerateGetAllValidator(queryClassName, validatorClassName, pluralName, rootNamespace),
             DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
@@ -186,6 +186,7 @@ public class QueryGenerator : IQueryGenerator
 
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         var queryClassName = $"Get{entityName}By{methodSuffix}Query";
         var handlerClassName = $"Get{entityName}By{methodSuffix}Handler";
@@ -196,7 +197,7 @@ public class QueryGenerator : IQueryGenerator
         {
             QueryCode = GenerateGetByIndexQueryRecord(table, index, indexColumns, queryClassName, dtoClassName, isUnique, rootNamespace),
             HandlerCode = GenerateGetByIndexHandler(table, indexColumns, queryClassName, handlerClassName, dtoClassName, isUnique, methodSuffix, rootNamespace),
-            ValidatorCode = GenerateGetByIndexValidator(indexColumns, queryClassName, validatorClassName, rootNamespace),
+            ValidatorCode = GenerateGetByIndexValidator(indexColumns, queryClassName, validatorClassName, pluralName, rootNamespace),
             DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
@@ -524,6 +525,10 @@ public class QueryGenerator : IQueryGenerator
         // Use entity alias if there's a name conflict
         var entityTypeName = entityAliasName != null ? $"{entityAliasName}Entity" : entityName;
 
+        // Find primary key column for sorting
+        var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+        var pkPropertyName = pkColumn != null ? Entities.PrefixHandler.GetPropertyName(pkColumn) : "ID";
+
         // Add ApplyFilters method
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityTypeName}> ApplyFilters(IQueryable<{entityTypeName}> query, {entityName}Filters? filters)");
         sb.AppendLine("    {");
@@ -548,7 +553,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("    {");
         sb.AppendLine("        if (string.IsNullOrEmpty(sortBy))");
         sb.AppendLine("        {");
-        sb.AppendLine("            return query.OrderBy(e => e.Id); // Default sort");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return query.OrderBy(e => e.{pkPropertyName}); // Default sort");
         sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        var isDescending = sortDirection?.ToLower() == \"desc\";");
@@ -556,9 +561,9 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("        // TODO: Add sorting logic based on table columns");
         sb.AppendLine("        return sortBy.ToLower() switch");
         sb.AppendLine("        {");
-        sb.AppendLine("            \"id\" => isDescending ? query.OrderByDescending(e => e.Id) : query.OrderBy(e => e.Id),");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            \"id\" => isDescending ? query.OrderByDescending(e => e.{pkPropertyName}) : query.OrderBy(e => e.{pkPropertyName}),");
         sb.AppendLine("            // Add more sortable columns here");
-        sb.AppendLine("            _ => query.OrderBy(e => e.Id) // Default to Id if unknown field");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _ => query.OrderBy(e => e.{pkPropertyName}) // Default to {pkPropertyName} if unknown field");
         sb.AppendLine("        };");
         sb.AppendLine("    }");
 
@@ -707,14 +712,14 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateGetAllValidator(string queryClassName, string validatorClassName, string rootNamespace)
+    private static string GenerateGetAllValidator(string queryClassName, string validatorClassName, string pluralName, string rootNamespace)
     {
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, "Multiple", "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.Common.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -745,6 +750,7 @@ public class QueryGenerator : IQueryGenerator
         List<Column> indexColumns,
         string queryClassName,
         string validatorClassName,
+        string pluralName,
         string rootNamespace)
     {
         var sb = new StringBuilder();
@@ -752,7 +758,7 @@ public class QueryGenerator : IQueryGenerator
         GenerateFileHeader(sb, "Index", "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.Common.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");

@@ -69,7 +69,7 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
         sb.AppendLine("{");
 
         // Generate DbSet properties
-        GenerateDbSetProperties(sb, schema);
+        GenerateDbSetProperties(sb, schema, rootNamespace);
 
         // Generate SaveChangesAsync method
         GenerateSaveChangesAsync(sb);
@@ -113,7 +113,7 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
         sb.AppendLine("/// </remarks>");
     }
 
-    private static void GenerateDbSetProperties(StringBuilder sb, DatabaseSchema schema)
+    private static void GenerateDbSetProperties(StringBuilder sb, DatabaseSchema schema, string rootNamespace)
     {
         foreach (var table in schema.Tables.OrderBy(t => t.Name))
         {
@@ -123,7 +123,16 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
             sb.AppendLine("    /// <summary>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Gets or sets the DbSet for {entityName} entities.");
             sb.AppendLine("    /// </summary>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    DbSet<{entityName}> {dbSetName} {{ get; set; }}");
+
+            // Use fully qualified name for entities that conflict with System types
+            // This prevents ambiguous reference errors with System.Threading.Tasks.Task, System.Action, etc.
+            var entityTypeName = entityName switch
+            {
+                "Task" => $"global::{rootNamespace}.Domain.Entities.{entityName}",
+                _ => entityName
+            };
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    DbSet<{entityTypeName}> {dbSetName} {{ get; set; }}");
             sb.AppendLine();
         }
     }
