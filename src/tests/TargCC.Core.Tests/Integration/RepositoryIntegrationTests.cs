@@ -49,7 +49,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         // Act - Generate all components
         var repositoryInterface = await _repositoryInterfaceGenerator.GenerateAsync(table);
         var repository = await _repositoryGenerator.GenerateAsync(table);
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         var entityConfig = await _entityConfigurationGenerator.GenerateAsync(table);
 
         // Assert - All components generated

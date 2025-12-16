@@ -86,7 +86,7 @@ public class PerformanceBenchmarkTests : IntegrationTestBase
 
         // Act
         stopwatch.Start();
-        var code = await _dbContextGenerator.GenerateAsync(schema);
+        var code = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         stopwatch.Stop();
 
         // Assert

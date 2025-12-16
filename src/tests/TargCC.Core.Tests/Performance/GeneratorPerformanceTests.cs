@@ -87,7 +87,7 @@ public class GeneratorPerformanceTests
         var stopwatch = Stopwatch.StartNew();
 
         // Act
-        var result = await generator.GenerateAsync(schema);
+        var result = await generator.GenerateAsync(schema, "TestNamespace");
         stopwatch.Stop();
 
         // Assert
