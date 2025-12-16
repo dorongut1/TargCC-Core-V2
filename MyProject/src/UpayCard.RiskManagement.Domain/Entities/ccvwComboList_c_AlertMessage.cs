@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ccvwComboList_c_AlertMessage table.
-    /// Generated: 2025-12-15 22:55:55
+    /// Generated: 2025-12-16 08:57:46
     /// </summary>
     [Table("ccvwComboList_c_AlertMessage")]
     public partial class CcvwComboListCAlertMessage
