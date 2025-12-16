@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CardOrderFromIssuer table.
-    /// Generated: 2025-12-16 09:26:43
+    /// Generated: 2025-12-16 09:50:43
     /// </summary>
     [Table("CardOrderFromIssuer")]
     public partial class CardOrderFromIssuer

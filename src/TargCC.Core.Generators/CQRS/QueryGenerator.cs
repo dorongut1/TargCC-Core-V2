@@ -526,7 +526,7 @@ public class QueryGenerator : IQueryGenerator
         var entityTypeName = entityAliasName != null ? $"{entityAliasName}Entity" : entityName;
 
         // Find primary key column for sorting
-        var pkColumn = table.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey);
         var pkPropertyName = pkColumn != null ? Entities.PrefixHandler.GetPropertyName(pkColumn) : "ID";
 
         // Add ApplyFilters method
