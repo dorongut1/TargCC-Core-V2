@@ -271,7 +271,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateCreateCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Command");
         GenerateCommandUsings(sb, rootNamespace);
@@ -320,7 +321,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateUpdateCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
@@ -378,7 +380,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateDeleteCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
@@ -655,7 +658,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateCreateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Validator");
         GenerateValidatorUsings(sb);
@@ -696,7 +700,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateUpdateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
@@ -755,7 +760,8 @@ public class CommandGenerator : ICommandGenerator
     private static string GenerateDeleteValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
