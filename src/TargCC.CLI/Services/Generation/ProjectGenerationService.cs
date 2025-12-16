@@ -11,6 +11,7 @@ using TargCC.Core.Generators.Common;
 using TargCC.Core.Generators.UI;
 using TargCC.Core.Generators.UI.Components;
 using TargCC.Core.Generators.Jobs;
+using TargCC.Core.Generators.CQRS;
 using TargCC.Core.Interfaces;
 using TargCC.Core.Interfaces.Models;
 using TargCC.Core.Writers;
@@ -103,6 +104,26 @@ public class ProjectGenerationService : IProjectGenerationService
             await GenerateSolutionStructureAsync(projectOptions);
 
             _output.Info("  ✓ Solution structure created!");
+            _output.BlankLine();
+
+            _output.Info("Step 2.5: Generating shared models...");
+
+            // Generate shared C# models (PagedResult, PaginationParams, FilterOperator, FilterCriteria, Result)
+            var sharedModelsGen = new SharedModelsGenerator(_loggerFactory.CreateLogger<SharedModelsGenerator>());
+            var sharedModels = await sharedModelsGen.GenerateAllAsync(rootNamespace);
+            foreach (var (fileName, content) in sharedModels)
+            {
+                // Result.cs goes to Application.Common.Models, others to Domain.Common
+                var targetDir = fileName == "Result.cs"
+                    ? Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Common", "Models")
+                    : Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Common");
+
+                var sharedModelPath = Path.Combine(targetDir, fileName);
+                await SaveFileAsync(sharedModelPath, content);
+                _output.Info($"  ✓ {fileName}");
+            }
+
+            _output.Info($"  ✓ Generated {sharedModels.Count} shared model files!");
             _output.BlankLine();
 
             _output.Info($"Step 3: Generating from {tables.Count} tables...");
@@ -274,6 +295,68 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(repoImplPath, repoImpl);
         filesCount++;
 
+        // 4.5 CQRS Layer (Queries, Commands, DTOs, Filters, Handlers, Validators)
+        var className = BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(className);
+
+        // Query Generator - Queries, Handlers, Validators
+        var queryGen = new QueryGenerator(_loggerFactory.CreateLogger<QueryGenerator>());
+        var queryResults = await queryGen.GenerateAllAsync(table, rootNamespace);
+
+        var queriesDir = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Features", pluralName, "Queries");
+        Directory.CreateDirectory(queriesDir);
+
+        foreach (var queryResult in queryResults)
+        {
+            // Save Query
+            var queryPath = Path.Combine(queriesDir, $"{queryResult.QueryClassName}.cs");
+            await SaveFileAsync(queryPath, queryResult.QueryCode);
+            filesCount++;
+
+            // Save Handler
+            var handlerPath = Path.Combine(queriesDir, $"{queryResult.HandlerClassName}.cs");
+            await SaveFileAsync(handlerPath, queryResult.HandlerCode);
+            filesCount++;
+
+            // Save Validator
+            var validatorPath = Path.Combine(queriesDir, $"{queryResult.ValidatorClassName}.cs");
+            await SaveFileAsync(validatorPath, queryResult.ValidatorCode);
+            filesCount++;
+        }
+
+        // DTO Generator
+        var dtoCode = await queryGen.GenerateDtoAsync(table, rootNamespace);
+        var dtoPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "DTOs", $"{className}Dto.cs");
+        await SaveFileAsync(dtoPath, dtoCode);
+        filesCount++;
+
+        // Note: Filters class is generated inside GetAllQuery file by QueryGenerator
+
+        // Command Generator - Commands, Handlers, Validators
+        var commandGen = new CommandGenerator(_loggerFactory.CreateLogger<CommandGenerator>());
+        var commandResults = await commandGen.GenerateAllAsync(table, rootNamespace);
+
+        var commandsDir = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Features", pluralName, "Commands");
+        Directory.CreateDirectory(commandsDir);
+
+        foreach (var cmdResult in commandResults)
+        {
+            // Save Command
+            var commandPath = Path.Combine(commandsDir, $"{cmdResult.CommandClassName}.cs");
+            await SaveFileAsync(commandPath, cmdResult.CommandCode);
+            filesCount++;
+
+            // Save Handler
+            var handlerPath = Path.Combine(commandsDir, $"{cmdResult.HandlerClassName}.cs");
+            await SaveFileAsync(handlerPath, cmdResult.HandlerCode);
+            filesCount++;
+
+            // Save Validator
+            var validatorPath = Path.Combine(commandsDir, $"{cmdResult.ValidatorClassName}.cs");
+            await SaveFileAsync(validatorPath, cmdResult.ValidatorCode);
+            filesCount++;
+        }
+
         // 5. API Controller
         var apiGen = new ApiControllerGenerator(_loggerFactory.CreateLogger<ApiControllerGenerator>());
         var apiConfig = new ApiGeneratorConfig
@@ -283,7 +366,7 @@ public class ProjectGenerationService : IProjectGenerationService
             GenerateSwaggerAttributes = true
         };
         var apiCode = await apiGen.GenerateAsync(table, schema, apiConfig);
-        var className = BaseApiGenerator.GetClassName(table.Name);
+        className = BaseApiGenerator.GetClassName(table.Name);
         var controllerName = $"{CodeGenerationHelpers.MakePlural(className)}Controller";
         var apiPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", $"{controllerName}.cs");
         await SaveFileAsync(apiPath, apiCode);
@@ -484,6 +567,11 @@ public class ProjectGenerationService : IProjectGenerationService
         var readme = GenerateReactReadme(rootNamespace);
         await SaveFileAsync(Path.Combine(clientDir, "README.md"), readme);
         _output.Info("  ✓ README.md");
+
+        // src/types/common.types.ts - Shared TypeScript types for pagination and filtering
+        var commonTypes = await TypeScriptTypeGenerator.GenerateCommonTypesAsync();
+        await SaveFileAsync(Path.Combine(clientDir, "src", "types", "common.types.ts"), commonTypes);
+        _output.Info("  ✓ src/types/common.types.ts");
     }
 
     private static string GeneratePackageJson(string projectName)

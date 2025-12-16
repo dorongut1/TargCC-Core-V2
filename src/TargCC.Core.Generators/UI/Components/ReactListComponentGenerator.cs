@@ -50,7 +50,11 @@ namespace TargCC.Core.Generators.UI.Components
             // Only import useNavigate for tables (edit/delete actions), not for read-only VIEWs
             if (!table.IsView)
             {
-                sb.AppendLine("import { useNavigate } from 'react-router-dom';");
+                sb.AppendLine("import { useNavigate, useSearchParams } from 'react-router-dom';");
+            }
+            else
+            {
+                sb.AppendLine("import { useSearchParams } from 'react-router-dom';");
             }
 
             sb.AppendLine("import ExcelJS from 'exceljs';");
@@ -195,7 +199,7 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"export const {className}List: React.FC = () => {{");
             sb.Append(GenerateComponentSetup(table, className, pluralName));
-            sb.Append(GenerateFilterLogic(pluralName));
+            sb.Append(GenerateFilterLogic());
             sb.Append(GenerateHandlersAndToolbar());
             sb.Append(GenerateExportToExcelHandler(className));
             sb.AppendLine(GenerateColumns(table));
@@ -237,6 +241,7 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine("  const navigate = useNavigate();");
             }
 
+            sb.AppendLine("  const [searchParams, setSearchParams] = useSearchParams();");
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine("  ");
 
@@ -250,8 +255,36 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.Append(GenerateDateFormatter());
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const [columnFilters, setColumnFilters] = React.useState<Record<string, string>>({{}});");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {pluralName}, isLoading, error }} = use{className}s({{}});");
+            // Server-side state management from URL params
+            sb.AppendLine("  // Extract pagination, sorting, and filters from URL");
+            sb.AppendLine("  const page = parseInt(searchParams.get('page') || '1', 10);");
+            sb.AppendLine("  const pageSize = parseInt(searchParams.get('pageSize') || '10', 10);");
+            sb.AppendLine("  const sortBy = searchParams.get('sortBy') || 'id';");
+            sb.AppendLine("  const sortDirection = (searchParams.get('sortDirection') || 'asc') as 'asc' | 'desc';");
+            sb.AppendLine();
+            sb.AppendLine("  // Extract filters from URL");
+            sb.AppendLine("  const filters = React.useMemo(() => {");
+            sb.AppendLine("    const filtersObj: Record<string, string> = {};");
+            sb.AppendLine("    searchParams.forEach((value, key) => {");
+            sb.AppendLine("      if (!['page', 'pageSize', 'sortBy', 'sortDirection'].includes(key)) {");
+            sb.AppendLine("        filtersObj[key] = value;");
+            sb.AppendLine("      }");
+            sb.AppendLine("    });");
+            sb.AppendLine("    return filtersObj;");
+            sb.AppendLine("  }, [searchParams]);");
+            sb.AppendLine();
+            sb.AppendLine("  // Fetch data with server-side options");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data, isLoading, error }} = use{className}s({{");
+            sb.AppendLine("    page,");
+            sb.AppendLine("    pageSize,");
+            sb.AppendLine("    sortBy,");
+            sb.AppendLine("    sortDirection,");
+            sb.AppendLine("    filters: Object.keys(filters).length > 0 ? filters : undefined,");
+            sb.AppendLine("  });");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  const {pluralName} = data?.items || [];");
+            sb.AppendLine("  const totalCount = data?.totalCount || 0;");
+            sb.AppendLine();
 
             if (!table.IsView)
             {
@@ -279,61 +312,43 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateFilterLogic(string pluralName)
+        private static string GenerateFilterLogic()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("  // Client-side column filters");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  const filteredData = React.useMemo(() => {{");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    if (!{pluralName}) return {pluralName};");
+            sb.AppendLine("  // URL update handlers");
+            sb.AppendLine("  const updateUrlParam = (key: string, value: string) => {");
+            sb.AppendLine("    const newParams = new URLSearchParams(searchParams);");
+            sb.AppendLine("    if (value && value.trim() !== '') {");
+            sb.AppendLine("      newParams.set(key, value);");
+            sb.AppendLine("    } else {");
+            sb.AppendLine("      newParams.delete(key);");
+            sb.AppendLine("    }");
+            sb.AppendLine("    // Reset to page 1 when filter changes");
+            sb.AppendLine("    if (key !== 'page' && key !== 'pageSize') {");
+            sb.AppendLine("      newParams.set('page', '1');");
+            sb.AppendLine("    }");
+            sb.AppendLine("    setSearchParams(newParams);");
+            sb.AppendLine("  };");
             sb.AppendLine();
-            sb.AppendLine("    // Get active filters");
-            sb.AppendLine("    const activeFilters = Object.entries(columnFilters).filter(([_, value]) => value && value.trim() !== '');");
-            sb.AppendLine("    if (activeFilters.length === 0) return " + pluralName + ";");
+            sb.AppendLine("  const handlePaginationChange = (newPage: number, newPageSize: number) => {");
+            sb.AppendLine("    const newParams = new URLSearchParams(searchParams);");
+            sb.AppendLine("    newParams.set('page', (newPage + 1).toString()); // MUI DataGrid is 0-based");
+            sb.AppendLine("    newParams.set('pageSize', newPageSize.toString());");
+            sb.AppendLine("    setSearchParams(newParams);");
+            sb.AppendLine("  };");
             sb.AppendLine();
-            sb.AppendLine("    // Apply all filters with AND logic");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    return {pluralName}.filter(item => {{");
-            sb.AppendLine("      return activeFilters.every(([column, filterValue]) => {");
-            sb.AppendLine("        // Cast to any to avoid TypeScript union type issues with instanceof");
-            sb.AppendLine("        let itemValue = item[column as keyof typeof item] as any;");
-            sb.AppendLine("        ");
-            sb.Append(GenerateDateFilterLogic());
-            sb.AppendLine("        ");
-            sb.AppendLine("        // Convert boolean values to readable text");
-            sb.AppendLine("        if (typeof itemValue === 'boolean') {");
-            sb.AppendLine("          itemValue = itemValue ? 'true' : 'false';");
-            sb.AppendLine("        }");
-            sb.AppendLine("        ");
-            sb.AppendLine("        return itemValue?.toString().toLowerCase().includes(filterValue.toLowerCase());");
-            sb.AppendLine("      });");
-            sb.AppendLine("    });");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  }}, [{pluralName}, columnFilters]);");
+            sb.AppendLine("  const handleSortChange = (field: string, direction: 'asc' | 'desc' | null) => {");
+            sb.AppendLine("    const newParams = new URLSearchParams(searchParams);");
+            sb.AppendLine("    if (field && direction) {");
+            sb.AppendLine("      newParams.set('sortBy', field);");
+            sb.AppendLine("      newParams.set('sortDirection', direction);");
+            sb.AppendLine("    } else {");
+            sb.AppendLine("      newParams.delete('sortBy');");
+            sb.AppendLine("      newParams.delete('sortDirection');");
+            sb.AppendLine("    }");
+            sb.AppendLine("    setSearchParams(newParams);");
+            sb.AppendLine("  };");
             sb.AppendLine();
-            return sb.ToString();
-        }
-
-        private static string GenerateDateFilterLogic()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("        // Special handling for date filtering - compare as Date objects");
-            sb.AppendLine("        if (typeof filterValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(filterValue)) {");
-            sb.AppendLine("          // Filter value is from date picker (YYYY-MM-DD)");
-            sb.AppendLine("          const filterDate = new Date(filterValue);");
-            sb.AppendLine("          let itemDate: Date | null = null;");
-            sb.AppendLine("          ");
-            sb.AppendLine("          if (itemValue instanceof Date) {");
-            sb.AppendLine("            itemDate = itemValue;");
-            sb.AppendLine("          } else if (typeof itemValue === 'string' && /^\\d{4}-\\d{2}-\\d{2}/.test(itemValue)) {");
-            sb.AppendLine("            itemDate = new Date(itemValue);");
-            sb.AppendLine("          }");
-            sb.AppendLine("          ");
-            sb.AppendLine("          if (itemDate) {");
-            sb.AppendLine("            // Compare dates (ignore time) - same year, month, and day");
-            sb.AppendLine("            return itemDate.getFullYear() === filterDate.getFullYear() &&");
-            sb.AppendLine("                   itemDate.getMonth() === filterDate.getMonth() &&");
-            sb.AppendLine("                   itemDate.getDate() === filterDate.getDate();");
-            sb.AppendLine("          }");
-            sb.AppendLine("          return false;");
-            sb.AppendLine("        }");
             return sb.ToString();
         }
 
@@ -341,7 +356,11 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
             sb.AppendLine("  const handleClearAllFilters = () => {");
-            sb.AppendLine("    setColumnFilters({});");
+            sb.AppendLine("    // Keep only page and pageSize, remove all filters and sorting");
+            sb.AppendLine("    const newParams = new URLSearchParams();");
+            sb.AppendLine("    newParams.set('page', '1');");
+            sb.AppendLine("    newParams.set('pageSize', pageSize.toString());");
+            sb.AppendLine("    setSearchParams(newParams);");
             sb.AppendLine("  };");
             sb.AppendLine();
             sb.AppendLine("  function CustomToolbar() {");
@@ -366,9 +385,10 @@ namespace TargCC.Core.Generators.UI.Components
         private static string GenerateExportToExcelHandler(string className)
         {
             var sb = new StringBuilder();
+            var pluralName = ToCamelCase(className) + "s";
             sb.AppendLine("  const handleExportToExcel = async () => {");
-            sb.AppendLine("    // Export only the filtered data visible on screen");
-            sb.AppendLine("    const visibleRows = filteredData || [];");
+            sb.AppendLine("    // Export the current page data (server-side filtered)");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    const visibleRows = {pluralName} || [];");
             sb.AppendLine();
             sb.AppendLine("    if (!visibleRows || visibleRows.length === 0) {");
             sb.AppendLine("      alert('No data to export');");
@@ -511,7 +531,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    <Box sx={{ height: 'calc(100vh - 200px)', width: '100%', display: 'flex', flexDirection: 'column' }}>");
             sb.Append(GenerateActionButtons(table, className, pluralName));
             sb.AppendLine(GenerateFilterUI(table));
-            sb.Append(GenerateDataGrid(pkCamelName));
+            sb.Append(GenerateDataGrid(pluralName, pkCamelName));
             sb.AppendLine("    </Box>");
             return sb.ToString();
         }
@@ -543,22 +563,40 @@ namespace TargCC.Core.Generators.UI.Components
             return sb.ToString();
         }
 
-        private static string GenerateDataGrid(string pkCamelName)
+        private static string GenerateDataGrid(string pluralName, string pkCamelName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("      <Box sx={{ flex: 1, minHeight: 0 }}>");
             sb.AppendLine("        <DataGrid");
             sb.AppendLine("          apiRef={apiRef}");
-            sb.AppendLine("          rows={filteredData || []}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"          rows={{{pluralName} || []}}");
             sb.AppendLine("          columns={columns}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"          getRowId={{(row) => row.{pkCamelName} ?? 0}}");
+            sb.AppendLine("          // Server-side pagination");
+            sb.AppendLine("          paginationMode=\"server\"");
+            sb.AppendLine("          rowCount={totalCount}");
+            sb.AppendLine("          paginationModel={{");
+            sb.AppendLine("            page: page - 1, // MUI DataGrid is 0-based, our API is 1-based");
+            sb.AppendLine("            pageSize: pageSize,");
+            sb.AppendLine("          }}");
+            sb.AppendLine("          onPaginationModelChange={(model) => handlePaginationChange(model.page, model.pageSize)}");
+            sb.AppendLine("          pageSizeOptions={[5, 10, 25, 50, 100]}");
+            sb.AppendLine("          // Server-side sorting");
+            sb.AppendLine("          sortingMode=\"server\"");
+            sb.AppendLine("          sortModel={[{");
+            sb.AppendLine("            field: sortBy,");
+            sb.AppendLine("            sort: sortDirection,");
+            sb.AppendLine("          }]}");
+            sb.AppendLine("          onSortModelChange={(model) => {");
+            sb.AppendLine("            if (model.length > 0) {");
+            sb.AppendLine("              handleSortChange(model[0].field, model[0].sort);");
+            sb.AppendLine("            } else {");
+            sb.AppendLine("              handleSortChange('id', 'asc');");
+            sb.AppendLine("            }");
+            sb.AppendLine("          }}");
             sb.AppendLine("          slots={{");
             sb.AppendLine("            toolbar: CustomToolbar,");
             sb.AppendLine("          }}");
-            sb.AppendLine("          initialState={{");
-            sb.AppendLine("            pagination: { paginationModel: { pageSize: 10 } },");
-            sb.AppendLine("          }}");
-            sb.AppendLine("          pageSizeOptions={[5, 10, 25, 100]}");
             sb.AppendLine("          checkboxSelection");
             sb.AppendLine("          disableRowSelectionOnClick");
             sb.AppendLine("        />");
@@ -614,11 +652,8 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 120 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
-                    sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
-                    sb.AppendLine("              ...prev,");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
-                    sb.AppendLine("            }))}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          >");
                     sb.AppendLine("            <MenuItem value=\"\">All</MenuItem>");
                     sb.AppendLine("            <MenuItem value=\"true\">Yes</MenuItem>");
@@ -634,11 +669,8 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 180 }}");
                     sb.AppendLine("            InputLabelProps={{ shrink: true }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
-                    sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
-                    sb.AppendLine("              ...prev,");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
-                    sb.AppendLine("            }))}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          />");
                 }
                 else if (isEnumColumn)
@@ -649,11 +681,8 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 150 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
-                    sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
-                    sb.AppendLine("              ...prev,");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
-                    sb.AppendLine("            }))}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          >");
                     sb.AppendLine("            <MenuItem value=\"\">All</MenuItem>");
                     sb.AppendLine("            <MenuItem value=\"Active\">Active</MenuItem>");
@@ -668,11 +697,8 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 150 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{columnFilters['{propertyName}'] || ''}}");
-                    sb.AppendLine("            onChange={(e) => setColumnFilters(prev => ({");
-                    sb.AppendLine("              ...prev,");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"              {propertyName}: e.target.value");
-                    sb.AppendLine("            }))}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          />");
                 }
             }
@@ -686,11 +712,11 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("            Clear");
             sb.AppendLine("          </Button>");
 
-            // Add row count display
+            // Add row count display (server-side)
             var pluralName = ToCamelCase(GetClassName(table.Name)) + "s";
             sb.AppendLine("          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>");
             sb.AppendLine("            <Typography variant=\"body2\" color=\"text.secondary\">");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"              Showing {{filteredData?.length || 0}} of {{{pluralName}?.length || 0}} rows");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"              Showing {{{pluralName}?.length || 0}} of {{totalCount}} rows");
             sb.AppendLine("            </Typography>");
             sb.AppendLine("          </Box>");
 

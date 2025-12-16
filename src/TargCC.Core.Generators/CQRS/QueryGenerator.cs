@@ -61,7 +61,7 @@ public class QueryGenerator : IQueryGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<QueryGenerationResult> GenerateAsync(Table table, QueryType queryType)
+    public async Task<QueryGenerationResult> GenerateAsync(Table table, QueryType queryType, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -74,8 +74,8 @@ public class QueryGenerator : IQueryGenerator
 
         var result = queryType switch
         {
-            QueryType.GetById => GenerateGetByIdQuery(table),
-            QueryType.GetAll => GenerateGetAllQuery(table),
+            QueryType.GetById => GenerateGetByIdQuery(table, rootNamespace),
+            QueryType.GetAll => GenerateGetAllQuery(table, rootNamespace),
             QueryType.GetByIndex => throw new InvalidOperationException("Use GenerateByIndexAsync for index-based queries."),
             _ => throw new ArgumentOutOfRangeException(nameof(queryType), queryType, "Unknown query type.")
         };
@@ -86,14 +86,14 @@ public class QueryGenerator : IQueryGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<QueryGenerationResult> GenerateByIndexAsync(Table table, Index index)
+    public async Task<QueryGenerationResult> GenerateByIndexAsync(Table table, Index index, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
         ArgumentNullException.ThrowIfNull(index);
 
         LogGeneratingIndexQuery(_logger, index.Name, table.Name, null);
 
-        var result = GenerateGetByIndexQuery(table, index);
+        var result = GenerateGetByIndexQuery(table, index, rootNamespace);
 
         LogQueryGenerated(_logger, table.Name, null);
 
@@ -101,15 +101,15 @@ public class QueryGenerator : IQueryGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateDtoAsync(Table table)
+    public async Task<string> GenerateDtoAsync(Table table, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
-        return await Task.FromResult(GenerateDto(table));
+        return await Task.FromResult(GenerateDto(table, rootNamespace));
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<QueryGenerationResult>> GenerateAllAsync(Table table)
+    public async Task<IEnumerable<QueryGenerationResult>> GenerateAllAsync(Table table, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
@@ -117,15 +117,15 @@ public class QueryGenerator : IQueryGenerator
 
         if (table.PrimaryKey != null)
         {
-            results.Add(GenerateGetByIdQuery(table));
+            results.Add(GenerateGetByIdQuery(table, rootNamespace));
         }
 
-        results.Add(GenerateGetAllQuery(table));
+        results.Add(GenerateGetAllQuery(table, rootNamespace));
 
         return await Task.FromResult(results);
     }
 
-    private static QueryGenerationResult GenerateGetByIdQuery(Table table)
+    private static QueryGenerationResult GenerateGetByIdQuery(Table table, string rootNamespace)
     {
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
@@ -143,10 +143,10 @@ public class QueryGenerator : IQueryGenerator
 
         return new QueryGenerationResult
         {
-            QueryCode = GenerateGetByIdQueryRecord(table, pkColumn, pkType, pkPropertyName, queryClassName, dtoClassName),
-            HandlerCode = GenerateGetByIdHandler(table, pkType, pkPropertyName, queryClassName, handlerClassName, dtoClassName),
-            ValidatorCode = GenerateGetByIdValidator(table, pkType, queryClassName, validatorClassName),
-            DtoCode = GenerateDto(table),
+            QueryCode = GenerateGetByIdQueryRecord(table, pkColumn, pkType, pkPropertyName, queryClassName, dtoClassName, rootNamespace),
+            HandlerCode = GenerateGetByIdHandler(table, pkType, pkPropertyName, queryClassName, handlerClassName, dtoClassName, rootNamespace),
+            ValidatorCode = GenerateGetByIdValidator(table, pkType, queryClassName, validatorClassName, rootNamespace),
+            DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -154,7 +154,7 @@ public class QueryGenerator : IQueryGenerator
         };
     }
 
-    private static QueryGenerationResult GenerateGetAllQuery(Table table)
+    private static QueryGenerationResult GenerateGetAllQuery(Table table, string rootNamespace)
     {
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
@@ -167,10 +167,10 @@ public class QueryGenerator : IQueryGenerator
 
         return new QueryGenerationResult
         {
-            QueryCode = GenerateGetAllQueryRecord(table, queryClassName, dtoClassName),
-            HandlerCode = GenerateGetAllHandler(table, queryClassName, handlerClassName, dtoClassName),
-            ValidatorCode = GenerateGetAllValidator(queryClassName, validatorClassName),
-            DtoCode = GenerateDto(table),
+            QueryCode = GenerateGetAllQueryRecord(table, queryClassName, dtoClassName, rootNamespace),
+            HandlerCode = GenerateGetAllHandler(table, queryClassName, handlerClassName, dtoClassName, rootNamespace),
+            ValidatorCode = GenerateGetAllValidator(queryClassName, validatorClassName, rootNamespace),
+            DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -178,7 +178,7 @@ public class QueryGenerator : IQueryGenerator
         };
     }
 
-    private static QueryGenerationResult GenerateGetByIndexQuery(Table table, Index index)
+    private static QueryGenerationResult GenerateGetByIndexQuery(Table table, Index index, string rootNamespace)
     {
         var indexColumns = GetIndexColumns(table, index);
         var methodSuffix = BuildMethodSuffix(indexColumns);
@@ -194,10 +194,10 @@ public class QueryGenerator : IQueryGenerator
 
         return new QueryGenerationResult
         {
-            QueryCode = GenerateGetByIndexQueryRecord(table, index, indexColumns, queryClassName, dtoClassName, isUnique),
-            HandlerCode = GenerateGetByIndexHandler(table, indexColumns, queryClassName, handlerClassName, dtoClassName, isUnique, methodSuffix),
-            ValidatorCode = GenerateGetByIndexValidator(indexColumns, queryClassName, validatorClassName),
-            DtoCode = GenerateDto(table),
+            QueryCode = GenerateGetByIndexQueryRecord(table, index, indexColumns, queryClassName, dtoClassName, isUnique, rootNamespace),
+            HandlerCode = GenerateGetByIndexHandler(table, indexColumns, queryClassName, handlerClassName, dtoClassName, isUnique, methodSuffix, rootNamespace),
+            ValidatorCode = GenerateGetByIndexValidator(indexColumns, queryClassName, validatorClassName, rootNamespace),
+            DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -211,14 +211,15 @@ public class QueryGenerator : IQueryGenerator
         string pkType,
         string pkPropertyName,
         string queryClassName,
-        string dtoClassName)
+        string dtoClassName,
+        string rootNamespace)
     {
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, table.Name, "Query");
-        GenerateQueryUsings(sb);
+        GenerateQueryUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{CodeGenerationHelpers.MakePlural(table.Name)}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{CodeGenerationHelpers.MakePlural(table.Name)}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -231,28 +232,57 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateGetAllQueryRecord(Table table, string queryClassName, string dtoClassName)
+    private static string GenerateGetAllQueryRecord(Table table, string queryClassName, string dtoClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
 
         GenerateFileHeader(sb, table.Name, "Query");
-        GenerateQueryUsings(sb);
+        GenerateQueryUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Query to retrieve all {pluralName} with pagination support.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Query to retrieve all {pluralName} with server-side filtering, sorting, and pagination.");
         sb.AppendLine("/// </summary>");
-        sb.AppendLine("/// <param name=\"PageNumber\">The page number (1-based).</param>");
-        sb.AppendLine("/// <param name=\"PageSize\">The number of items per page.</param>");
-        sb.AppendLine("/// <param name=\"SearchTerm\">Optional search term for filtering.</param>");
-
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName}(");
-        sb.AppendLine("    int PageNumber = 1,");
-        sb.AppendLine("    int PageSize = 10,");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    string? SearchTerm = null) : IRequest<Result<PaginatedList<{dtoClassName}>>>;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {queryClassName} : IRequest<Result<PagedResult<{dtoClassName}>>>");
+        sb.AppendLine("{");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the filters to apply.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public {entityName}Filters? Filters {{ get; init; }}");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the page number (1-based). Default is 1.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public int Page { get; init; } = 1;");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the page size. Default is 100.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public int PageSize { get; init; } = 100;");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the field to sort by. Default is \"Id\".");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public string? SortBy { get; init; } = \"Id\";");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Gets or initializes the sort direction. Default is \"asc\".");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public string SortDirection { get; init; } = \"asc\";");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// <summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// {entityName} filters class for filtering queries.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// </summary>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {entityName}Filters");
+        sb.AppendLine("{");
+        sb.AppendLine("    // TODO: Add filter properties based on table columns");
+        sb.AppendLine("    // Example: public string? Name { get; set; }");
+        sb.AppendLine("}");
 
         return sb.ToString();
     }
@@ -263,7 +293,8 @@ public class QueryGenerator : IQueryGenerator
         List<Column> indexColumns,
         string queryClassName,
         string dtoClassName,
-        bool isUnique)
+        bool isUnique,
+        string rootNamespace)
     {
         _ = index; // Mark as intentionally unused - reserved for future use
 
@@ -271,9 +302,9 @@ public class QueryGenerator : IQueryGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
 
         GenerateFileHeader(sb, table.Name, "Query");
-        GenerateQueryUsings(sb);
+        GenerateQueryUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -316,7 +347,8 @@ public class QueryGenerator : IQueryGenerator
         string pkPropertyName,
         string queryClassName,
         string handlerClassName,
-        string dtoClassName)
+        string dtoClassName,
+        string rootNamespace)
     {
         _ = pkType; // Mark as intentionally unused - reserved for future type-specific handling
 
@@ -326,9 +358,9 @@ public class QueryGenerator : IQueryGenerator
         const string repoFieldName = "_repository";
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -395,27 +427,34 @@ public class QueryGenerator : IQueryGenerator
         Table table,
         string queryClassName,
         string handlerClassName,
-        string dtoClassName)
+        string dtoClassName,
+        string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
-        const string repoFieldName = "_repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+
+        // Check if entity name conflicts with System types (e.g., Lookup, Task, etc.)
+        string? entityAliasName = entityName switch
+        {
+            "Lookup" or "Task" or "Action" or "Exception" or "Environment" => entityName,
+            _ => null
+        };
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {queryClassName} request.");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {queryClassName} request with server-side filtering, sorting, and pagination.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{queryClassName}, Result<PaginatedList<{dtoClassName}>>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{queryClassName}, Result<PagedResult<{dtoClassName}>>>");
         sb.AppendLine("{");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly {repoInterfaceName} {repoFieldName};");
+        sb.AppendLine("    private readonly IApplicationDbContext _context;");
         sb.AppendLine("    private readonly IMapper _mapper;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly ILogger<{handlerClassName}> _logger;");
         sb.AppendLine();
@@ -424,37 +463,55 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Initializes a new instance of the <see cref=\"{handlerClassName}\"/> class.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public {handlerClassName}(");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        {repoInterfaceName} repository,");
+        sb.AppendLine("        IApplicationDbContext context,");
         sb.AppendLine("        IMapper mapper,");
         sb.AppendLine(CultureInfo.InvariantCulture, $"        ILogger<{handlerClassName}> logger)");
         sb.AppendLine("    {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        {repoFieldName} = repository ?? throw new ArgumentNullException(nameof(repository));");
+        sb.AppendLine("        _context = context ?? throw new ArgumentNullException(nameof(context));");
         sb.AppendLine("        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));");
         sb.AppendLine("        _logger = logger ?? throw new ArgumentNullException(nameof(logger));");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<PaginatedList<{dtoClassName}>>> Handle({queryClassName} request, CancellationToken cancellationToken)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<PagedResult<{dtoClassName}>>> Handle({queryClassName} request, CancellationToken cancellationToken)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(request);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {pluralName} - Page: {{Page}}, Size: {{Size}}\", request.PageNumber, request.PageSize);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        _logger.LogDebug(\"Getting {pluralName} - Page: {{Page}}, Size: {{Size}}, SortBy: {{SortBy}}\", request.Page, request.PageSize, request.SortBy);");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine("            var skip = (request.PageNumber - 1) * request.PageSize;");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entities = await {repoFieldName}.GetAllAsync(skip: skip, take: request.PageSize, cancellationToken: cancellationToken);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralName}.AsQueryable();");
         sb.AppendLine();
+        sb.AppendLine("            // Apply filters");
+        sb.AppendLine("            query = ApplyFilters(query, request.Filters);");
+        sb.AppendLine();
+        sb.AppendLine("            // Get total count BEFORE pagination");
+        sb.AppendLine("            var totalCount = await query.CountAsync(cancellationToken);");
+        sb.AppendLine();
+        sb.AppendLine("            // Apply sorting");
+        sb.AppendLine("            query = ApplySorting(query, request.SortBy, request.SortDirection);");
+        sb.AppendLine();
+        sb.AppendLine("            // Apply pagination");
+        sb.AppendLine("            query = query");
+        sb.AppendLine("                .Skip((request.Page - 1) * request.PageSize)");
+        sb.AppendLine("                .Take(request.PageSize);");
+        sb.AppendLine();
+        sb.AppendLine("            var entities = await query.ToListAsync(cancellationToken);");
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var dtos = _mapper.Map<List<{dtoClassName}>>(entities);");
         sb.AppendLine();
-        sb.AppendLine("            // Note: For production, implement proper count query in repository");
-        sb.AppendLine("            var totalCount = dtos.Count; // Placeholder - should be from repository");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = new PaginatedList<{dtoClassName}>(dtos, totalCount, request.PageNumber, request.PageSize);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var result = new PagedResult<{dtoClassName}>");
+        sb.AppendLine("            {");
+        sb.AppendLine("                Items = dtos,");
+        sb.AppendLine("                TotalCount = totalCount,");
+        sb.AppendLine("                Page = request.Page,");
+        sb.AppendLine("                PageSize = request.PageSize");
+        sb.AppendLine("            };");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Successfully retrieved {{Count}} {pluralName}\", dtos.Count);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogDebug(\"Successfully retrieved {{Count}} of {{Total}} {pluralName}\", dtos.Count, totalCount);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<PaginatedList<{dtoClassName}>>.Success(result);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<PagedResult<{dtoClassName}>>.Success(result);");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
@@ -462,11 +519,55 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Use entity alias if there's a name conflict
+        var entityTypeName = entityAliasName != null ? $"{entityAliasName}Entity" : entityName;
+
+        // Add ApplyFilters method
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityTypeName}> ApplyFilters(IQueryable<{entityTypeName}> query, {entityName}Filters? filters)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (filters == null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return query;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        // TODO: Add filter logic based on table columns");
+        sb.AppendLine("        // Example:");
+        sb.AppendLine("        // if (!string.IsNullOrEmpty(filters.Name))");
+        sb.AppendLine("        // {");
+        sb.AppendLine("        //     query = query.Where(e => e.Name.Contains(filters.Name));");
+        sb.AppendLine("        // }");
+        sb.AppendLine();
+        sb.AppendLine("        return query;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Add ApplySorting method
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    private static IQueryable<{entityTypeName}> ApplySorting(IQueryable<{entityTypeName}> query, string? sortBy, string? sortDirection)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (string.IsNullOrEmpty(sortBy))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return query.OrderBy(e => e.Id); // Default sort");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        var isDescending = sortDirection?.ToLower() == \"desc\";");
+        sb.AppendLine();
+        sb.AppendLine("        // TODO: Add sorting logic based on table columns");
+        sb.AppendLine("        return sortBy.ToLower() switch");
+        sb.AppendLine("        {");
+        sb.AppendLine("            \"id\" => isDescending ? query.OrderByDescending(e => e.Id) : query.OrderBy(e => e.Id),");
+        sb.AppendLine("            // Add more sortable columns here");
+        sb.AppendLine("            _ => query.OrderBy(e => e.Id) // Default to Id if unknown field");
+        sb.AppendLine("        };");
+        sb.AppendLine("    }");
+
         sb.AppendLine("}");
 
         return sb.ToString();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarLint", "S107:MethodsWithTooManyParameters", Justification = "All parameters are necessary for flexible code generation")]
     private static string GenerateGetByIndexHandler(
         Table table,
         List<Column> indexColumns,
@@ -474,7 +575,8 @@ public class QueryGenerator : IQueryGenerator
         string handlerClassName,
         string dtoClassName,
         bool isUnique,
-        string methodSuffix)
+        string methodSuffix,
+        string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
@@ -483,9 +585,9 @@ public class QueryGenerator : IQueryGenerator
         var resultType = isUnique ? $"Result<{dtoClassName}?>" : $"Result<IEnumerable<{dtoClassName}>>";
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -561,7 +663,7 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateGetByIdValidator(Table table, string pkType, string queryClassName, string validatorClassName)
+    private static string GenerateGetByIdValidator(Table table, string pkType, string queryClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
@@ -571,7 +673,7 @@ public class QueryGenerator : IQueryGenerator
         GenerateFileHeader(sb, table.Name, "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -605,14 +707,14 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateGetAllValidator(string queryClassName, string validatorClassName)
+    private static string GenerateGetAllValidator(string queryClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, "Multiple", "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine("namespace TargCC.Application.Features.Common.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.Common.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -642,14 +744,15 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateGetByIndexValidator(
         List<Column> indexColumns,
         string queryClassName,
-        string validatorClassName)
+        string validatorClassName,
+        string rootNamespace)
     {
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, "Index", "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine("namespace TargCC.Application.Features.Common.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.Common.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -702,13 +805,13 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateDto(Table table)
+    private static string GenerateDto(Table table, string rootNamespace)
     {
         var sb = new StringBuilder();
         var dtoClassName = $"{table.Name}Dto";
 
         GenerateFileHeader(sb, table.Name, "DTO");
-        sb.AppendLine("namespace TargCC.Application.DTOs;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.DTOs;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -721,6 +824,8 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"public class {dtoClassName}");
         sb.AppendLine("{");
 
+        var seenProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var column in table.Columns)
         {
             if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
@@ -730,6 +835,16 @@ public class QueryGenerator : IQueryGenerator
             }
 
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names (common in tables with multiple FK relationships to same table)
+            if (seenProperties.Contains(propName))
+            {
+                // Silently skip duplicate properties
+                continue;
+            }
+
+            seenProperties.Add(propName);
+
             var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
 
             // Primary keys are never nullable in DTOs
@@ -762,22 +877,33 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateQueryUsings(StringBuilder sb)
+    private static void GenerateQueryUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using MediatR;");
-        sb.AppendLine("using TargCC.Application.Common.Models;");
-        sb.AppendLine("using TargCC.Application.DTOs;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.DTOs;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
         sb.AppendLine();
     }
 
-    private static void GenerateHandlerUsings(StringBuilder sb)
+    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace, string? entityAliasName = null)
     {
         sb.AppendLine("using AutoMapper;");
         sb.AppendLine("using MediatR;");
+        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
-        sb.AppendLine("using TargCC.Application.Common.Models;");
-        sb.AppendLine("using TargCC.Application.DTOs;");
-        sb.AppendLine("using TargCC.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.DTOs;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
+
+        // Add alias for entity names that conflict with System types (e.g., Lookup)
+        if (!string.IsNullOrEmpty(entityAliasName))
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {entityAliasName}Entity = {rootNamespace}.Domain.Entities.{entityAliasName};");
+        }
+
         sb.AppendLine();
     }
 

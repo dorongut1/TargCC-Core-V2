@@ -68,12 +68,14 @@ namespace TargCC.Core.Generators.UI
         {
             var sb = new StringBuilder();
             sb.AppendLine("/**");
-            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch all {className}s with optional filters.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $" * Hook to fetch all {className}s with server-side filtering, sorting, and pagination.");
             sb.AppendLine(" */");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{className}s = (filters?: {className}Filters) => {{");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"export const use{className}s = (options?: Use{className}Options) => {{");
             sb.AppendLine("  return useQuery({");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{camelName}s', filters],");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {camelName}Api.getAll(filters),");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{camelName}s', options],");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {camelName}Api.getAll(options),");
+            sb.AppendLine("    enabled: options?.enabled !== false,");
+            sb.AppendLine("    staleTime: 30000, // 30 seconds");
             sb.AppendLine("  });");
             sb.AppendLine("};");
             sb.AppendLine();
@@ -155,6 +157,7 @@ namespace TargCC.Core.Generators.UI
             }
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ {camelName}Api }} from '../api/{camelName}Api';");
+            sb.AppendLine("import type { UseEntityOptions } from '../types/common.types';");
 
             // Import necessary types based on table type
             if (table.IsView)
@@ -170,6 +173,8 @@ namespace TargCC.Core.Generators.UI
 
             // Entity type removed - TypeScript infers it from API responses
             // Child entity type imports removed - TypeScript infers them from hooks
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"type Use{className}Options = UseEntityOptions<{className}Filters>;");
             sb.AppendLine();
         }
 
