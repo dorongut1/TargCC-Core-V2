@@ -282,7 +282,7 @@ public class GeneratorPerformanceTests
         var memoryBefore = GC.GetTotalMemory(false);
 
         // Act
-        var result = await generator.GenerateAsync(schema);
+        var result = await generator.GenerateAsync(schema, "TestNamespace");
 
         // Measure memory after
         var memoryAfter = GC.GetTotalMemory(false);
