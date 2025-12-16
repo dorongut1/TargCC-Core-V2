@@ -221,7 +221,9 @@ public class ProjectFileGenerator : IProjectFileGenerator
                 new() { Name = "MediatR", Version = "12.2.0" },
                 new() { Name = "FluentValidation", Version = "11.9.0" },
                 new() { Name = "FluentValidation.DependencyInjectionExtensions", Version = "11.9.0" },
-                new() { Name = "AutoMapper", Version = "12.0.1" }
+                new() { Name = "AutoMapper", Version = "12.0.1" },
+                new() { Name = "Microsoft.Extensions.Logging.Abstractions", Version = "8.0.0" },
+                new() { Name = "Microsoft.EntityFrameworkCore", Version = "8.0.10" }
             },
             ProjectType.Infrastructure => new List<PackageReference>
             {
