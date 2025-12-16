@@ -676,7 +676,7 @@ public class QueryGenerator : IQueryGenerator
         var pkPropertyName = pkColumn.Name;
 
         GenerateFileHeader(sb, table.Name, "Validator");
-        GenerateValidatorUsings(sb);
+        GenerateValidatorUsings(sb, rootNamespace, pluralName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
@@ -717,7 +717,7 @@ public class QueryGenerator : IQueryGenerator
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, "Multiple", "Validator");
-        GenerateValidatorUsings(sb);
+        GenerateValidatorUsings(sb, rootNamespace, pluralName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
@@ -733,7 +733,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("    /// </summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    public {validatorClassName}()");
         sb.AppendLine("    {");
-        sb.AppendLine("        RuleFor(x => x.PageNumber)");
+        sb.AppendLine("        RuleFor(x => x.Page)");
         sb.AppendLine("            .GreaterThan(0)");
         sb.AppendLine("            .WithMessage(\"Page number must be greater than 0.\");");
         sb.AppendLine();
@@ -756,7 +756,7 @@ public class QueryGenerator : IQueryGenerator
         var sb = new StringBuilder();
 
         GenerateFileHeader(sb, "Index", "Validator");
-        GenerateValidatorUsings(sb);
+        GenerateValidatorUsings(sb, rootNamespace, pluralName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
@@ -917,9 +917,10 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateValidatorUsings(StringBuilder sb)
+    private static void GenerateValidatorUsings(StringBuilder sb, string rootNamespace, string queryNamespaceFromTable)
     {
         sb.AppendLine("using FluentValidation;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Features.{queryNamespaceFromTable}.Queries;");
         sb.AppendLine();
     }
 
