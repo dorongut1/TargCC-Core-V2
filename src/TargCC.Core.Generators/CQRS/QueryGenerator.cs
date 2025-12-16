@@ -814,7 +814,10 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateDto(Table table, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var dtoClassName = $"{table.Name}Dto";
+
+        // Use GetClassName to convert table name to proper entity name (removes prefixes, handles PascalCase)
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var dtoClassName = $"{entityName}Dto";
 
         GenerateFileHeader(sb, table.Name, "DTO");
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.DTOs;");
