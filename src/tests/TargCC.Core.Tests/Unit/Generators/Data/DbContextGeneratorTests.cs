@@ -385,7 +385,7 @@ public class DbContextGeneratorTests
         _mockLogger.Setup(x => x.IsEnabled(LogLevel.Information)).Returns(true);
 
         // Act
-        await _generator.GenerateAsync(schema);
+        await _generator.GenerateAsync(schema, "TestNamespace");
 
         // Assert - First log message
         _mockLogger.Verify(

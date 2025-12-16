@@ -161,7 +161,7 @@ public class GeneratorPerformanceTests
             await repoGen.GenerateAsync(table);
             await entityConfigGen.GenerateAsync(table);
         }
-        await dbContextGen.GenerateAsync(schema);
+        await dbContextGen.GenerateAsync(schema, "TestNamespace");
         await diGen.GenerateAsync(schema);
 
         stopwatch.Stop();

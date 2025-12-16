@@ -130,7 +130,7 @@ public class PerformanceBenchmarkTests : IntegrationTestBase
         
         await _repositoryInterfaceGenerator.GenerateAsync(table);
         await _repositoryGenerator.GenerateAsync(table);
-        await _dbContextGenerator.GenerateAsync(schema);
+        await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         await _entityConfigurationGenerator.GenerateAsync(table);
         
         stopwatch.Stop();
@@ -168,7 +168,7 @@ public class PerformanceBenchmarkTests : IntegrationTestBase
         stopwatch.Start();
         
         // Generate DbContext once
-        await _dbContextGenerator.GenerateAsync(schema);
+        await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         
         // Generate Repository + Configuration for each table
         foreach (var table in schema.Tables)
