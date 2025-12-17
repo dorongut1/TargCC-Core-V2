@@ -352,18 +352,8 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(dtoPath, dtoCode);
         filesCount++;
 
-        // Mapping Profile Generator
-        var mappingGen = new MappingProfileGenerator(_loggerFactory.CreateLogger<MappingProfileGenerator>());
-        var mappingConfig = new ApiGeneratorConfig
-        {
-            Namespace = $"{rootNamespace}.Application",
-            GenerateXmlDocumentation = true,
-            GenerateSwaggerAttributes = false
-        };
-        var mappingCode = await mappingGen.GenerateAsync(table, schema, mappingConfig);
-        var mappingPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Mapping", $"{className}MappingProfile.cs");
-        await SaveFileAsync(mappingPath, mappingCode);
-        filesCount++;
+        // Note: Mapping Profiles are created in a single ApplicationMappingProfile.cs file
+        // Individual table mapping profiles are NOT generated to avoid using statement issues
 
         // Note: Filters class is generated inside GetAllQuery file by QueryGenerator
 
