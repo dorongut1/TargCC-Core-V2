@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_SystemDefault table.
-    /// Generated: 2025-12-17 21:11:12
+    /// Generated: 2025-12-17 21:20:37
     /// </summary>
     [Table("c_SystemDefault")]
     public partial class SystemDefault

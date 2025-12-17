@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Domain", "src\UpayCard.RiskManagement.Domain\UpayCard.RiskManagement.Domain.csproj", "{85230350-9F3F-4422-8F63-A6672BC71E97}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Domain", "src\UpayCard.RiskManagement.Domain\UpayCard.RiskManagement.Domain.csproj", "{6D904322-C50E-4FCA-A58C-FF7E791B1996}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Application", "src\UpayCard.RiskManagement.Application\UpayCard.RiskManagement.Application.csproj", "{0DD42A1E-7E98-4BB6-A720-46D2B4413C03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Application", "src\UpayCard.RiskManagement.Application\UpayCard.RiskManagement.Application.csproj", "{F0620A4F-3D9E-46BF-88A5-9DD86BD8E455}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Infrastructure", "src\UpayCard.RiskManagement.Infrastructure\UpayCard.RiskManagement.Infrastructure.csproj", "{0F892338-7BCD-4D50-9A07-D8CBB23E61D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Infrastructure", "src\UpayCard.RiskManagement.Infrastructure\UpayCard.RiskManagement.Infrastructure.csproj", "{8D34EF27-CAC8-4609-A4F6-C51462F0CBF7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.API", "src\UpayCard.RiskManagement.API\UpayCard.RiskManagement.API.csproj", "{4532A419-7797-470B-9896-13981B44DD5B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.API", "src\UpayCard.RiskManagement.API\UpayCard.RiskManagement.API.csproj", "{6C36F5D4-0E4F-4F1A-9F1E-A076568D43BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Tests", "tests\UpayCard.RiskManagement.Tests\UpayCard.RiskManagement.Tests.csproj", "{1E5537B4-D8FB-445A-923A-5885B59B018B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpayCard.RiskManagement.Tests", "tests\UpayCard.RiskManagement.Tests\UpayCard.RiskManagement.Tests.csproj", "{68B967D6-6E40-4F2E-B4FA-0E1FC010F551}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,26 +19,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{85230350-9F3F-4422-8F63-A6672BC71E97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85230350-9F3F-4422-8F63-A6672BC71E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85230350-9F3F-4422-8F63-A6672BC71E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85230350-9F3F-4422-8F63-A6672BC71E97}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0DD42A1E-7E98-4BB6-A720-46D2B4413C03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0DD42A1E-7E98-4BB6-A720-46D2B4413C03}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0DD42A1E-7E98-4BB6-A720-46D2B4413C03}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0DD42A1E-7E98-4BB6-A720-46D2B4413C03}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F892338-7BCD-4D50-9A07-D8CBB23E61D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F892338-7BCD-4D50-9A07-D8CBB23E61D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F892338-7BCD-4D50-9A07-D8CBB23E61D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F892338-7BCD-4D50-9A07-D8CBB23E61D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4532A419-7797-470B-9896-13981B44DD5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4532A419-7797-470B-9896-13981B44DD5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4532A419-7797-470B-9896-13981B44DD5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4532A419-7797-470B-9896-13981B44DD5B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1E5537B4-D8FB-445A-923A-5885B59B018B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E5537B4-D8FB-445A-923A-5885B59B018B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1E5537B4-D8FB-445A-923A-5885B59B018B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1E5537B4-D8FB-445A-923A-5885B59B018B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D904322-C50E-4FCA-A58C-FF7E791B1996}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D904322-C50E-4FCA-A58C-FF7E791B1996}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D904322-C50E-4FCA-A58C-FF7E791B1996}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D904322-C50E-4FCA-A58C-FF7E791B1996}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0620A4F-3D9E-46BF-88A5-9DD86BD8E455}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0620A4F-3D9E-46BF-88A5-9DD86BD8E455}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0620A4F-3D9E-46BF-88A5-9DD86BD8E455}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0620A4F-3D9E-46BF-88A5-9DD86BD8E455}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D34EF27-CAC8-4609-A4F6-C51462F0CBF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D34EF27-CAC8-4609-A4F6-C51462F0CBF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D34EF27-CAC8-4609-A4F6-C51462F0CBF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D34EF27-CAC8-4609-A4F6-C51462F0CBF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C36F5D4-0E4F-4F1A-9F1E-A076568D43BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C36F5D4-0E4F-4F1A-9F1E-A076568D43BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C36F5D4-0E4F-4F1A-9F1E-A076568D43BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C36F5D4-0E4F-4F1A-9F1E-A076568D43BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68B967D6-6E40-4F2E-B4FA-0E1FC010F551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68B967D6-6E40-4F2E-B4FA-0E1FC010F551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68B967D6-6E40-4F2E-B4FA-0E1FC010F551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68B967D6-6E40-4F2E-B4FA-0E1FC010F551}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
