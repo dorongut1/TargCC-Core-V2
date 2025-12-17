@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_MFA table.
-    /// Generated: 2025-12-17 08:16:12
+    /// Generated: 2025-12-17 08:23:58
     /// </summary>
     [Table("c_MFA")]
     public partial class Mfa
