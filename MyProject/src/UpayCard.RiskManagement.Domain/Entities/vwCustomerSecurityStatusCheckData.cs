@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwCustomerSecurityStatusCheckData table.
-    /// Generated: 2025-12-17 14:47:46
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwCustomerSecurityStatusCheckData")]
-    public partial class VwCustomerSecurityStatusCheckData
+    public partial class vwCustomerSecurityStatusCheckData
     {
         #region Properties
 
@@ -117,9 +117,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwCustomerSecurityStatusCheckData"/> class.
+        /// Initializes a new instance of the <see cref="vwCustomerSecurityStatusCheckData"/> class.
         /// </summary>
-        public VwCustomerSecurityStatusCheckData()
+        public vwCustomerSecurityStatusCheckData()
         {
         }
 
@@ -128,19 +128,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwCustomerSecurityStatusCheckData.
+        /// Returns a string representation of this vwCustomerSecurityStatusCheckData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwCustomerSecurityStatusCheckData";
+            return $"vwCustomerSecurityStatusCheckData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwCustomerSecurityStatusCheckData.
+        /// Creates a shallow copy of this vwCustomerSecurityStatusCheckData.
         /// </summary>
-        public VwCustomerSecurityStatusCheckData Clone()
+        public vwCustomerSecurityStatusCheckData Clone()
         {
-            return new VwCustomerSecurityStatusCheckData
+            return new vwCustomerSecurityStatusCheckData
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -160,11 +160,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwCustomerSecurityStatusCheckData.
+        /// Determines whether the specified object is equal to this vwCustomerSecurityStatusCheckData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwCustomerSecurityStatusCheckData other)
+            if (obj is not vwCustomerSecurityStatusCheckData other)
                 return false;
 
 

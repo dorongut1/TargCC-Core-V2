@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportDistributorObligoBalanceData table.
-    /// Generated: 2025-12-17 14:47:47
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwReportDistributorObligoBalanceData")]
-    public partial class VwReportDistributorObligoBalanceData
+    public partial class vwReportDistributorObligoBalanceData
     {
         #region Properties
 
@@ -61,9 +61,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportDistributorObligoBalanceData"/> class.
+        /// Initializes a new instance of the <see cref="vwReportDistributorObligoBalanceData"/> class.
         /// </summary>
-        public VwReportDistributorObligoBalanceData()
+        public vwReportDistributorObligoBalanceData()
         {
         }
 
@@ -72,19 +72,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportDistributorObligoBalanceData.
+        /// Returns a string representation of this vwReportDistributorObligoBalanceData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportDistributorObligoBalanceData";
+            return $"vwReportDistributorObligoBalanceData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportDistributorObligoBalanceData.
+        /// Creates a shallow copy of this vwReportDistributorObligoBalanceData.
         /// </summary>
-        public VwReportDistributorObligoBalanceData Clone()
+        public vwReportDistributorObligoBalanceData Clone()
         {
-            return new VwReportDistributorObligoBalanceData
+            return new vwReportDistributorObligoBalanceData
             {
                 ID = this.ID,
                 DistributorID = this.DistributorID,
@@ -96,11 +96,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportDistributorObligoBalanceData.
+        /// Determines whether the specified object is equal to this vwReportDistributorObligoBalanceData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportDistributorObligoBalanceData other)
+            if (obj is not vwReportDistributorObligoBalanceData other)
                 return false;
 
 

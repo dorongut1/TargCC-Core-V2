@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportFromChanger table.
-    /// Generated: 2025-12-17 14:47:47
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwReportFromChanger")]
-    public partial class VwReportFromChanger
+    public partial class vwReportFromChanger
     {
         #region Properties
 
@@ -116,9 +116,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportFromChanger"/> class.
+        /// Initializes a new instance of the <see cref="vwReportFromChanger"/> class.
         /// </summary>
-        public VwReportFromChanger()
+        public vwReportFromChanger()
         {
         }
 
@@ -127,19 +127,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportFromChanger.
+        /// Returns a string representation of this vwReportFromChanger.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportFromChanger";
+            return $"vwReportFromChanger";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportFromChanger.
+        /// Creates a shallow copy of this vwReportFromChanger.
         /// </summary>
-        public VwReportFromChanger Clone()
+        public vwReportFromChanger Clone()
         {
-            return new VwReportFromChanger
+            return new vwReportFromChanger
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -159,11 +159,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportFromChanger.
+        /// Determines whether the specified object is equal to this vwReportFromChanger.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportFromChanger other)
+            if (obj is not vwReportFromChanger other)
                 return false;
 
 

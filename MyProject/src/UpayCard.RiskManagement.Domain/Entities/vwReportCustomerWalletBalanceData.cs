@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCustomerWalletBalanceData table.
-    /// Generated: 2025-12-17 14:47:47
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwReportCustomerWalletBalanceData")]
-    public partial class VwReportCustomerWalletBalanceData
+    public partial class vwReportCustomerWalletBalanceData
     {
         #region Properties
 
@@ -66,9 +66,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportCustomerWalletBalanceData"/> class.
+        /// Initializes a new instance of the <see cref="vwReportCustomerWalletBalanceData"/> class.
         /// </summary>
-        public VwReportCustomerWalletBalanceData()
+        public vwReportCustomerWalletBalanceData()
         {
         }
 
@@ -77,19 +77,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportCustomerWalletBalanceData.
+        /// Returns a string representation of this vwReportCustomerWalletBalanceData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportCustomerWalletBalanceData";
+            return $"vwReportCustomerWalletBalanceData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportCustomerWalletBalanceData.
+        /// Creates a shallow copy of this vwReportCustomerWalletBalanceData.
         /// </summary>
-        public VwReportCustomerWalletBalanceData Clone()
+        public vwReportCustomerWalletBalanceData Clone()
         {
-            return new VwReportCustomerWalletBalanceData
+            return new vwReportCustomerWalletBalanceData
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -102,11 +102,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportCustomerWalletBalanceData.
+        /// Determines whether the specified object is equal to this vwReportCustomerWalletBalanceData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportCustomerWalletBalanceData other)
+            if (obj is not vwReportCustomerWalletBalanceData other)
                 return false;
 
 

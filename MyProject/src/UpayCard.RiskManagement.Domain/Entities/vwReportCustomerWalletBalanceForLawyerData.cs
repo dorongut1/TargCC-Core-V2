@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCustomerWalletBalanceForLawyerData table.
-    /// Generated: 2025-12-17 14:47:47
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwReportCustomerWalletBalanceForLawyerData")]
-    public partial class VwReportCustomerWalletBalanceForLawyerData
+    public partial class vwReportCustomerWalletBalanceForLawyerData
     {
         #region Properties
 
@@ -59,9 +59,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportCustomerWalletBalanceForLawyerData"/> class.
+        /// Initializes a new instance of the <see cref="vwReportCustomerWalletBalanceForLawyerData"/> class.
         /// </summary>
-        public VwReportCustomerWalletBalanceForLawyerData()
+        public vwReportCustomerWalletBalanceForLawyerData()
         {
         }
 
@@ -70,19 +70,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportCustomerWalletBalanceForLawyerData.
+        /// Returns a string representation of this vwReportCustomerWalletBalanceForLawyerData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportCustomerWalletBalanceForLawyerData";
+            return $"vwReportCustomerWalletBalanceForLawyerData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportCustomerWalletBalanceForLawyerData.
+        /// Creates a shallow copy of this vwReportCustomerWalletBalanceForLawyerData.
         /// </summary>
-        public VwReportCustomerWalletBalanceForLawyerData Clone()
+        public vwReportCustomerWalletBalanceForLawyerData Clone()
         {
-            return new VwReportCustomerWalletBalanceForLawyerData
+            return new vwReportCustomerWalletBalanceForLawyerData
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -93,11 +93,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportCustomerWalletBalanceForLawyerData.
+        /// Determines whether the specified object is equal to this vwReportCustomerWalletBalanceForLawyerData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportCustomerWalletBalanceForLawyerData other)
+            if (obj is not vwReportCustomerWalletBalanceForLawyerData other)
                 return false;
 
 

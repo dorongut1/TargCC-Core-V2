@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwCustomerCardStatusData table.
-    /// Generated: 2025-12-17 14:47:46
+    /// Generated: 2025-12-17 15:31:38
     /// </summary>
     [Table("vwCustomerCardStatusData")]
-    public partial class VwCustomerCardStatusData
+    public partial class vwCustomerCardStatusData
     {
         #region Properties
 
@@ -79,9 +79,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwCustomerCardStatusData"/> class.
+        /// Initializes a new instance of the <see cref="vwCustomerCardStatusData"/> class.
         /// </summary>
-        public VwCustomerCardStatusData()
+        public vwCustomerCardStatusData()
         {
         }
 
@@ -90,19 +90,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwCustomerCardStatusData.
+        /// Returns a string representation of this vwCustomerCardStatusData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwCustomerCardStatusData";
+            return $"vwCustomerCardStatusData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwCustomerCardStatusData.
+        /// Creates a shallow copy of this vwCustomerCardStatusData.
         /// </summary>
-        public VwCustomerCardStatusData Clone()
+        public vwCustomerCardStatusData Clone()
         {
-            return new VwCustomerCardStatusData
+            return new vwCustomerCardStatusData
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -117,11 +117,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwCustomerCardStatusData.
+        /// Determines whether the specified object is equal to this vwCustomerCardStatusData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwCustomerCardStatusData other)
+            if (obj is not vwCustomerCardStatusData other)
                 return false;
 
 

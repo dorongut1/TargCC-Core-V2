@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportMonthlyCardFee table.
-    /// Generated: 2025-12-17 14:47:47
+    /// Generated: 2025-12-17 15:31:39
     /// </summary>
     [Table("vwReportMonthlyCardFee")]
-    public partial class VwReportMonthlyCardFee
+    public partial class vwReportMonthlyCardFee
     {
         #region Properties
 
@@ -108,9 +108,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportMonthlyCardFee"/> class.
+        /// Initializes a new instance of the <see cref="vwReportMonthlyCardFee"/> class.
         /// </summary>
-        public VwReportMonthlyCardFee()
+        public vwReportMonthlyCardFee()
         {
         }
 
@@ -119,19 +119,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportMonthlyCardFee.
+        /// Returns a string representation of this vwReportMonthlyCardFee.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportMonthlyCardFee";
+            return $"vwReportMonthlyCardFee";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportMonthlyCardFee.
+        /// Creates a shallow copy of this vwReportMonthlyCardFee.
         /// </summary>
-        public VwReportMonthlyCardFee Clone()
+        public vwReportMonthlyCardFee Clone()
         {
-            return new VwReportMonthlyCardFee
+            return new vwReportMonthlyCardFee
             {
                 ID = this.ID,
                 Month = this.Month,
@@ -151,11 +151,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportMonthlyCardFee.
+        /// Determines whether the specified object is equal to this vwReportMonthlyCardFee.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportMonthlyCardFee other)
+            if (obj is not vwReportMonthlyCardFee other)
                 return false;
 
 

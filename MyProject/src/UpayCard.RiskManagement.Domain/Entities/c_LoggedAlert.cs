@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_LoggedAlert table.
-    /// Generated: 2025-12-17 14:47:40
+    /// Generated: 2025-12-17 15:31:31
     /// </summary>
     [Table("c_LoggedAlert")]
     public partial class LoggedAlert
