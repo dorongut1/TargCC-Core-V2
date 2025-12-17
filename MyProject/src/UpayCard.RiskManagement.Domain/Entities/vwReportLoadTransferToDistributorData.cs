@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportLoadTransferToDistributorData table.
-    /// Generated: 2025-12-15 13:53:31
+    /// Generated: 2025-12-17 20:20:36
     /// </summary>
     [Table("vwReportLoadTransferToDistributorData")]
-    public partial class VwReportLoadTransferToDistributorData
+    public partial class vwReportLoadTransferToDistributorData
     {
         #region Properties
 
@@ -116,9 +116,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwReportLoadTransferToDistributorData"/> class.
+        /// Initializes a new instance of the <see cref="vwReportLoadTransferToDistributorData"/> class.
         /// </summary>
-        public VwReportLoadTransferToDistributorData()
+        public vwReportLoadTransferToDistributorData()
         {
         }
 
@@ -127,19 +127,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwReportLoadTransferToDistributorData.
+        /// Returns a string representation of this vwReportLoadTransferToDistributorData.
         /// </summary>
         public override string ToString()
         {
-            return $"VwReportLoadTransferToDistributorData";
+            return $"vwReportLoadTransferToDistributorData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwReportLoadTransferToDistributorData.
+        /// Creates a shallow copy of this vwReportLoadTransferToDistributorData.
         /// </summary>
-        public VwReportLoadTransferToDistributorData Clone()
+        public vwReportLoadTransferToDistributorData Clone()
         {
-            return new VwReportLoadTransferToDistributorData
+            return new vwReportLoadTransferToDistributorData
             {
                 ID = this.ID,
                 TransactionLoadID = this.TransactionLoadID,
@@ -161,11 +161,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwReportLoadTransferToDistributorData.
+        /// Determines whether the specified object is equal to this vwReportLoadTransferToDistributorData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwReportLoadTransferToDistributorData other)
+            if (obj is not vwReportLoadTransferToDistributorData other)
                 return false;
 
 

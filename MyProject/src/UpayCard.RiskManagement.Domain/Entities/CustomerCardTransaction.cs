@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CustomerCardTransaction table.
-    /// Generated: 2025-12-15 13:53:29
+    /// Generated: 2025-12-17 20:20:32
     /// </summary>
     [Table("CustomerCardTransaction")]
     public partial class CustomerCardTransaction
@@ -160,7 +160,8 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// Gets or sets the EstablishmentLocation.
         /// </summary>
         [Column("EstablishmentLocation")]
-        public object EstablishmentLocation { get; set; }
+        [MaxLength(int.MaxValue)]
+        public string EstablishmentLocation { get; set; }
         /// <summary>
         /// Gets or sets the IsEMV.
         /// </summary>

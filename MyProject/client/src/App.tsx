@@ -481,60 +481,60 @@ import { UITextForm } from './components/UIText/UITextForm';
 import { UserApprovalList } from './components/UserApproval/UserApprovalList';
 import { UserApprovalDetail } from './components/UserApproval/UserApprovalDetail';
 import { UserApprovalForm } from './components/UserApproval/UserApprovalForm';
-import { VwCustomerCardStatusList } from './components/VwCustomerCardStatus/VwCustomerCardStatusList';
-import { VwCustomerCardStatusDetail } from './components/VwCustomerCardStatus/VwCustomerCardStatusDetail';
-import { VwCustomerCardStatusDataList } from './components/VwCustomerCardStatusData/VwCustomerCardStatusDataList';
-import { VwCustomerCardStatusDataDetail } from './components/VwCustomerCardStatusData/VwCustomerCardStatusDataDetail';
-import { VwCustomerSecurityStatusCheckList } from './components/VwCustomerSecurityStatusCheck/VwCustomerSecurityStatusCheckList';
-import { VwCustomerSecurityStatusCheckDetail } from './components/VwCustomerSecurityStatusCheck/VwCustomerSecurityStatusCheckDetail';
-import { VwCustomerSecurityStatusCheckDataList } from './components/VwCustomerSecurityStatusCheckData/VwCustomerSecurityStatusCheckDataList';
-import { VwCustomerSecurityStatusCheckDataDetail } from './components/VwCustomerSecurityStatusCheckData/VwCustomerSecurityStatusCheckDataDetail';
-import { VwOnlineCardTransactionList } from './components/VwOnlineCardTransaction/VwOnlineCardTransactionList';
-import { VwOnlineCardTransactionDetail } from './components/VwOnlineCardTransaction/VwOnlineCardTransactionDetail';
-import { VwReportCardActivityList } from './components/VwReportCardActivity/VwReportCardActivityList';
-import { VwReportCardActivityDetail } from './components/VwReportCardActivity/VwReportCardActivityDetail';
-import { VwReportCardActivityDataList } from './components/VwReportCardActivityData/VwReportCardActivityDataList';
-import { VwReportCardActivityDataDetail } from './components/VwReportCardActivityData/VwReportCardActivityDataDetail';
-import { VwReportCustomerBankTransferList } from './components/VwReportCustomerBankTransfer/VwReportCustomerBankTransferList';
-import { VwReportCustomerBankTransferDetail } from './components/VwReportCustomerBankTransfer/VwReportCustomerBankTransferDetail';
-import { VwReportCustomerBankTransferDataList } from './components/VwReportCustomerBankTransferData/VwReportCustomerBankTransferDataList';
-import { VwReportCustomerBankTransferDataDetail } from './components/VwReportCustomerBankTransferData/VwReportCustomerBankTransferDataDetail';
-import { VwReportCustomerCreditCardTransactionsList } from './components/VwReportCustomerCreditCardTransactions/VwReportCustomerCreditCardTransactionsList';
-import { VwReportCustomerCreditCardTransactionsDetail } from './components/VwReportCustomerCreditCardTransactions/VwReportCustomerCreditCardTransactionsDetail';
-import { VwReportCustomerCreditCardTransactionsDataList } from './components/VwReportCustomerCreditCardTransactionsData/VwReportCustomerCreditCardTransactionsDataList';
-import { VwReportCustomerCreditCardTransactionsDataDetail } from './components/VwReportCustomerCreditCardTransactionsData/VwReportCustomerCreditCardTransactionsDataDetail';
-import { VwReportCustomerWalletBalanceList } from './components/VwReportCustomerWalletBalance/VwReportCustomerWalletBalanceList';
-import { VwReportCustomerWalletBalanceDetail } from './components/VwReportCustomerWalletBalance/VwReportCustomerWalletBalanceDetail';
-import { VwReportCustomerWalletBalanceDataList } from './components/VwReportCustomerWalletBalanceData/VwReportCustomerWalletBalanceDataList';
-import { VwReportCustomerWalletBalanceDataDetail } from './components/VwReportCustomerWalletBalanceData/VwReportCustomerWalletBalanceDataDetail';
-import { VwReportCustomerWalletBalanceForLawyerList } from './components/VwReportCustomerWalletBalanceForLawyer/VwReportCustomerWalletBalanceForLawyerList';
-import { VwReportCustomerWalletBalanceForLawyerDetail } from './components/VwReportCustomerWalletBalanceForLawyer/VwReportCustomerWalletBalanceForLawyerDetail';
-import { VwReportCustomerWalletBalanceForLawyerDataList } from './components/VwReportCustomerWalletBalanceForLawyerData/VwReportCustomerWalletBalanceForLawyerDataList';
-import { VwReportCustomerWalletBalanceForLawyerDataDetail } from './components/VwReportCustomerWalletBalanceForLawyerData/VwReportCustomerWalletBalanceForLawyerDataDetail';
-import { VwReportDistributorObligoBalanceList } from './components/VwReportDistributorObligoBalance/VwReportDistributorObligoBalanceList';
-import { VwReportDistributorObligoBalanceDetail } from './components/VwReportDistributorObligoBalance/VwReportDistributorObligoBalanceDetail';
-import { VwReportDistributorObligoBalanceDataList } from './components/VwReportDistributorObligoBalanceData/VwReportDistributorObligoBalanceDataList';
-import { VwReportDistributorObligoBalanceDataDetail } from './components/VwReportDistributorObligoBalanceData/VwReportDistributorObligoBalanceDataDetail';
-import { VwReportFromChangerList } from './components/VwReportFromChanger/VwReportFromChangerList';
-import { VwReportFromChangerDetail } from './components/VwReportFromChanger/VwReportFromChangerDetail';
-import { VwReportFromChangerDataList } from './components/VwReportFromChangerData/VwReportFromChangerDataList';
-import { VwReportFromChangerDataDetail } from './components/VwReportFromChangerData/VwReportFromChangerDataDetail';
-import { VwReportLoadTransferToDistributorList } from './components/VwReportLoadTransferToDistributor/VwReportLoadTransferToDistributorList';
-import { VwReportLoadTransferToDistributorDetail } from './components/VwReportLoadTransferToDistributor/VwReportLoadTransferToDistributorDetail';
-import { VwReportLoadTransferToDistributorDataList } from './components/VwReportLoadTransferToDistributorData/VwReportLoadTransferToDistributorDataList';
-import { VwReportLoadTransferToDistributorDataDetail } from './components/VwReportLoadTransferToDistributorData/VwReportLoadTransferToDistributorDataDetail';
-import { VwReportMonthlyCardFeeList } from './components/VwReportMonthlyCardFee/VwReportMonthlyCardFeeList';
-import { VwReportMonthlyCardFeeDetail } from './components/VwReportMonthlyCardFee/VwReportMonthlyCardFeeDetail';
-import { VwReportMonthlyCardFeeDataList } from './components/VwReportMonthlyCardFeeData/VwReportMonthlyCardFeeDataList';
-import { VwReportMonthlyCardFeeDataDetail } from './components/VwReportMonthlyCardFeeData/VwReportMonthlyCardFeeDataDetail';
-import { VwReportToChangerList } from './components/VwReportToChanger/VwReportToChangerList';
-import { VwReportToChangerDetail } from './components/VwReportToChanger/VwReportToChangerDetail';
-import { VwReportToChangerDataList } from './components/VwReportToChangerData/VwReportToChangerDataList';
-import { VwReportToChangerDataDetail } from './components/VwReportToChangerData/VwReportToChangerDataDetail';
-import { VwReportWalletTransferList } from './components/VwReportWalletTransfer/VwReportWalletTransferList';
-import { VwReportWalletTransferDetail } from './components/VwReportWalletTransfer/VwReportWalletTransferDetail';
-import { VwReportWalletTransferDataList } from './components/VwReportWalletTransferData/VwReportWalletTransferDataList';
-import { VwReportWalletTransferDataDetail } from './components/VwReportWalletTransferData/VwReportWalletTransferDataDetail';
+import { vwCustomerCardStatusList } from './components/vwCustomerCardStatus/vwCustomerCardStatusList';
+import { vwCustomerCardStatusDetail } from './components/vwCustomerCardStatus/vwCustomerCardStatusDetail';
+import { vwCustomerCardStatusDataList } from './components/vwCustomerCardStatusData/vwCustomerCardStatusDataList';
+import { vwCustomerCardStatusDataDetail } from './components/vwCustomerCardStatusData/vwCustomerCardStatusDataDetail';
+import { vwCustomerSecurityStatusCheckList } from './components/vwCustomerSecurityStatusCheck/vwCustomerSecurityStatusCheckList';
+import { vwCustomerSecurityStatusCheckDetail } from './components/vwCustomerSecurityStatusCheck/vwCustomerSecurityStatusCheckDetail';
+import { vwCustomerSecurityStatusCheckDataList } from './components/vwCustomerSecurityStatusCheckData/vwCustomerSecurityStatusCheckDataList';
+import { vwCustomerSecurityStatusCheckDataDetail } from './components/vwCustomerSecurityStatusCheckData/vwCustomerSecurityStatusCheckDataDetail';
+import { vwOnlineCardTransactionList } from './components/vwOnlineCardTransaction/vwOnlineCardTransactionList';
+import { vwOnlineCardTransactionDetail } from './components/vwOnlineCardTransaction/vwOnlineCardTransactionDetail';
+import { vwReportCardActivityList } from './components/vwReportCardActivity/vwReportCardActivityList';
+import { vwReportCardActivityDetail } from './components/vwReportCardActivity/vwReportCardActivityDetail';
+import { vwReportCardActivityDataList } from './components/vwReportCardActivityData/vwReportCardActivityDataList';
+import { vwReportCardActivityDataDetail } from './components/vwReportCardActivityData/vwReportCardActivityDataDetail';
+import { vwReportCustomerBankTransferList } from './components/vwReportCustomerBankTransfer/vwReportCustomerBankTransferList';
+import { vwReportCustomerBankTransferDetail } from './components/vwReportCustomerBankTransfer/vwReportCustomerBankTransferDetail';
+import { vwReportCustomerBankTransferDataList } from './components/vwReportCustomerBankTransferData/vwReportCustomerBankTransferDataList';
+import { vwReportCustomerBankTransferDataDetail } from './components/vwReportCustomerBankTransferData/vwReportCustomerBankTransferDataDetail';
+import { vwReportCustomerCreditCardTransactionsList } from './components/vwReportCustomerCreditCardTransactions/vwReportCustomerCreditCardTransactionsList';
+import { vwReportCustomerCreditCardTransactionsDetail } from './components/vwReportCustomerCreditCardTransactions/vwReportCustomerCreditCardTransactionsDetail';
+import { vwReportCustomerCreditCardTransactionsDataList } from './components/vwReportCustomerCreditCardTransactionsData/vwReportCustomerCreditCardTransactionsDataList';
+import { vwReportCustomerCreditCardTransactionsDataDetail } from './components/vwReportCustomerCreditCardTransactionsData/vwReportCustomerCreditCardTransactionsDataDetail';
+import { vwReportCustomerWalletBalanceList } from './components/vwReportCustomerWalletBalance/vwReportCustomerWalletBalanceList';
+import { vwReportCustomerWalletBalanceDetail } from './components/vwReportCustomerWalletBalance/vwReportCustomerWalletBalanceDetail';
+import { vwReportCustomerWalletBalanceDataList } from './components/vwReportCustomerWalletBalanceData/vwReportCustomerWalletBalanceDataList';
+import { vwReportCustomerWalletBalanceDataDetail } from './components/vwReportCustomerWalletBalanceData/vwReportCustomerWalletBalanceDataDetail';
+import { vwReportCustomerWalletBalanceForLawyerList } from './components/vwReportCustomerWalletBalanceForLawyer/vwReportCustomerWalletBalanceForLawyerList';
+import { vwReportCustomerWalletBalanceForLawyerDetail } from './components/vwReportCustomerWalletBalanceForLawyer/vwReportCustomerWalletBalanceForLawyerDetail';
+import { vwReportCustomerWalletBalanceForLawyerDataList } from './components/vwReportCustomerWalletBalanceForLawyerData/vwReportCustomerWalletBalanceForLawyerDataList';
+import { vwReportCustomerWalletBalanceForLawyerDataDetail } from './components/vwReportCustomerWalletBalanceForLawyerData/vwReportCustomerWalletBalanceForLawyerDataDetail';
+import { vwReportDistributorObligoBalanceList } from './components/vwReportDistributorObligoBalance/vwReportDistributorObligoBalanceList';
+import { vwReportDistributorObligoBalanceDetail } from './components/vwReportDistributorObligoBalance/vwReportDistributorObligoBalanceDetail';
+import { vwReportDistributorObligoBalanceDataList } from './components/vwReportDistributorObligoBalanceData/vwReportDistributorObligoBalanceDataList';
+import { vwReportDistributorObligoBalanceDataDetail } from './components/vwReportDistributorObligoBalanceData/vwReportDistributorObligoBalanceDataDetail';
+import { vwReportFromChangerList } from './components/vwReportFromChanger/vwReportFromChangerList';
+import { vwReportFromChangerDetail } from './components/vwReportFromChanger/vwReportFromChangerDetail';
+import { vwReportFromChangerDataList } from './components/vwReportFromChangerData/vwReportFromChangerDataList';
+import { vwReportFromChangerDataDetail } from './components/vwReportFromChangerData/vwReportFromChangerDataDetail';
+import { vwReportLoadTransferToDistributorList } from './components/vwReportLoadTransferToDistributor/vwReportLoadTransferToDistributorList';
+import { vwReportLoadTransferToDistributorDetail } from './components/vwReportLoadTransferToDistributor/vwReportLoadTransferToDistributorDetail';
+import { vwReportLoadTransferToDistributorDataList } from './components/vwReportLoadTransferToDistributorData/vwReportLoadTransferToDistributorDataList';
+import { vwReportLoadTransferToDistributorDataDetail } from './components/vwReportLoadTransferToDistributorData/vwReportLoadTransferToDistributorDataDetail';
+import { vwReportMonthlyCardFeeList } from './components/vwReportMonthlyCardFee/vwReportMonthlyCardFeeList';
+import { vwReportMonthlyCardFeeDetail } from './components/vwReportMonthlyCardFee/vwReportMonthlyCardFeeDetail';
+import { vwReportMonthlyCardFeeDataList } from './components/vwReportMonthlyCardFeeData/vwReportMonthlyCardFeeDataList';
+import { vwReportMonthlyCardFeeDataDetail } from './components/vwReportMonthlyCardFeeData/vwReportMonthlyCardFeeDataDetail';
+import { vwReportToChangerList } from './components/vwReportToChanger/vwReportToChangerList';
+import { vwReportToChangerDetail } from './components/vwReportToChanger/vwReportToChangerDetail';
+import { vwReportToChangerDataList } from './components/vwReportToChangerData/vwReportToChangerDataList';
+import { vwReportToChangerDataDetail } from './components/vwReportToChangerData/vwReportToChangerDataDetail';
+import { vwReportWalletTransferList } from './components/vwReportWalletTransfer/vwReportWalletTransferList';
+import { vwReportWalletTransferDetail } from './components/vwReportWalletTransfer/vwReportWalletTransferDetail';
+import { vwReportWalletTransferDataList } from './components/vwReportWalletTransferData/vwReportWalletTransferDataList';
+import { vwReportWalletTransferDataDetail } from './components/vwReportWalletTransferData/vwReportWalletTransferDataDetail';
 
 const drawerWidth = 240;
 
@@ -1521,137 +1521,137 @@ function App() {
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwCustomerCardStatuss">
-                <ListItemText primary="VwCustomerCardStatuss Report" />
+                <ListItemText primary="vwCustomerCardStatuss Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwCustomerCardStatusDatas">
-                <ListItemText primary="VwCustomerCardStatusDatas Report" />
+                <ListItemText primary="vwCustomerCardStatusDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwCustomerSecurityStatusChecks">
-                <ListItemText primary="VwCustomerSecurityStatusChecks Report" />
+                <ListItemText primary="vwCustomerSecurityStatusChecks Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwCustomerSecurityStatusCheckDatas">
-                <ListItemText primary="VwCustomerSecurityStatusCheckDatas Report" />
+                <ListItemText primary="vwCustomerSecurityStatusCheckDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwOnlineCardTransactions">
-                <ListItemText primary="VwOnlineCardTransactions Report" />
+                <ListItemText primary="vwOnlineCardTransactions Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCardActivitys">
-                <ListItemText primary="VwReportCardActivitys Report" />
+                <ListItemText primary="vwReportCardActivitys Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCardActivityDatas">
-                <ListItemText primary="VwReportCardActivityDatas Report" />
+                <ListItemText primary="vwReportCardActivityDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerBankTransfers">
-                <ListItemText primary="VwReportCustomerBankTransfers Report" />
+                <ListItemText primary="vwReportCustomerBankTransfers Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerBankTransferDatas">
-                <ListItemText primary="VwReportCustomerBankTransferDatas Report" />
+                <ListItemText primary="vwReportCustomerBankTransferDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerCreditCardTransactionss">
-                <ListItemText primary="VwReportCustomerCreditCardTransactionss Report" />
+                <ListItemText primary="vwReportCustomerCreditCardTransactionss Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerCreditCardTransactionsDatas">
-                <ListItemText primary="VwReportCustomerCreditCardTransactionsDatas Report" />
+                <ListItemText primary="vwReportCustomerCreditCardTransactionsDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerWalletBalances">
-                <ListItemText primary="VwReportCustomerWalletBalances Report" />
+                <ListItemText primary="vwReportCustomerWalletBalances Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerWalletBalanceDatas">
-                <ListItemText primary="VwReportCustomerWalletBalanceDatas Report" />
+                <ListItemText primary="vwReportCustomerWalletBalanceDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerWalletBalanceForLawyers">
-                <ListItemText primary="VwReportCustomerWalletBalanceForLawyers Report" />
+                <ListItemText primary="vwReportCustomerWalletBalanceForLawyers Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportCustomerWalletBalanceForLawyerDatas">
-                <ListItemText primary="VwReportCustomerWalletBalanceForLawyerDatas Report" />
+                <ListItemText primary="vwReportCustomerWalletBalanceForLawyerDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportDistributorObligoBalances">
-                <ListItemText primary="VwReportDistributorObligoBalances Report" />
+                <ListItemText primary="vwReportDistributorObligoBalances Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportDistributorObligoBalanceDatas">
-                <ListItemText primary="VwReportDistributorObligoBalanceDatas Report" />
+                <ListItemText primary="vwReportDistributorObligoBalanceDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportFromChangers">
-                <ListItemText primary="VwReportFromChangers Report" />
+                <ListItemText primary="vwReportFromChangers Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportFromChangerDatas">
-                <ListItemText primary="VwReportFromChangerDatas Report" />
+                <ListItemText primary="vwReportFromChangerDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportLoadTransferToDistributors">
-                <ListItemText primary="VwReportLoadTransferToDistributors Report" />
+                <ListItemText primary="vwReportLoadTransferToDistributors Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportLoadTransferToDistributorDatas">
-                <ListItemText primary="VwReportLoadTransferToDistributorDatas Report" />
+                <ListItemText primary="vwReportLoadTransferToDistributorDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportMonthlyCardFees">
-                <ListItemText primary="VwReportMonthlyCardFees Report" />
+                <ListItemText primary="vwReportMonthlyCardFees Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportMonthlyCardFeeDatas">
-                <ListItemText primary="VwReportMonthlyCardFeeDatas Report" />
+                <ListItemText primary="vwReportMonthlyCardFeeDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportToChangers">
-                <ListItemText primary="VwReportToChangers Report" />
+                <ListItemText primary="vwReportToChangers Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportToChangerDatas">
-                <ListItemText primary="VwReportToChangerDatas Report" />
+                <ListItemText primary="vwReportToChangerDatas Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportWalletTransfers">
-                <ListItemText primary="VwReportWalletTransfers Report" />
+                <ListItemText primary="vwReportWalletTransfers Report" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/vwReportWalletTransferDatas">
-                <ListItemText primary="VwReportWalletTransferDatas Report" />
+                <ListItemText primary="vwReportWalletTransferDatas Report" />
               </ListItemButton>
             </ListItem>
           </List>
@@ -2240,60 +2240,60 @@ function App() {
             <Route path="/userApprovals/new" element={<UserApprovalForm />} />
             <Route path="/userApprovals/:id" element={<UserApprovalDetail />} />
             <Route path="/userApprovals/:id/edit" element={<UserApprovalForm />} />
-            <Route path="/vwCustomerCardStatuss" element={<VwCustomerCardStatusList />} />
-            <Route path="/vwCustomerCardStatuss/:id" element={<VwCustomerCardStatusDetail />} />
-            <Route path="/vwCustomerCardStatusDatas" element={<VwCustomerCardStatusDataList />} />
-            <Route path="/vwCustomerCardStatusDatas/:id" element={<VwCustomerCardStatusDataDetail />} />
-            <Route path="/vwCustomerSecurityStatusChecks" element={<VwCustomerSecurityStatusCheckList />} />
-            <Route path="/vwCustomerSecurityStatusChecks/:id" element={<VwCustomerSecurityStatusCheckDetail />} />
-            <Route path="/vwCustomerSecurityStatusCheckDatas" element={<VwCustomerSecurityStatusCheckDataList />} />
-            <Route path="/vwCustomerSecurityStatusCheckDatas/:id" element={<VwCustomerSecurityStatusCheckDataDetail />} />
-            <Route path="/vwOnlineCardTransactions" element={<VwOnlineCardTransactionList />} />
-            <Route path="/vwOnlineCardTransactions/:id" element={<VwOnlineCardTransactionDetail />} />
-            <Route path="/vwReportCardActivitys" element={<VwReportCardActivityList />} />
-            <Route path="/vwReportCardActivitys/:id" element={<VwReportCardActivityDetail />} />
-            <Route path="/vwReportCardActivityDatas" element={<VwReportCardActivityDataList />} />
-            <Route path="/vwReportCardActivityDatas/:id" element={<VwReportCardActivityDataDetail />} />
-            <Route path="/vwReportCustomerBankTransfers" element={<VwReportCustomerBankTransferList />} />
-            <Route path="/vwReportCustomerBankTransfers/:id" element={<VwReportCustomerBankTransferDetail />} />
-            <Route path="/vwReportCustomerBankTransferDatas" element={<VwReportCustomerBankTransferDataList />} />
-            <Route path="/vwReportCustomerBankTransferDatas/:id" element={<VwReportCustomerBankTransferDataDetail />} />
-            <Route path="/vwReportCustomerCreditCardTransactionss" element={<VwReportCustomerCreditCardTransactionsList />} />
-            <Route path="/vwReportCustomerCreditCardTransactionss/:id" element={<VwReportCustomerCreditCardTransactionsDetail />} />
-            <Route path="/vwReportCustomerCreditCardTransactionsDatas" element={<VwReportCustomerCreditCardTransactionsDataList />} />
-            <Route path="/vwReportCustomerCreditCardTransactionsDatas/:id" element={<VwReportCustomerCreditCardTransactionsDataDetail />} />
-            <Route path="/vwReportCustomerWalletBalances" element={<VwReportCustomerWalletBalanceList />} />
-            <Route path="/vwReportCustomerWalletBalances/:id" element={<VwReportCustomerWalletBalanceDetail />} />
-            <Route path="/vwReportCustomerWalletBalanceDatas" element={<VwReportCustomerWalletBalanceDataList />} />
-            <Route path="/vwReportCustomerWalletBalanceDatas/:id" element={<VwReportCustomerWalletBalanceDataDetail />} />
-            <Route path="/vwReportCustomerWalletBalanceForLawyers" element={<VwReportCustomerWalletBalanceForLawyerList />} />
-            <Route path="/vwReportCustomerWalletBalanceForLawyers/:id" element={<VwReportCustomerWalletBalanceForLawyerDetail />} />
-            <Route path="/vwReportCustomerWalletBalanceForLawyerDatas" element={<VwReportCustomerWalletBalanceForLawyerDataList />} />
-            <Route path="/vwReportCustomerWalletBalanceForLawyerDatas/:id" element={<VwReportCustomerWalletBalanceForLawyerDataDetail />} />
-            <Route path="/vwReportDistributorObligoBalances" element={<VwReportDistributorObligoBalanceList />} />
-            <Route path="/vwReportDistributorObligoBalances/:id" element={<VwReportDistributorObligoBalanceDetail />} />
-            <Route path="/vwReportDistributorObligoBalanceDatas" element={<VwReportDistributorObligoBalanceDataList />} />
-            <Route path="/vwReportDistributorObligoBalanceDatas/:id" element={<VwReportDistributorObligoBalanceDataDetail />} />
-            <Route path="/vwReportFromChangers" element={<VwReportFromChangerList />} />
-            <Route path="/vwReportFromChangers/:id" element={<VwReportFromChangerDetail />} />
-            <Route path="/vwReportFromChangerDatas" element={<VwReportFromChangerDataList />} />
-            <Route path="/vwReportFromChangerDatas/:id" element={<VwReportFromChangerDataDetail />} />
-            <Route path="/vwReportLoadTransferToDistributors" element={<VwReportLoadTransferToDistributorList />} />
-            <Route path="/vwReportLoadTransferToDistributors/:id" element={<VwReportLoadTransferToDistributorDetail />} />
-            <Route path="/vwReportLoadTransferToDistributorDatas" element={<VwReportLoadTransferToDistributorDataList />} />
-            <Route path="/vwReportLoadTransferToDistributorDatas/:id" element={<VwReportLoadTransferToDistributorDataDetail />} />
-            <Route path="/vwReportMonthlyCardFees" element={<VwReportMonthlyCardFeeList />} />
-            <Route path="/vwReportMonthlyCardFees/:id" element={<VwReportMonthlyCardFeeDetail />} />
-            <Route path="/vwReportMonthlyCardFeeDatas" element={<VwReportMonthlyCardFeeDataList />} />
-            <Route path="/vwReportMonthlyCardFeeDatas/:id" element={<VwReportMonthlyCardFeeDataDetail />} />
-            <Route path="/vwReportToChangers" element={<VwReportToChangerList />} />
-            <Route path="/vwReportToChangers/:id" element={<VwReportToChangerDetail />} />
-            <Route path="/vwReportToChangerDatas" element={<VwReportToChangerDataList />} />
-            <Route path="/vwReportToChangerDatas/:id" element={<VwReportToChangerDataDetail />} />
-            <Route path="/vwReportWalletTransfers" element={<VwReportWalletTransferList />} />
-            <Route path="/vwReportWalletTransfers/:id" element={<VwReportWalletTransferDetail />} />
-            <Route path="/vwReportWalletTransferDatas" element={<VwReportWalletTransferDataList />} />
-            <Route path="/vwReportWalletTransferDatas/:id" element={<VwReportWalletTransferDataDetail />} />
+            <Route path="/vwCustomerCardStatuss" element={<vwCustomerCardStatusList />} />
+            <Route path="/vwCustomerCardStatuss/:id" element={<vwCustomerCardStatusDetail />} />
+            <Route path="/vwCustomerCardStatusDatas" element={<vwCustomerCardStatusDataList />} />
+            <Route path="/vwCustomerCardStatusDatas/:id" element={<vwCustomerCardStatusDataDetail />} />
+            <Route path="/vwCustomerSecurityStatusChecks" element={<vwCustomerSecurityStatusCheckList />} />
+            <Route path="/vwCustomerSecurityStatusChecks/:id" element={<vwCustomerSecurityStatusCheckDetail />} />
+            <Route path="/vwCustomerSecurityStatusCheckDatas" element={<vwCustomerSecurityStatusCheckDataList />} />
+            <Route path="/vwCustomerSecurityStatusCheckDatas/:id" element={<vwCustomerSecurityStatusCheckDataDetail />} />
+            <Route path="/vwOnlineCardTransactions" element={<vwOnlineCardTransactionList />} />
+            <Route path="/vwOnlineCardTransactions/:id" element={<vwOnlineCardTransactionDetail />} />
+            <Route path="/vwReportCardActivitys" element={<vwReportCardActivityList />} />
+            <Route path="/vwReportCardActivitys/:id" element={<vwReportCardActivityDetail />} />
+            <Route path="/vwReportCardActivityDatas" element={<vwReportCardActivityDataList />} />
+            <Route path="/vwReportCardActivityDatas/:id" element={<vwReportCardActivityDataDetail />} />
+            <Route path="/vwReportCustomerBankTransfers" element={<vwReportCustomerBankTransferList />} />
+            <Route path="/vwReportCustomerBankTransfers/:id" element={<vwReportCustomerBankTransferDetail />} />
+            <Route path="/vwReportCustomerBankTransferDatas" element={<vwReportCustomerBankTransferDataList />} />
+            <Route path="/vwReportCustomerBankTransferDatas/:id" element={<vwReportCustomerBankTransferDataDetail />} />
+            <Route path="/vwReportCustomerCreditCardTransactionss" element={<vwReportCustomerCreditCardTransactionsList />} />
+            <Route path="/vwReportCustomerCreditCardTransactionss/:id" element={<vwReportCustomerCreditCardTransactionsDetail />} />
+            <Route path="/vwReportCustomerCreditCardTransactionsDatas" element={<vwReportCustomerCreditCardTransactionsDataList />} />
+            <Route path="/vwReportCustomerCreditCardTransactionsDatas/:id" element={<vwReportCustomerCreditCardTransactionsDataDetail />} />
+            <Route path="/vwReportCustomerWalletBalances" element={<vwReportCustomerWalletBalanceList />} />
+            <Route path="/vwReportCustomerWalletBalances/:id" element={<vwReportCustomerWalletBalanceDetail />} />
+            <Route path="/vwReportCustomerWalletBalanceDatas" element={<vwReportCustomerWalletBalanceDataList />} />
+            <Route path="/vwReportCustomerWalletBalanceDatas/:id" element={<vwReportCustomerWalletBalanceDataDetail />} />
+            <Route path="/vwReportCustomerWalletBalanceForLawyers" element={<vwReportCustomerWalletBalanceForLawyerList />} />
+            <Route path="/vwReportCustomerWalletBalanceForLawyers/:id" element={<vwReportCustomerWalletBalanceForLawyerDetail />} />
+            <Route path="/vwReportCustomerWalletBalanceForLawyerDatas" element={<vwReportCustomerWalletBalanceForLawyerDataList />} />
+            <Route path="/vwReportCustomerWalletBalanceForLawyerDatas/:id" element={<vwReportCustomerWalletBalanceForLawyerDataDetail />} />
+            <Route path="/vwReportDistributorObligoBalances" element={<vwReportDistributorObligoBalanceList />} />
+            <Route path="/vwReportDistributorObligoBalances/:id" element={<vwReportDistributorObligoBalanceDetail />} />
+            <Route path="/vwReportDistributorObligoBalanceDatas" element={<vwReportDistributorObligoBalanceDataList />} />
+            <Route path="/vwReportDistributorObligoBalanceDatas/:id" element={<vwReportDistributorObligoBalanceDataDetail />} />
+            <Route path="/vwReportFromChangers" element={<vwReportFromChangerList />} />
+            <Route path="/vwReportFromChangers/:id" element={<vwReportFromChangerDetail />} />
+            <Route path="/vwReportFromChangerDatas" element={<vwReportFromChangerDataList />} />
+            <Route path="/vwReportFromChangerDatas/:id" element={<vwReportFromChangerDataDetail />} />
+            <Route path="/vwReportLoadTransferToDistributors" element={<vwReportLoadTransferToDistributorList />} />
+            <Route path="/vwReportLoadTransferToDistributors/:id" element={<vwReportLoadTransferToDistributorDetail />} />
+            <Route path="/vwReportLoadTransferToDistributorDatas" element={<vwReportLoadTransferToDistributorDataList />} />
+            <Route path="/vwReportLoadTransferToDistributorDatas/:id" element={<vwReportLoadTransferToDistributorDataDetail />} />
+            <Route path="/vwReportMonthlyCardFees" element={<vwReportMonthlyCardFeeList />} />
+            <Route path="/vwReportMonthlyCardFees/:id" element={<vwReportMonthlyCardFeeDetail />} />
+            <Route path="/vwReportMonthlyCardFeeDatas" element={<vwReportMonthlyCardFeeDataList />} />
+            <Route path="/vwReportMonthlyCardFeeDatas/:id" element={<vwReportMonthlyCardFeeDataDetail />} />
+            <Route path="/vwReportToChangers" element={<vwReportToChangerList />} />
+            <Route path="/vwReportToChangers/:id" element={<vwReportToChangerDetail />} />
+            <Route path="/vwReportToChangerDatas" element={<vwReportToChangerDataList />} />
+            <Route path="/vwReportToChangerDatas/:id" element={<vwReportToChangerDataDetail />} />
+            <Route path="/vwReportWalletTransfers" element={<vwReportWalletTransferList />} />
+            <Route path="/vwReportWalletTransfers/:id" element={<vwReportWalletTransferDetail />} />
+            <Route path="/vwReportWalletTransferDatas" element={<vwReportWalletTransferDataList />} />
+            <Route path="/vwReportWalletTransferDatas/:id" element={<vwReportWalletTransferDataDetail />} />
           </Routes>
         </Container>
       </Box>

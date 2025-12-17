@@ -87,7 +87,7 @@ public class GeneratorPerformanceTests
         var stopwatch = Stopwatch.StartNew();
 
         // Act
-        var result = await generator.GenerateAsync(schema);
+        var result = await generator.GenerateAsync(schema, "TestNamespace");
         stopwatch.Stop();
 
         // Assert
@@ -161,7 +161,7 @@ public class GeneratorPerformanceTests
             await repoGen.GenerateAsync(table);
             await entityConfigGen.GenerateAsync(table);
         }
-        await dbContextGen.GenerateAsync(schema);
+        await dbContextGen.GenerateAsync(schema, "TestNamespace");
         await diGen.GenerateAsync(schema);
 
         stopwatch.Stop();
@@ -282,7 +282,7 @@ public class GeneratorPerformanceTests
         var memoryBefore = GC.GetTotalMemory(false);
 
         // Act
-        var result = await generator.GenerateAsync(schema);
+        var result = await generator.GenerateAsync(schema, "TestNamespace");
 
         // Measure memory after
         var memoryAfter = GC.GetTotalMemory(false);

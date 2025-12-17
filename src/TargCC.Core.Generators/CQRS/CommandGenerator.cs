@@ -70,9 +70,20 @@ public class CommandGenerator : ICommandGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType)
+    public async Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
+
+        // Skip Create command for views (read-only)
+        if (commandType == CommandType.Create && table.IsView)
+        {
+            return await Task.FromResult(new CommandGenerationResult
+            {
+                CommandCode = string.Empty,
+                HandlerCode = string.Empty,
+                ValidatorCode = string.Empty
+            });
+        }
 
         if (commandType != CommandType.Create && table.PrimaryKey == null)
         {
@@ -84,9 +95,9 @@ public class CommandGenerator : ICommandGenerator
 
         var result = commandType switch
         {
-            CommandType.Create => GenerateCreateCommand(table),
-            CommandType.Update => GenerateUpdateCommand(table),
-            CommandType.Delete => GenerateDeleteCommand(table),
+            CommandType.Create => GenerateCreateCommand(table, rootNamespace),
+            CommandType.Update => GenerateUpdateCommand(table, rootNamespace),
+            CommandType.Delete => GenerateDeleteCommand(table, rootNamespace),
             _ => throw new ArgumentOutOfRangeException(nameof(commandType), commandType, "Unknown command type.")
         };
 
@@ -96,21 +107,24 @@ public class CommandGenerator : ICommandGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table)
+    public async Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table, string rootNamespace = "TargCC")
     {
         ArgumentNullException.ThrowIfNull(table);
 
         LogGeneratingAllCommands(_logger, table.Name, 3, null);
 
-        var results = new List<CommandGenerationResult>
+        var results = new List<CommandGenerationResult>();
+
+        // Skip Create command for views (read-only)
+        if (!table.IsView)
         {
-            GenerateCreateCommand(table),
-        };
+            results.Add(GenerateCreateCommand(table, rootNamespace));
+        }
 
         if (table.PrimaryKey != null)
         {
-            results.Add(GenerateUpdateCommand(table));
-            results.Add(GenerateDeleteCommand(table));
+            results.Add(GenerateUpdateCommand(table, rootNamespace));
+            results.Add(GenerateDeleteCommand(table, rootNamespace));
         }
 
         return await Task.FromResult(results);
@@ -121,9 +135,7 @@ public class CommandGenerator : ICommandGenerator
     {
         ArgumentNullException.ThrowIfNull(table);
 
-        return table.Columns.Where(c =>
-            !c.IsIdentity &&
-            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name));
+        return GetCreateColumnsInternal(table);
     }
 
     /// <inheritdoc/>
@@ -205,7 +217,7 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static CommandGenerationResult GenerateCreateCommand(Table table)
+    private static CommandGenerationResult GenerateCreateCommand(Table table, string rootNamespace)
     {
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
@@ -216,9 +228,9 @@ public class CommandGenerator : ICommandGenerator
 
         return new CommandGenerationResult
         {
-            CommandCode = GenerateCreateCommandRecord(table, commandClassName),
-            HandlerCode = GenerateCreateHandler(table, commandClassName, handlerClassName),
-            ValidatorCode = GenerateCreateValidator(table, commandClassName, validatorClassName),
+            CommandCode = GenerateCreateCommandRecord(table, commandClassName, rootNamespace),
+            HandlerCode = GenerateCreateHandler(table, commandClassName, handlerClassName, rootNamespace),
+            ValidatorCode = GenerateCreateValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -226,7 +238,7 @@ public class CommandGenerator : ICommandGenerator
         };
     }
 
-    private static CommandGenerationResult GenerateUpdateCommand(Table table)
+    private static CommandGenerationResult GenerateUpdateCommand(Table table, string rootNamespace)
     {
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
@@ -237,9 +249,9 @@ public class CommandGenerator : ICommandGenerator
 
         return new CommandGenerationResult
         {
-            CommandCode = GenerateUpdateCommandRecord(table, commandClassName),
-            HandlerCode = GenerateUpdateHandler(table, commandClassName, handlerClassName),
-            ValidatorCode = GenerateUpdateValidator(table, commandClassName, validatorClassName),
+            CommandCode = GenerateUpdateCommandRecord(table, commandClassName, rootNamespace),
+            HandlerCode = GenerateUpdateHandler(table, commandClassName, handlerClassName, rootNamespace),
+            ValidatorCode = GenerateUpdateValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -247,7 +259,7 @@ public class CommandGenerator : ICommandGenerator
         };
     }
 
-    private static CommandGenerationResult GenerateDeleteCommand(Table table)
+    private static CommandGenerationResult GenerateDeleteCommand(Table table, string rootNamespace)
     {
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
@@ -258,9 +270,9 @@ public class CommandGenerator : ICommandGenerator
 
         return new CommandGenerationResult
         {
-            CommandCode = GenerateDeleteCommandRecord(table, commandClassName),
-            HandlerCode = GenerateDeleteHandler(table, commandClassName, handlerClassName),
-            ValidatorCode = GenerateDeleteValidator(table, commandClassName, validatorClassName),
+            CommandCode = GenerateDeleteCommandRecord(table, commandClassName, rootNamespace),
+            HandlerCode = GenerateDeleteHandler(table, commandClassName, handlerClassName, rootNamespace),
+            ValidatorCode = GenerateDeleteValidator(table, commandClassName, validatorClassName, rootNamespace),
             CommandClassName = commandClassName,
             HandlerClassName = handlerClassName,
             ValidatorClassName = validatorClassName,
@@ -268,29 +280,46 @@ public class CommandGenerator : ICommandGenerator
         };
     }
 
-    private static string GenerateCreateCommandRecord(Table table, string commandClassName)
+    private static string GenerateCreateCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
+        var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+        if (pkColumn.IsNullable && pkType != "string")
+        {
+            pkType += "?";
+        }
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// Command to create a new {table.Name}.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {commandClassName} : IRequest<Result<int>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {commandClassName} : IRequest<Result<{pkType}>>");
         sb.AppendLine("{");
 
         var createColumns = GetCreateColumnsInternal(table);
+        var seenProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var column in createColumns)
         {
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names
+            if (seenProperties.Contains(propName))
+            {
+                continue; // Skip silently in generated code
+            }
+
+            seenProperties.Add(propName);
+
             var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
             var nullableSuffix = column.IsNullable && propType != "string" ? "?" : string.Empty;
             var defaultValue = GetDefaultValue(propType, column.IsNullable);
@@ -307,17 +336,18 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateUpdateCommandRecord(Table table, string commandClassName)
+    private static string GenerateUpdateCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -335,10 +365,20 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
 
         var updateColumns = GetUpdateColumnsInternal(table);
+        var seenProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var column in updateColumns)
         {
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names
+            if (seenProperties.Contains(propName))
+            {
+                continue; // Skip silently in generated code
+            }
+
+            seenProperties.Add(propName);
+
             var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
             var nullableSuffix = column.IsNullable && propType != "string" ? "?" : string.Empty;
             var defaultValue = GetDefaultValue(propType, column.IsNullable);
@@ -355,17 +395,18 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateDeleteCommandRecord(Table table, string commandClassName)
+    private static string GenerateDeleteCommandRecord(Table table, string commandClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Command");
-        GenerateCommandUsings(sb);
+        GenerateCommandUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -378,24 +419,32 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateCreateHandler(Table table, string commandClassName, string handlerClassName)
+    private static string GenerateCreateHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
+        var pkPropName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
+        var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+        if (pkColumn.IsNullable && pkType != "string")
+        {
+            pkType += "?";
+        }
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {commandClassName} request.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{commandClassName}, Result<int>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{commandClassName}, Result<{pkType}>>");
         sb.AppendLine("{");
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly {repoInterfaceName} {repoFieldName};");
@@ -415,7 +464,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<int>> Handle({commandClassName} request, CancellationToken cancellationToken)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<{pkType}>> Handle({commandClassName} request, CancellationToken cancellationToken)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(request);");
         sb.AppendLine();
@@ -423,7 +472,10 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {table.Name}");
+
+        // Use fully qualified name for Task entity to avoid ambiguity with System.Threading.Tasks.Task
+        var entityNameForInstantiation = entityName == "Task" ? $"{rootNamespace}.Domain.Entities.Task" : entityName;
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityNameForInstantiation}");
         sb.AppendLine("            {");
 
         var createColumns = GetCreateColumnsInternal(table);
@@ -461,9 +513,9 @@ public class CommandGenerator : ICommandGenerator
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await {repoFieldName}.AddAsync(entity, cancellationToken);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.Id);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.{pkPropName});");
         sb.AppendLine();
-        sb.AppendLine("            return Result<int>.Success(entity.Id);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<{pkType}>.Success(entity.{pkPropName});");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
@@ -476,18 +528,19 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateUpdateHandler(Table table, string commandClassName, string handlerClassName)
+    private static string GenerateUpdateHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -558,18 +611,19 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateDeleteHandler(Table table, string commandClassName, string handlerClassName)
+    private static string GenerateDeleteHandler(Table table, string commandClassName, string handlerClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb);
+        GenerateHandlerUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -629,15 +683,16 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateCreateValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateCreateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -670,17 +725,18 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateUpdateValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateUpdateValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -729,17 +785,18 @@ public class CommandGenerator : ICommandGenerator
         return sb.ToString();
     }
 
-    private static string GenerateDeleteValidator(Table table, string commandClassName, string validatorClassName)
+    private static string GenerateDeleteValidator(Table table, string commandClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Validator");
         GenerateValidatorUsings(sb);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace TargCC.Application.Features.{pluralName}.Commands;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -775,9 +832,87 @@ public class CommandGenerator : ICommandGenerator
 
     private static IEnumerable<Column> GetCreateColumnsInternal(Table table)
     {
-        return table.Columns.Where(c =>
-            !c.IsIdentity &&
-            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name));
+        // Audit fields that are typically auto-generated or have private setters
+        var auditFields = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
+
+        return table.Columns.Where(c => !ShouldExcludeFromCreate(c, auditFields));
+    }
+
+    private static bool ShouldExcludeFromCreate(Column column, string[] auditFields)
+    {
+        // Exclude identity columns
+        if (column.IsIdentity)
+        {
+            return true;
+        }
+
+        // Exclude audit fields
+        if (auditFields.Contains(column.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Exclude read-only columns (clc_, blg_, agg_, spt_, upl_, spl_)
+        if (CodeGenerationHelpers.IsReadOnlyColumn(column.Name))
+        {
+            return true;
+        }
+
+        // Exclude columns with prefixes in their names (both with and without underscore)
+        // Historic support: some columns use "enoPassword" instead of "eno_Password"
+        // ENM = Enumeration, SCB = Separate Changed By, SPT = Separate Update, ENO = One-Way Encryption, ENT = Two-Way Encryption
+        var upperName = column.Name.ToUpperInvariant();
+        if (upperName.StartsWith("ENO", StringComparison.Ordinal) ||
+            upperName.StartsWith("ENT", StringComparison.Ordinal) ||
+            upperName.StartsWith("SPT", StringComparison.Ordinal) ||
+            upperName.StartsWith("ENM", StringComparison.Ordinal) ||
+            upperName.StartsWith("SCB", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Check ExtendedProperties for ccType metadata
+        if (HasExcludedCcType(column))
+        {
+            return true;
+        }
+
+        // Check Prefix enum for transforming/read-only columns
+        if (HasExcludedPrefix(column))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool HasExcludedCcType(Column column)
+    {
+        if (column.ExtendedProperties == null || !column.ExtendedProperties.TryGetValue("ccType", out var ccType))
+        {
+            return false;
+        }
+
+        var ccTypeUpper = ccType.ToUpperInvariant();
+
+        return ccTypeUpper.Contains("SPT", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENO", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENT", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENM", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("SCB", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("CLC", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("BLG", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("AGG", StringComparison.Ordinal);
+    }
+
+    private static bool HasExcludedPrefix(Column column)
+    {
+        return column.Prefix == ColumnPrefix.SeparateUpdate ||
+               column.Prefix == ColumnPrefix.Calculated ||
+               column.Prefix == ColumnPrefix.BusinessLogic ||
+               column.Prefix == ColumnPrefix.Aggregate ||
+               column.Prefix == ColumnPrefix.OneWayEncryption ||
+               column.Prefix == ColumnPrefix.TwoWayEncryption;
     }
 
     private static IEnumerable<Column> GetUpdateColumnsInternal(Table table)
@@ -863,20 +998,20 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateCommandUsings(StringBuilder sb)
+    private static void GenerateCommandUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using MediatR;");
-        sb.AppendLine("using TargCC.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
         sb.AppendLine();
     }
 
-    private static void GenerateHandlerUsings(StringBuilder sb)
+    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using MediatR;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
-        sb.AppendLine("using TargCC.Application.Common.Models;");
-        sb.AppendLine("using TargCC.Domain.Entities;");
-        sb.AppendLine("using TargCC.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
         sb.AppendLine();
     }
 

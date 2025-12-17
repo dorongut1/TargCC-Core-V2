@@ -165,6 +165,7 @@ public interface ICommandGenerator
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
     /// <param name="commandType">The type of command to generate (Create, Update, Delete).</param>
+    /// <param name="rootNamespace">The root namespace for the project (e.g., "UpayCard.RiskManagement"). Defaults to "TargCC".</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains a
     /// <see cref="CommandGenerationResult"/> with all generated code components.
@@ -184,19 +185,20 @@ public interface ICommandGenerator
     ///     .WithColumn("Email", "nvarchar", maxLength: 100, isNullable: false)
     ///     .Build();
     ///
-    /// var result = await generator.GenerateAsync(table, CommandType.Create);
+    /// var result = await generator.GenerateAsync(table, CommandType.Create, "MyApp");
     ///
     /// await File.WriteAllTextAsync("CreateCustomerCommand.cs", result.CommandCode);
     /// await File.WriteAllTextAsync("CreateCustomerHandler.cs", result.HandlerCode);
     /// await File.WriteAllTextAsync("CreateCustomerValidator.cs", result.ValidatorCode);
     /// </code>
     /// </example>
-    Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType);
+    Task<CommandGenerationResult> GenerateAsync(Table table, CommandType commandType, string rootNamespace = "TargCC");
 
     /// <summary>
     /// Generates all standard commands for a table (Create, Update, Delete).
     /// </summary>
     /// <param name="table">The table metadata containing structure and constraints.</param>
+    /// <param name="rootNamespace">The root namespace for the project (e.g., "UpayCard.RiskManagement"). Defaults to "TargCC".</param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result contains
     /// a collection of <see cref="CommandGenerationResult"/> for all generated commands.
@@ -206,7 +208,7 @@ public interface ICommandGenerator
     /// </exception>
     /// <example>
     /// <code>
-    /// var results = await generator.GenerateAllAsync(customerTable);
+    /// var results = await generator.GenerateAllAsync(customerTable, "MyApp");
     /// // Returns results for CreateCustomerCommand, UpdateCustomerCommand, DeleteCustomerCommand
     ///
     /// foreach (var result in results)
@@ -217,7 +219,7 @@ public interface ICommandGenerator
     /// }
     /// </code>
     /// </example>
-    Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table);
+    Task<IEnumerable<CommandGenerationResult>> GenerateAllAsync(Table table, string rootNamespace = "TargCC");
 
     /// <summary>
     /// Gets the list of columns that should be included in a Create command.

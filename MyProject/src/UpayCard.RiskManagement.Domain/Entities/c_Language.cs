@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Language table.
-    /// Generated: 2025-12-15 13:53:26
+    /// Generated: 2025-12-17 20:20:27
     /// </summary>
     [Table("c_Language")]
     public partial class Language

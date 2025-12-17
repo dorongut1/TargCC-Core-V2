@@ -49,7 +49,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         // Act - Generate all components
         var repositoryInterface = await _repositoryInterfaceGenerator.GenerateAsync(table);
         var repository = await _repositoryGenerator.GenerateAsync(table);
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         var entityConfig = await _entityConfigurationGenerator.GenerateAsync(table);
 
         // Assert - All components generated
@@ -128,7 +128,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         var schema = CreateTestSchema();
 
         // Act
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
 
         // Assert - All tables in DbContext
         dbContext.Should().Contain("DbSet<Customer> Customers");
@@ -166,7 +166,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         // Act - Generate everything
         var repositoryInterface = await _repositoryInterfaceGenerator.GenerateAsync(customerTable);
         var repository = await _repositoryGenerator.GenerateAsync(customerTable);
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         var entityConfig = await _entityConfigurationGenerator.GenerateAsync(customerTable);
 
         // Assert - Repository has all methods
@@ -202,7 +202,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         
         await _repositoryInterfaceGenerator.GenerateAsync(table);
         await _repositoryGenerator.GenerateAsync(table);
-        await _dbContextGenerator.GenerateAsync(schema);
+        await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         await _entityConfigurationGenerator.GenerateAsync(table);
         
         stopwatch.Stop();
@@ -235,7 +235,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         // Act
         stopwatch.Start();
         
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         
         foreach (var table in schema.Tables)
         {
@@ -265,7 +265,7 @@ public class RepositoryIntegrationTests : IntegrationTestBase
         // Act
         var repositoryInterface = await _repositoryInterfaceGenerator.GenerateAsync(table);
         var repository = await _repositoryGenerator.GenerateAsync(table);
-        var dbContext = await _dbContextGenerator.GenerateAsync(schema);
+        var dbContext = await _dbContextGenerator.GenerateAsync(schema, "TestNamespace");
         var entityConfig = await _entityConfigurationGenerator.GenerateAsync(table);
 
         // Assert - All code includes necessary using statements

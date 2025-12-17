@@ -43,6 +43,9 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("        // MediatR");
         sb.AppendLine("        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));");
         sb.AppendLine();
+        sb.AppendLine("        // AutoMapper");
+        sb.AppendLine("        services.AddAutoMapper(Assembly.GetExecutingAssembly());");
+        sb.AppendLine();
         sb.AppendLine("        // FluentValidation (if used)");
         sb.AppendLine("        // services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());");
         sb.AppendLine();
@@ -65,9 +68,12 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("using System.Data;");
         sb.AppendLine("using Microsoft.Data.SqlClient;");
         sb.AppendLine("using Microsoft.Data.Sqlite;");
+        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Application.Common.Interfaces;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Domain.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure.Data;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {projectInfo.Namespace}.Infrastructure.Repositories;");
         sb.AppendLine();
 
@@ -107,6 +113,27 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("                return new SqlConnection(connectionString);");
         sb.AppendLine("            }");
         sb.AppendLine("        });");
+        sb.AppendLine();
+        sb.AppendLine("        // Register DbContext");
+        sb.AppendLine("        var connectionString = configuration.GetConnectionString(\"DefaultConnection\");");
+        sb.AppendLine("        ");
+        sb.AppendLine("        // Auto-detect database type and register DbContext accordingly");
+        sb.AppendLine("        if (connectionString?.Contains(\".db\", StringComparison.OrdinalIgnoreCase) == true ||");
+        sb.AppendLine("            connectionString?.Contains(\".sqlite\", StringComparison.OrdinalIgnoreCase) == true)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // SQLite");
+        sb.AppendLine("            services.AddDbContext<ApplicationDbContext>(options =>");
+        sb.AppendLine("                options.UseSqlite(connectionString));");
+        sb.AppendLine("        }");
+        sb.AppendLine("        else");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // SQL Server (default for production)");
+        sb.AppendLine("            services.AddDbContext<ApplicationDbContext>(options =>");
+        sb.AppendLine("                options.UseSqlServer(connectionString));");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        // Register IApplicationDbContext interface");
+        sb.AppendLine("        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());");
         sb.AppendLine();
         sb.AppendLine("        // Register repositories");
 

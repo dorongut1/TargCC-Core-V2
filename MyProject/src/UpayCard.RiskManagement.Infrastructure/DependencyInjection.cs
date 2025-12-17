@@ -2,9 +2,12 @@ using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UpayCard.RiskManagement.Application.Common.Interfaces;
 using UpayCard.RiskManagement.Domain.Interfaces;
+using UpayCard.RiskManagement.Infrastructure.Data;
 using UpayCard.RiskManagement.Infrastructure.Repositories;
 
 namespace UpayCard.RiskManagement.Infrastructure;
@@ -40,6 +43,27 @@ public static class DependencyInjection
                 return new SqlConnection(connectionString);
             }
         });
+
+        // Register DbContext
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        
+        // Auto-detect database type and register DbContext accordingly
+        if (connectionString?.Contains(".db", StringComparison.OrdinalIgnoreCase) == true ||
+            connectionString?.Contains(".sqlite", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            // SQLite
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlite(connectionString));
+        }
+        else
+        {
+            // SQL Server (default for production)
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+        }
+
+        // Register IApplicationDbContext interface
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         // Register repositories
         services.AddScoped<IReport2Repository, Report2Repository>();
@@ -233,33 +257,33 @@ public static class DependencyInjection
         services.AddScoped<ITransactionLoadAccountRepository, TransactionLoadAccountRepository>();
         services.AddScoped<IUITextRepository, UITextRepository>();
         services.AddScoped<IUserApprovalRepository, UserApprovalRepository>();
-        services.AddScoped<IVwCustomerCardStatusRepository, VwCustomerCardStatusRepository>();
-        services.AddScoped<IVwCustomerCardStatusDataRepository, VwCustomerCardStatusDataRepository>();
-        services.AddScoped<IVwCustomerSecurityStatusCheckRepository, VwCustomerSecurityStatusCheckRepository>();
-        services.AddScoped<IVwCustomerSecurityStatusCheckDataRepository, VwCustomerSecurityStatusCheckDataRepository>();
-        services.AddScoped<IVwOnlineCardTransactionRepository, VwOnlineCardTransactionRepository>();
-        services.AddScoped<IVwReportCardActivityRepository, VwReportCardActivityRepository>();
-        services.AddScoped<IVwReportCardActivityDataRepository, VwReportCardActivityDataRepository>();
-        services.AddScoped<IVwReportCustomerBankTransferRepository, VwReportCustomerBankTransferRepository>();
-        services.AddScoped<IVwReportCustomerBankTransferDataRepository, VwReportCustomerBankTransferDataRepository>();
-        services.AddScoped<IVwReportCustomerCreditCardTransactionsRepository, VwReportCustomerCreditCardTransactionsRepository>();
-        services.AddScoped<IVwReportCustomerCreditCardTransactionsDataRepository, VwReportCustomerCreditCardTransactionsDataRepository>();
-        services.AddScoped<IVwReportCustomerWalletBalanceRepository, VwReportCustomerWalletBalanceRepository>();
-        services.AddScoped<IVwReportCustomerWalletBalanceDataRepository, VwReportCustomerWalletBalanceDataRepository>();
-        services.AddScoped<IVwReportCustomerWalletBalanceForLawyerRepository, VwReportCustomerWalletBalanceForLawyerRepository>();
-        services.AddScoped<IVwReportCustomerWalletBalanceForLawyerDataRepository, VwReportCustomerWalletBalanceForLawyerDataRepository>();
-        services.AddScoped<IVwReportDistributorObligoBalanceRepository, VwReportDistributorObligoBalanceRepository>();
-        services.AddScoped<IVwReportDistributorObligoBalanceDataRepository, VwReportDistributorObligoBalanceDataRepository>();
-        services.AddScoped<IVwReportFromChangerRepository, VwReportFromChangerRepository>();
-        services.AddScoped<IVwReportFromChangerDataRepository, VwReportFromChangerDataRepository>();
-        services.AddScoped<IVwReportLoadTransferToDistributorRepository, VwReportLoadTransferToDistributorRepository>();
-        services.AddScoped<IVwReportLoadTransferToDistributorDataRepository, VwReportLoadTransferToDistributorDataRepository>();
-        services.AddScoped<IVwReportMonthlyCardFeeRepository, VwReportMonthlyCardFeeRepository>();
-        services.AddScoped<IVwReportMonthlyCardFeeDataRepository, VwReportMonthlyCardFeeDataRepository>();
-        services.AddScoped<IVwReportToChangerRepository, VwReportToChangerRepository>();
-        services.AddScoped<IVwReportToChangerDataRepository, VwReportToChangerDataRepository>();
-        services.AddScoped<IVwReportWalletTransferRepository, VwReportWalletTransferRepository>();
-        services.AddScoped<IVwReportWalletTransferDataRepository, VwReportWalletTransferDataRepository>();
+        services.AddScoped<IvwCustomerCardStatusRepository, vwCustomerCardStatusRepository>();
+        services.AddScoped<IvwCustomerCardStatusDataRepository, vwCustomerCardStatusDataRepository>();
+        services.AddScoped<IvwCustomerSecurityStatusCheckRepository, vwCustomerSecurityStatusCheckRepository>();
+        services.AddScoped<IvwCustomerSecurityStatusCheckDataRepository, vwCustomerSecurityStatusCheckDataRepository>();
+        services.AddScoped<IvwOnlineCardTransactionRepository, vwOnlineCardTransactionRepository>();
+        services.AddScoped<IvwReportCardActivityRepository, vwReportCardActivityRepository>();
+        services.AddScoped<IvwReportCardActivityDataRepository, vwReportCardActivityDataRepository>();
+        services.AddScoped<IvwReportCustomerBankTransferRepository, vwReportCustomerBankTransferRepository>();
+        services.AddScoped<IvwReportCustomerBankTransferDataRepository, vwReportCustomerBankTransferDataRepository>();
+        services.AddScoped<IvwReportCustomerCreditCardTransactionsRepository, vwReportCustomerCreditCardTransactionsRepository>();
+        services.AddScoped<IvwReportCustomerCreditCardTransactionsDataRepository, vwReportCustomerCreditCardTransactionsDataRepository>();
+        services.AddScoped<IvwReportCustomerWalletBalanceRepository, vwReportCustomerWalletBalanceRepository>();
+        services.AddScoped<IvwReportCustomerWalletBalanceDataRepository, vwReportCustomerWalletBalanceDataRepository>();
+        services.AddScoped<IvwReportCustomerWalletBalanceForLawyerRepository, vwReportCustomerWalletBalanceForLawyerRepository>();
+        services.AddScoped<IvwReportCustomerWalletBalanceForLawyerDataRepository, vwReportCustomerWalletBalanceForLawyerDataRepository>();
+        services.AddScoped<IvwReportDistributorObligoBalanceRepository, vwReportDistributorObligoBalanceRepository>();
+        services.AddScoped<IvwReportDistributorObligoBalanceDataRepository, vwReportDistributorObligoBalanceDataRepository>();
+        services.AddScoped<IvwReportFromChangerRepository, vwReportFromChangerRepository>();
+        services.AddScoped<IvwReportFromChangerDataRepository, vwReportFromChangerDataRepository>();
+        services.AddScoped<IvwReportLoadTransferToDistributorRepository, vwReportLoadTransferToDistributorRepository>();
+        services.AddScoped<IvwReportLoadTransferToDistributorDataRepository, vwReportLoadTransferToDistributorDataRepository>();
+        services.AddScoped<IvwReportMonthlyCardFeeRepository, vwReportMonthlyCardFeeRepository>();
+        services.AddScoped<IvwReportMonthlyCardFeeDataRepository, vwReportMonthlyCardFeeDataRepository>();
+        services.AddScoped<IvwReportToChangerRepository, vwReportToChangerRepository>();
+        services.AddScoped<IvwReportToChangerDataRepository, vwReportToChangerDataRepository>();
+        services.AddScoped<IvwReportWalletTransferRepository, vwReportWalletTransferRepository>();
+        services.AddScoped<IvwReportWalletTransferDataRepository, vwReportWalletTransferDataRepository>();
 
         return services;
     }

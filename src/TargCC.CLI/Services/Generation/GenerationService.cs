@@ -241,7 +241,8 @@ public class GenerationService : IGenerationService
     public async Task<GenerationResult> GenerateCqrsAsync(
         string connectionString,
         string tableName,
-        string outputDirectory)
+        string outputDirectory,
+        string @namespace = "TargCC")
     {
         var sw = Stopwatch.StartNew();
         var result = new GenerationResult();
@@ -302,7 +303,7 @@ public class GenerationService : IGenerationService
             // Generate Queries
             _output.Info("Generating CQRS queries...");
             var queryGenerator = new QueryGenerator(_loggerFactory.CreateLogger<QueryGenerator>());
-            var queryResults = await queryGenerator.GenerateAllAsync(table);
+            var queryResults = await queryGenerator.GenerateAllAsync(table, @namespace);
 
             var queriesDir = Path.Combine(outputDirectory, "Application", "Queries");
             Directory.CreateDirectory(queriesDir);

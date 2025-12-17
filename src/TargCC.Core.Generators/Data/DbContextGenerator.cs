@@ -55,9 +55,10 @@ public class DbContextGenerator : IDbContextGenerator
     }
 
     /// <inheritdoc/>
-    public async Task<string> GenerateAsync(DatabaseSchema schema)
+    public async Task<string> GenerateAsync(DatabaseSchema schema, string rootNamespace)
     {
         ArgumentNullException.ThrowIfNull(schema);
+        ArgumentException.ThrowIfNullOrEmpty(rootNamespace);
 
         if (schema.Tables == null || schema.Tables.Count == 0)
         {
@@ -72,21 +73,21 @@ public class DbContextGenerator : IDbContextGenerator
         GenerateFileHeader(sb, schema);
 
         // Add using statements
-        GenerateUsings(sb);
+        GenerateUsings(sb, rootNamespace);
 
         // Start namespace
-        sb.AppendLine("namespace TargCC.Infrastructure.Data;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Infrastructure.Data;");
         sb.AppendLine();
 
         // Add class documentation
         GenerateClassDocumentation(sb, schema);
 
-        // Start class
-        sb.AppendLine("public class ApplicationDbContext : DbContext");
+        // Start class - implement IApplicationDbContext
+        sb.AppendLine("public class ApplicationDbContext : DbContext, IApplicationDbContext");
         sb.AppendLine("{");
 
         // Generate DbSet properties
-        GenerateDbSets(sb, schema);
+        GenerateDbSets(sb, schema, rootNamespace);
 
         // Generate constructor
         GenerateConstructor(sb);
@@ -121,11 +122,12 @@ public class DbContextGenerator : IDbContextGenerator
     /// <summary>
     /// Generates using statements.
     /// </summary>
-    private static void GenerateUsings(StringBuilder sb)
+    private static void GenerateUsings(StringBuilder sb, string rootNamespace)
     {
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using Microsoft.EntityFrameworkCore;");
-        sb.AppendLine("using TargCC.Domain.Entities;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Interfaces;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine();
     }
 
@@ -154,10 +156,11 @@ public class DbContextGenerator : IDbContextGenerator
     /// <summary>
     /// Generates DbSet properties for all tables.
     /// </summary>
-    private static void GenerateDbSets(StringBuilder sb, DatabaseSchema schema)
+    private static void GenerateDbSets(StringBuilder sb, DatabaseSchema schema, string rootNamespace)
     {
         sb.AppendLine("    #region DbSets");
         sb.AppendLine();
+
         foreach (var table in schema.Tables.OrderBy(t => t.Name))
         {
             // Use PascalCase conversion for consistency with other generators
@@ -167,7 +170,16 @@ public class DbContextGenerator : IDbContextGenerator
             sb.AppendLine("    /// <summary>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Gets or sets the DbSet for {entityName} entities.");
             sb.AppendLine("    /// </summary>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    public DbSet<{entityName}> {dbSetName} {{ get; set; }} = null!;");
+
+            // Use fully qualified name for entities that conflict with System types
+            // This prevents ambiguous reference errors with System.Threading.Tasks.Task, System.Action, etc.
+            var entityTypeName = entityName switch
+            {
+                "Task" => $"global::{rootNamespace}.Domain.Entities.{entityName}",
+                _ => entityName
+            };
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public DbSet<{entityTypeName}> {dbSetName} {{ get; set; }} = null!;");
             sb.AppendLine();
         }
 

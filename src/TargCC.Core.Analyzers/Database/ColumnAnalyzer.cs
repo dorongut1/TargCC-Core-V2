@@ -584,6 +584,18 @@ namespace TargCC.Core.Analyzers.Database
         /// <param name="types">List of type identifiers.</param>
         private static void ApplyCcTypeSettings(Column column, List<string> types)
         {
+            if (types.Contains("eno"))
+            {
+                column.Prefix = ColumnPrefix.OneWayEncryption;
+                column.IsEncrypted = true;
+            }
+
+            if (types.Contains("ent"))
+            {
+                column.Prefix = ColumnPrefix.TwoWayEncryption;
+                column.IsEncrypted = true;
+            }
+
             if (types.Contains("blg"))
             {
                 column.Prefix = ColumnPrefix.BusinessLogic;

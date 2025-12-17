@@ -187,7 +187,10 @@ public static class CodeGenerationHelpers
     {
         return columnName.StartsWith("clc_", StringComparison.OrdinalIgnoreCase) ||
                columnName.StartsWith("blg_", StringComparison.OrdinalIgnoreCase) ||
-               columnName.StartsWith("agg_", StringComparison.OrdinalIgnoreCase);
+               columnName.StartsWith("agg_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("spt_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("upl_", StringComparison.OrdinalIgnoreCase) ||
+               columnName.StartsWith("spl_", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

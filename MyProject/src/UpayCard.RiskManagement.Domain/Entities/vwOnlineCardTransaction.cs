@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwOnlineCardTransaction table.
-    /// Generated: 2025-12-15 13:53:30
+    /// Generated: 2025-12-17 20:20:35
     /// </summary>
     [Table("vwOnlineCardTransaction")]
-    public partial class VwOnlineCardTransaction
+    public partial class vwOnlineCardTransaction
     {
         #region Properties
 
@@ -177,9 +177,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VwOnlineCardTransaction"/> class.
+        /// Initializes a new instance of the <see cref="vwOnlineCardTransaction"/> class.
         /// </summary>
-        public VwOnlineCardTransaction()
+        public vwOnlineCardTransaction()
         {
         }
 
@@ -188,19 +188,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this VwOnlineCardTransaction.
+        /// Returns a string representation of this vwOnlineCardTransaction.
         /// </summary>
         public override string ToString()
         {
-            return $"VwOnlineCardTransaction";
+            return $"vwOnlineCardTransaction";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this VwOnlineCardTransaction.
+        /// Creates a shallow copy of this vwOnlineCardTransaction.
         /// </summary>
-        public VwOnlineCardTransaction Clone()
+        public vwOnlineCardTransaction Clone()
         {
-            return new VwOnlineCardTransaction
+            return new vwOnlineCardTransaction
             {
                 ID = this.ID,
                 Cid = this.Cid,
@@ -232,11 +232,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this VwOnlineCardTransaction.
+        /// Determines whether the specified object is equal to this vwOnlineCardTransaction.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not VwOnlineCardTransaction other)
+            if (obj is not vwOnlineCardTransaction other)
                 return false;
 
 
