@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ccvwComboList_MCCBReceiver table.
-    /// Generated: 2025-12-17 08:03:52
+    /// Generated: 2025-12-17 08:16:14
     /// </summary>
     [Table("ccvwComboList_MCCBReceiver")]
     public partial class CcvwComboListMCCBReceiver

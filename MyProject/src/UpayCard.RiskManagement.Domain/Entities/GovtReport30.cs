@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for GovtReport30 table.
-    /// Generated: 2025-12-17 08:03:53
+    /// Generated: 2025-12-17 08:16:16
     /// </summary>
     [Table("GovtReport30")]
     public partial class GovtReport30

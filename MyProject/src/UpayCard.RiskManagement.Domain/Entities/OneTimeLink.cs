@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for OneTimeLink table.
-    /// Generated: 2025-12-17 08:03:54
+    /// Generated: 2025-12-17 08:16:17
     /// </summary>
     [Table("OneTimeLink")]
     public partial class OneTimeLink
