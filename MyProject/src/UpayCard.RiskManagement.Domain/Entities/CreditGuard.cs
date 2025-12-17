@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CreditGuard table.
-    /// Generated: 2025-12-17 08:49:58
+    /// Generated: 2025-12-17 08:54:24
     /// </summary>
     [Table("CreditGuard")]
     public partial class CreditGuard
