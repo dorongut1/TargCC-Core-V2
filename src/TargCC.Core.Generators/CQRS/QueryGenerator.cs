@@ -215,11 +215,13 @@ public class QueryGenerator : IQueryGenerator
         string rootNamespace)
     {
         var sb = new StringBuilder();
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Query");
         GenerateQueryUsings(sb, rootNamespace);
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{CodeGenerationHelpers.MakePlural(table.Name)}.Queries;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
 
         sb.AppendLine("/// <summary>");
@@ -235,8 +237,8 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateGetAllQueryRecord(Table table, string queryClassName, string dtoClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Query");
         GenerateQueryUsings(sb, rootNamespace);
@@ -299,7 +301,8 @@ public class QueryGenerator : IQueryGenerator
         _ = index; // Mark as intentionally unused - reserved for future use
 
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, table.Name, "Query");
         GenerateQueryUsings(sb, rootNamespace);
@@ -353,8 +356,9 @@ public class QueryGenerator : IQueryGenerator
         _ = pkType; // Mark as intentionally unused - reserved for future type-specific handling
 
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
 
         GenerateFileHeader(sb, table.Name, "Handler");
@@ -431,9 +435,8 @@ public class QueryGenerator : IQueryGenerator
         string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
-        var pluralNameCleaned = CodeGenerationHelpers.MakePlural(entityName);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         // Check if entity name conflicts with System types (e.g., Lookup, Task, etc.)
         string? entityAliasName = entityName switch
@@ -483,7 +486,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralNameCleaned}.AsQueryable();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralName}.AsQueryable();");
         sb.AppendLine();
         sb.AppendLine("            // Apply filters");
         sb.AppendLine("            query = ApplyFilters(query, request.Filters);");
@@ -584,8 +587,9 @@ public class QueryGenerator : IQueryGenerator
         string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
-        var repoInterfaceName = $"I{table.Name}Repository";
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
         var resultType = isUnique ? $"Result<{dtoClassName}?>" : $"Result<IEnumerable<{dtoClassName}>>";
 
@@ -671,7 +675,8 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateGetByIdValidator(Table table, string pkType, string queryClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkPropertyName = pkColumn.Name;
 
@@ -715,7 +720,8 @@ public class QueryGenerator : IQueryGenerator
     private static string GenerateGetAllValidator(Table table, string queryClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, "Multiple", "Validator");
         GenerateValidatorUsings(sb, rootNamespace, pluralName);
@@ -755,7 +761,8 @@ public class QueryGenerator : IQueryGenerator
         string rootNamespace)
     {
         var sb = new StringBuilder();
-        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
+        var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         GenerateFileHeader(sb, "Index", "Validator");
         GenerateValidatorUsings(sb, rootNamespace, pluralName);
