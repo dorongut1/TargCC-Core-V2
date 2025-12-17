@@ -229,6 +229,7 @@ public class ProjectFileGenerator : IProjectFileGenerator
             {
                 new() { Name = "Microsoft.EntityFrameworkCore", Version = "8.0.10" },
                 new() { Name = "Microsoft.EntityFrameworkCore.SqlServer", Version = "8.0.10" },
+                new() { Name = "Microsoft.EntityFrameworkCore.Sqlite", Version = "8.0.10" },
                 new() { Name = "Dapper", Version = "2.1.35" },
                 new() { Name = "Microsoft.Data.SqlClient", Version = "5.2.2" },
                 new() { Name = "Microsoft.Data.Sqlite", Version = "8.0.10" }

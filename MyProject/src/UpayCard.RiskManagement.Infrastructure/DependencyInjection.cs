@@ -2,9 +2,12 @@ using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UpayCard.RiskManagement.Application.Common.Interfaces;
 using UpayCard.RiskManagement.Domain.Interfaces;
+using UpayCard.RiskManagement.Infrastructure.Data;
 using UpayCard.RiskManagement.Infrastructure.Repositories;
 
 namespace UpayCard.RiskManagement.Infrastructure;
@@ -40,6 +43,27 @@ public static class DependencyInjection
                 return new SqlConnection(connectionString);
             }
         });
+
+        // Register DbContext
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // Auto-detect database type and register DbContext accordingly
+        if (connectionString?.Contains(".db", StringComparison.OrdinalIgnoreCase) == true ||
+            connectionString?.Contains(".sqlite", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            // SQLite
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlite(connectionString));
+        }
+        else
+        {
+            // SQL Server (default for production)
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+        }
+
+        // Register IApplicationDbContext interface
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         // Register repositories
         services.AddScoped<IReport2Repository, Report2Repository>();
