@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for UserApproval table.
-    /// Generated: 2025-12-17 21:20:42
+    /// Generated: 2025-12-17 21:32:16
     /// </summary>
     [Table("UserApproval")]
     public partial class UserApproval

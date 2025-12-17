@@ -1,0 +1,28 @@
+﻿{
+  "Hangfire": {
+    "ServerName": "UpayCard_RiskManagement_CCV2-Server",
+    "WorkerCount": 5,
+    "Queues": [
+      "default",
+      "critical",
+      "background"
+    ],
+    "Dashboard": {
+      "Enabled": true,
+      "Path": "/hangfire",
+      "RequireAuthentication": true
+    },
+    "Storage": {
+      "CommandBatchMaxTimeout": "00:05:00",
+      "SlidingInvisibilityTimeout": "00:05:00",
+      "QueuePollInterval": "00:00:00"
+    }
+  },
+  "TargCCJobs": {
+    "AutoDiscovery": true,
+    "LogToDatabase": true,
+    "AlertsEnabled": false,
+    "DefaultRetryAttempts": 3,
+    "DefaultQueue": "default"
+  }
+}
