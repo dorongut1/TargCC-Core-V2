@@ -840,21 +840,27 @@ public class CommandGenerator : ICommandGenerator
 
     private static bool ShouldExcludeFromCreate(Column column, string[] auditFields)
     {
+        // DEBUG LOGGING - תעזור לנו להבין מה קורה
+        System.Console.WriteLine($"[DEBUG] Checking column: '{column.Name}' | Prefix: {column.Prefix}");
+
         // Exclude identity columns
         if (column.IsIdentity)
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - IsIdentity");
             return true;
         }
 
         // Exclude audit fields
         if (auditFields.Contains(column.Name, StringComparer.OrdinalIgnoreCase))
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - AuditField");
             return true;
         }
 
         // Exclude read-only columns (clc_, blg_, agg_, spt_, upl_, spl_)
         if (CodeGenerationHelpers.IsReadOnlyColumn(column.Name))
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - IsReadOnlyColumn");
             return true;
         }
 
@@ -865,21 +871,25 @@ public class CommandGenerator : ICommandGenerator
             upperName.StartsWith("ENT", StringComparison.Ordinal) ||
             upperName.StartsWith("SPT", StringComparison.Ordinal))
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - StartsWith ENO/ENT/SPT");
             return true;
         }
 
         // Check ExtendedProperties for ccType metadata
         if (HasExcludedCcType(column))
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - HasExcludedCcType");
             return true;
         }
 
         // Check Prefix enum for transforming/read-only columns
         if (HasExcludedPrefix(column))
         {
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - HasExcludedPrefix");
             return true;
         }
 
+        System.Console.WriteLine($"[DEBUG] INCLUDED: {column.Name}");
         return false;
     }
 
