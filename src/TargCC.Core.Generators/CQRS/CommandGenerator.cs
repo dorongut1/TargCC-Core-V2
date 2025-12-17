@@ -74,6 +74,17 @@ public class CommandGenerator : ICommandGenerator
     {
         ArgumentNullException.ThrowIfNull(table);
 
+        // Skip Create command for views (read-only)
+        if (commandType == CommandType.Create && table.IsView)
+        {
+            return await Task.FromResult(new CommandGenerationResult
+            {
+                CommandCode = string.Empty,
+                HandlerCode = string.Empty,
+                ValidatorCode = string.Empty
+            });
+        }
+
         if (commandType != CommandType.Create && table.PrimaryKey == null)
         {
             throw new InvalidOperationException(
@@ -102,10 +113,13 @@ public class CommandGenerator : ICommandGenerator
 
         LogGeneratingAllCommands(_logger, table.Name, 3, null);
 
-        var results = new List<CommandGenerationResult>
+        var results = new List<CommandGenerationResult>();
+
+        // Skip Create command for views (read-only)
+        if (!table.IsView)
         {
-            GenerateCreateCommand(table, rootNamespace),
-        };
+            results.Add(GenerateCreateCommand(table, rootNamespace));
+        }
 
         if (table.PrimaryKey != null)
         {
@@ -275,6 +289,10 @@ public class CommandGenerator : ICommandGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+        if (pkColumn.IsNullable && pkType != "string")
+        {
+            pkType += "?";
+        }
 
         GenerateFileHeader(sb, table.Name, "Command");
         GenerateCommandUsings(sb, rootNamespace);
@@ -413,6 +431,10 @@ public class CommandGenerator : ICommandGenerator
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkPropName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
         var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
+        if (pkColumn.IsNullable && pkType != "string")
+        {
+            pkType += "?";
+        }
 
         GenerateFileHeader(sb, table.Name, "Handler");
         GenerateHandlerUsings(sb, rootNamespace);
@@ -452,7 +474,9 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityName}");
+        // Use fully qualified name for Task entity to avoid ambiguity with System.Threading.Tasks.Task
+        var entityNameForInstantiation = entityName == "Task" ? $"{rootNamespace}.Domain.Entities.Task" : entityName;
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityNameForInstantiation}");
         sb.AppendLine("            {");
 
         var createColumns = GetCreateColumnsInternal(table);
@@ -813,9 +837,36 @@ public class CommandGenerator : ICommandGenerator
         var auditFields = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
 
         return table.Columns.Where(c =>
-            !c.IsIdentity &&
-            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name) &&
-            !auditFields.Contains(c.Name, StringComparer.OrdinalIgnoreCase));
+        {
+            if (c.IsIdentity)
+            {
+                return false;
+            }
+
+            if (auditFields.Contains(c.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (CodeGenerationHelpers.IsReadOnlyColumn(c.Name))
+            {
+                return false;
+            }
+
+            // Check for columns with special prefixes that transform property names
+            // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
+            var prefix = ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
+            if (prefix == ColumnPrefix.SeparateUpdate ||
+                prefix == ColumnPrefix.Calculated ||
+                prefix == ColumnPrefix.BusinessLogic ||
+                prefix == ColumnPrefix.Aggregate ||
+                prefix == ColumnPrefix.SeparateChangedBy)
+            {
+                return false; // Exclude these - they transform property names or are read-only
+            }
+
+            return true;
+        });
     }
 
     private static IEnumerable<Column> GetUpdateColumnsInternal(Table table)
