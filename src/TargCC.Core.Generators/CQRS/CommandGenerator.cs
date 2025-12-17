@@ -408,6 +408,8 @@ public class CommandGenerator : ICommandGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(entityName);
         var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
+        var pkPropName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
 
         GenerateFileHeader(sb, table.Name, "Handler");
         GenerateHandlerUsings(sb, rootNamespace);
@@ -447,7 +449,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {table.Name}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityName}");
         sb.AppendLine("            {");
 
         var createColumns = GetCreateColumnsInternal(table);
@@ -485,9 +487,9 @@ public class CommandGenerator : ICommandGenerator
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"            await {repoFieldName}.AddAsync(entity, cancellationToken);");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.Id);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.{pkPropName});");
         sb.AppendLine();
-        sb.AppendLine("            return Result<int>.Success(entity.Id);");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<int>.Success(entity.{pkPropName});");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
@@ -804,9 +806,13 @@ public class CommandGenerator : ICommandGenerator
 
     private static IEnumerable<Column> GetCreateColumnsInternal(Table table)
     {
+        // Audit fields that are typically auto-generated or have private setters
+        var auditFields = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
+
         return table.Columns.Where(c =>
             !c.IsIdentity &&
-            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name));
+            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name) &&
+            !auditFields.Contains(c.Name, StringComparer.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<Column> GetUpdateColumnsInternal(Table table)
