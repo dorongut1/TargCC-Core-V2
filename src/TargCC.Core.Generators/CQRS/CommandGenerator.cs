@@ -476,8 +476,16 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine("        try");
         sb.AppendLine("        {");
 
-        // Use fully qualified name for Task entity to avoid ambiguity with System.Threading.Tasks.Task
-        var entityNameForInstantiation = entityName == "Task" ? $"{rootNamespace}.Domain.Entities.Task" : entityName;
+        // Determine entity name for instantiation:
+        // - Use fully qualified name for Task entity to avoid ambiguity with System.Threading.Tasks.Task
+        // - Use alias (EntityNameEntity) when there's a namespace collision (entityName == pluralName)
+        // - Otherwise use simple entity name
+        var entityNameForInstantiation = entityName switch
+        {
+            "Task" => $"{rootNamespace}.Domain.Entities.Task",
+            _ when entityAliasName != null => $"{entityName}Entity",
+            _ => entityName
+        };
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityNameForInstantiation}");
         sb.AppendLine("            {");
 
