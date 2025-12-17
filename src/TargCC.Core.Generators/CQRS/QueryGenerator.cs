@@ -169,7 +169,7 @@ public class QueryGenerator : IQueryGenerator
         {
             QueryCode = GenerateGetAllQueryRecord(table, queryClassName, dtoClassName, rootNamespace),
             HandlerCode = GenerateGetAllHandler(table, queryClassName, handlerClassName, dtoClassName, rootNamespace),
-            ValidatorCode = GenerateGetAllValidator(queryClassName, validatorClassName, pluralName, rootNamespace),
+            ValidatorCode = GenerateGetAllValidator(table, queryClassName, validatorClassName, rootNamespace),
             DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
@@ -186,7 +186,6 @@ public class QueryGenerator : IQueryGenerator
 
         // Use PascalCase conversion for consistency with other generators
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
-        var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         var queryClassName = $"Get{entityName}By{methodSuffix}Query";
         var handlerClassName = $"Get{entityName}By{methodSuffix}Handler";
@@ -197,7 +196,7 @@ public class QueryGenerator : IQueryGenerator
         {
             QueryCode = GenerateGetByIndexQueryRecord(table, index, indexColumns, queryClassName, dtoClassName, isUnique, rootNamespace),
             HandlerCode = GenerateGetByIndexHandler(table, indexColumns, queryClassName, handlerClassName, dtoClassName, isUnique, methodSuffix, rootNamespace),
-            ValidatorCode = GenerateGetByIndexValidator(indexColumns, queryClassName, validatorClassName, pluralName, rootNamespace),
+            ValidatorCode = GenerateGetByIndexValidator(table, indexColumns, queryClassName, validatorClassName, rootNamespace),
             DtoCode = GenerateDto(table, rootNamespace),
             QueryClassName = queryClassName,
             HandlerClassName = handlerClassName,
@@ -434,6 +433,7 @@ public class QueryGenerator : IQueryGenerator
         var sb = new StringBuilder();
         var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
+        var pluralNameCleaned = CodeGenerationHelpers.MakePlural(entityName);
 
         // Check if entity name conflicts with System types (e.g., Lookup, Task, etc.)
         string? entityAliasName = entityName switch
@@ -483,7 +483,7 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralName}.AsQueryable();");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            var query = _context.{pluralNameCleaned}.AsQueryable();");
         sb.AppendLine();
         sb.AppendLine("            // Apply filters");
         sb.AppendLine("            query = ApplyFilters(query, request.Filters);");
@@ -712,9 +712,10 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
-    private static string GenerateGetAllValidator(string queryClassName, string validatorClassName, string pluralName, string rootNamespace)
+    private static string GenerateGetAllValidator(Table table, string queryClassName, string validatorClassName, string rootNamespace)
     {
         var sb = new StringBuilder();
+        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
 
         GenerateFileHeader(sb, "Multiple", "Validator");
         GenerateValidatorUsings(sb, rootNamespace, pluralName);
@@ -747,13 +748,14 @@ public class QueryGenerator : IQueryGenerator
     }
 
     private static string GenerateGetByIndexValidator(
+        Table table,
         List<Column> indexColumns,
         string queryClassName,
         string validatorClassName,
-        string pluralName,
         string rootNamespace)
     {
         var sb = new StringBuilder();
+        var pluralName = CodeGenerationHelpers.MakePlural(table.Name);
 
         GenerateFileHeader(sb, "Index", "Validator");
         GenerateValidatorUsings(sb, rootNamespace, pluralName);
