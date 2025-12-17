@@ -70,6 +70,7 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sb.AppendLine("using Microsoft.Extensions.Logging;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.DTOs;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Features.{controllerName}.Queries;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Common;");
             sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
