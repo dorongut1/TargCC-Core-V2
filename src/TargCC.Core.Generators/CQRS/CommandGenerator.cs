@@ -854,6 +854,18 @@ public class CommandGenerator : ICommandGenerator
                 return false;
             }
 
+            // Exclude eno_ columns (one-way encryption) - they transform property names (e.g., "enoPassword" -> "PasswordHashed")
+            if (c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // Exclude spt_ columns (separate update) - they transform property names (e.g., "spt_Comment" -> "CommentSeparate")
+            if (c.Name.StartsWith("spt_", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             // Check for columns with special prefixes that transform property names or are read-only
             // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
             if (c.Prefix == ColumnPrefix.SeparateUpdate ||
