@@ -856,7 +856,7 @@ public class CommandGenerator : ICommandGenerator
 
             // Check for columns with special prefixes that transform property names
             // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
-            var prefix = Common.ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
+            var prefix = ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
 
             if (prefix == ColumnPrefix.SeparateUpdate ||
                 prefix == ColumnPrefix.Calculated ||
