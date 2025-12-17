@@ -135,9 +135,7 @@ public class CommandGenerator : ICommandGenerator
     {
         ArgumentNullException.ThrowIfNull(table);
 
-        return table.Columns.Where(c =>
-            !c.IsIdentity &&
-            !CodeGenerationHelpers.IsReadOnlyColumn(c.Name));
+        return GetCreateColumnsInternal(table);
     }
 
     /// <inheritdoc/>
