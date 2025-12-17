@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for sysdiagrams table.
-    /// Generated: 2025-12-16 18:22:31
+    /// Generated: 2025-12-16 21:06:07
     /// </summary>
     [Table("sysdiagrams")]
     public partial class Sysdiagrams

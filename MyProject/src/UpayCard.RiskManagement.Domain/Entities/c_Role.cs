@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Role table.
-    /// Generated: 2025-12-16 18:22:26
+    /// Generated: 2025-12-16 21:06:01
     /// </summary>
     [Table("c_Role")]
     public partial class Role
