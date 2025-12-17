@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCustomerWalletBalanceForLawyerData table.
-    /// Generated: 2025-12-17 14:36:08
+    /// Generated: 2025-12-17 14:47:47
     /// </summary>
     [Table("vwReportCustomerWalletBalanceForLawyerData")]
     public partial class VwReportCustomerWalletBalanceForLawyerData

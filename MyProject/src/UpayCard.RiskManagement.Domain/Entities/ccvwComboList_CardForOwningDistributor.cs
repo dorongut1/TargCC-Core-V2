@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ccvwComboList_CardForOwningDistributor table.
-    /// Generated: 2025-12-17 14:36:04
+    /// Generated: 2025-12-17 14:47:41
     /// </summary>
     [Table("ccvwComboList_CardForOwningDistributor")]
     public partial class CcvwComboListCardForOwningDistributor

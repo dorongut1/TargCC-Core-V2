@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Enumeration table.
-    /// Generated: 2025-12-17 14:36:02
+    /// Generated: 2025-12-17 14:47:39
     /// </summary>
     [Table("c_Enumeration")]
     public partial class Enumeration
