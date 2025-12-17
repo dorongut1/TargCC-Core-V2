@@ -918,7 +918,6 @@ public class CommandGenerator : ICommandGenerator
     private static bool HasExcludedPrefix(Column column)
     {
         return column.Prefix == ColumnPrefix.SeparateUpdate ||
-               column.Prefix == ColumnPrefix.SeparateChangedBy ||
                column.Prefix == ColumnPrefix.Calculated ||
                column.Prefix == ColumnPrefix.BusinessLogic ||
                column.Prefix == ColumnPrefix.Aggregate ||
