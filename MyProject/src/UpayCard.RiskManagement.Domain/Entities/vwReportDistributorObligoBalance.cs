@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportDistributorObligoBalance table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:18
     /// </summary>
     [Table("vwReportDistributorObligoBalance")]
-    public partial class vwReportDistributorObligoBalance
+    public partial class VwReportDistributorObligoBalance
     {
         #region Properties
 
@@ -53,9 +53,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportDistributorObligoBalance"/> class.
+        /// Initializes a new instance of the <see cref="VwReportDistributorObligoBalance"/> class.
         /// </summary>
-        public vwReportDistributorObligoBalance()
+        public VwReportDistributorObligoBalance()
         {
         }
 
@@ -64,19 +64,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportDistributorObligoBalance.
+        /// Returns a string representation of this VwReportDistributorObligoBalance.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportDistributorObligoBalance";
+            return $"VwReportDistributorObligoBalance";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportDistributorObligoBalance.
+        /// Creates a shallow copy of this VwReportDistributorObligoBalance.
         /// </summary>
-        public vwReportDistributorObligoBalance Clone()
+        public VwReportDistributorObligoBalance Clone()
         {
-            return new vwReportDistributorObligoBalance
+            return new VwReportDistributorObligoBalance
             {
                 ID = this.ID,
                 DistributorID = this.DistributorID,
@@ -87,11 +87,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportDistributorObligoBalance.
+        /// Determines whether the specified object is equal to this VwReportDistributorObligoBalance.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportDistributorObligoBalance other)
+            if (obj is not VwReportDistributorObligoBalance other)
                 return false;
 
 

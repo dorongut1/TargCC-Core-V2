@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for MCCBFPPaymentCard table.
-    /// Generated: 2025-12-17 20:20:34
+    /// Generated: 2025-12-17 21:11:16
     /// </summary>
     [Table("MCCBFPPaymentCard")]
     public partial class MCCBFPPaymentCard

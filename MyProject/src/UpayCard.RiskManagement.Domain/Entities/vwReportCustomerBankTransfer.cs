@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCustomerBankTransfer table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:17
     /// </summary>
     [Table("vwReportCustomerBankTransfer")]
-    public partial class vwReportCustomerBankTransfer
+    public partial class VwReportCustomerBankTransfer
     {
         #region Properties
 
@@ -113,9 +113,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportCustomerBankTransfer"/> class.
+        /// Initializes a new instance of the <see cref="VwReportCustomerBankTransfer"/> class.
         /// </summary>
-        public vwReportCustomerBankTransfer()
+        public VwReportCustomerBankTransfer()
         {
         }
 
@@ -124,19 +124,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportCustomerBankTransfer.
+        /// Returns a string representation of this VwReportCustomerBankTransfer.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportCustomerBankTransfer";
+            return $"VwReportCustomerBankTransfer";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportCustomerBankTransfer.
+        /// Creates a shallow copy of this VwReportCustomerBankTransfer.
         /// </summary>
-        public vwReportCustomerBankTransfer Clone()
+        public VwReportCustomerBankTransfer Clone()
         {
-            return new vwReportCustomerBankTransfer
+            return new VwReportCustomerBankTransfer
             {
                 ID = this.ID,
                 CustomerWalletID = this.CustomerWalletID,
@@ -156,11 +156,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportCustomerBankTransfer.
+        /// Determines whether the specified object is equal to this VwReportCustomerBankTransfer.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportCustomerBankTransfer other)
+            if (obj is not VwReportCustomerBankTransfer other)
                 return false;
 
 

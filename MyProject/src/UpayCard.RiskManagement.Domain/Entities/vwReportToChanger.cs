@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportToChanger table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:18
     /// </summary>
     [Table("vwReportToChanger")]
-    public partial class vwReportToChanger
+    public partial class VwReportToChanger
     {
         #region Properties
 
@@ -116,9 +116,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportToChanger"/> class.
+        /// Initializes a new instance of the <see cref="VwReportToChanger"/> class.
         /// </summary>
-        public vwReportToChanger()
+        public VwReportToChanger()
         {
         }
 
@@ -127,19 +127,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportToChanger.
+        /// Returns a string representation of this VwReportToChanger.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportToChanger";
+            return $"VwReportToChanger";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportToChanger.
+        /// Creates a shallow copy of this VwReportToChanger.
         /// </summary>
-        public vwReportToChanger Clone()
+        public VwReportToChanger Clone()
         {
-            return new vwReportToChanger
+            return new VwReportToChanger
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -159,11 +159,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportToChanger.
+        /// Determines whether the specified object is equal to this VwReportToChanger.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportToChanger other)
+            if (obj is not VwReportToChanger other)
                 return false;
 
 

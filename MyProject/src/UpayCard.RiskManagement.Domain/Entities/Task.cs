@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for Task table.
-    /// Generated: 2025-12-17 20:20:35
+    /// Generated: 2025-12-17 21:11:17
     /// </summary>
     [Table("Task")]
     public partial class Task

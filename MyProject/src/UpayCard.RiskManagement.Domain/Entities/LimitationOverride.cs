@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for LimitationOverride table.
-    /// Generated: 2025-12-17 20:20:34
+    /// Generated: 2025-12-17 21:11:16
     /// </summary>
     [Table("LimitationOverride")]
     public partial class LimitationOverride

@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCardActivity table.
-    /// Generated: 2025-12-17 20:20:35
+    /// Generated: 2025-12-17 21:11:17
     /// </summary>
     [Table("vwReportCardActivity")]
-    public partial class vwReportCardActivity
+    public partial class VwReportCardActivity
     {
         #region Properties
 
@@ -131,9 +131,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportCardActivity"/> class.
+        /// Initializes a new instance of the <see cref="VwReportCardActivity"/> class.
         /// </summary>
-        public vwReportCardActivity()
+        public VwReportCardActivity()
         {
         }
 
@@ -142,19 +142,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportCardActivity.
+        /// Returns a string representation of this VwReportCardActivity.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportCardActivity";
+            return $"VwReportCardActivity";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportCardActivity.
+        /// Creates a shallow copy of this VwReportCardActivity.
         /// </summary>
-        public vwReportCardActivity Clone()
+        public VwReportCardActivity Clone()
         {
-            return new vwReportCardActivity
+            return new VwReportCardActivity
             {
                 ID = this.ID,
                 CardID = this.CardID,
@@ -177,11 +177,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportCardActivity.
+        /// Determines whether the specified object is equal to this VwReportCardActivity.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportCardActivity other)
+            if (obj is not VwReportCardActivity other)
                 return false;
 
 

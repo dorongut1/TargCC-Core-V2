@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwCustomerCardStatus table.
-    /// Generated: 2025-12-17 20:20:35
+    /// Generated: 2025-12-17 21:11:17
     /// </summary>
     [Table("vwCustomerCardStatus")]
-    public partial class vwCustomerCardStatus
+    public partial class VwCustomerCardStatus
     {
         #region Properties
 
@@ -78,9 +78,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwCustomerCardStatus"/> class.
+        /// Initializes a new instance of the <see cref="VwCustomerCardStatus"/> class.
         /// </summary>
-        public vwCustomerCardStatus()
+        public VwCustomerCardStatus()
         {
         }
 
@@ -89,19 +89,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwCustomerCardStatus.
+        /// Returns a string representation of this VwCustomerCardStatus.
         /// </summary>
         public override string ToString()
         {
-            return $"vwCustomerCardStatus";
+            return $"VwCustomerCardStatus";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwCustomerCardStatus.
+        /// Creates a shallow copy of this VwCustomerCardStatus.
         /// </summary>
-        public vwCustomerCardStatus Clone()
+        public VwCustomerCardStatus Clone()
         {
-            return new vwCustomerCardStatus
+            return new VwCustomerCardStatus
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -116,11 +116,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwCustomerCardStatus.
+        /// Determines whether the specified object is equal to this VwCustomerCardStatus.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwCustomerCardStatus other)
+            if (obj is not VwCustomerCardStatus other)
                 return false;
 
 

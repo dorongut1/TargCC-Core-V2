@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportFromChangerData table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:18
     /// </summary>
     [Table("vwReportFromChangerData")]
-    public partial class vwReportFromChangerData
+    public partial class VwReportFromChangerData
     {
         #region Properties
 
@@ -122,9 +122,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportFromChangerData"/> class.
+        /// Initializes a new instance of the <see cref="VwReportFromChangerData"/> class.
         /// </summary>
-        public vwReportFromChangerData()
+        public VwReportFromChangerData()
         {
         }
 
@@ -133,19 +133,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportFromChangerData.
+        /// Returns a string representation of this VwReportFromChangerData.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportFromChangerData";
+            return $"VwReportFromChangerData";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportFromChangerData.
+        /// Creates a shallow copy of this VwReportFromChangerData.
         /// </summary>
-        public vwReportFromChangerData Clone()
+        public VwReportFromChangerData Clone()
         {
-            return new vwReportFromChangerData
+            return new VwReportFromChangerData
             {
                 ID = this.ID,
                 CustomerID = this.CustomerID,
@@ -165,11 +165,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportFromChangerData.
+        /// Determines whether the specified object is equal to this VwReportFromChangerData.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportFromChangerData other)
+            if (obj is not VwReportFromChangerData other)
                 return false;
 
 

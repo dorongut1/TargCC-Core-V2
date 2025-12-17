@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportCustomerCreditCardTransactions table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:17
     /// </summary>
     [Table("vwReportCustomerCreditCardTransactions")]
-    public partial class vwReportCustomerCreditCardTransactions
+    public partial class VwReportCustomerCreditCardTransactions
     {
         #region Properties
 
@@ -116,9 +116,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportCustomerCreditCardTransactions"/> class.
+        /// Initializes a new instance of the <see cref="VwReportCustomerCreditCardTransactions"/> class.
         /// </summary>
-        public vwReportCustomerCreditCardTransactions()
+        public VwReportCustomerCreditCardTransactions()
         {
         }
 
@@ -127,19 +127,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportCustomerCreditCardTransactions.
+        /// Returns a string representation of this VwReportCustomerCreditCardTransactions.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportCustomerCreditCardTransactions";
+            return $"VwReportCustomerCreditCardTransactions";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportCustomerCreditCardTransactions.
+        /// Creates a shallow copy of this VwReportCustomerCreditCardTransactions.
         /// </summary>
-        public vwReportCustomerCreditCardTransactions Clone()
+        public VwReportCustomerCreditCardTransactions Clone()
         {
-            return new vwReportCustomerCreditCardTransactions
+            return new VwReportCustomerCreditCardTransactions
             {
                 ID = this.ID,
                 TransactionCreditCardID = this.TransactionCreditCardID,
@@ -160,11 +160,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportCustomerCreditCardTransactions.
+        /// Determines whether the specified object is equal to this VwReportCustomerCreditCardTransactions.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportCustomerCreditCardTransactions other)
+            if (obj is not VwReportCustomerCreditCardTransactions other)
                 return false;
 
 

@@ -14,10 +14,10 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwReportLoadTransferToDistributor table.
-    /// Generated: 2025-12-17 20:20:36
+    /// Generated: 2025-12-17 21:11:18
     /// </summary>
     [Table("vwReportLoadTransferToDistributor")]
-    public partial class vwReportLoadTransferToDistributor
+    public partial class VwReportLoadTransferToDistributor
     {
         #region Properties
 
@@ -112,9 +112,9 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="vwReportLoadTransferToDistributor"/> class.
+        /// Initializes a new instance of the <see cref="VwReportLoadTransferToDistributor"/> class.
         /// </summary>
-        public vwReportLoadTransferToDistributor()
+        public VwReportLoadTransferToDistributor()
         {
         }
 
@@ -123,19 +123,19 @@ namespace UpayCard.RiskManagement.Domain.Entities
         #region Methods
 
         /// <summary>
-        /// Returns a string representation of this vwReportLoadTransferToDistributor.
+        /// Returns a string representation of this VwReportLoadTransferToDistributor.
         /// </summary>
         public override string ToString()
         {
-            return $"vwReportLoadTransferToDistributor";
+            return $"VwReportLoadTransferToDistributor";
         }
 
         /// <summary>
-        /// Creates a shallow copy of this vwReportLoadTransferToDistributor.
+        /// Creates a shallow copy of this VwReportLoadTransferToDistributor.
         /// </summary>
-        public vwReportLoadTransferToDistributor Clone()
+        public VwReportLoadTransferToDistributor Clone()
         {
-            return new vwReportLoadTransferToDistributor
+            return new VwReportLoadTransferToDistributor
             {
                 ID = this.ID,
                 TransactionLoadID = this.TransactionLoadID,
@@ -157,11 +157,11 @@ namespace UpayCard.RiskManagement.Domain.Entities
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this vwReportLoadTransferToDistributor.
+        /// Determines whether the specified object is equal to this VwReportLoadTransferToDistributor.
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is not vwReportLoadTransferToDistributor other)
+            if (obj is not VwReportLoadTransferToDistributor other)
                 return false;
 
 
