@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for Country table.
-    /// Generated: 2025-12-17 08:54:24
+    /// Generated: 2025-12-17 09:02:39
     /// </summary>
     [Table("Country")]
     public partial class Country

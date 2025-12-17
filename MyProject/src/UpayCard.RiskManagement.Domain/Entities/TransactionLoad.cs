@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for TransactionLoad table.
-    /// Generated: 2025-12-17 08:54:26
+    /// Generated: 2025-12-17 09:02:41
     /// </summary>
     [Table("TransactionLoad")]
     public partial class TransactionLoad
