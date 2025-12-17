@@ -273,6 +273,8 @@ public class CommandGenerator : ICommandGenerator
         var sb = new StringBuilder();
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
         var pluralName = CodeGenerationHelpers.MakePlural(entityName);
+        var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
+        var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Command");
         GenerateCommandUsings(sb, rootNamespace);
@@ -284,7 +286,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// Command to create a new {table.Name}.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {commandClassName} : IRequest<Result<int>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public record {commandClassName} : IRequest<Result<{pkType}>>");
         sb.AppendLine("{");
 
         var createColumns = GetCreateColumnsInternal(table);
