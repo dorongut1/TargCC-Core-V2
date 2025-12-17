@@ -858,9 +858,12 @@ public class CommandGenerator : ICommandGenerator
             return true;
         }
 
-        // Exclude columns with prefixes in their names
-        if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
-            column.Name.StartsWith("spt_", StringComparison.OrdinalIgnoreCase))
+        // Exclude columns with prefixes in their names (both with and without underscore)
+        // Historic support: some columns use "enoPassword" instead of "eno_Password"
+        var upperName = column.Name.ToUpperInvariant();
+        if (upperName.StartsWith("ENO", StringComparison.Ordinal) ||
+            upperName.StartsWith("ENT", StringComparison.Ordinal) ||
+            upperName.StartsWith("SPT", StringComparison.Ordinal))
         {
             return true;
         }
@@ -891,6 +894,7 @@ public class CommandGenerator : ICommandGenerator
 
         return ccTypeUpper.Contains("SPT", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("ENO", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENT", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("CLC", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("BLG", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("AGG", StringComparison.Ordinal);
@@ -902,7 +906,8 @@ public class CommandGenerator : ICommandGenerator
                column.Prefix == ColumnPrefix.Calculated ||
                column.Prefix == ColumnPrefix.BusinessLogic ||
                column.Prefix == ColumnPrefix.Aggregate ||
-               column.Prefix == ColumnPrefix.OneWayEncryption;
+               column.Prefix == ColumnPrefix.OneWayEncryption ||
+               column.Prefix == ColumnPrefix.TwoWayEncryption;
     }
 
     private static IEnumerable<Column> GetUpdateColumnsInternal(Table table)
