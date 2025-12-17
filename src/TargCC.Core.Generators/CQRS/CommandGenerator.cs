@@ -854,14 +854,12 @@ public class CommandGenerator : ICommandGenerator
                 return false;
             }
 
-            // Check for columns with special prefixes that transform property names
+            // Check for columns with special prefixes that transform property names or are read-only
             // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
-            var prefix = ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
-
-            if (prefix == ColumnPrefix.SeparateUpdate ||
-                prefix == ColumnPrefix.Calculated ||
-                prefix == ColumnPrefix.BusinessLogic ||
-                prefix == ColumnPrefix.Aggregate)
+            if (c.Prefix == ColumnPrefix.SeparateUpdate ||
+                c.Prefix == ColumnPrefix.Calculated ||
+                c.Prefix == ColumnPrefix.BusinessLogic ||
+                c.Prefix == ColumnPrefix.Aggregate)
             {
                 return false; // Exclude these - they transform property names or are read-only
             }
