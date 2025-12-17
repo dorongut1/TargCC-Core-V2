@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Mail table.
-    /// Generated: 2025-12-17 13:12:56
+    /// Generated: 2025-12-17 14:08:21
     /// </summary>
     [Table("c_Mail")]
     public partial class Mail

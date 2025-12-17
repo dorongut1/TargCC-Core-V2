@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ccvwComboList_c_ObjectToTranslate table.
-    /// Generated: 2025-12-17 13:12:57
+    /// Generated: 2025-12-17 14:08:22
     /// </summary>
     [Table("ccvwComboList_c_ObjectToTranslate")]
     public partial class CcvwComboListCObjectToTranslate

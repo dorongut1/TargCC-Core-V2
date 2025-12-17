@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for DistributorBranch table.
-    /// Generated: 2025-12-17 13:13:00
+    /// Generated: 2025-12-17 14:08:25
     /// </summary>
     [Table("DistributorBranch")]
     public partial class DistributorBranch
