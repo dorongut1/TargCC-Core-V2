@@ -866,12 +866,15 @@ public class CommandGenerator : ICommandGenerator
 
         // Exclude columns with prefixes in their names (both with and without underscore)
         // Historic support: some columns use "enoPassword" instead of "eno_Password"
+        // ENM = Enumeration, SCB = ?, SPT = Separate Update, ENO = One-Way Encryption, ENT = Two-Way Encryption
         var upperName = column.Name.ToUpperInvariant();
         if (upperName.StartsWith("ENO", StringComparison.Ordinal) ||
             upperName.StartsWith("ENT", StringComparison.Ordinal) ||
-            upperName.StartsWith("SPT", StringComparison.Ordinal))
+            upperName.StartsWith("SPT", StringComparison.Ordinal) ||
+            upperName.StartsWith("ENM", StringComparison.Ordinal) ||
+            upperName.StartsWith("SCB", StringComparison.Ordinal))
         {
-            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - StartsWith ENO/ENT/SPT");
+            System.Console.WriteLine($"[DEBUG] EXCLUDED: {column.Name} - StartsWith ENO/ENT/SPT/ENM/SCB");
             return true;
         }
 
@@ -905,6 +908,8 @@ public class CommandGenerator : ICommandGenerator
         return ccTypeUpper.Contains("SPT", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("ENO", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("ENT", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENM", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("SCB", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("CLC", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("BLG", StringComparison.Ordinal) ||
                ccTypeUpper.Contains("AGG", StringComparison.Ordinal);
@@ -913,6 +918,7 @@ public class CommandGenerator : ICommandGenerator
     private static bool HasExcludedPrefix(Column column)
     {
         return column.Prefix == ColumnPrefix.SeparateUpdate ||
+               column.Prefix == ColumnPrefix.SeparateChangedBy ||
                column.Prefix == ColumnPrefix.Calculated ||
                column.Prefix == ColumnPrefix.BusinessLogic ||
                column.Prefix == ColumnPrefix.Aggregate ||
