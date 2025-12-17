@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for TransactionBit table.
-    /// Generated: 2025-12-17 08:24:04
+    /// Generated: 2025-12-17 08:50:01
     /// </summary>
     [Table("TransactionBit")]
     public partial class TransactionBit
