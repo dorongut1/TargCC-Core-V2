@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for UIText table.
-    /// Generated: 2025-12-16 21:06:07
+    /// Generated: 2025-12-17 07:22:12
     /// </summary>
     [Table("UIText")]
     public partial class UIText

@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for RiskRuleOverride table.
-    /// Generated: 2025-12-16 21:06:07
+    /// Generated: 2025-12-17 07:22:12
     /// </summary>
     [Table("RiskRuleOverride")]
     public partial class RiskRuleOverride
