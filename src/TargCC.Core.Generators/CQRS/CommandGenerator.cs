@@ -474,6 +474,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+
         // Use fully qualified name for Task entity to avoid ambiguity with System.Threading.Tasks.Task
         var entityNameForInstantiation = entityName == "Task" ? $"{rootNamespace}.Domain.Entities.Task" : entityName;
         sb.AppendLine(CultureInfo.InvariantCulture, $"            var entity = new {entityNameForInstantiation}");
@@ -855,12 +856,12 @@ public class CommandGenerator : ICommandGenerator
 
             // Check for columns with special prefixes that transform property names
             // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
-            var prefix = ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
+            var prefix = Common.ColumnPrefixDetector.DeterminePrefix(c.Name, c.ExtendedProperties);
+
             if (prefix == ColumnPrefix.SeparateUpdate ||
                 prefix == ColumnPrefix.Calculated ||
                 prefix == ColumnPrefix.BusinessLogic ||
-                prefix == ColumnPrefix.Aggregate ||
-                prefix == ColumnPrefix.SeparateChangedBy)
+                prefix == ColumnPrefix.Aggregate)
             {
                 return false; // Exclude these - they transform property names or are read-only
             }
