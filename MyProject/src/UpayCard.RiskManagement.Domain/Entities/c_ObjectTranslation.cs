@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_ObjectTranslation table.
-    /// Generated: 2025-12-17 12:56:53
+    /// Generated: 2025-12-17 13:12:56
     /// </summary>
     [Table("c_ObjectTranslation")]
     public partial class ObjectTranslation
