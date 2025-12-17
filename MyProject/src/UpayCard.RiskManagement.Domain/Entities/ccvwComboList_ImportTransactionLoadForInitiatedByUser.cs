@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ccvwComboList_ImportTransactionLoadForInitiatedByUser table.
-    /// Generated: 2025-12-17 21:32:13
+    /// Generated: 2025-12-17 21:37:02
     /// </summary>
     [Table("ccvwComboList_ImportTransactionLoadForInitiatedByUser")]
     public partial class CcvwComboListImportTransactionLoadForInitiatedByUser
