@@ -410,6 +410,7 @@ public class CommandGenerator : ICommandGenerator
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
         var pkPropName = CodeGenerationHelpers.SanitizeColumnName(pkColumn.Name);
+        var pkType = CodeGenerationHelpers.GetCSharpType(pkColumn.DataType);
 
         GenerateFileHeader(sb, table.Name, "Handler");
         GenerateHandlerUsings(sb, rootNamespace);
@@ -421,7 +422,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// Handles the {commandClassName} request.");
         sb.AppendLine("/// </summary>");
 
-        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{commandClassName}, Result<int>>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"public class {handlerClassName} : IRequestHandler<{commandClassName}, Result<{pkType}>>");
         sb.AppendLine("{");
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"    private readonly {repoInterfaceName} {repoFieldName};");
@@ -441,7 +442,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
 
         sb.AppendLine("    /// <inheritdoc/>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<int>> Handle({commandClassName} request, CancellationToken cancellationToken)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"    public async Task<Result<{pkType}>> Handle({commandClassName} request, CancellationToken cancellationToken)");
         sb.AppendLine("    {");
         sb.AppendLine("        ArgumentNullException.ThrowIfNull(request);");
         sb.AppendLine();
@@ -489,7 +490,7 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _logger.LogInformation(\"{table.Name} created successfully with ID: {{Id}}\", entity.{pkPropName});");
         sb.AppendLine();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<int>.Success(entity.{pkPropName});");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"            return Result<{pkType}>.Success(entity.{pkPropName});");
         sb.AppendLine("        }");
         sb.AppendLine("        catch (Exception ex)");
         sb.AppendLine("        {");
