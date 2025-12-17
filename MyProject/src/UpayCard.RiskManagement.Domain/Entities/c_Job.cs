@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Job table.
-    /// Generated: 2025-12-17 21:36:59
+    /// Generated: 2025-12-17 21:45:20
     /// </summary>
     [Table("c_Job")]
     public partial class Job
