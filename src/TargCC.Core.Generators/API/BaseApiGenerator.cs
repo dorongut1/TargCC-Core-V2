@@ -79,12 +79,12 @@ namespace TargCC.Core.Generators.API
                 tableName = tableName.Substring(2);
             }
 
-            // Preserve lowercase "vw" prefix for views (e.g., vwReportData should remain vwReportData, not VwReportData)
+            // Normalize "vw" prefix for views to "Vw" for consistency (e.g., vwReportData -> VwReportData)
             if (tableName.StartsWith("vw", StringComparison.Ordinal) && tableName.Length > 2 && char.IsUpper(tableName[2]))
             {
                 // Table starts with lowercase "vw" followed by uppercase letter (e.g., vwReportData)
-                // Keep the vw lowercase and convert the rest
-                return "vw" + ToPascalCase(tableName.Substring(2));
+                // Normalize to "Vw" to avoid case-sensitivity issues on Linux filesystems
+                return "Vw" + ToPascalCase(tableName.Substring(2));
             }
 
             // Convert to PascalCase

@@ -201,7 +201,8 @@ public static class CodeGenerationHelpers
     /// Simple pluralization rules:
     /// - Words ending in 'z' → double z and add 'es' (e.g., Quiz → Quizzes)
     /// - Words ending in 'y' → replace with 'ies' (e.g., Category → Categories)
-    /// - Words ending in 's', 'x', 'ch', 'sh' → add 'es' (e.g., Address → Addresses)
+    /// - Words ending in 'ss', 'x', 'ch', 'sh' → add 'es' (e.g., Address → Addresses)
+    /// - Words already plural (ending in 's') → return as-is (e.g., ActiveRestrictions → ActiveRestrictions)
     /// - Default → add 's' (e.g., Customer → Customers).
     /// </remarks>
     /// <returns>MakePlural.</returns>
@@ -216,12 +217,21 @@ public static class CodeGenerationHelpers
             return singular + "zes";
         }
 
-        if (singular.EndsWith('s') ||
+        // Handle words ending in 'ss', 'x', 'ch', 'sh' - these need 'es'
+        if (singular.EndsWith("ss", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith('x') ||
             singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
             singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
         {
             return singular + "es";
+        }
+
+        // If word already ends in 's' (but not 'ss' which was handled above),
+        // it's likely already plural (e.g., ActiveRestrictions, AlertMessages)
+        // Return as-is to avoid double pluralization
+        if (singular.EndsWith('s'))
+        {
+            return singular;
         }
 
         if (singular.EndsWith('y') &&
