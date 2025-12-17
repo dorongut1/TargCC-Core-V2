@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for vwCustomerCardStatus table.
-    /// Generated: 2025-12-17 21:45:25
+    /// Generated: 2025-12-17 21:49:15
     /// </summary>
     [Table("vwCustomerCardStatus")]
     public partial class VwCustomerCardStatus
