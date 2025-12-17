@@ -1014,13 +1014,20 @@ public class CommandGenerator : ICommandGenerator
         sb.AppendLine();
     }
 
-    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace)
+    private static void GenerateHandlerUsings(StringBuilder sb, string rootNamespace, string? entityAliasName = null)
     {
         sb.AppendLine("using MediatR;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Application.Common.Models;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Entities;");
         sb.AppendLine(CultureInfo.InvariantCulture, $"using {rootNamespace}.Domain.Interfaces;");
+
+        // Add alias for entity names that conflict with namespace (e.g., when entityName == pluralName)
+        if (!string.IsNullOrEmpty(entityAliasName))
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"using {entityAliasName}Entity = {rootNamespace}.Domain.Entities.{entityAliasName};");
+        }
+
         sb.AppendLine();
     }
 
