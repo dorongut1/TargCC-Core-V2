@@ -864,12 +864,25 @@ public class CommandGenerator : ICommandGenerator
                 return false;
             }
 
+            // Check ExtendedProperties for ccType to catch columns with metadata-based prefixes
+            if (c.ExtendedProperties != null && c.ExtendedProperties.TryGetValue("ccType", out var ccType))
+            {
+                var ccTypeUpper = ccType.ToUpperInvariant();
+                if (ccTypeUpper.Contains("SPT") || ccTypeUpper.Contains("ENO") ||
+                    ccTypeUpper.Contains("CLC") || ccTypeUpper.Contains("BLG") ||
+                    ccTypeUpper.Contains("AGG"))
+                {
+                    return false; // Exclude columns with transforming or read-only ccType
+                }
+            }
+
             // Check for columns with special prefixes that transform property names or are read-only
             // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
             if (c.Prefix == ColumnPrefix.SeparateUpdate ||
                 c.Prefix == ColumnPrefix.Calculated ||
                 c.Prefix == ColumnPrefix.BusinessLogic ||
-                c.Prefix == ColumnPrefix.Aggregate)
+                c.Prefix == ColumnPrefix.Aggregate ||
+                c.Prefix == ColumnPrefix.OneWayEncryption)
             {
                 return false; // Exclude these - they transform property names or are read-only
             }
