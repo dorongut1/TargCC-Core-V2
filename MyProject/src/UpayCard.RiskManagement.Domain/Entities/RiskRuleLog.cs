@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for RiskRuleLog table.
-    /// Generated: 2025-12-17 14:08:27
+    /// Generated: 2025-12-17 14:36:07
     /// </summary>
     [Table("RiskRuleLog")]
     public partial class RiskRuleLog
