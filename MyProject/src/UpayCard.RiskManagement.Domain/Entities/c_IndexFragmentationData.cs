@@ -37,7 +37,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// Gets or sets the IndexName.
         /// </summary>
         [Column("IndexName")]
-        public object IndexName { get; set; }
+        public string IndexName { get; set; }
         /// <summary>
         /// Gets or sets the IndexType.
         /// </summary>

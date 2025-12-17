@@ -160,7 +160,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// Gets or sets the EstablishmentLocation.
         /// </summary>
         [Column("EstablishmentLocation")]
-        public object EstablishmentLocation { get; set; }
+        public string EstablishmentLocation { get; set; }
         /// <summary>
         /// Gets or sets the IsEMV.
         /// </summary>

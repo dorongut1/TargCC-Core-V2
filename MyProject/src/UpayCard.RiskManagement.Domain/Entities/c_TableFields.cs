@@ -51,7 +51,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         [Column("TABLE_NAME")]
         [Required]
-        public object TABLE_NAME { get; set; }
+        public string TABLE_NAME { get; set; }
         /// <summary>
         /// Gets or sets the TABLE_TYPE.
         /// </summary>
@@ -62,7 +62,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// Gets or sets the COLUMN_NAME.
         /// </summary>
         [Column("COLUMN_NAME")]
-        public object COLUMN_NAME { get; set; }
+        public string COLUMN_NAME { get; set; }
         /// <summary>
         /// Gets or sets the DATA_TYPE.
         /// </summary>

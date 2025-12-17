@@ -35,7 +35,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// </summary>
         [Column("name")]
         [Required]
-        public object name { get; set; }
+        public string name { get; set; }
         /// <summary>
         /// Gets or sets the principal_id.
         /// </summary>

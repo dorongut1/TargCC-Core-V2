@@ -40,7 +40,7 @@ namespace TargCC.Core.Generators.Entities
                 "VARCHAR" or "NVARCHAR" or "CHAR" or "NCHAR" or "TEXT" or "NTEXT" => "string",
 
                 // Date/Time types
-                "DATETIME" or "DATETIME2" or "DATE" => "DateTime",
+                "DATETIME" or "DATETIME2" or "DATE" or "SMALLDATETIME" => "DateTime",
                 "TIME" => "TimeSpan",
                 "DATETIMEOFFSET" => "DateTimeOffset",
 
@@ -51,9 +51,13 @@ namespace TargCC.Core.Generators.Entities
                 "BIT" => "bool",
                 "UNIQUEIDENTIFIER" => "Guid",
                 "XML" => "string",
+                "SQL_VARIANT" => "string",  // SQL_VARIANT is stored as string to avoid object type
+                "GEOGRAPHY" => "string",    // Spatial types stored as string (WKT format)
+                "GEOMETRY" => "string",     // Spatial types stored as string (WKT format)
+                "HIERARCHYID" => "string",  // HierarchyId stored as string
 
-                // Fallback
-                _ => "object",
+                // Fallback - use string instead of object to avoid EF Core mapping issues
+                _ => "string",
             };
 
             // Add nullable modifier if needed
@@ -93,7 +97,6 @@ namespace TargCC.Core.Generators.Entities
                 "Guid" => "Guid.Empty",
                 "string" => "null",
                 "byte[]" => "null",
-                "object" => "null",
                 _ => csharpType.EndsWith('?') ? "null" : "default",
             };
         }
@@ -106,8 +109,7 @@ namespace TargCC.Core.Generators.Entities
         private static bool IsValueType(string csharpType)
         {
             return !string.Equals(csharpType, "string", StringComparison.Ordinal) &&
-                   !string.Equals(csharpType, "byte[]", StringComparison.Ordinal) &&
-                   !string.Equals(csharpType, "object", StringComparison.Ordinal);
+                   !string.Equals(csharpType, "byte[]", StringComparison.Ordinal);
         }
     }
 }

@@ -101,13 +101,13 @@ namespace UpayCard.RiskManagement.Domain.Entities
         /// Localized value for Location.
         /// </summary>
         [Column("Location")]
-        public object Location { get; set; }
+        public string Location { get; set; }
 
         /// <summary>
         /// Localized display value (runtime).
         /// </summary>
         [NotMapped]
-        public object LocationLocalized { get; set; }
+        public string LocationLocalized { get; set; }
         /// <summary>
         /// Gets or sets the DeletedBy.
         /// </summary>
