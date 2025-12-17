@@ -434,8 +434,11 @@ public class CommandGenerator : ICommandGenerator
             pkType += "?";
         }
 
+        // Check for namespace collision
+        string? entityAliasName = entityName == pluralName ? entityName : null;
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -537,8 +540,11 @@ public class CommandGenerator : ICommandGenerator
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
+        // Check for namespace collision
+        string? entityAliasName = entityName == pluralName ? entityName : null;
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
@@ -620,8 +626,11 @@ public class CommandGenerator : ICommandGenerator
         const string repoFieldName = "_repository";
         var pkColumn = table.Columns.Find(c => c.IsPrimaryKey) ?? table.Columns.First(c => c.IsPrimaryKey);
 
+        // Check for namespace collision
+        string? entityAliasName = entityName == pluralName ? entityName : null;
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Commands;");
         sb.AppendLine();
