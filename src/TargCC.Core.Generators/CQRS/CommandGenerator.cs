@@ -835,60 +835,74 @@ public class CommandGenerator : ICommandGenerator
         // Audit fields that are typically auto-generated or have private setters
         var auditFields = new[] { "AddedBy", "AddedOn", "ChangedBy", "ChangedOn" };
 
-        return table.Columns.Where(c =>
+        return table.Columns.Where(c => !ShouldExcludeFromCreate(c, auditFields));
+    }
+
+    private static bool ShouldExcludeFromCreate(Column column, string[] auditFields)
+    {
+        // Exclude identity columns
+        if (column.IsIdentity)
         {
-            if (c.IsIdentity)
-            {
-                return false;
-            }
-
-            if (auditFields.Contains(c.Name, StringComparer.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (CodeGenerationHelpers.IsReadOnlyColumn(c.Name))
-            {
-                return false;
-            }
-
-            // Exclude eno_ columns (one-way encryption) - they transform property names (e.g., "enoPassword" -> "PasswordHashed")
-            if (c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            // Exclude spt_ columns (separate update) - they transform property names (e.g., "spt_Comment" -> "CommentSeparate")
-            if (c.Name.StartsWith("spt_", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            // Check ExtendedProperties for ccType to catch columns with metadata-based prefixes
-            if (c.ExtendedProperties != null && c.ExtendedProperties.TryGetValue("ccType", out var ccType))
-            {
-                var ccTypeUpper = ccType.ToUpperInvariant();
-                if (ccTypeUpper.Contains("SPT") || ccTypeUpper.Contains("ENO") ||
-                    ccTypeUpper.Contains("CLC") || ccTypeUpper.Contains("BLG") ||
-                    ccTypeUpper.Contains("AGG"))
-                {
-                    return false; // Exclude columns with transforming or read-only ccType
-                }
-            }
-
-            // Check for columns with special prefixes that transform property names or are read-only
-            // These columns have different property names in the entity (e.g., "enmStatusAtICP" -> "enmStatusAtICPSeparate")
-            if (c.Prefix == ColumnPrefix.SeparateUpdate ||
-                c.Prefix == ColumnPrefix.Calculated ||
-                c.Prefix == ColumnPrefix.BusinessLogic ||
-                c.Prefix == ColumnPrefix.Aggregate ||
-                c.Prefix == ColumnPrefix.OneWayEncryption)
-            {
-                return false; // Exclude these - they transform property names or are read-only
-            }
-
             return true;
-        });
+        }
+
+        // Exclude audit fields
+        if (auditFields.Contains(column.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Exclude read-only columns (clc_, blg_, agg_, spt_, upl_, spl_)
+        if (CodeGenerationHelpers.IsReadOnlyColumn(column.Name))
+        {
+            return true;
+        }
+
+        // Exclude columns with prefixes in their names
+        if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
+            column.Name.StartsWith("spt_", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Check ExtendedProperties for ccType metadata
+        if (HasExcludedCcType(column))
+        {
+            return true;
+        }
+
+        // Check Prefix enum for transforming/read-only columns
+        if (HasExcludedPrefix(column))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool HasExcludedCcType(Column column)
+    {
+        if (column.ExtendedProperties == null || !column.ExtendedProperties.TryGetValue("ccType", out var ccType))
+        {
+            return false;
+        }
+
+        var ccTypeUpper = ccType.ToUpperInvariant();
+
+        return ccTypeUpper.Contains("SPT", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("ENO", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("CLC", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("BLG", StringComparison.Ordinal) ||
+               ccTypeUpper.Contains("AGG", StringComparison.Ordinal);
+    }
+
+    private static bool HasExcludedPrefix(Column column)
+    {
+        return column.Prefix == ColumnPrefix.SeparateUpdate ||
+               column.Prefix == ColumnPrefix.Calculated ||
+               column.Prefix == ColumnPrefix.BusinessLogic ||
+               column.Prefix == ColumnPrefix.Aggregate ||
+               column.Prefix == ColumnPrefix.OneWayEncryption;
     }
 
     private static IEnumerable<Column> GetUpdateColumnsInternal(Table table)
