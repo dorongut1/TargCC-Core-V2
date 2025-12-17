@@ -361,8 +361,11 @@ public class QueryGenerator : IQueryGenerator
         var repoInterfaceName = $"I{entityName}Repository";
         const string repoFieldName = "_repository";
 
+        // Check for namespace collision
+        string? entityAliasName = entityName == pluralName ? entityName : null;
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
@@ -439,9 +442,11 @@ public class QueryGenerator : IQueryGenerator
         var pluralName = CodeGenerationHelpers.MakePlural(entityName);
 
         // Check if entity name conflicts with System types (e.g., Lookup, Task, etc.)
+        // OR if entity name equals plural name (namespace collision)
         string? entityAliasName = entityName switch
         {
             "Lookup" or "Task" or "Action" or "Exception" or "Environment" => entityName,
+            _ when entityName == pluralName => entityName,  // Namespace collision fix
             _ => null
         };
 
@@ -593,8 +598,11 @@ public class QueryGenerator : IQueryGenerator
         const string repoFieldName = "_repository";
         var resultType = isUnique ? $"Result<{dtoClassName}?>" : $"Result<IEnumerable<{dtoClassName}>>";
 
+        // Check for namespace collision
+        string? entityAliasName = entityName == pluralName ? entityName : null;
+
         GenerateFileHeader(sb, table.Name, "Handler");
-        GenerateHandlerUsings(sb, rootNamespace);
+        GenerateHandlerUsings(sb, rootNamespace, entityAliasName);
 
         sb.AppendLine(CultureInfo.InvariantCulture, $"namespace {rootNamespace}.Application.Features.{pluralName}.Queries;");
         sb.AppendLine();
