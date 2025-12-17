@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for SAP table.
-    /// Generated: 2025-12-17 15:31:37
+    /// Generated: 2025-12-17 17:47:25
     /// </summary>
     [Table("SAP")]
     public partial class Sap

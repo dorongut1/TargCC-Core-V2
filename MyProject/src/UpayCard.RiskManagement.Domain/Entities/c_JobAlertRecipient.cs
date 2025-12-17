@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_JobAlertRecipient table.
-    /// Generated: 2025-12-17 15:31:31
+    /// Generated: 2025-12-17 17:47:19
     /// </summary>
     [Table("c_JobAlertRecipient")]
     public partial class JobAlertRecipient

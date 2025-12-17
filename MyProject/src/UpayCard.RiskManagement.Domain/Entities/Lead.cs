@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for Lead table.
-    /// Generated: 2025-12-17 15:31:36
+    /// Generated: 2025-12-17 17:47:24
     /// </summary>
     [Table("Lead")]
     public partial class Lead

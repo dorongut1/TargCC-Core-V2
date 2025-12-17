@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for DrivebotPayment table.
-    /// Generated: 2025-12-17 15:31:35
+    /// Generated: 2025-12-17 17:47:23
     /// </summary>
     [Table("DrivebotPayment")]
     public partial class DrivebotPayment

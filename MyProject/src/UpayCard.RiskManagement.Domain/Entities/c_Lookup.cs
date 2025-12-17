@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Lookup table.
-    /// Generated: 2025-12-17 15:31:31
+    /// Generated: 2025-12-17 17:47:20
     /// </summary>
     [Table("c_Lookup")]
     public partial class Lookup

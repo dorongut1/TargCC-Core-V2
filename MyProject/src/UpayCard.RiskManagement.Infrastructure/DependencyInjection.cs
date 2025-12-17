@@ -46,7 +46,7 @@ public static class DependencyInjection
 
         // Register DbContext
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-
+        
         // Auto-detect database type and register DbContext accordingly
         if (connectionString?.Contains(".db", StringComparison.OrdinalIgnoreCase) == true ||
             connectionString?.Contains(".sqlite", StringComparison.OrdinalIgnoreCase) == true)
