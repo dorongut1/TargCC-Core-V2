@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ExchangeRate table.
-    /// Generated: 2025-12-17 07:22:10
+    /// Generated: 2025-12-17 07:52:24
     /// </summary>
     [Table("ExchangeRate")]
     public partial class ExchangeRate

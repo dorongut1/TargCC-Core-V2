@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for ActiveRestrictions table.
-    /// Generated: 2025-12-17 07:22:06
+    /// Generated: 2025-12-17 07:52:19
     /// </summary>
     [Table("ActiveRestrictions")]
     public partial class ActiveRestrictions
