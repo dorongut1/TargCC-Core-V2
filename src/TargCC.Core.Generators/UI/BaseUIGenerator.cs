@@ -274,14 +274,14 @@ namespace TargCC.Core.Generators.UI
         }
 
         /// <summary>
-        /// Gets all columns excluding audit fields.
+        /// Gets all columns excluding audit fields and computed columns.
         /// </summary>
         /// <param name="table">Table.</param>
         /// <returns>Filtered columns.</returns>
         protected static IReadOnlyList<Column> GetDataColumns(Table table)
         {
             return table.Columns
-                .Where(c => !IsAuditField(c.Name))
+                .Where(c => !IsAuditField(c.Name) && !c.IsComputed)
                 .ToList();
         }
 
