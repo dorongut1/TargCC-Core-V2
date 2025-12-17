@@ -43,6 +43,9 @@ public class DependencyInjectionGenerator : IDependencyInjectionGenerator
         sb.AppendLine("        // MediatR");
         sb.AppendLine("        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));");
         sb.AppendLine();
+        sb.AppendLine("        // AutoMapper");
+        sb.AppendLine("        services.AddAutoMapper(Assembly.GetExecutingAssembly());");
+        sb.AppendLine();
         sb.AppendLine("        // FluentValidation (if used)");
         sb.AppendLine("        // services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());");
         sb.AppendLine();
