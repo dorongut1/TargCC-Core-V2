@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for CardActivation table.
-    /// Generated: 2025-12-18 07:57:41
+    /// Generated: 2025-12-18 08:11:17
     /// </summary>
     [Table("CardActivation")]
     public partial class CardActivation
