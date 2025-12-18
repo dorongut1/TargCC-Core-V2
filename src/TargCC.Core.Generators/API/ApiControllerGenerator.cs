@@ -608,8 +608,9 @@ namespace TargCC.Core.Generators.API
                 }
 
                 // Generate method name to check for duplicates
-                // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
-                string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
+                // Use GetClassName to normalize table name (removes c_ prefix, normalizes vw, etc.)
+                string childClassName = GetClassName(childTable.Name);
+                string childrenName = CodeGenerationHelpers.MakePlural(childClassName);
                 string methodName = $"Get{childrenName}";
 
                 // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -645,9 +646,10 @@ namespace TargCC.Core.Generators.API
             string childEntityName = GetClassName(childTable.Name);
             string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
 
-            // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
-            string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
-            string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
+            // Use GetClassName to normalize table name (removes c_ prefix, normalizes vw, etc.)
+            // Then pluralize the cleaned name for consistency
+            string childrenName = CodeGenerationHelpers.MakePlural(childEntityName);
+            string childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)
             {
