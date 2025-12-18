@@ -36,7 +36,7 @@ namespace TargCC.Core.Generators.API
         {
             var className = GetClassName(table.Name);
             var entityName = className;
-            var controllerName = MakePlural(className);
+            var controllerName = CodeGenerationHelpers.MakePlural(className);
 
             // Extract root namespace from config.Namespace (e.g., "TestApp.API" -> "TestApp", or "UpayCard.RiskManagement.API" -> "UpayCard.RiskManagement")
             // Remove the last segment (typically "API" or "Controllers") to get the root namespace
@@ -213,7 +213,7 @@ namespace TargCC.Core.Generators.API
                 ? qualifiedEntityName[(qualifiedEntityName.LastIndexOf('.') + 1) ..]
                 : qualifiedEntityName;
 
-            var pluralName = MakePlural(entityNameForDocs);
+            var pluralName = CodeGenerationHelpers.MakePlural(entityNameForDocs);
 
             if (config.GenerateXmlDocumentation)
             {
@@ -461,7 +461,7 @@ namespace TargCC.Core.Generators.API
             }
 
             sb.AppendLine("        /// <summary>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {MakePlural(entityNameForDocs)} based on indexed columns.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets filtered {CodeGenerationHelpers.MakePlural(entityNameForDocs)} based on indexed columns.");
             sb.AppendLine("        /// </summary>");
             foreach (var (paramName, _, columnName) in parameters)
             {
@@ -540,37 +540,6 @@ namespace TargCC.Core.Generators.API
             };
         }
 
-        private static string MakePlural(string word)
-        {
-            if (string.IsNullOrEmpty(word))
-            {
-                return word;
-            }
-
-            // Simple pluralization rules
-            char lastChar = word[^1];
-            if ((lastChar == 'y' || lastChar == 'Y') && word.Length > 1 &&
-                !IsVowel(word[word.Length - 2]))
-            {
-                return string.Concat(word.AsSpan(0, word.Length - 1), "ies");
-            }
-
-            if (lastChar == 's' || lastChar == 'S' ||
-                lastChar == 'x' || lastChar == 'X' ||
-                lastChar == 'z' || lastChar == 'Z' ||
-                word.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-                word.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-            {
-                return word + "es";
-            }
-
-            return word + "s";
-        }
-
-        private static bool IsVowel(char c)
-        {
-            return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
-        }
 
         /// <summary>
         /// Gets a qualified entity name that avoids naming conflicts with system types.
@@ -640,7 +609,7 @@ namespace TargCC.Core.Generators.API
 
                 // Generate method name to check for duplicates
                 // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
-                string childrenName = MakePlural(childTable.Name);
+                string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
                 string methodName = $"Get{childrenName}";
 
                 // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -677,7 +646,7 @@ namespace TargCC.Core.Generators.API
             string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
 
             // IMPORTANT: Use childTable.Name directly (not GetClassName) to match repository generator
-            string childrenName = MakePlural(childTable.Name);
+            string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
             string childrenLowerCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)

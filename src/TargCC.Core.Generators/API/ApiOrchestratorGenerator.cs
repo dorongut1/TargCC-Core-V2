@@ -81,7 +81,7 @@ namespace TargCC.Core.Generators.API
 
                 // Generate Controller
                 var controllerCode = await _controllerGenerator.GenerateAsync(table, schema, config).ConfigureAwait(false);
-                var controllerPath = $"{config.ControllersOutputDirectory}/{MakePlural(className)}Controller.cs";
+                var controllerPath = $"{config.ControllersOutputDirectory}/{CodeGenerationHelpers.MakePlural(className)}Controller.cs";
                 results[controllerPath] = controllerCode;
 
                 // Generate Mapping Profile
@@ -156,36 +156,5 @@ namespace TargCC.Core.Generators.API
             return sb.ToString();
         }
 
-        private static string MakePlural(string word)
-        {
-            if (string.IsNullOrEmpty(word))
-            {
-                return word;
-            }
-
-            // Simple pluralization rules
-            char lastChar = word[^1];
-            if ((lastChar == 'y' || lastChar == 'Y') && word.Length > 1 &&
-                !IsVowel(word[word.Length - 2]))
-            {
-                return string.Concat(word.AsSpan(0, word.Length - 1), "ies");
-            }
-
-            if (lastChar == 's' || lastChar == 'S' ||
-                lastChar == 'x' || lastChar == 'X' ||
-                lastChar == 'z' || lastChar == 'Z' ||
-                word.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-                word.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-            {
-                return word + "es";
-            }
-
-            return word + "s";
-        }
-
-        private static bool IsVowel(char c)
-        {
-            return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
-        }
     }
 }
