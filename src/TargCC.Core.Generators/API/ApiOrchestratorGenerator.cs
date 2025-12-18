@@ -10,6 +10,7 @@ namespace TargCC.Core.Generators.API
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using TargCC.Core.Generators.Common;
     using TargCC.Core.Interfaces.Models;
 
     /// <summary>
@@ -155,6 +156,5 @@ namespace TargCC.Core.Generators.API
 
             return sb.ToString();
         }
-
     }
 }

@@ -9,6 +9,7 @@ namespace TargCC.Core.Generators.API
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
+    using TargCC.Core.Generators.Common;
     using TargCC.Core.Generators.Entities;
 
     // Note: Domain.Interfaces using added by generator based on config.Namespace
@@ -539,7 +540,6 @@ namespace TargCC.Core.Generators.API
                 _ => "string",
             };
         }
-
 
         /// <summary>
         /// Gets a qualified entity name that avoids naming conflicts with system types.
