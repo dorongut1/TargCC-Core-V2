@@ -649,12 +649,12 @@ namespace TargCC.Core.Generators.API
             // Use GetClassName to normalize table name (removes c_ prefix, normalizes vw, etc.)
             // Then pluralize the cleaned name for consistency
             string childrenName = CodeGenerationHelpers.MakePlural(childEntityName);
-            string childrenLowerCase = childrenName.ToLower(CultureInfo.InvariantCulture);
+            string childrenUpperCase = childrenName.ToUpper(CultureInfo.InvariantCulture);
 
             if (config.GenerateXmlDocumentation)
             {
                 sb.AppendLine("        /// <summary>");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenLowerCase} for a specific {parentEntityName.ToUpper(CultureInfo.InvariantCulture)}.");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"        /// Gets all {childrenUpperCase} for a specific {parentEntityName.ToUpper(CultureInfo.InvariantCulture)}.");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"id\">The parent entity ID.</param>");
                 sb.AppendLine("        /// <param name=\"skip\">Number of records to skip for pagination.</param>");
@@ -662,7 +662,7 @@ namespace TargCC.Core.Generators.API
                 sb.AppendLine(CultureInfo.InvariantCulture, $"        /// <returns>Collection of {childEntityName} entities.</returns>");
             }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"        [HttpGet(\"{{id}}/{childrenLowerCase}\")]");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        [HttpGet(\"{{id}}/{childrenUpperCase}\")]");
 
             if (config.GenerateSwaggerAttributes)
             {
@@ -681,8 +681,8 @@ namespace TargCC.Core.Generators.API
             sb.AppendLine("                return NotFound();");
             sb.AppendLine("            }");
             sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            var {childrenLowerCase} = await _repository.Get{childrenName}Async(id, skip, take).ConfigureAwait(false);");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok({childrenLowerCase});");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            var {childrenUpperCase} = await _repository.Get{childrenName}Async(id, skip, take).ConfigureAwait(false);");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            return Ok({childrenUpperCase});");
             sb.AppendLine("        }");
         }
     }
