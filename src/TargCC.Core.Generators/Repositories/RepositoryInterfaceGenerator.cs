@@ -529,7 +529,7 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
             }
 
             var pkType = GetCSharpType(pkColumn.DataType);
-            var childrenName = Pluralize(childTable.Name);
+            var childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
             var methodName = $"Get{childrenName}Async";
 
             // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -567,45 +567,6 @@ public class RepositoryInterfaceGenerator : IRepositoryInterfaceGenerator
     private static void CloseInterface(StringBuilder sb)
     {
         sb.AppendLine("}");
-    }
-
-    /// <summary>
-    /// Pluralizes an English singular noun.
-    /// </summary>
-    private static string Pluralize(string singular)
-    {
-        if (string.IsNullOrEmpty(singular))
-        {
-            return singular;
-        }
-
-        // Simple English pluralization rules
-        // CA1867: String literals required here because char overload doesn't support StringComparison
-#pragma warning disable CA1867
-        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
-        {
-            // Category → Categories
-            return singular[..^1] + "ies";
-        }
-
-        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-#pragma warning restore CA1867
-        {
-            // Address → Addresses, Box → Boxes
-            return singular + "es";
-        }
-
-        // Default: just add 's'
-        // Order → Orders, Customer → Customers
-        return singular + "s";
     }
 
     /// <summary>
