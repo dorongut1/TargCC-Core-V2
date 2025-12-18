@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_Process table.
-    /// Generated: 2025-12-18 07:42:08
+    /// Generated: 2025-12-18 07:57:40
     /// </summary>
     [Table("c_Process")]
     public partial class Process
