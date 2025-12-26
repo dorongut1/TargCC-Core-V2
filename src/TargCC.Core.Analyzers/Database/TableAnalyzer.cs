@@ -246,16 +246,44 @@ namespace TargCC.Core.Analyzers.Database
                     table.Name);
             }
 
-            // Check extended properties for UI generation overrides
-            if (table.ExtendedProperties.TryGetValue("ccUICreateEntity", out var createEntity))
+            // Load extended properties into typed properties
+            LoadExtendedPropertyFlags(table);
+
+            _logger.LogDebug(
+                "Generation flags for {TableName}: IsSystemTable={IsSystem}, IsComboListView={IsCombo}, GenerateUI={GenUI}, GenerateSP={GenSP}, AuditLevel={AuditLevel}",
+                table.Name,
+                table.IsSystemTable,
+                table.IsComboListView,
+                table.GenerateUI,
+                table.GenerateStoredProcedures,
+                table.AuditLevel);
+        }
+
+        /// <summary>
+        /// Loads extended property values into typed properties on the table.
+        /// </summary>
+        /// <param name="table">Table to load properties into.</param>
+        private void LoadExtendedPropertyFlags(Table table)
+        {
+            // ccUICreateMenu - whether to create menu entry
+            if (table.ExtendedProperties.TryGetValue("ccUICreateMenu", out var createMenu))
             {
-                table.GenerateUI = createEntity == "1" || createEntity.Equals("true", StringComparison.OrdinalIgnoreCase);
+                table.CreateMenu = createMenu == "1" || createMenu.Equals("true", StringComparison.OrdinalIgnoreCase);
             }
 
+            // ccUICreateEntity - whether to create entity form
+            if (table.ExtendedProperties.TryGetValue("ccUICreateEntity", out var createEntity))
+            {
+                table.CreateEntity = createEntity == "1" || createEntity.Equals("true", StringComparison.OrdinalIgnoreCase);
+                table.GenerateUI = table.CreateEntity;
+            }
+
+            // ccUICreateCollection - whether to create collection grid
             if (table.ExtendedProperties.TryGetValue("ccUICreateCollection", out var createCollection))
             {
-                // If collection is disabled, we might still want entity forms
-                if (createCollection == "0" || createCollection.Equals("false", StringComparison.OrdinalIgnoreCase))
+                table.CreateCollection = createCollection == "1" || createCollection.Equals("true", StringComparison.OrdinalIgnoreCase);
+
+                if (!table.CreateCollection)
                 {
                     _logger.LogDebug(
                         "Table {TableName} has ccUICreateCollection=0 - collection grid disabled",
@@ -263,13 +291,21 @@ namespace TargCC.Core.Analyzers.Database
                 }
             }
 
-            _logger.LogDebug(
-                "Generation flags for {TableName}: IsSystemTable={IsSystem}, IsComboListView={IsCombo}, GenerateUI={GenUI}, GenerateSP={GenSP}",
-                table.Name,
-                table.IsSystemTable,
-                table.IsComboListView,
-                table.GenerateUI,
-                table.GenerateStoredProcedures);
+            // ccAuditLevel - audit level (0=None, 1=TrackChanges, 2=FullAudit)
+            if (table.ExtendedProperties.TryGetValue("ccAuditLevel", out var auditLevelStr))
+            {
+                if (int.TryParse(auditLevelStr, out var auditLevel))
+                {
+                    table.AuditLevel = auditLevel;
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Invalid ccAuditLevel value '{AuditLevel}' for table {TableName}, using default 0",
+                        auditLevelStr,
+                        table.Name);
+                }
+            }
         }
 
         /// <summary>

@@ -335,6 +335,45 @@ public class Table
     public bool GenerateStoredProcedures { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether a menu entry should be created for this table.
+    /// </summary>
+    /// <remarks>
+    /// Controlled by the ccUICreateMenu extended property. Defaults to true.
+    /// </remarks>
+    public bool CreateMenu { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether an entity form should be created for this table.
+    /// </summary>
+    /// <remarks>
+    /// Controlled by the ccUICreateEntity extended property. Defaults to true.
+    /// </remarks>
+    public bool CreateEntity { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a collection grid should be created for this table.
+    /// </summary>
+    /// <remarks>
+    /// Controlled by the ccUICreateCollection extended property. Defaults to true.
+    /// </remarks>
+    public bool CreateCollection { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the audit level for this table.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Audit levels control how data changes are tracked:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><term>0 (None)</term><description>No audit tracking</description></item>
+    /// <item><term>1 (TrackChanges)</term><description>Track changes via application code</description></item>
+    /// <item><term>2 (FullAudit)</term><description>Full audit with CLR triggers (AuditCommon.dll)</description></item>
+    /// </list>
+    /// </remarks>
+    public int AuditLevel { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of rows in the table.
     /// </summary>
     public long RowCount { get; set; }
