@@ -5,7 +5,7 @@
 namespace TargCC.Core.Generators.Sql.Templates
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
     using System.Text;
@@ -34,113 +34,239 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             if (filterableIndexes == null || filterableIndexes.Count == 0)
             {
-                // No filterable indexes, return empty
                 return Task.FromResult(string.Empty);
             }
 
             var sb = new StringBuilder();
+            var fkColumns = GetForeignKeyColumns(table);
 
-            // Procedure header
             GenerateProcedureHeader(sb, table, filterableIndexes);
 
-            // SELECT and WHERE clauses
-            GenerateSelectAndWhere(sb, table, filterableIndexes);
-
-            // ORDER BY and pagination
-            GenerateOrderByAndPagination(sb, table);
+            if (fkColumns.Count > 0)
+            {
+                GenerateWithParentTextBranch(sb, table, filterableIndexes, fkColumns);
+            }
+            else
+            {
+                GenerateSimpleSelectAndWhere(sb, table, filterableIndexes, "    ");
+                GenerateOrderByAndPagination(sb, table, null, "    ");
+            }
 
             sb.AppendLine("END");
 
             return Task.FromResult(sb.ToString());
         }
 
-        private static void GenerateProcedureHeader(StringBuilder sb, Table table, List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
+        private static List<Column> GetForeignKeyColumns(Table table)
         {
-            // Use PascalCase conversion for procedure name consistency with Repository
+            return table.Columns
+                .Where(c => c.IsForeignKey && !string.IsNullOrEmpty(c.ReferencedTable))
+                .ToList();
+        }
+
+        private static void GenerateProcedureHeader(
+            StringBuilder sb,
+            Table table,
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
+        {
             var entityName = API.BaseApiGenerator.GetClassName(table.Name);
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"CREATE OR ALTER PROCEDURE [dbo].[SP_GetFiltered{entityName}s]");
 
-            // Add parameters for each indexed column
             var parameters = new List<string>();
             foreach (var index in filterableIndexes)
             {
-                foreach (var columnName in index.ColumnNames)
-                {
-                    var column = table.Columns.Find(c => c.Name == columnName);
-                    if (column != null)
-                    {
-                        // Avoid duplicate parameters
-                        var paramName = $"@{columnName}";
-                        if (!parameters.Contains(paramName))
-                        {
-                            parameters.Add(paramName);
-                            var sqlType = GetSqlType(column.DataType, column.MaxLength);
-                            sb.AppendLine(CultureInfo.InvariantCulture, $"    {paramName} {sqlType} = NULL,");
-                        }
-                    }
-                }
+                AddIndexColumnParameters(sb, table, index, parameters);
             }
 
-            // Add pagination parameters
             sb.AppendLine("    @Skip INT = NULL,");
-            sb.AppendLine("    @Take INT = NULL");
+            sb.AppendLine("    @Take INT = NULL,");
+            sb.AppendLine("    @WithParentText BIT = 1");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
             sb.AppendLine();
         }
 
-        private static void GenerateSelectAndWhere(StringBuilder sb, Table table, List<TargCC.Core.Interfaces.Models.Index> filterableIndexes)
+        private static void AddIndexColumnParameters(
+            StringBuilder sb,
+            Table table,
+            TargCC.Core.Interfaces.Models.Index index,
+            List<string> parameters)
         {
-            // SELECT statement
-            sb.AppendLine("    SELECT");
+            foreach (var columnName in index.ColumnNames)
+            {
+                var column = table.Columns.Find(c => c.Name == columnName);
+                if (column == null)
+                {
+                    continue;
+                }
 
+                var paramName = $"@{columnName}";
+                if (parameters.Contains(paramName))
+                {
+                    continue;
+                }
+
+                parameters.Add(paramName);
+                var sqlType = GetSqlType(column.DataType, column.MaxLength);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    {paramName} {sqlType} = NULL,");
+            }
+        }
+
+        private static void GenerateWithParentTextBranch(
+            StringBuilder sb,
+            Table table,
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes,
+            List<Column> fkColumns)
+        {
+            sb.AppendLine("    IF @WithParentText = 1");
+            sb.AppendLine("    BEGIN");
+
+            GenerateSelectWithJoins(sb, table, filterableIndexes, fkColumns, "        ");
+            GenerateOrderByAndPagination(sb, table, "t", "        ");
+
+            sb.AppendLine("    END");
+            sb.AppendLine("    ELSE");
+            sb.AppendLine("    BEGIN");
+
+            GenerateSimpleSelectAndWhere(sb, table, filterableIndexes, "        ");
+            GenerateOrderByAndPagination(sb, table, null, "        ");
+
+            sb.AppendLine("    END");
+        }
+
+        private static void GenerateSelectWithJoins(
+            StringBuilder sb,
+            Table table,
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes,
+            List<Column> fkColumns,
+            string indent)
+        {
+            const string tableAlias = "t";
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}SELECT");
+
+            GenerateBaseColumns(sb, table, $"{tableAlias}.", indent, hasMoreColumns: true);
+            GenerateParentTextColumns(sb, fkColumns, indent);
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}FROM [{table.Name}] {tableAlias}");
+
+            GenerateLeftJoins(sb, fkColumns, tableAlias, indent);
+            GenerateWhereClause(sb, table, filterableIndexes, $"{tableAlias}.", indent);
+        }
+
+        private static void GenerateSimpleSelectAndWhere(
+            StringBuilder sb,
+            Table table,
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes,
+            string indent)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}SELECT");
+
+            GenerateBaseColumns(sb, table, string.Empty, indent, hasMoreColumns: false);
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}FROM [{table.Name}]");
+            GenerateWhereClause(sb, table, filterableIndexes, string.Empty, indent);
+        }
+
+        private static void GenerateBaseColumns(
+            StringBuilder sb,
+            Table table,
+            string prefix,
+            string indent,
+            bool hasMoreColumns)
+        {
             var allColumns = table.Columns.ToList();
             for (int i = 0; i < allColumns.Count; i++)
             {
                 var col = allColumns[i];
-                sb.Append(CultureInfo.InvariantCulture, $"        [{col.Name}]");
-                sb.AppendLine(i < allColumns.Count - 1 ? "," : string.Empty);
+                sb.Append(CultureInfo.InvariantCulture, $"{indent}    {prefix}[{col.Name}]");
+
+                if (hasMoreColumns || i < allColumns.Count - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
             }
+        }
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    FROM [{table.Name}]");
+        private static void GenerateParentTextColumns(
+            StringBuilder sb,
+            List<Column> fkColumns,
+            string indent)
+        {
+            for (int i = 0; i < fkColumns.Count; i++)
+            {
+                var fkCol = fkColumns[i];
+                var parentAlias = $"p{i + 1}";
+                var parentTextColumnName = $"{fkCol.Name}_Text";
 
-            // WHERE clause
-            sb.AppendLine("    WHERE 1=1");
+                sb.Append(CultureInfo.InvariantCulture, $"{indent}    {parentAlias}.[Text] AS [{parentTextColumnName}]");
+                sb.AppendLine(i < fkColumns.Count - 1 ? "," : string.Empty);
+            }
+        }
+
+        private static void GenerateLeftJoins(
+            StringBuilder sb,
+            List<Column> fkColumns,
+            string tableAlias,
+            string indent)
+        {
+            for (int i = 0; i < fkColumns.Count; i++)
+            {
+                var fkCol = fkColumns[i];
+                var parentAlias = $"p{i + 1}";
+                var comboViewName = $"ccvwComboList_{fkCol.ReferencedTable}";
+
+                sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}LEFT JOIN [{comboViewName}] {parentAlias} ON {tableAlias}.[{fkCol.Name}] = {parentAlias}.[ID]");
+            }
+        }
+
+        private static void GenerateWhereClause(
+            StringBuilder sb,
+            Table table,
+            List<TargCC.Core.Interfaces.Models.Index> filterableIndexes,
+            string prefix,
+            string indent)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}WHERE 1=1");
 
             foreach (var index in filterableIndexes)
             {
                 foreach (var columnName in index.ColumnNames)
                 {
                     var column = table.Columns.Find(c => c.Name == columnName);
-                    if (column != null)
+                    if (column == null)
                     {
-                        var isTextType = IsTextType(column.DataType);
-                        var paramName = $"@{columnName}";
-
-                        if (isTextType)
-                        {
-                            // LIKE for text columns
-                            sb.AppendLine(CultureInfo.InvariantCulture, $"      AND ({paramName} IS NULL OR [{columnName}] LIKE '%' + {paramName} + '%')");
-                        }
-                        else
-                        {
-                            // Exact match for non-text columns
-                            sb.AppendLine(CultureInfo.InvariantCulture, $"      AND ({paramName} IS NULL OR [{columnName}] = {paramName})");
-                        }
+                        continue;
                     }
+
+                    var paramName = $"@{columnName}";
+                    var condition = IsTextType(column.DataType)
+                        ? $"{prefix}[{columnName}] LIKE '%' + {paramName} + '%'"
+                        : $"{prefix}[{columnName}] = {paramName}";
+
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}  AND ({paramName} IS NULL OR {condition})");
                 }
             }
         }
 
-        private static void GenerateOrderByAndPagination(StringBuilder sb, Table table)
+        private static void GenerateOrderByAndPagination(
+            StringBuilder sb,
+            Table table,
+            string? tableAlias,
+            string indent)
         {
-            // Order by primary key
             var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
+            var prefix = string.IsNullOrEmpty(tableAlias) ? string.Empty : $"{tableAlias}.";
+
             if (pkColumns.Count > 0)
             {
-                sb.Append("    ORDER BY ");
+                sb.Append(CultureInfo.InvariantCulture, $"{indent}ORDER BY ");
                 for (int i = 0; i < pkColumns.Count; i++)
                 {
                     var col = pkColumns[i];
@@ -149,14 +275,13 @@ namespace TargCC.Core.Generators.Sql.Templates
                         sb.Append(", ");
                     }
 
-                    sb.Append(CultureInfo.InvariantCulture, $"[{col.Name}]");
+                    sb.Append(CultureInfo.InvariantCulture, $"{prefix}[{col.Name}]");
                 }
 
                 sb.AppendLine();
 
-                // Add pagination using OFFSET/FETCH
-                sb.AppendLine("    OFFSET ISNULL(@Skip, 0) ROWS");
-                sb.AppendLine("    FETCH NEXT ISNULL(@Take, 2147483647) ROWS ONLY;");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}OFFSET ISNULL(@Skip, 0) ROWS");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"{indent}FETCH NEXT ISNULL(@Take, 2147483647) ROWS ONLY;");
             }
             else
             {
@@ -170,7 +295,9 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             if (upperType.Contains("VARCHAR", StringComparison.Ordinal))
             {
-                var length = maxLength.HasValue && maxLength.Value > 0 ? maxLength.Value.ToString(CultureInfo.InvariantCulture) : "MAX";
+                var length = maxLength.HasValue && maxLength.Value > 0
+                    ? maxLength.Value.ToString(CultureInfo.InvariantCulture)
+                    : "MAX";
                 return upperType.Contains("NVARCHAR", StringComparison.Ordinal)
                     ? $"NVARCHAR({length})"
                     : $"VARCHAR({length})";
