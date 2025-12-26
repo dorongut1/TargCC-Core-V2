@@ -103,7 +103,9 @@ _ReSharper*/
 *.nuget.targets
 
 # Others
-sql/
+# Exclude output sql folders, but not source Sql folders
+/sql/
+**/output/sql/
 *.Cache
 ClientBin/
 [Ss]tyle[Cc]op.*
