@@ -312,13 +312,23 @@ public class Table
     public bool IsView { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this is a ComboList view (ccvwComboList_* prefix).
+    /// Gets or sets a value indicating whether this is an auto-generated ComboList view (ccvwComboList_* prefix).
     /// </summary>
     /// <remarks>
     /// ComboList views are simple indexed views with SCHEMABINDING that return only ID, Text, TextNS columns.
     /// They are used for dropdown/autocomplete lookups and should NOT generate any UI components or stored procedures.
     /// </remarks>
     public bool IsComboListView { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is a manual ComboList view (mnccvwComboList_* prefix).
+    /// </summary>
+    /// <remarks>
+    /// Manual ComboList views are hand-crafted views that may have additional logic.
+    /// Unlike auto-generated ComboList views, these can generate read-only UI (lists/grids) but no SPs.
+    /// The "mn" prefix indicates "Manual".
+    /// </remarks>
+    public bool IsManualComboListView { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether UI components should be generated for this table.

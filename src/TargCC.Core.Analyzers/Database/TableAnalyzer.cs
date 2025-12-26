@@ -226,23 +226,38 @@ namespace TargCC.Core.Analyzers.Database
         /// <param name="table">Table to set flags on.</param>
         private void SetGenerationFlags(Table table)
         {
-            // Detect ComboList views (ccvwComboList_*)
-            table.IsComboListView = table.Name.StartsWith(
-                "ccvwComboList_",
-                StringComparison.OrdinalIgnoreCase);
+            // Detect ComboList views:
+            // - ccvwComboList_* = Auto-generated views for dropdowns (don't generate UI/SPs)
+            // - mnccvwComboList_* = Manual views (mn = Manual, generate read-only UI)
+            var isAutoComboList = table.Name.StartsWith("ccvwComboList_", StringComparison.OrdinalIgnoreCase);
+            var isManualComboList = table.Name.Contains("ccvwComboList", StringComparison.OrdinalIgnoreCase)
+                && !isAutoComboList;
+
+            table.IsComboListView = isAutoComboList;
+            table.IsManualComboListView = isManualComboList;
 
             // Detect system tables (c_* prefix)
             table.IsSystemTable = table.Name.StartsWith("c_", StringComparison.OrdinalIgnoreCase);
 
-            // Set UI generation flag
-            // Don't generate UI for ComboList views - they are for dropdowns only
-            if (table.IsComboListView)
+            // Set generation flags based on type
+            if (isAutoComboList)
             {
+                // Auto ComboList views - no UI, no SPs (they're just for dropdowns)
                 table.GenerateUI = false;
                 table.GenerateStoredProcedures = false;
 
                 _logger.LogDebug(
-                    "Table {TableName} identified as ComboList view - UI and SP generation disabled",
+                    "Table {TableName} identified as AUTO ComboList view - UI and SP generation disabled",
+                    table.Name);
+            }
+            else if (isManualComboList)
+            {
+                // Manual ComboList views (mn prefix) - generate READ-ONLY UI
+                table.GenerateUI = true;
+                table.GenerateStoredProcedures = false; // Views don't need CRUD SPs
+
+                _logger.LogDebug(
+                    "Table {TableName} identified as MANUAL ComboList view - Read-only UI enabled",
                     table.Name);
             }
 
@@ -250,10 +265,11 @@ namespace TargCC.Core.Analyzers.Database
             LoadExtendedPropertyFlags(table);
 
             _logger.LogDebug(
-                "Generation flags for {TableName}: IsSystemTable={IsSystem}, IsComboListView={IsCombo}, GenerateUI={GenUI}, GenerateSP={GenSP}, AuditLevel={AuditLevel}",
+                "Generation flags for {TableName}: IsSystemTable={IsSystem}, IsComboListView={IsCombo}, IsManualCombo={IsManualCombo}, GenerateUI={GenUI}, GenerateSP={GenSP}, AuditLevel={AuditLevel}",
                 table.Name,
                 table.IsSystemTable,
                 table.IsComboListView,
+                table.IsManualComboListView,
                 table.GenerateUI,
                 table.GenerateStoredProcedures,
                 table.AuditLevel);

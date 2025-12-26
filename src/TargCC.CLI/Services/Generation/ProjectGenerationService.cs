@@ -84,10 +84,28 @@ public class ProjectGenerationService : IProjectGenerationService
             var analyzerLogger = _loggerFactory.CreateLogger<DatabaseAnalyzer>();
             var analyzer = new DatabaseAnalyzer(connectionString, analyzerLogger);
             var schema = await analyzer.AnalyzeAsync();
-            var tables = schema.Tables.ToList();
 
-            _output.Info($"  ✓ Found {tables.Count} tables");
+            // Filter out tables without primary keys and ccvwComboList views
+            var allTables = schema.Tables.ToList();
+            var skippedTables = allTables.Where(t =>
+                !t.Columns.Any(c => c.IsPrimaryKey) ||
+                t.IsComboListView ||
+                !t.GenerateUI).ToList();
+
+            var tables = allTables.Where(t =>
+                t.Columns.Any(c => c.IsPrimaryKey) &&
+                !t.IsComboListView &&
+                t.GenerateUI).ToList();
+
+            _output.Info($"  ✓ Found {allTables.Count} tables total");
+            _output.Info($"  ✓ Processing {tables.Count} tables (skipping {skippedTables.Count} without PK or ComboList views)");
             _output.Info($"  ✓ Found {schema.Relationships?.Count ?? 0} relationships");
+
+            if (skippedTables.Count > 0)
+            {
+                _output.Warning($"  Skipped tables: {string.Join(", ", skippedTables.Take(10).Select(t => t.Name))}{(skippedTables.Count > 10 ? "..." : "")}");
+            }
+
             _output.BlankLine();
 
             _output.Info("Step 2: Creating solution structure...");
