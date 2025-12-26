@@ -873,7 +873,7 @@ public class RepositoryGenerator : IRepositoryGenerator
 
             // Generate method name to check for duplicates
             // IMPORTANT: Use childTable.Name directly (not GetClassName) to match interface generator
-            string childrenName = Pluralize(childTable.Name);
+            string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
             string methodName = $"Get{childrenName}Async";
 
             // Skip if we've already generated this method (happens with multiple FKs to same table)
@@ -907,7 +907,7 @@ public class RepositoryGenerator : IRepositoryGenerator
         string rootNamespace)
     {
         // IMPORTANT: Use childTable.Name directly (not GetClassName) to match interface generator
-        string childrenName = Pluralize(childTable.Name);
+        string childrenName = CodeGenerationHelpers.MakePlural(childTable.Name);
         string childEntityName = GetClassName(childTable.Name);
         string qualifiedChildEntityName = GetQualifiedEntityName(childEntityName, rootNamespace);
         string methodName = $"Get{childrenName}Async";
@@ -959,43 +959,6 @@ public class RepositoryGenerator : IRepositoryGenerator
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
-    }
-
-    /// <summary>
-    /// Pluralizes a singular noun using simple English rules.
-    /// </summary>
-    private static string Pluralize(string singular)
-    {
-        if (string.IsNullOrEmpty(singular))
-        {
-            return singular;
-        }
-
-        // Category → Categories
-        // CA1867: String literals required here because char overload doesn't support StringComparison
-#pragma warning disable CA1867
-        if (singular.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("ay", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
-            !singular.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
-        {
-            return singular[..^1] + "ies";
-        }
-
-        // Address → Addresses, Box → Boxes
-        if (singular.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("z", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-            singular.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-#pragma warning restore CA1867
-        {
-            return singular + "es";
-        }
-
-        // Order → Orders, Customer → Customers
-        return singular + "s";
     }
 
     /// <summary>
