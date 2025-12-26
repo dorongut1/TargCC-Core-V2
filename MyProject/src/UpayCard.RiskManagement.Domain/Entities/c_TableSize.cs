@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_TableSize table.
-    /// Generated: 2025-12-18 08:11:16
+    /// Generated: 2025-12-18 08:27:22
     /// </summary>
     [Table("c_TableSize")]
     public partial class TableSize

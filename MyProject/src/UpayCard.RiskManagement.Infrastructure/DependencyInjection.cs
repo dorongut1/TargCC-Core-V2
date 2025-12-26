@@ -94,7 +94,7 @@ public static class DependencyInjection
         services.AddScoped<ITableRepository, TableRepository>();
         services.AddScoped<ITableFieldsRepository, TableFieldsRepository>();
         services.AddScoped<ITableSizeRepository, TableSizeRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
+       //services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserLoginKeyRepository, UserLoginKeyRepository>();
         services.AddScoped<IUserPermissionRepository, UserPermissionRepository>();
         services.AddScoped<IUserStatusRepository, UserStatusRepository>();
@@ -244,8 +244,8 @@ public static class DependencyInjection
         services.AddScoped<IOnlineApprovalRepository, OnlineApprovalRepository>();
         services.AddScoped<IRequestedTransactionRepository, RequestedTransactionRepository>();
         services.AddScoped<IRequestedTransactionFeeRepository, RequestedTransactionFeeRepository>();
-        services.AddScoped<IRiskEventRepository, RiskEventRepository>();
-        services.AddScoped<IRiskRuleRepository, RiskRuleRepository>();
+        //services.AddScoped<IRiskEventRepository, RiskEventRepository>();
+        //services.AddScoped<IRiskRuleRepository, RiskRuleRepository>();
         services.AddScoped<IRiskRuleLogRepository, RiskRuleLogRepository>();
         services.AddScoped<IRiskRuleOverrideRepository, RiskRuleOverrideRepository>();
         services.AddScoped<ISapRepository, SapRepository>();

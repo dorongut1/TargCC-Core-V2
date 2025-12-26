@@ -14,7 +14,7 @@ namespace UpayCard.RiskManagement.Domain.Entities
 {
     /// <summary>
     /// Entity class for c_UserStatus table.
-    /// Generated: 2025-12-18 08:11:17
+    /// Generated: 2025-12-18 08:27:23
     /// </summary>
     [Table("c_UserStatus")]
     public partial class UserStatus
