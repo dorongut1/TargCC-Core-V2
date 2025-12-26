@@ -312,6 +312,29 @@ public class Table
     public bool IsView { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether this is a ComboList view (ccvwComboList_* prefix).
+    /// </summary>
+    /// <remarks>
+    /// ComboList views are simple indexed views with SCHEMABINDING that return only ID, Text, TextNS columns.
+    /// They are used for dropdown/autocomplete lookups and should NOT generate any UI components or stored procedures.
+    /// </remarks>
+    public bool IsComboListView { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether UI components should be generated for this table.
+    /// </summary>
+    /// <remarks>
+    /// When false, no React forms, lists, or pages will be generated.
+    /// This is automatically set to false for ComboList views and can be controlled via extended properties.
+    /// </remarks>
+    public bool GenerateUI { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether stored procedures should be generated for this table.
+    /// </summary>
+    public bool GenerateStoredProcedures { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the number of rows in the table.
     /// </summary>
     public long RowCount { get; set; }

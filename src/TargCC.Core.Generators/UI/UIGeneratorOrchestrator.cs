@@ -82,6 +82,12 @@ namespace TargCC.Core.Generators.UI
                 new EventId(11, nameof(LogGenerationComplete)),
                 "UI generation complete: {SuccessCount}/{TotalCount} tables successful");
 
+        private static readonly Action<ILogger, string, string, Exception?> LogSkippingUIGeneration =
+            LoggerMessage.Define<string, string>(
+                LogLevel.Debug,
+                new EventId(12, nameof(LogSkippingUIGeneration)),
+                "Skipping UI generation for {TableName} - {Reason}");
+
         private readonly ILogger<UIGeneratorOrchestrator> _logger;
 
         // TODO: Inject these generators via DI once they're implemented
@@ -115,6 +121,21 @@ namespace TargCC.Core.Generators.UI
             ArgumentNullException.ThrowIfNull(config);
 
             config.Validate();
+
+            // Skip UI generation for tables that don't need it
+            if (!ShouldGenerateUI(table))
+            {
+                var skipReason = GetSkipReason(table);
+                LogSkippingUIGeneration(_logger, table.Name, skipReason, null);
+
+                return await Task.FromResult(new UIGenerationResult
+                {
+                    TableName = table.Name,
+                    Success = true,
+                    Skipped = true,
+                    SkipReason = skipReason,
+                }).ConfigureAwait(false);
+            }
 
             LogGeneratingUI(_logger, table.Name, null);
 
@@ -211,6 +232,48 @@ namespace TargCC.Core.Generators.UI
             LogGenerationComplete(_logger, successCount, results.Count, null);
 
             return results;
+        }
+
+        /// <summary>
+        /// Determines if UI should be generated for the given table.
+        /// </summary>
+        /// <param name="table">Table to check.</param>
+        /// <returns>True if UI should be generated; otherwise, false.</returns>
+        private static bool ShouldGenerateUI(Table table)
+        {
+            // Skip ComboList views - they are for dropdowns only
+            if (table.IsComboListView)
+            {
+                return false;
+            }
+
+            // Skip tables with GenerateUI explicitly set to false
+            if (!table.GenerateUI)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the reason why UI generation was skipped for a table.
+        /// </summary>
+        /// <param name="table">Table that was skipped.</param>
+        /// <returns>Skip reason string.</returns>
+        private static string GetSkipReason(Table table)
+        {
+            if (table.IsComboListView)
+            {
+                return "ComboList view (ccvwComboList_*) - used for dropdowns only";
+            }
+
+            if (!table.GenerateUI)
+            {
+                return "GenerateUI flag is false";
+            }
+
+            return "Unknown reason";
         }
     }
 }

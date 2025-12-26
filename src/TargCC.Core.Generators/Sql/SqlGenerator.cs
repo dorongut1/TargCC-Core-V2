@@ -113,6 +113,18 @@ namespace TargCC.Core.Generators.Sql
                 return false;
             }
 
+            // Skip ComboList views - they are simple views for dropdowns and don't need SPs
+            if (table.IsComboListView)
+            {
+                return false;
+            }
+
+            // Check the GenerateStoredProcedures flag
+            if (!table.GenerateStoredProcedures)
+            {
+                return false;
+            }
+
             // Must have at least one column
             return table.Columns != null && table.Columns.Count != 0;
         }

@@ -25,6 +25,16 @@ namespace TargCC.Core.Generators.UI
         public string? ErrorMessage { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether generation was skipped.
+        /// </summary>
+        public bool Skipped { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why generation was skipped.
+        /// </summary>
+        public string? SkipReason { get; set; }
+
+        /// <summary>
         /// Gets or sets the generated TypeScript types code.
         /// </summary>
         public string? TypesCode { get; set; }

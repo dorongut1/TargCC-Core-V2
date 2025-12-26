@@ -215,6 +215,61 @@ namespace TargCC.Core.Analyzers.Database
 
             // Load extended properties
             await LoadExtendedPropertiesAsync(table);
+
+            // Set generation flags based on table name and properties
+            SetGenerationFlags(table);
+        }
+
+        /// <summary>
+        /// Sets generation flags based on table name patterns and extended properties.
+        /// </summary>
+        /// <param name="table">Table to set flags on.</param>
+        private void SetGenerationFlags(Table table)
+        {
+            // Detect ComboList views (ccvwComboList_*)
+            table.IsComboListView = table.Name.StartsWith(
+                "ccvwComboList_",
+                StringComparison.OrdinalIgnoreCase);
+
+            // Detect system tables (c_* prefix)
+            table.IsSystemTable = table.Name.StartsWith("c_", StringComparison.OrdinalIgnoreCase);
+
+            // Set UI generation flag
+            // Don't generate UI for ComboList views - they are for dropdowns only
+            if (table.IsComboListView)
+            {
+                table.GenerateUI = false;
+                table.GenerateStoredProcedures = false;
+
+                _logger.LogDebug(
+                    "Table {TableName} identified as ComboList view - UI and SP generation disabled",
+                    table.Name);
+            }
+
+            // Check extended properties for UI generation overrides
+            if (table.ExtendedProperties.TryGetValue("ccUICreateEntity", out var createEntity))
+            {
+                table.GenerateUI = createEntity == "1" || createEntity.Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (table.ExtendedProperties.TryGetValue("ccUICreateCollection", out var createCollection))
+            {
+                // If collection is disabled, we might still want entity forms
+                if (createCollection == "0" || createCollection.Equals("false", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogDebug(
+                        "Table {TableName} has ccUICreateCollection=0 - collection grid disabled",
+                        table.Name);
+                }
+            }
+
+            _logger.LogDebug(
+                "Generation flags for {TableName}: IsSystemTable={IsSystem}, IsComboListView={IsCombo}, GenerateUI={GenUI}, GenerateSP={GenSP}",
+                table.Name,
+                table.IsSystemTable,
+                table.IsComboListView,
+                table.GenerateUI,
+                table.GenerateStoredProcedures);
         }
 
         /// <summary>
