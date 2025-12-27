@@ -277,10 +277,15 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    return filtersObj;");
             sb.AppendLine("  }, [searchParams]);");
             sb.AppendLine();
-            sb.AppendLine("  // Initialize local filters from URL on mount");
+            sb.AppendLine("  // Sync local filters when URL filters change (e.g., browser back/forward)");
             sb.AppendLine("  React.useEffect(() => {");
-            sb.AppendLine("    setLocalFilters(filters);");
-            sb.AppendLine("  }, []);");
+            sb.AppendLine("    setLocalFilters(prev => {");
+            sb.AppendLine("      // Only update if filters actually changed");
+            sb.AppendLine("      const hasChanges = Object.keys(filters).some(key => prev[key] !== filters[key]) ||");
+            sb.AppendLine("                         Object.keys(prev).some(key => filters[key] === undefined && prev[key] !== undefined);");
+            sb.AppendLine("      return hasChanges ? { ...filters } : prev;");
+            sb.AppendLine("    });");
+            sb.AppendLine("  }, [filters]);");
             sb.AppendLine();
             sb.AppendLine("  // Fetch data with server-side options");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data, isLoading, error }} = use{className}s({{");

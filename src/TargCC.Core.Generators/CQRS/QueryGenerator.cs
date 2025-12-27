@@ -288,9 +288,17 @@ public class QueryGenerator : IQueryGenerator
             !c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) &&
             !c.Name.StartsWith("ent_", StringComparison.OrdinalIgnoreCase));
 
+        var seenFilterProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var column in filterColumns)
         {
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names
+            if (!seenFilterProperties.Add(propName))
+            {
+                continue;
+            }
 
             // All filter properties are nullable strings for text-based filtering
             sb.AppendLine("    /// <summary>");
@@ -446,12 +454,14 @@ public class QueryGenerator : IQueryGenerator
         return sb.ToString();
     }
 
+#pragma warning disable S3776 // Cognitive Complexity - code generator requires comprehensive logic
     private static string GenerateGetAllHandler(
         Table table,
         string queryClassName,
         string handlerClassName,
         string dtoClassName,
         string rootNamespace)
+#pragma warning restore S3776
     {
         var sb = new StringBuilder();
         var entityName = API.BaseApiGenerator.GetClassName(table.Name);
@@ -563,6 +573,8 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
 
         // Generate filter logic for each column
+        var seenFilterLogicProps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var column in table.Columns)
         {
             // Skip encrypted columns
@@ -573,6 +585,13 @@ public class QueryGenerator : IQueryGenerator
             }
 
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names
+            if (!seenFilterLogicProps.Add(propName))
+            {
+                continue;
+            }
+
             var entityPropName = Entities.PrefixHandler.GetPropertyName(column);
             var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
 
@@ -641,6 +660,8 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("        {");
 
         // Generate sorting logic for each column
+        var seenSortingProps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var column in table.Columns)
         {
             // Skip encrypted columns
@@ -651,6 +672,13 @@ public class QueryGenerator : IQueryGenerator
             }
 
             var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // Skip duplicate property names
+            if (!seenSortingProps.Add(propName))
+            {
+                continue;
+            }
+
             var entityPropName = Entities.PrefixHandler.GetPropertyName(column);
 #pragma warning disable CA1308 // Normalize strings to uppercase - lowercase is required for switch key matching
             var sortKey = propName.ToLowerInvariant();
