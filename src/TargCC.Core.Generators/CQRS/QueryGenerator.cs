@@ -282,8 +282,24 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"/// </summary>");
         sb.AppendLine(CultureInfo.InvariantCulture, $"public class {entityName}Filters");
         sb.AppendLine("{");
-        sb.AppendLine("    // TODO: Add filter properties based on table columns");
-        sb.AppendLine("    // Example: public string? Name { get; set; }");
+
+        // Generate filter properties for each column (excluding encrypted columns)
+        var filterColumns = table.Columns.Where(c =>
+            !c.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) &&
+            !c.Name.StartsWith("ent_", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var column in filterColumns)
+        {
+            var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+
+            // All filter properties are nullable strings for text-based filtering
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    /// Gets or sets the filter value for {propName}.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    public string? {propName} {{ get; set; }}");
+            sb.AppendLine();
+        }
+
         sb.AppendLine("}");
 
         return sb.ToString();
@@ -545,13 +561,68 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine("            return query;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine("        // TODO: Add filter logic based on table columns");
-        sb.AppendLine("        // Example:");
-        sb.AppendLine("        // if (!string.IsNullOrEmpty(filters.Name))");
-        sb.AppendLine("        // {");
-        sb.AppendLine("        //     query = query.Where(e => e.Name.Contains(filters.Name));");
-        sb.AppendLine("        // }");
-        sb.AppendLine();
+
+        // Generate filter logic for each column
+        foreach (var column in table.Columns)
+        {
+            // Skip encrypted columns
+            if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
+                column.Name.StartsWith("ent_", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+            var entityPropName = Entities.PrefixHandler.GetPropertyName(column);
+            var propType = CodeGenerationHelpers.GetCSharpType(column.DataType);
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"        if (!string.IsNullOrEmpty(filters.{propName}))");
+            sb.AppendLine("        {");
+
+            switch (propType)
+            {
+                case "string":
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            query = query.Where(e => e.{entityPropName} != null && e.{entityPropName}.Contains(filters.{propName}));");
+                    break;
+                case "int":
+                case "long":
+                case "short":
+                case "decimal":
+                case "double":
+                case "float":
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            if ({propType}.TryParse(filters.{propName}, out var {CodeGenerationHelpers.ToCamelCase(propName)}Value))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"                query = query.Where(e => e.{entityPropName} == {CodeGenerationHelpers.ToCamelCase(propName)}Value);");
+                    sb.AppendLine("            }");
+                    break;
+                case "bool":
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            if (bool.TryParse(filters.{propName}, out var {CodeGenerationHelpers.ToCamelCase(propName)}Value))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"                query = query.Where(e => e.{entityPropName} == {CodeGenerationHelpers.ToCamelCase(propName)}Value);");
+                    sb.AppendLine("            }");
+                    break;
+                case "DateTime":
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            if (DateTime.TryParse(filters.{propName}, out var {CodeGenerationHelpers.ToCamelCase(propName)}Value))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"                query = query.Where(e => e.{entityPropName} == {CodeGenerationHelpers.ToCamelCase(propName)}Value);");
+                    sb.AppendLine("            }");
+                    break;
+                case "Guid":
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            if (Guid.TryParse(filters.{propName}, out var {CodeGenerationHelpers.ToCamelCase(propName)}Value))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"                query = query.Where(e => e.{entityPropName} == {CodeGenerationHelpers.ToCamelCase(propName)}Value);");
+                    sb.AppendLine("            }");
+                    break;
+                default:
+                    // For unknown types, try string Contains if the entity property is string
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            query = query.Where(e => e.{entityPropName} != null && e.{entityPropName}.ToString()!.Contains(filters.{propName}));");
+                    break;
+            }
+
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
         sb.AppendLine("        return query;");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -566,11 +637,28 @@ public class QueryGenerator : IQueryGenerator
         sb.AppendLine();
         sb.AppendLine("        var isDescending = sortDirection?.ToLower() == \"desc\";");
         sb.AppendLine();
-        sb.AppendLine("        // TODO: Add sorting logic based on table columns");
         sb.AppendLine("        return sortBy.ToLower() switch");
         sb.AppendLine("        {");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"            \"id\" => isDescending ? query.OrderByDescending(e => e.{pkPropertyName}) : query.OrderBy(e => e.{pkPropertyName}),");
-        sb.AppendLine("            // Add more sortable columns here");
+
+        // Generate sorting logic for each column
+        foreach (var column in table.Columns)
+        {
+            // Skip encrypted columns
+            if (column.Name.StartsWith("eno_", StringComparison.OrdinalIgnoreCase) ||
+                column.Name.StartsWith("ent_", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var propName = CodeGenerationHelpers.SanitizeColumnName(column.Name);
+            var entityPropName = Entities.PrefixHandler.GetPropertyName(column);
+#pragma warning disable CA1308 // Normalize strings to uppercase - lowercase is required for switch key matching
+            var sortKey = propName.ToLowerInvariant();
+#pragma warning restore CA1308
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"            \"{sortKey}\" => isDescending ? query.OrderByDescending(e => e.{entityPropName}) : query.OrderBy(e => e.{entityPropName}),");
+        }
+
         sb.AppendLine(CultureInfo.InvariantCulture, $"            _ => query.OrderBy(e => e.{pkPropertyName}) // Default to {pkPropertyName} if unknown field");
         sb.AppendLine("        };");
         sb.AppendLine("    }");

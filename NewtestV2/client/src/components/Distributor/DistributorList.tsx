@@ -18,7 +18,11 @@ export const DistributorList: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const apiRef = useGridApiRef();
-  
+
+  // Local state for filter inputs (debounced before URL update)
+  const [localFilters, setLocalFilters] = React.useState<Record<string, string>>({});
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
   // Extract pagination, sorting, and filters from URL
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = parseInt(searchParams.get('pageSize') || '10', 10);
@@ -36,6 +40,11 @@ export const DistributorList: React.FC = () => {
     return filtersObj;
   }, [searchParams]);
 
+  // Initialize local filters from URL on mount
+  React.useEffect(() => {
+    setLocalFilters(filters);
+  }, []);
+
   // Fetch data with server-side options
   const { data, isLoading, error } = useDistributors({
     page,
@@ -50,20 +59,38 @@ export const DistributorList: React.FC = () => {
 
   const { mutate: deleteEntity } = useDeleteDistributor();
 
-  // URL update handlers
-  const updateUrlParam = (key: string, value: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (value && value.trim() !== '') {
-      newParams.set(key, value);
-    } else {
-      newParams.delete(key);
+  // Debounced filter update - only updates URL after user stops typing
+  const handleFilterChange = (key: string, value: string) => {
+    // Update local state immediately for responsive UI
+    setLocalFilters(prev => ({ ...prev, [key]: value }));
+
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-    // Reset to page 1 when filter changes
-    if (key !== 'page' && key !== 'pageSize') {
+
+    // Set new debounce timer (500ms delay)
+    debounceTimerRef.current = setTimeout(() => {
+      const newParams = new URLSearchParams(searchParams);
+      if (value && value.trim() !== '') {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+      // Reset to page 1 when filter changes
       newParams.set('page', '1');
-    }
-    setSearchParams(newParams);
+      setSearchParams(newParams);
+    }, 500);
   };
+
+  // Cleanup debounce timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const handlePaginationChange = (newPage: number, newPageSize: number) => {
     const newParams = new URLSearchParams(searchParams);
@@ -85,6 +112,12 @@ export const DistributorList: React.FC = () => {
   };
 
   const handleClearAllFilters = () => {
+    // Clear local filters
+    setLocalFilters({});
+    // Clear debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     // Keep only page and pageSize, remove all filters and sorting
     const newParams = new URLSearchParams();
     newParams.set('page', '1');
@@ -243,8 +276,8 @@ export const DistributorList: React.FC = () => {
             label="TableNameDistributor"
             size="small"
             sx={{ minWidth: 120 }}
-            value={filters['tableNameDistributor'] || ''}
-            onChange={(e) => updateUrlParam('tableNameDistributor', e.target.value)}
+            value={localFilters['tableNameDistributor'] ?? filters['tableNameDistributor'] ?? ''}
+            onChange={(e) => handleFilterChange('tableNameDistributor', e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="true">Yes</MenuItem>
@@ -254,64 +287,64 @@ export const DistributorList: React.FC = () => {
             label="Id"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['id'] || ''}
-            onChange={(e) => updateUrlParam('id', e.target.value)}
+            value={localFilters['id'] ?? filters['id'] ?? ''}
+            onChange={(e) => handleFilterChange('id', e.target.value)}
           />
           <TextField
             label="BusinessName"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['businessName'] || ''}
-            onChange={(e) => updateUrlParam('businessName', e.target.value)}
+            value={localFilters['businessName'] ?? filters['businessName'] ?? ''}
+            onChange={(e) => handleFilterChange('businessName', e.target.value)}
           />
           <TextField
             label="BusinessPhoneNumber"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['businessPhoneNumber'] || ''}
-            onChange={(e) => updateUrlParam('businessPhoneNumber', e.target.value)}
+            value={localFilters['businessPhoneNumber'] ?? filters['businessPhoneNumber'] ?? ''}
+            onChange={(e) => handleFilterChange('businessPhoneNumber', e.target.value)}
           />
           <TextField
             label="ContactName"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['contactName'] || ''}
-            onChange={(e) => updateUrlParam('contactName', e.target.value)}
+            value={localFilters['contactName'] ?? filters['contactName'] ?? ''}
+            onChange={(e) => handleFilterChange('contactName', e.target.value)}
           />
           <TextField
             label="Email"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['email'] || ''}
-            onChange={(e) => updateUrlParam('email', e.target.value)}
+            value={localFilters['email'] ?? filters['email'] ?? ''}
+            onChange={(e) => handleFilterChange('email', e.target.value)}
           />
           <TextField
             label="CellphoneNumber"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['cellphoneNumber'] || ''}
-            onChange={(e) => updateUrlParam('cellphoneNumber', e.target.value)}
+            value={localFilters['cellphoneNumber'] ?? filters['cellphoneNumber'] ?? ''}
+            onChange={(e) => handleFilterChange('cellphoneNumber', e.target.value)}
           />
           <TextField
             label="ActualAddressStreetAndNumber"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['actualAddressStreetAndNumber'] || ''}
-            onChange={(e) => updateUrlParam('actualAddressStreetAndNumber', e.target.value)}
+            value={localFilters['actualAddressStreetAndNumber'] ?? filters['actualAddressStreetAndNumber'] ?? ''}
+            onChange={(e) => handleFilterChange('actualAddressStreetAndNumber', e.target.value)}
           />
           <TextField
             label="ActualAddressCity"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['actualAddressCity'] || ''}
-            onChange={(e) => updateUrlParam('actualAddressCity', e.target.value)}
+            value={localFilters['actualAddressCity'] ?? filters['actualAddressCity'] ?? ''}
+            onChange={(e) => handleFilterChange('actualAddressCity', e.target.value)}
           />
           <TextField
             label="ActualZipCode"
             size="small"
             sx={{ minWidth: 150 }}
-            value={filters['actualZipCode'] || ''}
-            onChange={(e) => updateUrlParam('actualZipCode', e.target.value)}
+            value={localFilters['actualZipCode'] ?? filters['actualZipCode'] ?? ''}
+            onChange={(e) => handleFilterChange('actualZipCode', e.target.value)}
           />
           <Button
             variant="outlined"
@@ -366,4 +399,3 @@ export const DistributorList: React.FC = () => {
     </Box>
   );
 };
-

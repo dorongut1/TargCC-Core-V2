@@ -244,6 +244,10 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("  const [searchParams, setSearchParams] = useSearchParams();");
             sb.AppendLine("  const apiRef = useGridApiRef();");
             sb.AppendLine("  ");
+            sb.AppendLine("  // Local state for filter inputs (debounced before URL update)");
+            sb.AppendLine("  const [localFilters, setLocalFilters] = React.useState<Record<string, string>>({});");
+            sb.AppendLine("  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);");
+            sb.AppendLine("  ");
 
             // Only generate formatDate if the first 10 displayed columns contain DATE fields
             var dataColumns = GetDataColumns(table).Take(10).ToList();
@@ -272,6 +276,11 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("    });");
             sb.AppendLine("    return filtersObj;");
             sb.AppendLine("  }, [searchParams]);");
+            sb.AppendLine();
+            sb.AppendLine("  // Initialize local filters from URL on mount");
+            sb.AppendLine("  React.useEffect(() => {");
+            sb.AppendLine("    setLocalFilters(filters);");
+            sb.AppendLine("  }, []);");
             sb.AppendLine();
             sb.AppendLine("  // Fetch data with server-side options");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data, isLoading, error }} = use{className}s({{");
@@ -315,20 +324,38 @@ namespace TargCC.Core.Generators.UI.Components
         private static string GenerateFilterLogic()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("  // URL update handlers");
-            sb.AppendLine("  const updateUrlParam = (key: string, value: string) => {");
-            sb.AppendLine("    const newParams = new URLSearchParams(searchParams);");
-            sb.AppendLine("    if (value && value.trim() !== '') {");
-            sb.AppendLine("      newParams.set(key, value);");
-            sb.AppendLine("    } else {");
-            sb.AppendLine("      newParams.delete(key);");
+            sb.AppendLine("  // Debounced filter update - only updates URL after user stops typing");
+            sb.AppendLine("  const handleFilterChange = (key: string, value: string) => {");
+            sb.AppendLine("    // Update local state immediately for responsive UI");
+            sb.AppendLine("    setLocalFilters(prev => ({ ...prev, [key]: value }));");
+            sb.AppendLine();
+            sb.AppendLine("    // Clear existing debounce timer");
+            sb.AppendLine("    if (debounceTimerRef.current) {");
+            sb.AppendLine("      clearTimeout(debounceTimerRef.current);");
             sb.AppendLine("    }");
-            sb.AppendLine("    // Reset to page 1 when filter changes");
-            sb.AppendLine("    if (key !== 'page' && key !== 'pageSize') {");
+            sb.AppendLine();
+            sb.AppendLine("    // Set new debounce timer (500ms delay)");
+            sb.AppendLine("    debounceTimerRef.current = setTimeout(() => {");
+            sb.AppendLine("      const newParams = new URLSearchParams(searchParams);");
+            sb.AppendLine("      if (value && value.trim() !== '') {");
+            sb.AppendLine("        newParams.set(key, value);");
+            sb.AppendLine("      } else {");
+            sb.AppendLine("        newParams.delete(key);");
+            sb.AppendLine("      }");
+            sb.AppendLine("      // Reset to page 1 when filter changes");
             sb.AppendLine("      newParams.set('page', '1');");
-            sb.AppendLine("    }");
-            sb.AppendLine("    setSearchParams(newParams);");
+            sb.AppendLine("      setSearchParams(newParams);");
+            sb.AppendLine("    }, 500);");
             sb.AppendLine("  };");
+            sb.AppendLine();
+            sb.AppendLine("  // Cleanup debounce timer on unmount");
+            sb.AppendLine("  React.useEffect(() => {");
+            sb.AppendLine("    return () => {");
+            sb.AppendLine("      if (debounceTimerRef.current) {");
+            sb.AppendLine("        clearTimeout(debounceTimerRef.current);");
+            sb.AppendLine("      }");
+            sb.AppendLine("    };");
+            sb.AppendLine("  }, []);");
             sb.AppendLine();
             sb.AppendLine("  const handlePaginationChange = (newPage: number, newPageSize: number) => {");
             sb.AppendLine("    const newParams = new URLSearchParams(searchParams);");
@@ -356,6 +383,12 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
             sb.AppendLine("  const handleClearAllFilters = () => {");
+            sb.AppendLine("    // Clear local filters");
+            sb.AppendLine("    setLocalFilters({});");
+            sb.AppendLine("    // Clear debounce timer");
+            sb.AppendLine("    if (debounceTimerRef.current) {");
+            sb.AppendLine("      clearTimeout(debounceTimerRef.current);");
+            sb.AppendLine("    }");
             sb.AppendLine("    // Keep only page and pageSize, remove all filters and sorting");
             sb.AppendLine("    const newParams = new URLSearchParams();");
             sb.AppendLine("    newParams.set('page', '1');");
@@ -646,14 +679,14 @@ namespace TargCC.Core.Generators.UI.Components
 
                 if (isBooleanColumn)
                 {
-                    // Dropdown for Boolean columns
+                    // Dropdown for Boolean columns - no debounce needed for dropdowns
                     sb.AppendLine("          <TextField");
                     sb.AppendLine("            select");
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 120 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters['{propertyName}'] ?? filters['{propertyName}'] ?? ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => handleFilterChange('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          >");
                     sb.AppendLine("            <MenuItem value=\"\">All</MenuItem>");
                     sb.AppendLine("            <MenuItem value=\"true\">Yes</MenuItem>");
@@ -669,20 +702,20 @@ namespace TargCC.Core.Generators.UI.Components
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 180 }}");
                     sb.AppendLine("            InputLabelProps={{ shrink: true }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters['{propertyName}'] ?? filters['{propertyName}'] ?? ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => handleFilterChange('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          />");
                 }
                 else if (isEnumColumn)
                 {
-                    // Dropdown for ENUM/Status/Type columns
+                    // Dropdown for ENUM/Status/Type columns - no debounce needed for dropdowns
                     sb.AppendLine("          <TextField");
                     sb.AppendLine("            select");
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 150 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters['{propertyName}'] ?? filters['{propertyName}'] ?? ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => handleFilterChange('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          >");
                     sb.AppendLine("            <MenuItem value=\"\">All</MenuItem>");
                     sb.AppendLine("            <MenuItem value=\"Active\">Active</MenuItem>");
@@ -692,13 +725,13 @@ namespace TargCC.Core.Generators.UI.Components
                 }
                 else
                 {
-                    // Regular text field
+                    // Regular text field with debounce
                     sb.AppendLine("          <TextField");
                     sb.AppendLine(CultureInfo.InvariantCulture, $"            label=\"{displayName}\"");
                     sb.AppendLine("            size=\"small\"");
                     sb.AppendLine("            sx={{ minWidth: 150 }}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{filters['{propertyName}'] || ''}}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => updateUrlParam('{propertyName}', e.target.value)}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            value={{localFilters['{propertyName}'] ?? filters['{propertyName}'] ?? ''}}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"            onChange={{(e) => handleFilterChange('{propertyName}', e.target.value)}}");
                     sb.AppendLine("          />");
                 }
             }
