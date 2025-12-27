@@ -589,7 +589,7 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine("          }]}");
             sb.AppendLine("          onSortModelChange={(model) => {");
             sb.AppendLine("            if (model.length > 0) {");
-            sb.AppendLine("              handleSortChange(model[0].field, model[0].sort);");
+            sb.AppendLine("              handleSortChange(model[0].field, model[0].sort ?? 'asc');");
             sb.AppendLine("            } else {");
             sb.AppendLine("              handleSortChange('id', 'asc');");
             sb.AppendLine("            }");

@@ -295,12 +295,21 @@ namespace TargCC.Core.Generators.Sql.Templates
 
             if (upperType.Contains("VARCHAR", StringComparison.Ordinal))
             {
-                var length = maxLength.HasValue && maxLength.Value > 0
-                    ? maxLength.Value.ToString(CultureInfo.InvariantCulture)
-                    : "MAX";
-                return upperType.Contains("NVARCHAR", StringComparison.Ordinal)
-                    ? $"NVARCHAR({length})"
-                    : $"VARCHAR({length})";
+                // NVARCHAR max is 4000, VARCHAR max is 8000 - use MAX for larger values
+                var isNVarchar = upperType.Contains("NVARCHAR", StringComparison.Ordinal);
+                var maxAllowed = isNVarchar ? 4000 : 8000;
+
+                string length;
+                if (!maxLength.HasValue || maxLength.Value <= 0 || maxLength.Value > maxAllowed)
+                {
+                    length = "MAX";
+                }
+                else
+                {
+                    length = maxLength.Value.ToString(CultureInfo.InvariantCulture);
+                }
+
+                return isNVarchar ? $"NVARCHAR({length})" : $"VARCHAR({length})";
             }
 
             if (upperType.Contains("CHAR", StringComparison.Ordinal))

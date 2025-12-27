@@ -161,7 +161,14 @@ public class DbContextGenerator : IDbContextGenerator
         sb.AppendLine("    #region DbSets");
         sb.AppendLine();
 
-        foreach (var table in schema.Tables.OrderBy(t => t.Name))
+        // Filter tables: must have PK, not be auto ComboList views, and have GenerateUI flag
+        var validTables = schema.Tables
+            .Where(t => t.Columns.ToList().Exists(c => c.IsPrimaryKey)) // Must have PK
+            .Where(t => !t.IsComboListView) // Not auto ComboList view
+            .Where(t => t.GenerateUI) // GenerateUI flag set
+            .OrderBy(t => t.Name);
+
+        foreach (var table in validTables)
         {
             // Use PascalCase conversion for consistency with other generators
             var entityName = API.BaseApiGenerator.GetClassName(table.Name);

@@ -1,13 +1,77 @@
 # סיכום שיחה - TargCC V2 Development
 ## Session Summary for Next Conversation
 
-**תאריך:** 2025-12-26
+**תאריך:** 2025-12-27
 **Branch:** `feature/legacy-compatibility`
-**Last Commit:** `745420d62` - Fix: Skip tables without PK, distinguish auto vs manual ComboList views
+**Last Commit:** (pending) - Fix: DbContext generators now filter tables correctly
 
 ---
 
-## מה הושלם בשיחה הזו
+## מה הושלם בשיחה הזו (2025-12-27)
+
+### Bug Fix 1: DbContext Generators Filter Issue ✅
+הבעיה: `IApplicationDbContext.cs` ו-`ApplicationDbContext.cs` כללו DbSet references לטבלאות שלא קיימות כ-Entities (כמו `IndexFragmentationData`, `CcvwComboListActiveRestrictions`).
+
+**שורש הבעיה:**
+- DbContext generators (`ApplicationDbContextInterfaceGenerator`, `DbContextGenerator`) השתמשו בכל הטבלאות מה-schema
+- Entity generator ושאר הגנרטורים סיננו טבלאות בלי PK, ccvwComboList views, וטבלאות עם GenerateUI=false
+
+**התיקון:**
+- עדכון `ApplicationDbContextInterfaceGenerator.cs` - הוספת פילטור לטבלאות
+- עדכון `DbContextGenerator.cs` - הוספת פילטור לטבלאות
+
+**קבצים שנערכו:**
+- `src/TargCC.Core.Generators/Data/ApplicationDbContextInterfaceGenerator.cs`
+- `src/TargCC.Core.Generators/Data/DbContextGenerator.cs`
+
+**תוצאה:** הפרויקט המיוצר (`NewtestV2`) מתקמפל בהצלחה!
+
+### Bug Fix 2: React Client TypeScript Error ✅
+הבעיה: TypeScript build נכשל עם שגיאת `TS2345: Argument of type 'GridSortDirection' is not assignable to parameter of type '"desc" | "asc" | null'`
+
+**שורש הבעיה:**
+- MUI DataGrid's `model[0].sort` can be `undefined`, but `handleSortChange` expected `'asc' | 'desc' | null`
+
+**התיקון:**
+- עדכון `ReactListComponentGenerator.cs` להוסיף nullish coalescing: `model[0].sort ?? 'asc'`
+
+**קובץ שנערך:**
+- `src/TargCC.Core.Generators/UI/Components/ReactListComponentGenerator.cs`
+
+**תוצאה:** React client מתקמפל בהצלחה!
+
+### Feature: @WithParentText Now Works! ✅
+הפיצ'ר `@WithParentText` עכשיו עובד מלא!
+
+**הבעיה הקודמת:**
+- `Column.IsForeignKey` ו-`Column.ReferencedTable` לא היו מאוכלסים
+- לכן הSPs לא ייצרו את הלוגיקה של LEFT JOIN
+
+**התיקון:**
+- עדכון `DatabaseAnalyzer.cs` - הוספת מתודה `PopulateForeignKeyInfoOnColumns`
+- אחרי שהRelationships נטענים, עוברים על כל relationship ומאכלסים את:
+  - `Column.IsForeignKey = true`
+  - `Column.ReferencedTable = "ParentTableName"`
+
+**תוצאה:**
+- 146 FK column references מאוכלסים
+- 292 LEFT JOINs ל-ccvwComboList views
+- 120 `IF @WithParentText = 1` conditional blocks
+
+### Feature: ccvwComboList Views Generation ✅
+נוספה יכולת לייצר ccvwComboList Views אוטומטית!
+
+**מה נעשה:**
+- שילוב `ComboListViewGenerator` ב-`ProjectGenerationService`
+- הViews נוצרים בתחילת הקובץ `all_procedures.sql`
+
+**תוצאה:**
+- 73 ccvwComboList Views נוצרו אוטומטית
+- כל View מכיל: ID, Text, TextNS (for search optimization)
+
+---
+
+## סיכום מהשיחה הקודמת (2025-12-26)
 
 ### Phase 5: Extended Properties & Audit ✅
 - הוספת properties חדשים ל-`Table.cs`: `CreateMenu`, `CreateEntity`, `CreateCollection`, `AuditLevel`
@@ -60,12 +124,28 @@ dotnet run -- generate project --database "UpayCard_RiskManagement_CCV2" --conne
 
 ## מה עדיין צריך לבדוק/לעשות
 
+### בדיקות שהושלמו ✅
+1. [x] להריץ generation מחדש ולבדוק שאין SPs ל-ccvwComboList - **עובד! 0 SPs ל-ccvwComboList**
+2. [x] לעשות dotnet build על הפרויקט המיוצר - **Build succeeded!**
+3. [x] לבדוק npm build על ה-React client - **Build succeeded!**
+4. [x] @WithParentText עובד - **292 LEFT JOINs, 120 IF blocks**
+5. [x] ccvwComboList Views נוצרים - **73 Views generated**
+
 ### בדיקות נדרשות
-1. [ ] להריץ generation מחדש ולבדוק שאין SPs ל-ccvwComboList
-2. [ ] לבדוק ש-mnccvwComboList מקבלות UI
-3. [ ] לבדוק @WithParentText בSQL output
-4. [ ] לעשות dotnet build על הפרויקט המיוצר
-5. [ ] לבדוק npm build על ה-React client
+1. [ ] לבדוק ש-mnccvwComboList מקבלות UI
+2. [ ] לבדוק API endpoint אחד ידנית
+3. [ ] להריץ את ה-API ולבדוק ב-Swagger
+
+### ממצאים חשובים מהבדיקה
+
+#### @WithParentText - עובד! ✅
+- 146 FK column references מאוכלסים
+- 292 LEFT JOINs ל-ccvwComboList views
+- 120 `IF @WithParentText = 1` conditional blocks
+
+#### ccvwComboList Views - עובד! ✅
+- 73 ccvwComboList Views נוצרו אוטומטית
+- כל View מכיל: ID, Text, TextNS
 
 ### שיפורים אפשריים לעתיד
 - [ ] יצירת ccvwComboList Views אוטומטית

@@ -242,6 +242,13 @@ namespace TargCC.Core.Generators.Sql.Templates
                 return $"{baseType}(MAX)";
             }
 
+            // NVARCHAR max is 4000, VARCHAR max is 8000 - use MAX for larger values
+            var maxAllowed = baseType.StartsWith('n') || baseType.StartsWith('N') ? 4000 : 8000;
+            if (maxLength.HasValue && maxLength.Value > maxAllowed)
+            {
+                return $"{baseType}(MAX)";
+            }
+
             return maxLength.HasValue ? $"{baseType}({maxLength.Value})" : baseType;
         }
     }

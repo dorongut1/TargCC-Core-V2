@@ -17,6 +17,8 @@ namespace TargCC.Core.Generators.Sql.Templates
     /// </summary>
     public static class SpGetByIndexTemplate
     {
+        private const int MaxProcedureNameLength = 128;
+
         /// <summary>
         /// Generates stored procedures for all indexes on a table.
         /// </summary>
@@ -80,6 +82,14 @@ namespace TargCC.Core.Generators.Sql.Templates
             var prefix = index.IsUnique ? "Get" : "Fill";
             var columnNames = string.Join("And", index.ColumnNames.Select(ToTitleCase));
             var procName = $"SP_{prefix}{entityName}By{columnNames}";
+
+            // Truncate procedure name if too long (SQL Server limit is 128 characters)
+            if (procName.Length > MaxProcedureNameLength)
+            {
+                // Use hash to ensure uniqueness when truncating
+                var hash = Math.Abs(procName.GetHashCode(StringComparison.Ordinal)).ToString(CultureInfo.InvariantCulture)[..6];
+                procName = procName[.. (MaxProcedureNameLength - 7)] + "_" + hash;
+            }
 
             AppendHeader(sb, index);
             AppendProcedureDeclaration(sb, procName, table, index);
@@ -247,6 +257,13 @@ namespace TargCC.Core.Generators.Sql.Templates
         private static string FormatStringType(string baseType, int? maxLength)
         {
             if (maxLength == -1)
+            {
+                return $"{baseType}(MAX)";
+            }
+
+            // NVARCHAR max is 4000, VARCHAR max is 8000 - use MAX for larger values
+            var maxAllowed = baseType.StartsWith('n') || baseType.StartsWith('N') ? 4000 : 8000;
+            if (maxLength.HasValue && maxLength.Value > maxAllowed)
             {
                 return $"{baseType}(MAX)";
             }

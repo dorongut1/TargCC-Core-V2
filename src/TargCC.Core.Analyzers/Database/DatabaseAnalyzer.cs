@@ -490,6 +490,61 @@ public class DatabaseAnalyzer : IAnalyzer, IDatabaseAnalyzer
     {
         _logger.LogInformation("Analyzing table relationships...");
         schema.Relationships = await _relationshipAnalyzer.AnalyzeRelationshipsAsync(schema.Tables);
+
+        // Populate FK info on columns based on relationships
+        PopulateForeignKeyInfoOnColumns(schema);
+    }
+
+    /// <summary>
+    /// Populates IsForeignKey and ReferencedTable on Column objects based on relationships.
+    /// This enables @WithParentText feature in SP generation.
+    /// </summary>
+    private void PopulateForeignKeyInfoOnColumns(DatabaseSchema schema)
+    {
+        int fkCount = 0;
+
+        foreach (var relationship in schema.Relationships)
+        {
+            // Find the child table (the one that has the FK column)
+            // In Relationship: ChildTable has the FK column pointing to ParentTable
+            var childTableName = relationship.ChildTable?.Replace("dbo.", string.Empty);
+            if (string.IsNullOrEmpty(childTableName))
+            {
+                continue;
+            }
+
+            var childTable = schema.Tables.Find(t =>
+                t.Name.Equals(childTableName, StringComparison.OrdinalIgnoreCase) ||
+                t.FullName.Equals(relationship.ChildTable, StringComparison.OrdinalIgnoreCase));
+
+            if (childTable == null)
+            {
+                continue;
+            }
+
+            // Find the FK column in child table
+            var fkColumn = childTable.Columns.Find(c =>
+                c.Name.Equals(relationship.ChildColumn, StringComparison.OrdinalIgnoreCase));
+
+            if (fkColumn != null)
+            {
+                fkColumn.IsForeignKey = true;
+
+                // Set ReferencedTable - remove schema prefix if present
+                var referencedTable = relationship.ParentTable?.Replace("dbo.", string.Empty);
+                fkColumn.ReferencedTable = referencedTable;
+
+                fkCount++;
+
+                _logger.LogDebug(
+                    "FK populated: {ChildTable}.{ChildColumn} -> {ParentTable}",
+                    childTable.Name,
+                    fkColumn.Name,
+                    referencedTable);
+            }
+        }
+
+        _logger.LogInformation("Populated {FkCount} foreign key column references", fkCount);
     }
 
     /// <summary>

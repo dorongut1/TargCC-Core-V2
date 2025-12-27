@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TargCC.Core.Generators.API;
@@ -115,7 +116,14 @@ public class ApplicationDbContextInterfaceGenerator : IApplicationDbContextInter
 
     private static void GenerateDbSetProperties(StringBuilder sb, DatabaseSchema schema, string rootNamespace)
     {
-        foreach (var table in schema.Tables.OrderBy(t => t.Name))
+        // Filter tables: must have PK, not be auto ComboList views, and have GenerateUI flag
+        var validTables = schema.Tables
+            .Where(t => t.Columns.ToList().Exists(c => c.IsPrimaryKey)) // Must have PK
+            .Where(t => !t.IsComboListView) // Not auto ComboList view
+            .Where(t => t.GenerateUI) // GenerateUI flag set
+            .OrderBy(t => t.Name);
+
+        foreach (var table in validTables)
         {
             var entityName = BaseApiGenerator.GetClassName(table.Name);
             var dbSetName = CodeGenerationHelpers.MakePlural(entityName);

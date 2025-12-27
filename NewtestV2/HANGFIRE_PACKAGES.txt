@@ -1,0 +1,15 @@
+﻿<!-- Hangfire Packages - Add these to your .csproj files -->
+
+<!-- API Project -->
+<ItemGroup>
+  <PackageReference Include="Hangfire.Core" Version="1.8.14" />
+  <PackageReference Include="Hangfire.SqlServer" Version="1.8.14" />
+  <PackageReference Include="Hangfire.AspNetCore" Version="1.8.14" />
+</ItemGroup>
+
+<!-- Infrastructure Project -->
+<ItemGroup>
+  <PackageReference Include="Hangfire.Core" Version="1.8.14" />
+  <PackageReference Include="Dapper" Version="2.1.28" />
+  <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+</ItemGroup>

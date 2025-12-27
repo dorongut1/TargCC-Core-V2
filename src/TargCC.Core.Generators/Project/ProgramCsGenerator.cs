@@ -64,12 +64,24 @@ public class ProgramCsGenerator : IProgramCsGenerator
 
         // Configure middleware
         sb.AppendLine("// Configure the HTTP request pipeline");
-        sb.AppendLine("app.UseSwagger();");
-        sb.AppendLine("app.UseSwaggerUI();");
+        sb.AppendLine("if (app.Environment.IsDevelopment())");
+        sb.AppendLine("{");
+        sb.AppendLine("    app.UseSwagger();");
+        sb.AppendLine("    app.UseSwaggerUI();");
+        sb.AppendLine("}");
         sb.AppendLine();
 
-        sb.AppendLine("app.UseHttpsRedirection();");
+        sb.AppendLine("// CORS must be before other middleware");
         sb.AppendLine("app.UseCors();");
+        sb.AppendLine();
+
+        sb.AppendLine("// Don't redirect to HTTPS in development");
+        sb.AppendLine("if (!app.Environment.IsDevelopment())");
+        sb.AppendLine("{");
+        sb.AppendLine("    app.UseHttpsRedirection();");
+        sb.AppendLine("}");
+        sb.AppendLine();
+
         sb.AppendLine("app.UseAuthorization();");
         sb.AppendLine("app.MapControllers();");
         sb.AppendLine();
