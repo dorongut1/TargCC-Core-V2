@@ -884,7 +884,12 @@ public class ProjectGenerationService : IProjectGenerationService
 
     private static string GenerateAppTsx(List<Table> tables)
     {
-        var imports = string.Join("\n", tables.Select(t =>
+        // Filter out c_Settings from UI generation (it's a config table, not user-facing)
+        var uiTables = tables.Where(t =>
+            !t.Name.Equals("c_Settings", StringComparison.OrdinalIgnoreCase) &&
+            !t.Name.Equals("Settings", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        var imports = string.Join("\n", uiTables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             // For views, skip Form import (views are read-only)
@@ -895,7 +900,7 @@ public class ProjectGenerationService : IProjectGenerationService
             return $"import {{ {className}List }} from './components/{className}/{className}List';\nimport {{ {className}Detail }} from './components/{className}/{className}Detail';\nimport {{ {className}Form }} from './components/{className}/{className}Form';";
         }));
 
-        var menuItems = string.Join("\n", tables.Select(t =>
+        var menuItems = string.Join("\n", uiTables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
@@ -904,7 +909,7 @@ public class ProjectGenerationService : IProjectGenerationService
             return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/{camelName}s\">\n                <ListItemText primary=\"{displayName}\" />\n              </ListItemButton>\n            </ListItem>";
         }));
 
-        var routes = string.Join("\n", tables.Select(t =>
+        var routes = string.Join("\n", uiTables.Select(t =>
         {
             var className = BaseApiGenerator.GetClassName(t.Name);
             var camelName = char.ToLowerInvariant(className[0]) + className.Substring(1);
@@ -916,7 +921,7 @@ public class ProjectGenerationService : IProjectGenerationService
             return $"            <Route path=\"/{camelName}s\" element={{<{className}List />}} />\n            <Route path=\"/{camelName}s/new\" element={{<{className}Form />}} />\n            <Route path=\"/{camelName}s/:id\" element={{<{className}Detail />}} />\n            <Route path=\"/{camelName}s/:id/edit\" element={{<{className}Form />}} />";
         }));
 
-        var appName = tables.Any() ? BaseApiGenerator.GetClassName(tables[0].Name) : "App";
+        var appName = uiTables.Any() ? BaseApiGenerator.GetClassName(uiTables[0].Name) : "App";
 
         return $@"import {{ Routes, Route, Link }} from 'react-router-dom';
 import {{ AppBar, Toolbar, Typography, Container, Box, Drawer, List, ListItem, ListItemButton, ListItemText }} from '@mui/material';
@@ -1420,12 +1425,96 @@ export const Dashboard: React.FC = () => {{
                 _output.Info($"    ✓ {view.ViewName} report screen generated");
             }
 
+            // Update App.tsx to include MN view routes
+            await UpdateAppTsxWithReportsAsync(outputDirectory, manualViews);
+
             _output.Info($"  ✓ Generated {manualViews.Count} report screens!");
         }
         else
         {
             _output.Warning("  No manual views (MN) found - skipping report screen generation");
         }
+    }
+
+    private async Task UpdateAppTsxWithReportsAsync(string outputDirectory, List<ViewInfo> manualViews)
+    {
+        var appTsxPath = Path.Combine(outputDirectory, "client", "src", "App.tsx");
+        if (!File.Exists(appTsxPath))
+        {
+            _output.Warning("  App.tsx not found - skipping route update");
+            return;
+        }
+
+        var appContent = await File.ReadAllTextAsync(appTsxPath);
+
+        // Build import statements for reports
+        var reportImports = string.Join("\n", manualViews.Select(v =>
+        {
+            var className = BaseApiGenerator.GetClassName(v.ViewName);
+            return $"import {{ {className}Report }} from './components/{className}/{className}Report';";
+        }));
+
+        // Build menu items for reports (in a "Reports" section)
+        var reportMenuItems = string.Join("\n", manualViews.Select(v =>
+        {
+            var className = BaseApiGenerator.GetClassName(v.ViewName);
+            var camelName = CodeGenerationHelpers.ToCamelCase(className);
+            var displayName = CodeGenerationHelpers.SanitizeColumnName(v.ViewName);
+            return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/reports/{camelName}\">\n                <ListItemText primary=\"{displayName}\" />\n              </ListItemButton>\n            </ListItem>";
+        }));
+
+        // Build routes for reports
+        var reportRoutes = string.Join("\n", manualViews.Select(v =>
+        {
+            var className = BaseApiGenerator.GetClassName(v.ViewName);
+            var camelName = CodeGenerationHelpers.ToCamelCase(className);
+            return $"            <Route path=\"/reports/{camelName}\" element={{<{className}Report />}} />";
+        }));
+
+        // Find insertion point for imports (after Dashboard import)
+        var dashboardImportLine = "import { Dashboard } from './components/Dashboard/Dashboard';";
+        if (!appContent.Contains(dashboardImportLine))
+        {
+            _output.Warning("  Could not find Dashboard import in App.tsx - skipping route update");
+            return;
+        }
+
+        // Insert report imports after Dashboard import
+        appContent = appContent.Replace(
+            dashboardImportLine,
+            dashboardImportLine + "\n" + reportImports
+        );
+
+        // Find insertion point for menu items (before the closing </List>)
+        var closingListTag = "          </List>";
+        if (!appContent.Contains(closingListTag))
+        {
+            _output.Warning("  Could not find closing List tag in App.tsx - skipping menu update");
+            return;
+        }
+
+        // Insert report menu items before closing </List>
+        appContent = appContent.Replace(
+            closingListTag,
+            reportMenuItems + "\n" + closingListTag
+        );
+
+        // Find insertion point for routes (before closing </Routes>)
+        var closingRoutesTag = "          </Routes>";
+        if (!appContent.Contains(closingRoutesTag))
+        {
+            _output.Warning("  Could not find closing Routes tag in App.tsx - skipping routes update");
+            return;
+        }
+
+        // Insert report routes before closing </Routes>
+        appContent = appContent.Replace(
+            closingRoutesTag,
+            reportRoutes + "\n" + closingRoutesTag
+        );
+
+        await File.WriteAllTextAsync(appTsxPath, appContent);
+        _output.Info("  ✓ App.tsx updated with report routes");
     }
     private async Task GenerateJobInfrastructureAsync(
         string outputDirectory,
