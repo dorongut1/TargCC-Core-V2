@@ -54,8 +54,8 @@ public static class ReactReportComponentGenerator
         sb.AppendLine(CultureInfo.InvariantCulture, $"    queryKey: ['{camelCasePlural}', debouncedSearch],");
         sb.AppendLine(CultureInfo.InvariantCulture, $"    queryFn: () => {{");
         sb.AppendLine("      const url = debouncedSearch");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        ? `/api/{pluralName}/search?term=${{debouncedSearch}}`");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"        : `/api/{pluralName}`;");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        ? `/{pluralName}/search?term=${{debouncedSearch}}`");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"        : `/{pluralName}`;");
         sb.AppendLine("      return api.get(url).then(res => res.data);");
         sb.AppendLine("    }");
         sb.AppendLine("  });");

@@ -1459,7 +1459,7 @@ export const Dashboard: React.FC = () => {{
         {
             var className = BaseApiGenerator.GetClassName(v.ViewName);
             var camelName = CodeGenerationHelpers.ToCamelCase(className);
-            var displayName = CodeGenerationHelpers.SanitizeColumnName(v.ViewName);
+            var displayName = CodeGenerationHelpers.GetFriendlyViewName(v.ViewName);
             return $"            <ListItem disablePadding>\n              <ListItemButton component={{Link}} to=\"/reports/{camelName}\">\n                <ListItemText primary=\"{displayName}\" />\n              </ListItemButton>\n            </ListItem>";
         }));
 

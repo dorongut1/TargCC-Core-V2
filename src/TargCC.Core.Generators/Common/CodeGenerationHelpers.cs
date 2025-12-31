@@ -244,6 +244,53 @@ public static class CodeGenerationHelpers
         return singular + "s";
     }
 
+    /// <summary>
+    /// Converts a view name to a friendly display name for UI.
+    /// Removes technical prefixes (Mn, ccvw, ComboList) and splits PascalCase with spaces.
+    /// </summary>
+    /// <param name="viewName">The view name (e.g., "mnccvwComboList_ProductPricing").</param>
+    /// <returns>Friendly display name (e.g., "Product Pricing").</returns>
+    /// <example>
+    /// <code>
+    /// GetFriendlyViewName("mnccvwComboList_CustomerDebts") // Returns "Customer Debts"
+    /// GetFriendlyViewName("MnccvwComboListOrderSummary")   // Returns "Order Summary"
+    /// GetFriendlyViewName("mnSalesReport")                // Returns "Sales Report"
+    /// </code>
+    /// </example>
+    public static string GetFriendlyViewName(string viewName)
+    {
+        if (string.IsNullOrWhiteSpace(viewName))
+        {
+            return viewName;
+        }
+
+        var cleaned = viewName;
+
+        // Remove common prefixes (case-insensitive) - use Array.Find as per S6602
+        var prefixesToRemove = new[] { "mnccvwComboList_", "mnccvwComboList", "ccvwComboList_", "ccvwComboList", "ccvw", "mn" };
+        var matchingPrefix = Array.Find(prefixesToRemove, prefix =>
+            cleaned.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingPrefix != null)
+        {
+            cleaned = cleaned.Substring(matchingPrefix.Length);
+        }
+
+        // Remove underscores
+        cleaned = cleaned.Replace("_", string.Empty, StringComparison.Ordinal);
+
+        // Split PascalCase into words with spaces
+        var result = System.Text.RegularExpressions.Regex.Replace(cleaned, "([a-z])([A-Z])", "$1 $2");
+
+        // Capitalize first letter
+        if (result.Length > 0 && char.IsLower(result[0]))
+        {
+            result = char.ToUpperInvariant(result[0]) + result.Substring(1);
+        }
+
+        return result;
+    }
+
     private static bool IsVowel(char c)
     {
         return "aeiouAEIOU".Contains(c, StringComparison.Ordinal);
