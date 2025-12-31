@@ -46,6 +46,30 @@ namespace TargCC.Core.Generators.UI.Components
             return await Task.Run(() => Generate(table, config)).ConfigureAwait(false);
         }
 
+        private static bool HasBooleanFields(Table table)
+        {
+            return GetDataColumns(table)
+                .Where(c => !c.IsPrimaryKey && !c.IsIdentity)
+                .Any(c =>
+                {
+                    var (prefix, _) = SplitPrefix(c.Name);
+
+                    // Exclude read-only prefixes that are skipped in create mode
+                    if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
+                    {
+                        return false;
+                    }
+
+                    // Only columns without special prefixes render as Checkbox for BIT type
+                    if (!string.IsNullOrEmpty(prefix))
+                    {
+                        return false;
+                    }
+
+                    return c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase);
+                });
+        }
+
         private static string GenerateImports(string className, UIFramework framework, FormValidationLibrary validationLibrary, Table table)
         {
             var sb = new StringBuilder();
@@ -65,29 +89,7 @@ namespace TargCC.Core.Generators.UI.Components
                     c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase) ||
                     c.Name.StartsWith("lkp_", StringComparison.OrdinalIgnoreCase));
 
-                // Check if table has BIT columns that will actually render as Checkbox
-                // Only BIT columns without special prefixes and not excluded from create forms
-                var hasBooleanFields = GetDataColumns(table)
-                    .Where(c => !c.IsPrimaryKey && !c.IsIdentity)
-                    .Any(c =>
-                    {
-                        var (prefix, _) = SplitPrefix(c.Name);
-
-                        // Exclude read-only prefixes that are skipped in create mode
-                        if (prefix == "CLC" || prefix == "BLG" || prefix == "AGG" || prefix == "SCB")
-                        {
-                            return false;
-                        }
-
-                        // Only columns without special prefixes render as Checkbox for BIT type
-                        // Columns with prefixes ENO, LKP, LOC, ENM, SPL, UPL, SPT, ENT use other components
-                        if (!string.IsNullOrEmpty(prefix))
-                        {
-                            return false;
-                        }
-
-                        return c.DataType.Contains("BIT", StringComparison.OrdinalIgnoreCase);
-                    });
+                var hasBooleanFields = HasBooleanFields(table);
 
                 var imports = new List<string> { "TextField", "Button", "Box", "CircularProgress" };
 
@@ -106,6 +108,13 @@ namespace TargCC.Core.Generators.UI.Components
 
             sb.AppendLine(CultureInfo.InvariantCulture, $"import {{ use{className}, useCreate{className}, useUpdate{className} }} from '../../hooks/use{className}';");
             sb.AppendLine(CultureInfo.InvariantCulture, $"import type {{ Create{className}Request, Update{className}Request }} from '../../types/{className}.types';");
+
+            // Add enum hook import if table has enum fields
+            var hasEnumFields = table.Columns.Exists(c => c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase));
+            if (hasEnumFields)
+            {
+                sb.AppendLine("import { useEnumValues } from '../../hooks/useEnumValues';");
+            }
 
             return sb.ToString();
         }
@@ -215,6 +224,7 @@ namespace TargCC.Core.Generators.UI.Components
         {
             var sb = new StringBuilder();
             var enumName = GetClassName(baseName);
+            var camelEnumName = ToCamelCase(enumName);
             var validationRules = GetValidationRules(column);
 
             if (framework == UIFramework.MaterialUI)
@@ -226,8 +236,12 @@ namespace TargCC.Core.Generators.UI.Components
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          {{...register('{fieldName}', {{ {string.Join(", ", validationRules)} }})}}");
                 sb.AppendLine(CultureInfo.InvariantCulture, $"          error={{!!errors.{fieldName}}}");
                 sb.AppendLine("        >");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"          {{/* TODO: Load enum values for {enumName} */}}");
                 sb.AppendLine("          <MenuItem value=\"\">Select...</MenuItem>");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"          {{{camelEnumName}Values?.map((enumValue) => (");
+                sb.AppendLine("            <MenuItem key={enumValue.enumValue} value={enumValue.enumValue}>");
+                sb.AppendLine("              {enumValue.locText}");
+                sb.AppendLine("            </MenuItem>");
+                sb.AppendLine("          ))}");
                 sb.AppendLine("        </Select>");
                 sb.AppendLine("      </FormControl>");
             }
@@ -437,6 +451,24 @@ namespace TargCC.Core.Generators.UI.Components
             sb.AppendLine();
             sb.AppendLine("  const isSubmitting = isCreating || isUpdating;");
             sb.AppendLine();
+
+            // Enum hooks for ENM columns
+            var enumColumns = GetDataColumns(table)
+                .Where(c => !c.IsPrimaryKey && !c.IsIdentity && c.Name.StartsWith("enm_", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var enumColumn in enumColumns)
+            {
+                var (_, baseName) = SplitPrefix(enumColumn.Name);
+                var enumTypeName = GetClassName(baseName);
+                var camelEnumName = ToCamelCase(enumTypeName);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  const {{ data: {camelEnumName}Values }} = useEnumValues('{enumTypeName}');");
+            }
+
+            if (enumColumns.Count > 0)
+            {
+                sb.AppendLine();
+            }
 
             // Submit handler
             sb.AppendLine(CultureInfo.InvariantCulture, $"  const onSubmit = (data: Create{className}Request) => {{");

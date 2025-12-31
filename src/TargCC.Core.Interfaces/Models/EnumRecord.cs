@@ -1,8 +1,4 @@
-// <copyright file="EnumRecord.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace TargCC.Core.Generators.TypeScript
+namespace TargCC.Core.Interfaces.Models
 {
     /// <summary>
     /// Represents an enum value from c_Enumeration table.

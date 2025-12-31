@@ -10,7 +10,7 @@ namespace TargCC.Core.Generators.CSharp
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
-    using TargCC.Core.Generators.TypeScript;
+    using TargCC.Core.Interfaces.Models;
 
     /// <summary>
     /// Generates C# enums from c_Enumeration database table.

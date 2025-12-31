@@ -578,13 +578,33 @@ public class RepositoryGenerator : IRepositoryGenerator
 
         string entityName = GetClassName(table.Name);
 
+        // Track generated method signatures to avoid duplicates
+        var generatedMethods = new HashSet<string>();
+
+        // Process unique indexes first (they take precedence)
+        var sortedIndexes = table.Indexes
+            .Where(i => !i.IsPrimaryKey)
+            .OrderByDescending(i => i.IsUnique) // Unique indexes first
+            .ToList();
+
         // Process each non-primary key index
-        foreach (var index in table.Indexes.Where(i => !i.IsPrimaryKey))
+        foreach (var index in sortedIndexes)
         {
             if (index.ColumnNames == null || index.ColumnNames.Count == 0)
             {
                 continue;
             }
+
+            // Build method name to check for duplicates
+            string methodName = CodeGenerationHelpers.BuildMethodName("GetBy", index.ColumnNames);
+
+            // Skip if we already generated a method with this name
+            if (generatedMethods.Contains(methodName))
+            {
+                continue;
+            }
+
+            generatedMethods.Add(methodName);
 
             GenerateSingleIndexMethod(sb, table, index, entityName, rootNamespace);
         }

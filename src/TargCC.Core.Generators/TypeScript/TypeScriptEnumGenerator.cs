@@ -10,6 +10,7 @@ namespace TargCC.Core.Generators.TypeScript
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
+    using TargCC.Core.Interfaces.Models;
 
     /// <summary>
     /// Generates TypeScript enums from c_Enumeration database table.

@@ -78,6 +78,26 @@ public class ProjectGenerationService : IProjectGenerationService
 
         try
         {
+            _output.Info("Step 0: Ensuring system tables exist...");
+
+            // Check if c_Enumeration table exists
+            var hasSysTables = await CheckSystemTablesExistAsync(connectionString);
+            if (!hasSysTables)
+            {
+                _output.Warning("  System tables not found - creating them automatically...");
+                var sysTablesGen = new SystemTablesGenerator(
+                    _loggerFactory.CreateLogger<SystemTablesGenerator>());
+                var sysTablesSql = await sysTablesGen.GenerateAsync(checkExists: true);
+
+                await ExecuteSqlScriptAsync(connectionString, sysTablesSql);
+                _output.Info("  ✓ System tables created successfully!");
+            }
+            else
+            {
+                _output.Info("  ✓ System tables already exist");
+            }
+            _output.BlankLine();
+
             _output.Info("Step 1: Analyzing database schema...");
 
             // Get all tables from database
@@ -225,6 +245,15 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("  ✓ Database context generated!");
             _output.BlankLine();
 
+            _output.Info("Step 3.8: Generating Enumeration API Controller...");
+
+            // Generate EnumerationsController
+            var enumControllerCode = TargCC.Core.Generators.API.EnumerationControllerGenerator.Generate(rootNamespace);
+            var enumControllerPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", "EnumerationsController.cs");
+            await SaveFileAsync(enumControllerPath, enumControllerCode);
+            _output.Info("  ✓ EnumerationsController.cs");
+            _output.BlankLine();
+
             _output.Info("Step 4: Generating support files...");
 
             // Generate Program.cs
@@ -245,7 +274,7 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("Step 5: Generating React Frontend Setup...");
 
             // Generate React setup files
-            await GenerateReactSetupFilesAsync(outputDirectory, rootNamespace, tables);
+            await GenerateReactSetupFilesAsync(outputDirectory, rootNamespace, tables, connectionString);
 
             _output.Info("  ✓ React setup files generated!");
             _output.BlankLine();
@@ -607,7 +636,8 @@ public class ProjectGenerationService : IProjectGenerationService
     private async Task GenerateReactSetupFilesAsync(
         string outputDirectory,
         string rootNamespace,
-        List<Table> tables)
+        List<Table> tables,
+        string connectionString)
     {
         var clientDir = Path.Combine(outputDirectory, "client");
 
@@ -656,6 +686,11 @@ public class ProjectGenerationService : IProjectGenerationService
         await SaveFileAsync(Path.Combine(clientDir, "src", "api", "client.ts"), apiClient);
         _output.Info("  ✓ src/api/client.ts");
 
+        // src/hooks/useEnumValues.ts - Enum loading hooks
+        var enumHooksCode = TargCC.Core.Generators.React.EnumHooksGenerator.GenerateUseEnumValuesHook();
+        await SaveFileAsync(Path.Combine(clientDir, "src", "hooks", "useEnumValues.ts"), enumHooksCode);
+        _output.Info("  ✓ src/hooks/useEnumValues.ts");
+
         // .gitignore
         var gitignore = GenerateGitignore();
         await SaveFileAsync(Path.Combine(clientDir, ".gitignore"), gitignore);
@@ -670,6 +705,9 @@ public class ProjectGenerationService : IProjectGenerationService
         var commonTypes = await TypeScriptTypeGenerator.GenerateCommonTypesAsync();
         await SaveFileAsync(Path.Combine(clientDir, "src", "types", "common.types.ts"), commonTypes);
         _output.Info("  ✓ src/types/common.types.ts");
+
+        // src/enums/index.ts - TypeScript enums from c_Enumeration
+        await GenerateEnumsAsync(outputDirectory, connectionString);
     }
 
     private static string GeneratePackageJson(string projectName)
@@ -1391,5 +1429,113 @@ export const Dashboard: React.FC = () => {{
         sb.AppendLine("}");
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Checks if system tables (c_Enumeration, c_User, etc.) exist in the database
+    /// </summary>
+    private async Task<bool> CheckSystemTablesExistAsync(string connectionString)
+    {
+        try
+        {
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = 'dbo'
+                  AND TABLE_NAME = 'c_Enumeration'";
+
+            var result = await command.ExecuteScalarAsync();
+            var count = Convert.ToInt32(result);
+
+            return count > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check for system tables - assuming they don't exist");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Executes a SQL script against the database
+    /// </summary>
+    private async Task ExecuteSqlScriptAsync(string connectionString, string sqlScript)
+    {
+        try
+        {
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Split script by GO statements and execute each batch
+            var batches = System.Text.RegularExpressions.Regex.Split(
+                sqlScript,
+                @"^\s*GO\s*$",
+                System.Text.RegularExpressions.RegexOptions.Multiline | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            foreach (var batch in batches)
+            {
+                var trimmedBatch = batch.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedBatch))
+                    continue;
+
+                var command = connection.CreateCommand();
+                command.CommandText = trimmedBatch;
+                command.CommandTimeout = 300; // 5 minutes
+
+                await command.ExecuteNonQueryAsync();
+            }
+
+            _logger.LogInformation("System tables SQL script executed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to execute system tables SQL script");
+            throw new InvalidOperationException($"Failed to create system tables: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Generates TypeScript enums from c_Enumeration table
+    /// </summary>
+    private async Task GenerateEnumsAsync(string outputDirectory, string connectionString)
+    {
+        try
+        {
+            // Load enums from c_Enumeration
+            var enumLoader = new TargCC.Core.Analyzers.Database.EnumLoader(
+                connectionString,
+                _loggerFactory.CreateLogger<TargCC.Core.Analyzers.Database.EnumLoader>());
+
+            var enums = await enumLoader.LoadAllEnumsAsync();
+
+            if (enums.Count == 0)
+            {
+                _output.Warning("  ⚠ No enums found in c_Enumeration table");
+                _output.Info("  You can add enum values to c_Enumeration to generate TypeScript enums");
+                return;
+            }
+
+            // Generate TypeScript enums
+            var enumGen = new TargCC.Core.Generators.TypeScript.TypeScriptEnumGenerator(
+                _loggerFactory.CreateLogger<TargCC.Core.Generators.TypeScript.TypeScriptEnumGenerator>());
+
+            var enumsCode = enumGen.GenerateEnumsCode(enums);
+
+            // Save to client/src/enums/index.ts
+            var enumsPath = Path.Combine(outputDirectory, "client", "src", "enums", "index.ts");
+            await SaveFileAsync(enumsPath, enumsCode);
+
+            var enumTypes = enums.Select(e => e.EnumType).Distinct().Count();
+            _output.Info($"  ✓ src/enums/index.ts ({enumTypes} enum types, {enums.Count} values)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate TypeScript enums");
+            _output.Warning($"  ⚠ Failed to generate enums: {ex.Message}");
+        }
     }
 }
