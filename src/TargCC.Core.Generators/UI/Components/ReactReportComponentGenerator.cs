@@ -44,7 +44,7 @@ public static class ReactReportComponentGenerator
         sb.AppendLine();
 
         // Component
-        sb.AppendLine(CultureInfo.InvariantCulture, $"export default function {className}Report() {{");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"export function {className}Report() {{");
         sb.AppendLine("  const [searchTerm, setSearchTerm] = useState('');");
         sb.AppendLine("  const [debouncedSearch, setDebouncedSearch] = useState('');");
         sb.AppendLine();
@@ -72,7 +72,7 @@ public static class ReactReportComponentGenerator
         sb.AppendLine("    if (!rows || rows.length === 0) return;");
         sb.AppendLine();
         sb.AppendLine("    const headers = columns.map(col => col.headerName).join(',');");
-        sb.AppendLine("    const csvRows = rows.map(row =>");
+        sb.AppendLine("    const csvRows = rows.map((row: any) =>");
         sb.AppendLine("      columns.map(col => {");
         sb.AppendLine("        const value = row[col.field];");
         sb.AppendLine("        if (value === null || value === undefined) return '';");
