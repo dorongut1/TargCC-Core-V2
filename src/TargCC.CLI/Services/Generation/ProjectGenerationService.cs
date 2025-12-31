@@ -279,6 +279,23 @@ public class ProjectGenerationService : IProjectGenerationService
             _output.Info("  ✓ React setup files generated!");
             _output.BlankLine();
 
+            _output.Info("Step 5.5: Generating Report Screens for MN Views...");
+            await GenerateViewReportScreensAsync(outputDirectory, rootNamespace, connectionString);
+            _output.BlankLine();
+
+            _output.Info("Step 5.6: Generating ComboList API and Hooks...");
+            var comboListTables = tables.Select(t => t.Name).ToList();
+            var comboListControllerCode = TargCC.Core.Generators.API.ComboListControllerGenerator.Generate(comboListTables, rootNamespace);
+            var comboListControllerPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", "ComboListController.cs");
+            await SaveFileAsync(comboListControllerPath, comboListControllerCode);
+            _output.Info("  ✓ ComboListController.cs");
+
+            var comboListHooksCode = TargCC.Core.Generators.React.ComboListHooksGenerator.GenerateAllHooks(comboListTables);
+            var comboListHooksPath = Path.Combine(outputDirectory, "client", "src", "hooks", "useComboLists.ts");
+            await SaveFileAsync(comboListHooksPath, comboListHooksCode);
+            _output.Info("  ✓ useComboLists.ts");
+            _output.BlankLine();
+
             _output.Info("Step 6: Generating Job Scheduler Infrastructure...");
 
             // Generate job infrastructure
@@ -1354,6 +1371,62 @@ export const Dashboard: React.FC = () => {{
         _output.Info("  ✓ DashboardController.cs");
     }
 
+
+    private async Task GenerateViewReportScreensAsync(
+        string outputDirectory,
+        string rootNamespace,
+        string connectionString)
+    {
+        var viewAnalyzer = new ViewAnalyzer(connectionString);
+        var views = await viewAnalyzer.AnalyzeViewsAsync();
+        var manualViews = views.Where(v => v.Type == ViewType.Manual).ToList();
+
+        if (manualViews.Count > 0)
+        {
+            _output.Info($"  ✓ Found {manualViews.Count} manual views (MN)");
+
+            foreach (var view in manualViews)
+            {
+                _output.Info($"  Processing view: {view.ViewName}");
+
+                var className = BaseApiGenerator.GetClassName(view.ViewName);
+
+                // Generate entity
+                var viewEntityCode = TargCC.Core.Generators.Domain.ViewEntityGenerator.Generate(view, rootNamespace);
+                var viewEntityPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Domain", "Entities", $"{className}.cs");
+                await SaveFileAsync(viewEntityPath, viewEntityCode);
+
+                // Generate repository interface
+                var viewRepoInterface = TargCC.Core.Generators.Repositories.ViewRepositoryGenerator.GenerateInterface(view, rootNamespace);
+                var viewRepoInterfacePath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Application", "Interfaces", "Repositories", $"I{className}Repository.cs");
+                await SaveFileAsync(viewRepoInterfacePath, viewRepoInterface);
+
+                // Generate repository implementation
+                var viewRepoImpl = TargCC.Core.Generators.Repositories.ViewRepositoryGenerator.GenerateImplementation(view, rootNamespace);
+                var viewRepoImplPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.Infrastructure", "Repositories", $"{className}Repository.cs");
+                await SaveFileAsync(viewRepoImplPath, viewRepoImpl);
+
+                // Generate API controller
+                var viewControllerCode = TargCC.Core.Generators.API.ViewControllerGenerator.Generate(view, rootNamespace);
+                var pluralName = CodeGenerationHelpers.MakePlural(className);
+                var viewControllerPath = Path.Combine(outputDirectory, "src", $"{rootNamespace}.API", "Controllers", $"{pluralName}Controller.cs");
+                await SaveFileAsync(viewControllerPath, viewControllerCode);
+
+                // Generate React report component
+                var reportComponentCode = TargCC.Core.Generators.UI.Components.ReactReportComponentGenerator.Generate(view, rootNamespace);
+                var reportComponentPath = Path.Combine(outputDirectory, "client", "src", "components", className, $"{className}Report.tsx");
+                await SaveFileAsync(reportComponentPath, reportComponentCode);
+
+                _output.Info($"    ✓ {view.ViewName} report screen generated");
+            }
+
+            _output.Info($"  ✓ Generated {manualViews.Count} report screens!");
+        }
+        else
+        {
+            _output.Warning("  No manual views (MN) found - skipping report screen generation");
+        }
+    }
     private async Task GenerateJobInfrastructureAsync(
         string outputDirectory,
         string rootNamespace,
